@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import type { CableType, SplitRatio } from '../types';
 import { ATTENUATION_DB_PER_KM, CABLE_SPECS, SPLIT_RATIOS, SPLITTER_LOSS_DB } from '../types';
+import { getHardwareProfileForNode } from '../data/componentCatalogue';
 
 /* ========================================================================== *
  * Component toolbox — HTML5 drag source for every PON element.
@@ -36,11 +37,12 @@ interface ToolItemProps {
   accent: string;
   title: string;
   subtitle: string;
+  thumbnail?: { src: string; alt: string };
   payload: ToolboxPayload;
   onQuickAdd: (payload: ToolboxPayload) => void;
 }
 
-function ToolItem({ icon, accent, title, subtitle, payload, onQuickAdd }: ToolItemProps) {
+function ToolItem({ icon, accent, title, subtitle, thumbnail, payload, onQuickAdd }: ToolItemProps) {
   return (
     <button
       type="button"
@@ -51,10 +53,14 @@ function ToolItem({ icon, accent, title, subtitle, payload, onQuickAdd }: ToolIt
       className="tool-card group w-full"
     >
       <span
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md"
-        style={{ background: `${accent}22`, color: accent }}
+        className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white"
+        style={{ boxShadow: `inset 3px 0 0 ${accent}` }}
       >
-        {icon}
+        {thumbnail ? (
+          <img src={thumbnail.src} alt={thumbnail.alt} draggable={false} className="h-full w-full object-contain" />
+        ) : (
+          icon
+        )}
       </span>
       <span className="min-w-0 flex-1">
         <span className="block truncate text-[12px] font-semibold text-noc-200">{title}</span>
@@ -72,6 +78,10 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 export function Sidebar({ onQuickAdd }: SidebarProps) {
   const [ratioDraft, setRatioDraft] = useState<SplitRatio>(8);
   const [cableDraft, setCableDraft] = useState<CableType>('distribution');
+  const oltHardware = getHardwareProfileForNode('olt');
+  const splitterHardware = getHardwareProfileForNode('splitter');
+  const fiberHardware = getHardwareProfileForNode('fiber', cableDraft);
+  const ontHardware = getHardwareProfileForNode('ont');
 
   return (
     <aside className="flex h-full w-[248px] shrink-0 flex-col border-r border-noc-700/70 bg-noc-900/70">
@@ -89,9 +99,10 @@ export function Sidebar({ onQuickAdd }: SidebarProps) {
         <SectionLabel>Headend</SectionLabel>
         <ToolItem
           icon={<Radio size={16} />}
-          accent="#38bdf8"
+          accent="#2563eb"
           title="OLT Transceiver"
           subtitle="Class B+ / C+ · +3.0 dBm default"
+          thumbnail={{ src: oltHardware.thumbnailSvg, alt: `${oltHardware.modelName} illustration` }}
           payload={{ component: 'olt' }}
           onQuickAdd={onQuickAdd}
         />
@@ -116,9 +127,10 @@ export function Sidebar({ onQuickAdd }: SidebarProps) {
         </div>
         <ToolItem
           icon={<Split size={16} />}
-          accent="#a78bfa"
+          accent="#7c3aed"
           title={`PLC Splitter 1:${ratioDraft}`}
           subtitle={`${SPLITTER_LOSS_DB[ratioDraft].toFixed(1)} dB insertion loss`}
+          thumbnail={{ src: splitterHardware.thumbnailSvg, alt: `${splitterHardware.modelName} illustration` }}
           payload={{ component: 'splitter', ratio: ratioDraft }}
           onQuickAdd={onQuickAdd}
         />
@@ -164,6 +176,7 @@ export function Sidebar({ onQuickAdd }: SidebarProps) {
           accent={CABLE_SPECS[cableDraft].accent}
           title={`${CABLE_SPECS[cableDraft].label} span`}
           subtitle={`${CABLE_SPECS[cableDraft].defaultLengthKm} km · ${CABLE_SPECS[cableDraft].defaultSplices} splice · ${CABLE_SPECS[cableDraft].defaultConnectors} conn`}
+          thumbnail={{ src: fiberHardware.thumbnailSvg, alt: `${fiberHardware.modelName} illustration` }}
           payload={{ component: 'fiber', cableType: cableDraft }}
           onQuickAdd={onQuickAdd}
         />
@@ -175,8 +188,8 @@ export function Sidebar({ onQuickAdd }: SidebarProps) {
               draggable
               onDragStart={(event) => startDrag(event, { component: 'fiber', cableType: cable })}
               onClick={() => onQuickAdd({ component: 'fiber', cableType: cable })}
-              className="rounded border border-noc-700/70 bg-noc-850/70 py-1 font-mono text-[10px] text-noc-300 transition-colors hover:border-sky-400/50"
-              style={{ color: CABLE_SPECS[cable].accent }}
+              className="rounded border border-noc-700/70 bg-noc-850/70 py-1 font-mono text-[10px] font-semibold text-amber-800 transition-colors hover:border-amber-500/60"
+              style={{ boxShadow: `inset 0 2px 0 ${CABLE_SPECS[cable].accent}` }}
             >
               {CABLE_SPECS[cable].short}
             </button>
@@ -186,9 +199,10 @@ export function Sidebar({ onQuickAdd }: SidebarProps) {
         <SectionLabel>Premises</SectionLabel>
         <ToolItem
           icon={<Router size={16} />}
-          accent="#22d383"
+          accent="#16a34a"
           title="ONT / ONU"
           subtitle="Subscriber endpoint · −28 dBm sensitivity"
+          thumbnail={{ src: ontHardware.thumbnailSvg, alt: `${ontHardware.modelName} illustration` }}
           payload={{ component: 'ont' }}
           onQuickAdd={onQuickAdd}
         />
@@ -224,6 +238,15 @@ export function Sidebar({ onQuickAdd }: SidebarProps) {
             </tbody>
           </table>
         </div>
+
+        <section aria-label="Optical interface colour key" className="mt-2 rounded-md border border-noc-700/60 bg-white px-2 py-2">
+          <div className="mb-1.5 text-[9px] font-semibold uppercase tracking-wide text-noc-400">Field colour cues</div>
+          <div className="flex flex-wrap gap-x-2.5 gap-y-1.5 text-[9px] text-noc-300">
+            <span className="inline-flex items-center gap-1"><span aria-hidden="true" className="h-2 w-2 rounded-sm bg-[#FACC15]" />Cable</span>
+            <span className="inline-flex items-center gap-1"><span aria-hidden="true" className="h-2 w-2 rounded-sm bg-[#16A34A]" />SC/APC</span>
+            <span className="inline-flex items-center gap-1"><span aria-hidden="true" className="h-2 w-2 rounded-sm bg-[#2563EB]" />SC/UPC</span>
+          </div>
+        </section>
 
         <p className="mt-3 text-[10px] leading-relaxed text-noc-500">
           Drag a handle from one element to another to patch them. Every drop cable, splice and

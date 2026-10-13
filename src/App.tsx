@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState, type DragEvent } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type DragEvent } from 'react';
 import {
   Background,
   BackgroundVariant,
@@ -48,14 +48,29 @@ import { Sidebar, DND_MIME, type ToolboxPayload } from './components/Sidebar';
 import { Inspector } from './components/Inspector';
 import { BOMModal } from './components/BOMModal';
 import { TopBar } from './components/TopBar';
+import { MissionDrawer } from './components/MissionDrawer';
+import { LandingView } from './components/landing/LandingView';
+import { getMissionById, type Mission } from './engine/missions';
 
 const edgeTypes = { optical: OpticalEdge };
 
+type LandingCommandInput =
+  | { kind: 'preset'; presetId: string }
+  | { kind: 'mission'; missionId: string }
+  | { kind: 'missions' };
+
+type LandingCommand = LandingCommandInput & { requestId: number };
+
+interface StudioWorkspaceProps {
+  onOpenOverview: () => void;
+  landingCommand: LandingCommand | null;
+}
+
 const MINIMAP_COLORS: Record<string, string> = {
-  olt: '#38bdf8',
-  splitter: '#a78bfa',
-  fiber: '#22d383',
-  ont: '#f5b544',
+  olt: '#2563eb',
+  splitter: '#7c3aed',
+  fiber: '#facc15',
+  ont: '#16a34a',
 };
 
 function initialTopology(): { nodes: PonNode[]; edges: PonEdge[] } {
@@ -66,7 +81,7 @@ function initialTopology(): { nodes: PonNode[]; edges: PonEdge[] } {
  * Studio workspace — canvas, drag & drop, selection and simulation wiring.
  * ========================================================================== */
 
-function StudioWorkspace() {
+function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProps) {
   const seeded = useMemo(initialTopology, []);
   const [nodes, setNodes, onNodesChange] = useNodesState<PonNode>(seeded.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState<PonEdge>(seeded.edges);
@@ -75,6 +90,8 @@ function StudioWorkspace() {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null);
   const [bomOpen, setBomOpen] = useState(false);
+  const [missionsOpen, setMissionsOpen] = useState(false);
+  const [activeMissionId, setActiveMissionId] = useState<string | null>(null);
   const [testing, setTesting] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [committedSim, setCommittedSim] = useState<SimulationResult | null>(null);
@@ -249,6 +266,13 @@ function StudioWorkspace() {
     setSelectedEdgeId(params.edges.length === 1 ? params.edges[0].id : null);
   }, []);
 
+  const closeMissions = useCallback(() => setMissionsOpen(false), []);
+  const handleOpenOverview = useCallback(() => {
+    setBomOpen(false);
+    setMissionsOpen(false);
+    onOpenOverview();
+  }, [onOpenOverview]);
+
   const applyPreset = useCallback(
     (presetId: string) => {
       const built = buildPreset(presetId);
@@ -256,6 +280,7 @@ function StudioWorkspace() {
       setNodes(built.nodes);
       setEdges(built.edges);
       setActivePresetId(presetId);
+      setActiveMissionId(null);
       setSelectedNodeId(null);
       setSelectedEdgeId(null);
       setDirty(false);
@@ -266,10 +291,49 @@ function StudioWorkspace() {
     [setNodes, setEdges, fitView],
   );
 
+  const startMission = useCallback(
+    (mission: Mission) => {
+      const presetTopology = buildPreset(mission.presetId);
+      if (!presetTopology) return;
+      const topology = mission.prepareTopology?.(presetTopology) ?? presetTopology;
+      setNodes(topology.nodes);
+      setEdges(topology.edges);
+      setSettings((current) => ({
+        ...current,
+        safetyMarginDb: mission.safetyMarginDb,
+        autoRun: true,
+      }));
+      setCommittedSim(null);
+      setDirty(false);
+      setActivePresetId(mission.presetId);
+      setActiveMissionId(mission.id);
+      setSelectedNodeId(null);
+      setSelectedEdgeId(null);
+      setBomOpen(false);
+      window.requestAnimationFrame(() => {
+        void fitView({ padding: 0.16, duration: 450 });
+      });
+    },
+    [setNodes, setEdges, fitView],
+  );
+
+  useEffect(() => {
+    if (!landingCommand) return;
+    if (landingCommand.kind === 'preset') {
+      applyPreset(landingCommand.presetId);
+    } else if (landingCommand.kind === 'mission') {
+      const mission = getMissionById(landingCommand.missionId);
+      if (mission) startMission(mission);
+    } else {
+      setMissionsOpen(true);
+    }
+  }, [landingCommand, applyPreset, startMission]);
+
   const clearCanvas = useCallback(() => {
     setNodes([]);
     setEdges([]);
     setActivePresetId(null);
+    setActiveMissionId(null);
     setSelectedNodeId(null);
     setSelectedEdgeId(null);
     markDirty();
@@ -331,7 +395,7 @@ function StudioWorkspace() {
   const summary = simulation.summary;
 
   return (
-    <div className="flex h-screen w-screen flex-col overflow-hidden bg-noc-950">
+    <div className="flex h-full w-full flex-col overflow-hidden bg-noc-950">
       <TopBar
         summary={summary}
         settings={settings}
@@ -339,6 +403,9 @@ function StudioWorkspace() {
         onPreset={applyPreset}
         onRunTest={runLightTest}
         onOpenBOM={() => setBomOpen(true)}
+        onOpenMissions={() => setMissionsOpen(true)}
+        onOpenOverview={handleOpenOverview}
+        activeMissionTitle={activeMissionId ? getMissionById(activeMissionId)?.title ?? null : null}
         onClear={clearCanvas}
         testing={testing}
         stale={!settings.autoRun && dirty}
@@ -369,16 +436,17 @@ function StudioWorkspace() {
               proOptions={{ hideAttribution: true }}
               className="bg-noc-950"
             >
-              <Background variant={BackgroundVariant.Dots} gap={22} size={1.4} color="#1c2540" />
+              <Background variant={BackgroundVariant.Dots} gap={22} size={1.25} color="#cbd5e1" />
               <Controls position="bottom-right" showInteractive={false} />
               <MiniMap
                 position="top-right"
                 pannable
                 zoomable
                 className="!h-[120px] !w-[180px]"
-                nodeColor={(node) => MINIMAP_COLORS[node.type ?? ''] ?? '#3b4867'}
-                nodeStrokeWidth={2}
-                maskColor="rgba(5,7,13,0.72)"
+                nodeColor={(node) => MINIMAP_COLORS[node.type ?? ''] ?? '#64748b'}
+                nodeStrokeColor="#475569"
+                nodeStrokeWidth={1.5}
+                maskColor="rgba(248,250,252,0.72)"
               />
 
               <Panel position="bottom-left" className="!m-3">
@@ -457,14 +525,84 @@ function StudioWorkspace() {
         simulation={simulation}
         settings={settings}
       />
+      <MissionDrawer
+        open={missionsOpen}
+        activeMissionId={activeMissionId}
+        nodes={nodes}
+        edges={edges}
+        simulation={simulation}
+        onClose={closeMissions}
+        onStartMission={startMission}
+      />
     </div>
   );
 }
 
 export default function App() {
+  const [viewMode, setViewMode] = useState<'landing' | 'studio'>('landing');
+  const [landingCommand, setLandingCommand] = useState<LandingCommand | null>(null);
+  const commandSequence = useRef(0);
+  const hasEnteredStudio = useRef(false);
+  const studioViewportRef = useRef<HTMLDivElement>(null);
+  const landingViewportRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    studioViewportRef.current?.toggleAttribute('inert', viewMode !== 'studio');
+    landingViewportRef.current?.toggleAttribute('inert', viewMode !== 'landing');
+  }, [viewMode]);
+
+  const sendLandingCommand = useCallback((command: LandingCommandInput) => {
+    const requestId = ++commandSequence.current;
+    setLandingCommand({ ...command, requestId } as LandingCommand);
+    setViewMode('studio');
+  }, []);
+  const launchStudio = useCallback(() => setViewMode('studio'), []);
+  const openMissions = useCallback(() => sendLandingCommand({ kind: 'missions' }), [sendLandingCommand]);
+  const loadPreset = useCallback(
+    (presetId: string) => sendLandingCommand({ kind: 'preset', presetId }),
+    [sendLandingCommand],
+  );
+  const startVillaMission = useCallback(
+    () => sendLandingCommand({ kind: 'mission', missionId: 'marginal-villa' }),
+    [sendLandingCommand],
+  );
+  const returnToOverview = useCallback(() => setViewMode('landing'), []);
+
+  useEffect(() => {
+    if (viewMode === 'studio') {
+      hasEnteredStudio.current = true;
+      const missionHeading = landingCommand?.kind === 'missions'
+        ? document.getElementById('mission-drawer-title')
+        : null;
+      (missionHeading ?? document.getElementById('studio-overview-toggle'))?.focus({ preventScroll: true });
+    } else if (hasEnteredStudio.current) {
+      document.getElementById('landing-overview-link')?.focus({ preventScroll: true });
+    }
+  }, [viewMode, landingCommand]);
+
   return (
     <ReactFlowProvider>
-      <StudioWorkspace />
+      <div className="fiberlab-app-shell">
+        <div
+          ref={studioViewportRef}
+          className={`studio-viewport ${viewMode === 'studio' ? 'is-active' : 'is-staged'}`}
+          aria-hidden={viewMode !== 'studio'}
+        >
+          <StudioWorkspace onOpenOverview={returnToOverview} landingCommand={landingCommand} />
+        </div>
+        <div
+          ref={landingViewportRef}
+          className={`landing-viewport ${viewMode === 'landing' ? 'is-active' : 'is-staged'}`}
+          aria-hidden={viewMode !== 'landing'}
+        >
+          <LandingView
+            onLaunchStudio={launchStudio}
+            onExploreMissions={openMissions}
+            onLoadPreset={loadPreset}
+            onStartVillaMission={startVillaMission}
+          />
+        </div>
+      </div>
     </ReactFlowProvider>
   );
 }

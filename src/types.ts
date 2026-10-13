@@ -1,7 +1,7 @@
 import type { Edge, Node } from '@xyflow/react';
 
 /* ========================================================================== *
- * FTTH-Studio — Domain Model
+ * FiberLAB — Domain Model
  *
  * Every optical element in the PON is modelled as a React Flow node. Fiber
  * runs are first-class nodes (not edges) so that a physical cable span carries
@@ -111,7 +111,7 @@ export const CABLE_SPECS: Record<CableType, CableSpec> = {
     defaultLengthKm: 5,
     defaultSplices: 0,
     defaultConnectors: 2,
-    accent: '#38bdf8',
+    accent: '#facc15',
   },
   distribution: {
     label: 'Distribution cable',
@@ -119,7 +119,7 @@ export const CABLE_SPECS: Record<CableType, CableSpec> = {
     defaultLengthKm: 1,
     defaultSplices: 2,
     defaultConnectors: 2,
-    accent: '#22d383',
+    accent: '#facc15',
   },
   drop: {
     label: 'Drop cable',
@@ -127,7 +127,7 @@ export const CABLE_SPECS: Record<CableType, CableSpec> = {
     defaultLengthKm: 0.3,
     defaultSplices: 1,
     defaultConnectors: 2,
-    accent: '#f5b544',
+    accent: '#facc15',
   },
 };
 
@@ -183,37 +183,37 @@ export interface StatusStyle {
 export const STATUS_STYLES: Record<OntStatus, StatusStyle> = {
   OVERLOAD: {
     label: 'OVERLOAD',
-    hex: '#a78bfa',
-    badge: 'bg-purple-500/15 text-purple-300 border-purple-500/40',
-    ring: 'border-purple-500/70 shadow-[0_0_28px_-6px_rgba(167,139,250,0.75)]',
+    hex: '#7c3aed',
+    badge: 'bg-purple-50 text-purple-800 border-purple-200',
+    ring: 'border-purple-500/70 shadow-[0_0_18px_-8px_rgba(124,58,237,0.32)]',
     blurb: 'Receiver saturation — optical burn risk. Add attenuation.',
   },
   ONLINE: {
     label: 'ONLINE',
-    hex: '#22d383',
-    badge: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40',
-    ring: 'border-emerald-500/70 shadow-[0_0_28px_-6px_rgba(34,211,131,0.7)]',
+    hex: '#15803d',
+    badge: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+    ring: 'border-emerald-500/70 shadow-[0_0_18px_-8px_rgba(21,128,61,0.28)]',
     blurb: 'Within the GPON optimal receive window.',
   },
   WARNING: {
     label: 'WARNING',
-    hex: '#f5b544',
-    badge: 'bg-amber-500/15 text-amber-300 border-amber-500/40',
-    ring: 'border-amber-500/70 shadow-[0_0_28px_-6px_rgba(245,181,68,0.7)]',
+    hex: '#a16207',
+    badge: 'bg-amber-50 text-amber-900 border-amber-200',
+    ring: 'border-amber-600/70 shadow-[0_0_18px_-8px_rgba(161,98,7,0.25)]',
     blurb: 'Marginal link — high BER risk, service will degrade.',
   },
   LOS: {
     label: 'LOS',
-    hex: '#f0544f',
-    badge: 'bg-red-500/15 text-red-300 border-red-500/40',
-    ring: 'border-red-500/70 shadow-[0_0_28px_-6px_rgba(240,84,79,0.7)]',
+    hex: '#dc2626',
+    badge: 'bg-red-50 text-red-800 border-red-200',
+    ring: 'border-red-600/70 shadow-[0_0_18px_-8px_rgba(220,38,38,0.28)]',
     blurb: 'Loss of signal — received power below receiver sensitivity.',
   },
   DISCONNECTED: {
     label: 'DISCONNECTED',
-    hex: '#8c9ab8',
-    badge: 'bg-noc-700/60 text-noc-300 border-noc-500/50',
-    ring: 'border-noc-600',
+    hex: '#64748b',
+    badge: 'bg-slate-100 text-slate-700 border-slate-300',
+    ring: 'border-slate-300',
     blurb: 'No active OLT path reaches this ONT.',
   },
 };

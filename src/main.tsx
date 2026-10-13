@@ -6,7 +6,7 @@ import App from './App';
 
 const container = document.getElementById('root');
 if (!container) {
-  throw new Error('FTTH-Studio: root container #root was not found in the document.');
+  throw new Error('FiberLAB: root container #root was not found in the document.');
 }
 
 ReactDOM.createRoot(container).render(

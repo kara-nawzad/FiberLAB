@@ -238,7 +238,7 @@ export function BOMModal({ open, onClose, nodes, edges, simulation, settings }: 
                         className="rounded border border-purple-500/40 bg-purple-500/15 px-2 py-1 font-mono text-[11px] text-purple-200"
                       >
                         1:{ratio} × {summary.splitterCountByRatio[ratio]}
-                        <span className="ml-1.5 text-purple-300/60">
+                        <span className="ml-1.5 text-purple-800">
                           −{SPLITTER_LOSS_DB[ratio].toFixed(1)} dB each
                         </span>
                       </span>
