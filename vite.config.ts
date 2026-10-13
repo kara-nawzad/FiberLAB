@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react';
 
 // Bound to 0.0.0.0 so the sandbox preview host can reach the dev server.
 export default defineConfig({
+  base: './',
   plugins: [react()],
   server: {
     host: '0.0.0.0',
