@@ -1,7 +1,9 @@
 import type {
+  ClosureNodeData,
   DesignSettings,
   EdgeTelemetry,
   FiberNodeData,
+  GatewayTelemetry,
   LossSegment,
   NetworkSummary,
   OltNodeData,
@@ -10,16 +12,27 @@ import type {
   OpticalPath,
   PonEdge,
   PonNode,
+  PonStandard,
   SimulationResult,
   SplitRatio,
   SplitterNodeData,
 } from '../types';
 import {
   ATTENUATION_DB_PER_KM,
+  CLOSURE_OUTPUT_PORTS,
+  CLOSURE_SPLICE_LOSS_MAX_DB,
+  CLOSURE_SPLICE_LOSS_MIN_DB,
   CONNECTOR_LOSS_DB,
   CABLE_SPECS,
+  DEFAULT_ODF_THROUGH_PORT_LOSS_DB,
+  DIRTY_CONNECTOR_PENALTY_DB,
+  MACRO_BEND_PENALTY_DB,
+  NAP_OUTPUT_PORTS,
+  NAP_SPLIT_LOSS_DB,
+  NAP_SPLIT_RATIO,
   OLT_CLASS_SPECS,
   ONT_THRESHOLDS,
+  PON_STANDARD_SPECS,
   SPLITTER_LOSS_DB,
   SPLICE_LOSS_DB,
 } from '../types';
@@ -28,10 +41,11 @@ import {
  * Optical Simulator
  *
  * Performs a directed depth-first walk from every energised OLT transceiver,
- * accumulating loss element by element, and terminates at every ONT it can
- * reach. The link budget follows:
+ * accumulating loss element by element, and terminates at every ONT or gateway
+ * it can reach. The legacy GPON loss terms are preserved; ODF through loss and
+ * the fixed NAP split are explicit additions for those node types:
  *
- *   P_rx = P_tx - (L_fiber + L_splitters + L_splices + L_connectors + Margin)
+ *   P_rx = P_tx - (L_fiber + L_splitters + L_ODF + L_NAP + L_splices + L_connectors + L_field_faults + L_closure + Margin)
  *
  * Where a subscriber is reachable by more than one OLT the best (highest
  * received power) path is kept as the primary path; all candidates are
@@ -60,8 +74,30 @@ export function isFiberNode(node: PonNode): node is Extract<PonNode, { type: 'fi
   return node.type === 'fiber';
 }
 
+export function isClosureNode(node: PonNode): node is Extract<PonNode, { type: 'closure' }> {
+  return node.type === 'closure';
+}
+
 export function isOntNode(node: PonNode): node is Extract<PonNode, { type: 'ont' }> {
   return node.type === 'ont';
+}
+
+export function isOdfNode(node: PonNode): node is Extract<PonNode, { type: 'odf' }> {
+  return node.type === 'odf';
+}
+
+export function isNapNode(node: PonNode): node is Extract<PonNode, { type: 'nap' }> {
+  return node.type === 'nap';
+}
+
+export function isGatewayNode(node: PonNode): node is Extract<PonNode, { type: 'gateway' }> {
+  return node.type === 'gateway';
+}
+
+export function isSubscriberEndpointNode(
+  node: PonNode,
+): node is Extract<PonNode, { type: 'ont' | 'gateway' }> {
+  return isOntNode(node) || isGatewayNode(node);
 }
 
 /* -------------------------------------------------------------------------- *
@@ -80,23 +116,35 @@ export interface FiberLossBreakdown {
   cableDb: number;
   spliceDb: number;
   connectorDb: number;
+  macroBendLossDb: number;
+  dirtyConnectorLossDb: number;
   totalDb: number;
   attenuationDbPerKm: number;
 }
 
-/** Full loss model of a single cable span. */
+/** Full loss model of a single cable span, with field faults kept explicit. */
 export function computeFiberLoss(data: FiberNodeData): FiberLossBreakdown {
   const attenuationDbPerKm = fiberAttenuationDbPerKm(data);
   const cableDb = Math.max(0, data.lengthKm) * attenuationDbPerKm;
   const spliceDb = Math.max(0, data.splices) * SPLICE_LOSS_DB;
   const connectorDb = Math.max(0, data.connectors) * CONNECTOR_LOSS_DB;
+  const macroBendLossDb = data.macroBendActive ? MACRO_BEND_PENALTY_DB : 0;
+  const dirtyConnectorLossDb = data.dirtyConnectorActive ? DIRTY_CONNECTOR_PENALTY_DB : 0;
   return {
     cableDb,
     spliceDb,
     connectorDb,
-    totalDb: cableDb + spliceDb + connectorDb,
+    macroBendLossDb,
+    dirtyConnectorLossDb,
+    totalDb: cableDb + spliceDb + connectorDb + macroBendLossDb + dirtyConnectorLossDb,
     attenuationDbPerKm,
   };
+}
+
+/** Clamp a closure through-splice setting to its simplified learning range. */
+export function computeClosureSpliceLoss(data: ClosureNodeData): number {
+  const value = Number.isFinite(data.spliceLossDb) ? data.spliceLossDb : CLOSURE_SPLICE_LOSS_MIN_DB;
+  return Math.min(CLOSURE_SPLICE_LOSS_MAX_DB, Math.max(CLOSURE_SPLICE_LOSS_MIN_DB, value));
 }
 
 /** Catalogue + excess loss of a passive splitter. */
@@ -104,8 +152,22 @@ export function computeSplitterLoss(data: SplitterNodeData): number {
   return SPLITTER_LOSS_DB[data.ratio] + Math.max(0, data.excessLossDb);
 }
 
+/** Educational ODF through-port allowance; invalid legacy values use 0.5 dB. */
+export function computeOdfLoss(throughPortLossDb: number): number {
+  return Number.isFinite(throughPortLossDb) && throughPortLossDb >= 0
+    ? throughPortLossDb
+    : DEFAULT_ODF_THROUGH_PORT_LOSS_DB;
+}
+
+/** Fixed 1:8 NAP/FAT insertion allowance; value is not a calibrated SKU measurement. */
+export function computeNapLoss(splitLossDb: number): number {
+  return Number.isFinite(splitLossDb) && splitLossDb >= 0 ? splitLossDb : NAP_SPLIT_LOSS_DB;
+}
+
 /* -------------------------------------------------------------------------- *
- * Status classification — ITU-T G.984 GPON receive window
+ * Status classification — existing GPON-style receive thresholds.
+ * Reused for gateway and XGS-PON paths; standard-specific receiver classes
+ * are not modeled in this educational simulator.
  * -------------------------------------------------------------------------- */
 
 export function classifyOnt(rxPowerDbm: number | null): OntStatus {
@@ -158,8 +220,10 @@ export function simulateTopology(
   }
 
   const { outgoing } = buildAdjacency(edges, nodeIds);
+  const edgeById = new Map(edges.map((edge) => [edge.id, edge]));
 
   const candidatesByOnt = new Map<string, OpticalPath[]>();
+  const candidatesByGateway = new Map<string, OpticalPath[]>();
   const edgeBest = new Map<string, number>();
   const safetyMarginDb = Math.max(0, settings.safetyMarginDb);
 
@@ -209,9 +273,10 @@ export function simulateTopology(
       recordEdge(incomingEdgeId, oltData.txPowerDbm - state.lossDb);
     }
 
-    // Terminal: a subscriber endpoint. Emit a completed optical path.
-    if (isOntNode(node)) {
+    // Terminal: an ONT or integrated Wi-Fi gateway. Emit a completed optical path.
+    if (isSubscriberEndpointNode(node)) {
       const rxPowerDbm = oltData.txPowerDbm - state.lossDb - safetyMarginDb;
+      const ponStandard = oltData.ponStandard === 'XGS-PON' ? 'XGS-PON' : 'GPON';
       const path: OpticalPath = {
         oltId: olt.id,
         oltPort: oltData.portName,
@@ -233,11 +298,18 @@ export function simulateTopology(
         cumulativeSplitRatio: state.cumulativeSplitRatio,
         splices: state.splices,
         connectors: state.connectors,
-        wavelength: oltData.wavelength,
+        wavelength: ponStandard === 'XGS-PON' ? PON_STANDARD_SPECS['XGS-PON'].downstreamWavelength : oltData.wavelength,
+        ponStandard,
       };
-      const bucket = candidatesByOnt.get(node.id) ?? [];
-      bucket.push(path);
-      candidatesByOnt.set(node.id, bucket);
+      if (isGatewayNode(node)) {
+        const bucket = candidatesByGateway.get(node.id) ?? [];
+        bucket.push(path);
+        candidatesByGateway.set(node.id, bucket);
+      } else {
+        const bucket = candidatesByOnt.get(node.id) ?? [];
+        bucket.push(path);
+        candidatesByOnt.set(node.id, bucket);
+      }
       return;
     }
 
@@ -257,7 +329,12 @@ export function simulateTopology(
     nextState.onStack.add(node.id);
 
     if (isFiberNode(node)) {
-      const loss = computeFiberLoss(node.data);
+      // The XGS-PON downstream uses 1577 nm throughout this route. Legacy GPON
+      // still uses each span's own selected wavelength, preserving its equation.
+      const effectiveFiberData = oltData.ponStandard === 'XGS-PON'
+        ? { ...node.data, wavelength: PON_STANDARD_SPECS['XGS-PON'].downstreamWavelength }
+        : node.data;
+      const loss = computeFiberLoss(effectiveFiberData);
       nextState.lossDb += loss.totalDb;
       nextState.fiberKm += Math.max(0, node.data.lengthKm);
       nextState.splices += Math.max(0, node.data.splices);
@@ -267,7 +344,7 @@ export function simulateTopology(
         component: 'fiber',
         label: `${CABLE_SPECS[node.data.cableType].label} — ${round3(node.data.lengthKm)} km @ ${round2(
           loss.attenuationDbPerKm,
-        )} dB/km`,
+        )} dB/km @ ${effectiveFiberData.wavelength} nm`,
         lossDb: loss.cableDb,
       });
       if (loss.spliceDb > 0) {
@@ -286,6 +363,22 @@ export function simulateTopology(
           lossDb: loss.connectorDb,
         });
       }
+      if (loss.macroBendLossDb > 0) {
+        nextState.segments.push({
+          nodeId: node.id,
+          component: 'fault',
+          label: `Fault Penalty: Macro-Bend (-${loss.macroBendLossDb.toFixed(2)} dB)`,
+          lossDb: loss.macroBendLossDb,
+        });
+      }
+      if (loss.dirtyConnectorLossDb > 0) {
+        nextState.segments.push({
+          nodeId: node.id,
+          component: 'fault',
+          label: `Fault Penalty: Dust Contamination (-${loss.dirtyConnectorLossDb.toFixed(2)} dB)`,
+          lossDb: loss.dirtyConnectorLossDb,
+        });
+      }
     } else if (isSplitterNode(node)) {
       const splitterLoss = computeSplitterLoss(node.data);
       nextState.lossDb += splitterLoss;
@@ -299,10 +392,68 @@ export function simulateTopology(
         }`,
         lossDb: splitterLoss,
       });
+    } else if (isOdfNode(node)) {
+      const odfLossDb = computeOdfLoss(node.data.throughPortLossDb);
+      nextState.lossDb += odfLossDb;
+      nextState.segments.push({
+        nodeId: node.id,
+        component: 'odf',
+        label: `ODF adapter through-port · ${odfLossDb.toFixed(2)} dB`,
+        lossDb: odfLossDb,
+      });
+    } else if (isNapNode(node)) {
+      const napLossDb = computeNapLoss(node.data.splitLossDb);
+      nextState.lossDb += napLossDb;
+      nextState.splitStages += 1;
+      nextState.cumulativeSplitRatio *= NAP_SPLIT_RATIO;
+      nextState.segments.push({
+        nodeId: node.id,
+        component: 'nap',
+        label: `Outdoor NAP/FAT internal 1:${NAP_SPLIT_RATIO} · ${napLossDb.toFixed(2)} dB reference split loss`,
+        lossDb: napLossDb,
+      });
     }
 
-    for (const edge of outgoing.get(node.id) ?? []) {
+    let nextEdges = outgoing.get(node.id) ?? [];
+    if (isOdfNode(node)) {
+      const inputEdge = edgeById.get(incomingEdgeId ?? '');
+      const inputIndex = Number(/^in-(\d+)$/.exec(inputEdge?.targetHandle ?? 'in-0')?.[1] ?? 0);
+      nextEdges = nextEdges.filter((edge) => edge.sourceHandle === `out-${inputIndex}`);
+    } else if (isNapNode(node)) {
+      nextEdges = nextEdges.filter((edge) => {
+        const outputIndex = Number(/^out-(\d+)$/.exec(edge.sourceHandle ?? '')?.[1] ?? -1);
+        return Number.isInteger(outputIndex) && outputIndex >= 0 && outputIndex < NAP_OUTPUT_PORTS;
+      });
+    }
+
+    for (const edge of nextEdges) {
       if (nextState.onStack.has(edge.target)) continue; // loop guard
+
+      if (isClosureNode(node)) {
+        const handleIndex = Number((edge.sourceHandle ?? 'out-0').replace(/^out-/, ''));
+        if (!Number.isInteger(handleIndex) || handleIndex < 0 || handleIndex >= CLOSURE_OUTPUT_PORTS) continue;
+        if (!node.data.activeSpliceChannels[handleIndex]) continue;
+
+        const spliceLossDb = computeClosureSpliceLoss(node.data);
+        const branchState: WalkState = {
+          ...nextState,
+          lossDb: nextState.lossDb + spliceLossDb,
+          segments: [
+            ...nextState.segments,
+            {
+              nodeId: node.id,
+              component: 'splice',
+              label: `FOSC closure · channel ${handleIndex + 1} through-splice @ ${spliceLossDb.toFixed(2)} dB`,
+              lossDb: spliceLossDb,
+            },
+          ],
+          onStack: new Set(nextState.onStack),
+          splices: nextState.splices + 1,
+        };
+        walk(olt, oltData, edge.target, branchState, [...visitedEdges, edge.id]);
+        continue;
+      }
+
       walk(olt, oltData, edge.target, nextState, [...visitedEdges, edge.id]);
     }
   };
@@ -320,24 +471,19 @@ export function simulateTopology(
     }
   }
 
-  /* -------------------------- Assemble ONT telemetry ---------------------- */
+  /* ---------------------- Assemble endpoint telemetry -------------------- */
 
   const ontTelemetry: Record<string, OntTelemetry> = {};
+  const gatewayTelemetry: Record<string, GatewayTelemetry> = {};
   const bestPaths: Record<string, OpticalPath> = {};
 
-  for (const node of nodes) {
-    if (!isOntNode(node)) continue;
-    const candidates = [...(candidatesByOnt.get(node.id) ?? [])].sort(
-      (a, b) => b.rxPowerDbm - a.rxPowerDbm,
-    );
+  const opticalReading = (candidates: OpticalPath[]) => {
     const best = candidates[0];
     const rxPowerDbm = best ? round2(best.rxPowerDbm) : null;
-    const status = classifyOnt(rxPowerDbm);
-
-    ontTelemetry[node.id] = {
-      ontId: node.id,
-      status,
+    return {
+      best,
       rxPowerDbm,
+      status: classifyOnt(rxPowerDbm),
       totalLossDb: best ? round2(best.totalLossDb) : 0,
       marginDb: rxPowerDbm === null ? 0 : round2(rxPowerDbm - ONT_THRESHOLDS.losFloorDbm),
       headroomDb: rxPowerDbm === null ? 0 : round2(ONT_THRESHOLDS.overloadDbm - rxPowerDbm),
@@ -350,8 +496,54 @@ export function simulateTopology(
       segments: best ? best.segments : [],
       candidatePaths: candidates,
     };
+  };
 
-    if (best) bestPaths[node.id] = best;
+  for (const node of nodes) {
+    if (isOntNode(node)) {
+      const candidates = [...(candidatesByOnt.get(node.id) ?? [])].sort(
+        (a, b) => b.rxPowerDbm - a.rxPowerDbm,
+      );
+      const reading = opticalReading(candidates);
+      const { best, ...telemetry } = reading;
+      ontTelemetry[node.id] = { ontId: node.id, ...telemetry };
+      if (best) bestPaths[node.id] = best;
+    } else if (isGatewayNode(node)) {
+      const candidates = [...(candidatesByGateway.get(node.id) ?? [])].sort(
+        (a, b) => b.rxPowerDbm - a.rxPowerDbm,
+      );
+      const reading = opticalReading(candidates);
+      const standard = reading.best?.ponStandard ?? null;
+      const standardSpec = standard ? PON_STANDARD_SPECS[standard] : null;
+      const splitRatio = reading.best ? Math.max(1, reading.best.cumulativeSplitRatio) : null;
+      gatewayTelemetry[node.id] = {
+        gatewayId: node.id,
+        ssid: node.data.ssid,
+        serviceIpAddress: node.data.serviceIpAddress,
+        status: reading.status,
+        rxPowerDbm: reading.rxPowerDbm,
+        totalLossDb: reading.totalLossDb,
+        marginDb: reading.marginDb,
+        headroomDb: reading.headroomDb,
+        sourceOltId: reading.sourceOltId,
+        fiberKm: reading.fiberKm,
+        splitStages: reading.splitStages,
+        cumulativeSplitRatio: reading.cumulativeSplitRatio,
+        splices: reading.splices,
+        connectors: reading.connectors,
+        segments: reading.segments,
+        candidatePaths: candidates,
+        ponStandard: standard,
+        downstreamLineRateGbps: standardSpec?.downstreamGbps ?? null,
+        upstreamLineRateGbps: standardSpec?.upstreamGbps ?? null,
+        estimatedDownMbps: standardSpec && splitRatio
+          ? round2((standardSpec.downstreamGbps * 1000) / splitRatio)
+          : null,
+        estimatedUpMbps: standardSpec && splitRatio
+          ? round2((standardSpec.upstreamGbps * 1000) / splitRatio)
+          : null,
+      };
+      if (reading.best) bestPaths[node.id] = reading.best;
+    }
   }
 
   /* --------------------------- Edge telemetry ---------------------------- */
@@ -369,10 +561,11 @@ export function simulateTopology(
 
   /* ------------------------------ Summary -------------------------------- */
 
-  const summary = summarise(nodes, ontTelemetry);
+  const summary = summarise(nodes, ontTelemetry, gatewayTelemetry);
 
   return {
     ontTelemetry,
+    gatewayTelemetry,
     bestPaths,
     edgeTelemetry,
     summary,
@@ -385,6 +578,7 @@ export function simulateTopology(
 function summarise(
   nodes: PonNode[],
   ontTelemetry: Record<string, OntTelemetry>,
+  gatewayTelemetry: Record<string, GatewayTelemetry>,
 ): NetworkSummary {
   const byStatus: Record<OntStatus, number> = {
     OVERLOAD: 0,
@@ -394,13 +588,18 @@ function summarise(
     DISCONNECTED: 0,
   };
 
-  let ontCount = 0;
+  const ontCount = Object.keys(ontTelemetry).length;
+  const gatewayCount = Object.keys(gatewayTelemetry).length;
+  const subscriberCount = ontCount + gatewayCount;
+  const endpointReadings = [
+    ...Object.values(ontTelemetry),
+    ...Object.values(gatewayTelemetry),
+  ];
   let rxSum = 0;
   let rxCount = 0;
   let worstRxDbm: number | null = null;
 
-  for (const telemetry of Object.values(ontTelemetry)) {
-    ontCount += 1;
+  for (const telemetry of endpointReadings) {
     byStatus[telemetry.status] += 1;
     if (telemetry.rxPowerDbm !== null) {
       rxSum += telemetry.rxPowerDbm;
@@ -424,6 +623,8 @@ function summarise(
       totalFiberKm += Math.max(0, node.data.lengthKm);
       totalSplices += Math.max(0, node.data.splices);
       totalConnectors += Math.max(0, node.data.connectors);
+    } else if (isClosureNode(node)) {
+      totalSplices += node.data.activeSpliceChannels.filter(Boolean).length;
     } else if (isSplitterNode(node)) {
       splitterTotal += 1;
       splitterCountByRatio[node.data.ratio] = (splitterCountByRatio[node.data.ratio] ?? 0) + 1;
@@ -437,6 +638,8 @@ function summarise(
 
   return {
     ontCount,
+    gatewayCount,
+    subscriberCount,
     byStatus,
     totalFiberKm: round3(totalFiberKm),
     totalSplices,
@@ -447,8 +650,8 @@ function summarise(
     oltActive,
     meanRxDbm: rxCount > 0 ? round2(rxSum / rxCount) : null,
     worstRxDbm,
-    allOptimal: ontCount > 0 && byStatus.ONLINE === ontCount,
-    hasFault: byStatus.LOS > 0 || byStatus.DISCONNECTED > 0 || (ontCount > 0 && liveCount < ontCount),
+    allOptimal: subscriberCount > 0 && byStatus.ONLINE === subscriberCount,
+    hasFault: byStatus.LOS > 0 || byStatus.DISCONNECTED > 0 || (subscriberCount > 0 && liveCount < subscriberCount),
   };
 }
 
@@ -461,12 +664,14 @@ export const formatDbm = (value: number | null): string =>
 
 export const formatDb = (value: number): string => `${value.toFixed(2)} dB`;
 
-export function describeStatus(status: OntStatus): string {
+export function describeStatus(status: OntStatus, ponStandard?: PonStandard): string {
   switch (status) {
     case 'OVERLOAD':
       return 'Optical saturation / burn risk';
     case 'ONLINE':
-      return 'Within GPON optimal window';
+      return ponStandard === 'XGS-PON'
+        ? 'Within modeled XGS-PON receive-power window'
+        : 'Within GPON optimal window';
     case 'WARNING':
       return 'Marginal — high BER risk';
     case 'LOS':
