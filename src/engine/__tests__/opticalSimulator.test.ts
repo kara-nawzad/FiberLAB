@@ -1,16 +1,22 @@
 import { describe, expect, it } from 'vitest';
 import {
   classifyOnt,
+  computeClosureSpliceLoss,
   computeFiberLoss,
   computeSplitterLoss,
   simulateTopology,
 } from '../opticalSimulator';
 import { decorateEdges } from '../edgeDecoration';
 import { buildPreset } from '../presets';
+import { createClosureNode, createOltNode, createOntNode } from '../factories';
 import {
   ATTENUATION_DB_PER_KM,
+  CLOSURE_SPLICE_LOSS_MAX_DB,
+  CLOSURE_SPLICE_LOSS_MIN_DB,
   CONNECTOR_LOSS_DB,
   DEFAULT_SETTINGS,
+  DIRTY_CONNECTOR_PENALTY_DB,
+  MACRO_BEND_PENALTY_DB,
   SPLIT_RATIOS,
   SPLITTER_LOSS_DB,
   SPLICE_LOSS_DB,
@@ -36,9 +42,10 @@ describe('loss catalogue', () => {
     expect(losses).toEqual([...losses].sort((a, b) => a - b));
   });
 
-  it('uses 0.35 dB/km @1310nm and 0.25 dB/km @1490nm', () => {
+  it('uses nominal single-mode learning coefficients at 1310, 1490, and 1550 nm', () => {
     expect(ATTENUATION_DB_PER_KM[1310]).toBe(0.35);
     expect(ATTENUATION_DB_PER_KM[1490]).toBe(0.25);
+    expect(ATTENUATION_DB_PER_KM[1550]).toBe(0.2);
   });
 
   it('applies 0.1 dB per fusion splice and 0.5 dB per SC/APC connector', () => {
@@ -75,6 +82,32 @@ describe('loss catalogue', () => {
     expect(computeFiberLoss(data).cableDb).toBeCloseTo(3.5, 6);
     const overridden: FiberNodeData = { ...data, attenuationOverrideDbPerKm: 0.2 };
     expect(computeFiberLoss(overridden).cableDb).toBeCloseTo(2.0, 6);
+  });
+
+  it('adds the macro-bend and dirty-ferrule penalties as separate span losses', () => {
+    const data: FiberNodeData = {
+      kind: 'fiber',
+      cableType: 'drop',
+      lengthKm: 1,
+      splices: 0,
+      connectors: 0,
+      wavelength: 1490,
+      attenuationOverrideDbPerKm: null,
+      macroBendActive: true,
+      dirtyConnectorActive: true,
+    };
+    const loss = computeFiberLoss(data);
+    expect(loss.macroBendLossDb).toBe(MACRO_BEND_PENALTY_DB);
+    expect(loss.dirtyConnectorLossDb).toBe(DIRTY_CONNECTOR_PENALTY_DB);
+    expect(loss.totalDb).toBeCloseTo(0.25 + 3.5 + 2.0, 6);
+  });
+
+  it('clamps the closure through-splice allowance to 0.05–0.10 dB', () => {
+    const closure = createClosureNode({ id: 'closure-loss' });
+    if (closure.type !== 'closure') throw new Error('Closure factory returned an invalid node.');
+    expect(computeClosureSpliceLoss(closure.data)).toBe(0.08);
+    expect(computeClosureSpliceLoss({ ...closure.data, spliceLossDb: -1 })).toBe(CLOSURE_SPLICE_LOSS_MIN_DB);
+    expect(computeClosureSpliceLoss({ ...closure.data, spliceLossDb: 9 })).toBe(CLOSURE_SPLICE_LOSS_MAX_DB);
   });
 
   it('adds excess loss on top of the splitter catalogue value', () => {
@@ -206,6 +239,73 @@ describe('Preset B — failing long-distance link', () => {
     // The C+ port launches +5.0 dBm, so the trunk is live even though the ONTs are not.
     expect(result.edgeTelemetry['e-b1'].edgeState).toBe('live');
     expect(result.edgeTelemetry['e-b6'].edgeState).toBe('degraded');
+  });
+});
+
+describe('field faults and OSP splice closures', () => {
+  it('keeps fault penalties explicit and moves a marginal subscriber to WARNING', () => {
+    const { nodes, edges } = buildPreset('standard-1x32') as { nodes: PonNode[]; edges: PonEdge[] };
+    const faultNodes = nodes.map((node) => node.type === 'fiber' && node.id === 'fiber-drop-a1'
+      ? { ...node, data: { ...node.data, macroBendActive: true, dirtyConnectorActive: true } }
+      : node) as PonNode[];
+    const result = simulateTopology(faultNodes, edges, settings, 21);
+    const telemetry = result.ontTelemetry['ont-a1'];
+
+    expect(telemetry.rxPowerDbm).toBeCloseTo(-27.075, 2);
+    expect(telemetry.status).toBe('WARNING');
+    expect(telemetry.segments.map((segment) => segment.label)).toContain('Fault Penalty: Macro-Bend (-3.50 dB)');
+    expect(telemetry.segments.map((segment) => segment.label)).toContain('Fault Penalty: Dust Contamination (-2.00 dB)');
+
+    const decorated = decorateEdges(edges, result.edgeTelemetry, faultNodes);
+    expect(decorated.find((edge) => edge.id === 'e-a6')?.data?.faultLabels).toEqual([
+      'Macro-bend loss on this span',
+      'Dust contamination loss on this span',
+    ]);
+  });
+
+  it('routes through an active closure channel with one splice allowance and blocks an open one', () => {
+    const olt = createOltNode({ id: 'olt-closure' });
+    const closureCreated = createClosureNode({ id: 'closure-1' });
+    if (closureCreated.type !== 'closure') throw new Error('Closure factory returned an invalid node.');
+    const closure = closureCreated;
+    const fiber: PonNode = {
+      id: 'fiber-closure-drop',
+      type: 'fiber',
+      position: { x: 600, y: 0 },
+      data: {
+        kind: 'fiber',
+        cableType: 'drop',
+        lengthKm: 0,
+        splices: 0,
+        connectors: 0,
+        wavelength: 1490,
+        attenuationOverrideDbPerKm: null,
+      },
+    };
+    const ont = createOntNode({ id: 'ont-closure' });
+    const edges: PonEdge[] = [
+      { id: 'closure-in', source: olt.id, target: closure.id, sourceHandle: 'out', targetHandle: 'in-0', type: 'optical' },
+      { id: 'closure-out-a', source: closure.id, target: fiber.id, sourceHandle: 'out-0', targetHandle: 'in', type: 'optical' },
+      { id: 'closure-to-ont', source: fiber.id, target: ont.id, sourceHandle: 'out', targetHandle: 'in', type: 'optical' },
+    ];
+    const nodes: PonNode[] = [olt, closure, fiber, ont];
+    const connected = simulateTopology(nodes, edges, { ...settings, safetyMarginDb: 0 }, 22);
+
+    expect(connected.edgeTelemetry['closure-in'].powerDbm).toBe(3);
+    expect(connected.edgeTelemetry['closure-out-a'].powerDbm).toBeCloseTo(2.92, 6);
+    expect(connected.ontTelemetry[ont.id].rxPowerDbm).toBeCloseTo(2.92, 6);
+    expect(connected.ontTelemetry[ont.id].splices).toBe(1);
+    expect(connected.ontTelemetry[ont.id].segments.some((segment) => segment.label.includes('channel 1 through-splice'))).toBe(true);
+    expect(connected.summary.totalSplices).toBe(4);
+
+    const openClosure: PonNode = {
+      ...closure,
+      data: { ...closure.data, activeSpliceChannels: closure.data.activeSpliceChannels.map(() => false) },
+    };
+    const open = simulateTopology([olt, openClosure, fiber, ont], edges, { ...settings, safetyMarginDb: 0 }, 23);
+    expect(open.ontTelemetry[ont.id].status).toBe('DISCONNECTED');
+    expect(open.edgeTelemetry['closure-in'].powerDbm).toBe(3);
+    expect(open.edgeTelemetry['closure-out-a'].powerDbm).toBeNull();
   });
 });
 

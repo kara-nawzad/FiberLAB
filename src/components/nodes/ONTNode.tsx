@@ -4,6 +4,7 @@ import type { OntNode as OntFlowNode, OntStatus } from '../../types';
 import { STATUS_STYLES } from '../../types';
 import { describeStatus } from '../../engine/opticalSimulator';
 import { useSimulation } from '../../engine/SimulationContext';
+import { getHardwareProfileForNode } from '../../data/componentCatalogue';
 import { Badge, Led, NodeShell, Stat } from './nodeShared';
 
 /* Meter scale: -35 dBm (left) .. -5 dBm (right) */
@@ -15,10 +16,10 @@ const toPercent = (value: number): number =>
   Math.max(0, Math.min(100, ((value - METER_MIN) / METER_SPAN) * 100));
 
 const ZONES: Array<{ from: number; to: number; color: string }> = [
-  { from: -35, to: -28, color: 'rgba(240,84,79,0.55)' },
-  { from: -28, to: -24, color: 'rgba(245,181,68,0.55)' },
-  { from: -24, to: -8, color: 'rgba(34,211,131,0.55)' },
-  { from: -8, to: -5, color: 'rgba(167,139,250,0.55)' },
+  { from: -35, to: -28, color: 'rgba(220,38,38,0.16)' },
+  { from: -28, to: -24, color: 'rgba(161,98,7,0.16)' },
+  { from: -24, to: -8, color: 'rgba(22,163,74,0.15)' },
+  { from: -8, to: -5, color: 'rgba(124,58,237,0.15)' },
 ];
 
 /**
@@ -28,17 +29,27 @@ const ZONES: Array<{ from: number; to: number; color: string }> = [
 export function ONTNode({ id, data, selected }: NodeProps<OntFlowNode>) {
   const simulation = useSimulation();
   const telemetry = simulation?.ontTelemetry[id];
+  const hardware = getHardwareProfileForNode('ont', 'indoor');
   const status: OntStatus = telemetry?.status ?? 'DISCONNECTED';
   const style = STATUS_STYLES[status];
   const rx = telemetry?.rxPowerDbm ?? null;
 
   return (
     <div className="relative w-[252px]">
-      <Handle id="in" type="target" position={Position.Left} className="!top-1/2" style={{ left: -6 }} />
+      <Handle
+        id="in"
+        type="target"
+        position={Position.Left}
+        className="!top-1/2"
+        aria-label="SC/APC ONT optical input"
+        title="SC/APC input cue — confirm the installed ONT connector"
+        style={{ left: -6, borderColor: '#16a34a', background: '#f0fdf4' }}
+      />
       <NodeShell
         eyebrow="Subscriber"
         title={data.subscriber}
         icon={rx === null ? <WifiOff size={14} /> : <Router size={14} />}
+        thumbnail={{ src: hardware.thumbnailSvg, alt: `${hardware.modelName} illustration` }}
         accent={style.hex}
         selected={selected}
         ringClass={style.ring}
@@ -77,7 +88,7 @@ export function ONTNode({ id, data, selected }: NodeProps<OntFlowNode>) {
           ))}
           {rx !== null ? (
             <span
-              className="absolute inset-y-0 w-[3px] rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.9)]"
+              className="absolute inset-y-0 w-[3px] rounded-full bg-slate-900 shadow-[0_0_0_1px_rgba(255,255,255,0.9)]"
               style={{ left: `calc(${toPercent(rx)}% - 1.5px)` }}
             />
           ) : null}

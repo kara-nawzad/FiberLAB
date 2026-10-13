@@ -1,7 +1,8 @@
 import type { Edge, Node } from '@xyflow/react';
+import type { NetworkCostBreakdown, UnitCostProfile } from './data/pricingCatalogue';
 
 /* ========================================================================== *
- * FTTH-Studio — Domain Model
+ * FiberLAB — Domain Model
  *
  * Every optical element in the PON is modelled as a React Flow node. Fiber
  * runs are first-class nodes (not edges) so that a physical cable span carries
@@ -9,20 +10,56 @@ import type { Edge, Node } from '@xyflow/react';
  * between elements are purely patch-cord / patch-panel relationships.
  * ========================================================================== */
 
-/** Downstream (1490 nm) carries the OLT -> ONT data we budget for.
- *  Upstream (1310 nm) is the ONT -> OLT return path, which is weaker. */
-export type Wavelength = 1310 | 1490;
+/** Supported PON and diagnostic wavelengths. The OPM retains its original three calibration choices. */
+export type Wavelength = 1270 | 1310 | 1490 | 1550 | 1577;
+export type MeterWavelength = 1310 | 1490 | 1550;
+export type PonStandard = 'GPON' | 'XGS-PON';
 
-/** Attenuation coefficient per wavelength in dB/km (ITU-T G.652.D single mode). */
+/** Educational reference attenuation values, not calibrated fiber specifications. */
 export const ATTENUATION_DB_PER_KM: Record<Wavelength, number> = {
+  1270: 0.35,
   1310: 0.35,
   1490: 0.25,
+  1550: 0.2,
+  1577: 0.22,
 };
 
 export const WAVELENGTH_LABEL: Record<Wavelength, string> = {
-  1310: '1310 nm (upstream)',
-  1490: '1490 nm (downstream)',
+  1270: '1270 nm (XGS-PON upstream)',
+  1310: '1310 nm (GPON upstream)',
+  1490: '1490 nm (GPON downstream)',
+  1550: '1550 nm (diagnostic reference)',
+  1577: '1577 nm (XGS-PON downstream)',
 };
+
+export interface PonStandardSpec {
+  downstreamWavelength: Wavelength;
+  upstreamWavelength: Wavelength;
+  downstreamGbps: number;
+  upstreamGbps: number;
+}
+
+/** Nominal line-rate/wavelength references; payload throughput is lower and shared. */
+export const PON_STANDARD_SPECS: Record<PonStandard, PonStandardSpec> = {
+  GPON: {
+    downstreamWavelength: 1490,
+    upstreamWavelength: 1310,
+    downstreamGbps: 2.488,
+    upstreamGbps: 1.244,
+  },
+  'XGS-PON': {
+    downstreamWavelength: 1577,
+    upstreamWavelength: 1270,
+    downstreamGbps: 9.953,
+    upstreamGbps: 9.953,
+  },
+};
+
+export const DEFAULT_ODF_THROUGH_PORT_LOSS_DB = 0.5;
+export const ODF_PORT_PAIRS = 2;
+export const NAP_OUTPUT_PORTS = 8;
+export const NAP_SPLIT_LOSS_DB = 10.5;
+export const NAP_SPLIT_RATIO = 8;
 
 /* -------------------------------------------------------------------------- *
  * Passive splitter catalogue
@@ -111,7 +148,7 @@ export const CABLE_SPECS: Record<CableType, CableSpec> = {
     defaultLengthKm: 5,
     defaultSplices: 0,
     defaultConnectors: 2,
-    accent: '#38bdf8',
+    accent: '#facc15',
   },
   distribution: {
     label: 'Distribution cable',
@@ -119,7 +156,7 @@ export const CABLE_SPECS: Record<CableType, CableSpec> = {
     defaultLengthKm: 1,
     defaultSplices: 2,
     defaultConnectors: 2,
-    accent: '#22d383',
+    accent: '#facc15',
   },
   drop: {
     label: 'Drop cable',
@@ -127,7 +164,7 @@ export const CABLE_SPECS: Record<CableType, CableSpec> = {
     defaultLengthKm: 0.3,
     defaultSplices: 1,
     defaultConnectors: 2,
-    accent: '#f5b544',
+    accent: '#facc15',
   },
 };
 
@@ -140,6 +177,43 @@ export const SPLICE_LOSS_DB = 0.1;
 
 /** SC/APC connector pair member loss. */
 export const CONNECTOR_LOSS_DB = 0.5;
+
+/** Educational field-fault penalties; actual loss depends on the cable and fault geometry. */
+export const MACRO_BEND_PENALTY_DB = 3.5;
+export const DIRTY_CONNECTOR_PENALTY_DB = 2.0;
+
+/** Simplified through-splice allowance for the OSP closure model. */
+export const CLOSURE_SPLICE_LOSS_MIN_DB = 0.05;
+export const CLOSURE_SPLICE_LOSS_MAX_DB = 0.1;
+export const DEFAULT_CLOSURE_SPLICE_LOSS_DB = 0.08;
+export const CLOSURE_INPUT_PORTS = 2;
+export const CLOSURE_OUTPUT_PORTS = 4;
+export const SPLICE_TRAY_CHANNEL_COUNT = 12;
+
+/** Two matched ODF adapter pairs; each is an independent through path. */
+export const ODF_INPUT_PORTS = ODF_PORT_PAIRS;
+export const ODF_OUTPUT_PORTS = ODF_PORT_PAIRS;
+
+export interface SpliceTrayChannel {
+  name: string;
+  hex: string;
+}
+
+/** TIA-598-style color order used for the 12-channel teaching tray. */
+export const SPLICE_TRAY_CHANNELS: SpliceTrayChannel[] = [
+  { name: 'Blue', hex: '#0072BC' },
+  { name: 'Orange', hex: '#F58220' },
+  { name: 'Green', hex: '#1A8F3A' },
+  { name: 'Brown', hex: '#8B4513' },
+  { name: 'Slate', hex: '#808080' },
+  { name: 'White', hex: '#F2F2F2' },
+  { name: 'Red', hex: '#E31B23' },
+  { name: 'Black', hex: '#191919' },
+  { name: 'Yellow', hex: '#F8D40A' },
+  { name: 'Violet', hex: '#6A3D9A' },
+  { name: 'Rose', hex: '#E88BA2' },
+  { name: 'Aqua', hex: '#17A6A6' },
+];
 
 /** Default system / ageing / repair allowance. */
 export const DEFAULT_SAFETY_MARGIN_DB = 2.0;
@@ -183,37 +257,37 @@ export interface StatusStyle {
 export const STATUS_STYLES: Record<OntStatus, StatusStyle> = {
   OVERLOAD: {
     label: 'OVERLOAD',
-    hex: '#a78bfa',
-    badge: 'bg-purple-500/15 text-purple-300 border-purple-500/40',
-    ring: 'border-purple-500/70 shadow-[0_0_28px_-6px_rgba(167,139,250,0.75)]',
+    hex: '#7c3aed',
+    badge: 'bg-purple-50 text-purple-800 border-purple-200',
+    ring: 'border-purple-500/70 shadow-[0_0_18px_-8px_rgba(124,58,237,0.32)]',
     blurb: 'Receiver saturation — optical burn risk. Add attenuation.',
   },
   ONLINE: {
     label: 'ONLINE',
-    hex: '#22d383',
-    badge: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40',
-    ring: 'border-emerald-500/70 shadow-[0_0_28px_-6px_rgba(34,211,131,0.7)]',
+    hex: '#15803d',
+    badge: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+    ring: 'border-emerald-500/70 shadow-[0_0_18px_-8px_rgba(21,128,61,0.28)]',
     blurb: 'Within the GPON optimal receive window.',
   },
   WARNING: {
     label: 'WARNING',
-    hex: '#f5b544',
-    badge: 'bg-amber-500/15 text-amber-300 border-amber-500/40',
-    ring: 'border-amber-500/70 shadow-[0_0_28px_-6px_rgba(245,181,68,0.7)]',
+    hex: '#a16207',
+    badge: 'bg-amber-50 text-amber-900 border-amber-200',
+    ring: 'border-amber-600/70 shadow-[0_0_18px_-8px_rgba(161,98,7,0.25)]',
     blurb: 'Marginal link — high BER risk, service will degrade.',
   },
   LOS: {
     label: 'LOS',
-    hex: '#f0544f',
-    badge: 'bg-red-500/15 text-red-300 border-red-500/40',
-    ring: 'border-red-500/70 shadow-[0_0_28px_-6px_rgba(240,84,79,0.7)]',
+    hex: '#dc2626',
+    badge: 'bg-red-50 text-red-800 border-red-200',
+    ring: 'border-red-600/70 shadow-[0_0_18px_-8px_rgba(220,38,38,0.28)]',
     blurb: 'Loss of signal — received power below receiver sensitivity.',
   },
   DISCONNECTED: {
     label: 'DISCONNECTED',
-    hex: '#8c9ab8',
-    badge: 'bg-noc-700/60 text-noc-300 border-noc-500/50',
-    ring: 'border-noc-600',
+    hex: '#64748b',
+    badge: 'bg-slate-100 text-slate-700 border-slate-300',
+    ring: 'border-slate-300',
     blurb: 'No active OLT path reaches this ONT.',
   },
 };
@@ -222,7 +296,7 @@ export const STATUS_STYLES: Record<OntStatus, StatusStyle> = {
  * Node data payloads
  * -------------------------------------------------------------------------- */
 
-export type ComponentKind = 'olt' | 'splitter' | 'fiber' | 'ont';
+export type ComponentKind = 'olt' | 'splitter' | 'fiber' | 'closure' | 'ont' | 'odf' | 'nap' | 'gateway';
 
 export interface OltNodeData extends Record<string, unknown> {
   kind: 'olt';
@@ -231,6 +305,8 @@ export interface OltNodeData extends Record<string, unknown> {
   txPowerDbm: number;
   laserOn: boolean;
   wavelength: Wavelength;
+  /** Omitted only by older saved graphs; legacy OLTs are treated as GPON. */
+  ponStandard?: PonStandard;
 }
 
 export interface SplitterNodeData extends Record<string, unknown> {
@@ -249,6 +325,17 @@ export interface FiberNodeData extends Record<string, unknown> {
   wavelength: Wavelength;
   /** Manual override of the attenuation coefficient; when set it wins over wavelength. */
   attenuationOverrideDbPerKm: number | null;
+  /** Optional simplified field-fault flags; each is a separate explicit loss term. */
+  macroBendActive?: boolean;
+  dirtyConnectorActive?: boolean;
+}
+
+export interface ClosureNodeData extends Record<string, unknown> {
+  kind: 'closure';
+  /** Representative through-splice allowance, clamped to the educational 0.05–0.10 dB range. */
+  spliceLossDb: number;
+  /** Twelve tray occupancy flags; channels 1–4 map to the four modeled branch handles. */
+  activeSpliceChannels: boolean[];
 }
 
 export interface OntNodeData extends Record<string, unknown> {
@@ -259,19 +346,57 @@ export interface OntNodeData extends Record<string, unknown> {
   sensitivityDbm: number;
 }
 
-export type AnyNodeData = OltNodeData | SplitterNodeData | FiberNodeData | OntNodeData;
+export interface OdfNodeData extends Record<string, unknown> {
+  kind: 'odf';
+  /** Illustrative adapter/through-port insertion allowance. */
+  throughPortLossDb: number;
+}
+
+export interface NapNodeData extends Record<string, unknown> {
+  kind: 'nap';
+  /** Reference insertion loss for the internal fixed 1:8 splitter. */
+  splitLossDb: number;
+}
+
+export interface GatewayNodeData extends Record<string, unknown> {
+  kind: 'gateway';
+  serial: string;
+  subscriber: string;
+  ssid: string;
+  /** Reserved TEST-NET address used only as an educational service-state placeholder. */
+  serviceIpAddress: string;
+  /** Informational receiver sensitivity; shared status thresholds remain global. */
+  sensitivityDbm: number;
+}
+
+export type AnyNodeData =
+  | OltNodeData
+  | SplitterNodeData
+  | FiberNodeData
+  | ClosureNodeData
+  | OntNodeData
+  | OdfNodeData
+  | NapNodeData
+  | GatewayNodeData;
 
 export type OltNode = Node<OltNodeData, 'olt'>;
 export type SplitterNode = Node<SplitterNodeData, 'splitter'>;
 export type FiberNode = Node<FiberNodeData, 'fiber'>;
+export type ClosureNode = Node<ClosureNodeData, 'closure'>;
 export type OntNode = Node<OntNodeData, 'ont'>;
-export type PonNode = OltNode | SplitterNode | FiberNode | OntNode;
+export type OdfNode = Node<OdfNodeData, 'odf'>;
+export type NapNode = Node<NapNodeData, 'nap'>;
+export type GatewayNode = Node<GatewayNodeData, 'gateway'>;
+export type SubscriberEndpointNode = OntNode | GatewayNode;
+export type PonNode = OltNode | SplitterNode | FiberNode | ClosureNode | OntNode | OdfNode | NapNode | GatewayNode;
 
 /** Edge payload — carries the optical state produced by the simulator. */
 export interface FiberEdgeData extends Record<string, unknown> {
   /** Optical power at the far end of this edge, dBm. `null` when no light flows. */
   powerDbm: number | null;
   edgeState: EdgeState;
+  /** Non-empty on the output patch cord of a faulted cable span. */
+  faultLabels?: string[];
 }
 
 export type EdgeState = 'live' | 'degraded' | 'idle';
@@ -284,7 +409,7 @@ export type PonEdge = Edge<FiberEdgeData>;
 
 export interface LossSegment {
   nodeId: string | null;
-  component: 'fiber' | 'splitter' | 'splice' | 'connector' | 'margin' | 'olt';
+  component: 'fiber' | 'splitter' | 'splice' | 'connector' | 'fault' | 'margin' | 'olt' | 'odf' | 'nap';
   label: string;
   lossDb: number;
 }
@@ -292,7 +417,7 @@ export interface LossSegment {
 export interface OpticalPath {
   oltId: string;
   oltPort: string;
-  /** Ordered node ids from the OLT to the ONT (inclusive). */
+  /** Ordered node ids from the OLT to the subscriber endpoint (inclusive). */
   nodeIds: string[];
   txPowerDbm: number;
   totalLossDb: number;
@@ -304,14 +429,14 @@ export interface OpticalPath {
   splices: number;
   connectors: number;
   wavelength: Wavelength;
+  ponStandard: PonStandard;
 }
 
-export interface OntTelemetry {
-  ontId: string;
+export interface SubscriberOpticalTelemetry {
   status: OntStatus;
   rxPowerDbm: number | null;
   totalLossDb: number;
-  /** Distance from the ONT's worst acceptable floor (-28 dBm). */
+  /** Distance from the subscriber receiver's illustrative worst acceptable floor (-28 dBm). */
   marginDb: number;
   /** Distance from the overload ceiling (-8 dBm). */
   headroomDb: number;
@@ -322,8 +447,24 @@ export interface OntTelemetry {
   splices: number;
   connectors: number;
   segments: LossSegment[];
-  /** Every OLT path that reaches this ONT, best first. */
   candidatePaths: OpticalPath[];
+}
+
+export interface OntTelemetry extends SubscriberOpticalTelemetry {
+  ontId: string;
+}
+
+export interface GatewayTelemetry extends SubscriberOpticalTelemetry {
+  gatewayId: string;
+  ssid: string;
+  /** Reserved TEST-NET address placeholder; not assigned by a simulated DHCP service. */
+  serviceIpAddress: string;
+  ponStandard: PonStandard | null;
+  downstreamLineRateGbps: number | null;
+  upstreamLineRateGbps: number | null;
+  /** Topology-derived equal-share PON rate estimate, not an Internet speed test. */
+  estimatedDownMbps: number | null;
+  estimatedUpMbps: number | null;
 }
 
 export interface EdgeTelemetry {
@@ -333,6 +474,10 @@ export interface EdgeTelemetry {
 
 export interface NetworkSummary {
   ontCount: number;
+  gatewayCount: number;
+  /** ONTs plus Wi-Fi gateways represented as subscriber endpoints. */
+  subscriberCount: number;
+  /** Statuses and power statistics include both endpoint types. */
   byStatus: Record<OntStatus, number>;
   totalFiberKm: number;
   totalSplices: number;
@@ -341,17 +486,18 @@ export interface NetworkSummary {
   splitterTotal: number;
   oltCount: number;
   oltActive: number;
-  /** Mean received power across all ONTs that have signal. */
+  /** Mean received power across all subscriber endpoints that have signal. */
   meanRxDbm: number | null;
   worstRxDbm: number | null;
-  /** True when every ONT on the canvas sits inside the optimal window. */
+  /** True when every subscriber endpoint sits inside the optimal window. */
   allOptimal: boolean;
   hasFault: boolean;
 }
 
 export interface SimulationResult {
   ontTelemetry: Record<string, OntTelemetry>;
-  /** Best path per ONT id. */
+  gatewayTelemetry: Record<string, GatewayTelemetry>;
+  /** Best path per ONT or gateway id. */
   bestPaths: Record<string, OpticalPath>;
   edgeTelemetry: Record<string, EdgeTelemetry>;
   summary: NetworkSummary;
@@ -382,7 +528,7 @@ export const DEFAULT_SETTINGS: DesignSettings = {
 
 export interface TopologyExport {
   format: 'ftth-studio/topology';
-  version: 1;
+  version: 2;
   exportedAt: string;
   settings: DesignSettings;
   nodes: PonNode[];
@@ -390,6 +536,14 @@ export interface TopologyExport {
   simulation: {
     summary: NetworkSummary;
     ontTelemetry: Record<string, OntTelemetry>;
+    gatewayTelemetry: Record<string, GatewayTelemetry>;
+  };
+  commercial: {
+    currency: 'USD';
+    unitCosts: UnitCostProfile;
+    breakdown: NetworkCostBreakdown;
+    connectedSubscriberCount: number;
+    costPerConnectedSubscriber: number;
   };
 }
 

@@ -1,5 +1,5 @@
 import { MarkerType } from '@xyflow/react';
-import type { EdgeTelemetry, FiberEdgeData, PonEdge } from '../types';
+import type { EdgeTelemetry, FiberEdgeData, PonEdge, PonNode } from '../types';
 
 /* ========================================================================== *
  * Edge presentation — turns simulator telemetry into React Flow edge props.
@@ -9,21 +9,31 @@ import type { EdgeTelemetry, FiberEdgeData, PonEdge } from '../types';
 
 /** Stroke colour per optical edge state — shared by the edge renderer. */
 export const EDGE_STROKE: Record<EdgeTelemetry['edgeState'], string> = {
-  live: '#22d383',
-  degraded: '#f0544f',
-  idle: '#4b5568',
+  live: '#0F8A5F',
+  degraded: '#C23B3B',
+  idle: '#85695A',
 };
 
 /** Applies the simulator's edge telemetry onto React Flow edges. */
 export function decorateEdges(
   edges: PonEdge[],
   telemetry: Record<string, EdgeTelemetry>,
+  nodes: PonNode[] = [],
 ): PonEdge[] {
+  const nodeById = new Map(nodes.map((node) => [node.id, node]));
   return edges.map((edge) => {
     const reading: EdgeTelemetry = telemetry[edge.id] ?? { powerDbm: null, edgeState: 'idle' };
+    const sourceNode = nodeById.get(edge.source);
+    const faultLabels = sourceNode?.type === 'fiber'
+      ? [
+          sourceNode.data.macroBendActive ? 'Macro-bend loss on this span' : null,
+          sourceNode.data.dirtyConnectorActive ? 'Dust contamination loss on this span' : null,
+        ].filter((label): label is string => label !== null)
+      : [];
     const data: FiberEdgeData = {
       powerDbm: reading.powerDbm,
       edgeState: reading.edgeState,
+      faultLabels,
     };
     return {
       ...edge,

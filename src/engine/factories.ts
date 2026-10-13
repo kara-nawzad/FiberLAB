@@ -1,6 +1,10 @@
 import type {
   CableType,
+  ClosureNodeData,
   FiberNodeData,
+  GatewayNodeData,
+  NapNodeData,
+  OdfNodeData,
   OltClass,
   OltNodeData,
   OntNodeData,
@@ -9,7 +13,15 @@ import type {
   SplitterNodeData,
   Wavelength,
 } from '../types';
-import { CABLE_SPECS, OLT_CLASS_SPECS } from '../types';
+import {
+  CABLE_SPECS,
+  CLOSURE_OUTPUT_PORTS,
+  DEFAULT_CLOSURE_SPLICE_LOSS_DB,
+  DEFAULT_ODF_THROUGH_PORT_LOSS_DB,
+  NAP_SPLIT_LOSS_DB,
+  OLT_CLASS_SPECS,
+  SPLICE_TRAY_CHANNEL_COUNT,
+} from '../types';
 
 /* ========================================================================== *
  * Node factories — single source of truth for defaults, used by the toolbox,
@@ -33,10 +45,16 @@ export interface NodePlacement {
 }
 
 export const NODE_SIZES: Record<string, { width: number; height: number }> = {
-  olt: { width: 236, height: 132 },
-  splitter: { width: 224, height: 128 },
-  fiber: { width: 244, height: 132 },
-  ont: { width: 252, height: 138 },
+  // The 16 px height allowance accounts for the new 40 px hardware thumbnails
+  // in the shared node header (the previous icon block was 24 px tall).
+  olt: { width: 236, height: 148 },
+  splitter: { width: 224, height: 144 },
+  fiber: { width: 244, height: 148 },
+  closure: { width: 248, height: 166 },
+  ont: { width: 252, height: 154 },
+  odf: { width: 236, height: 148 },
+  nap: { width: 248, height: 166 },
+  gateway: { width: 252, height: 178 },
 };
 
 let ontSequence = 0;
@@ -50,6 +68,7 @@ export function createOltNode(placement: NodePlacement = {}): PonNode {
     txPowerDbm: OLT_CLASS_SPECS[oltClass].txPowerDbm,
     laserOn: true,
     wavelength: 1490,
+    ponStandard: 'GPON',
   };
   return {
     id: placement.id ?? nextId('olt'),
@@ -92,6 +111,23 @@ export function createFiberNode(cableType: CableType = 'distribution', placement
   };
 }
 
+export function createClosureNode(placement: NodePlacement = {}): PonNode {
+  const data: ClosureNodeData = {
+    kind: 'closure',
+    spliceLossDb: DEFAULT_CLOSURE_SPLICE_LOSS_DB,
+    activeSpliceChannels: Array.from(
+      { length: SPLICE_TRAY_CHANNEL_COUNT },
+      (_, index) => index < CLOSURE_OUTPUT_PORTS,
+    ),
+  };
+  return {
+    id: placement.id ?? nextId('closure'),
+    type: 'closure',
+    position: placement.position ?? { x: 0, y: 0 },
+    data,
+  };
+}
+
 export function createOntNode(placement: NodePlacement = {}, serial?: string, subscriber?: string): PonNode {
   ontSequence += 1;
   const data: OntNodeData = {
@@ -103,6 +139,58 @@ export function createOntNode(placement: NodePlacement = {}, serial?: string, su
   return {
     id: placement.id ?? nextId('ont'),
     type: 'ont',
+    position: placement.position ?? { x: 0, y: 0 },
+    data,
+  };
+}
+
+export function createOdfNode(placement: NodePlacement = {}): PonNode {
+  const data: OdfNodeData = {
+    kind: 'odf',
+    throughPortLossDb: DEFAULT_ODF_THROUGH_PORT_LOSS_DB,
+  };
+  return {
+    id: placement.id ?? nextId('odf'),
+    type: 'odf',
+    position: placement.position ?? { x: 0, y: 0 },
+    data,
+  };
+}
+
+export function createNapNode(placement: NodePlacement = {}): PonNode {
+  const data: NapNodeData = {
+    kind: 'nap',
+    splitLossDb: NAP_SPLIT_LOSS_DB,
+  };
+  return {
+    id: placement.id ?? nextId('nap'),
+    type: 'nap',
+    position: placement.position ?? { x: 0, y: 0 },
+    data,
+  };
+}
+
+let gatewaySequence = 0;
+
+export function createGatewayNode(
+  placement: NodePlacement = {},
+  serial?: string,
+  subscriber?: string,
+  ssid?: string,
+): PonNode {
+  gatewaySequence += 1;
+  const suffix = String(gatewaySequence).padStart(2, '0');
+  const data: GatewayNodeData = {
+    kind: 'gateway',
+    serial: serial ?? `FLGW${String(100000 + gatewaySequence).padStart(8, '0')}`,
+    subscriber: subscriber ?? `Gateway Home ${gatewaySequence}`,
+    ssid: ssid ?? `FiberLAB-${suffix}`,
+    serviceIpAddress: `192.0.2.${100 + ((gatewaySequence - 1) % 150)}`,
+    sensitivityDbm: -28,
+  };
+  return {
+    id: placement.id ?? nextId('gateway'),
+    type: 'gateway',
     position: placement.position ?? { x: 0, y: 0 },
     data,
   };

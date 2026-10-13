@@ -20,12 +20,18 @@ export interface Preset {
   build: () => { nodes: PonNode[]; edges: PonEdge[] };
 }
 
-const edge = (id: string, source: string, target: string, sourceHandle: string): PonEdge => ({
+const edge = (
+  id: string,
+  source: string,
+  target: string,
+  sourceHandle: string,
+  targetHandle = 'in',
+): PonEdge => ({
   id,
   source,
   target,
   sourceHandle,
-  targetHandle: 'in',
+  targetHandle,
   type: 'optical',
 });
 
@@ -328,6 +334,127 @@ function buildFailingLink(): { nodes: PonNode[]; edges: PonEdge[] } {
   return { nodes, edges };
 }
 
+/* --------------------------------- Preset C -------------------------------- */
+
+function buildModernXgsSuburb(): { nodes: PonNode[]; edges: PonEdge[] } {
+  const nodes: PonNode[] = [
+    {
+      id: 'olt-xgs-suburb',
+      type: 'olt',
+      position: { x: 40, y: 300 },
+      data: {
+        kind: 'olt',
+        portName: 'XGS-PON 0/1/0',
+        oltClass: 'C+',
+        txPowerDbm: 5,
+        laserOn: true,
+        wavelength: 1577,
+        ponStandard: 'XGS-PON',
+      },
+    },
+    {
+      id: 'odf-xgs-suburb',
+      type: 'odf',
+      position: { x: 320, y: 300 },
+      data: { kind: 'odf', throughPortLossDb: 0.5 },
+    },
+    {
+      id: 'fiber-feeder-xgs-suburb',
+      type: 'fiber',
+      position: { x: 600, y: 300 },
+      data: {
+        kind: 'fiber',
+        cableType: 'feeder',
+        lengthKm: 3.5,
+        splices: 0,
+        connectors: 2,
+        wavelength: 1577,
+        attenuationOverrideDbPerKm: null,
+      },
+    },
+    {
+      id: 'closure-xgs-suburb',
+      type: 'closure',
+      position: { x: 890, y: 300 },
+      data: {
+        kind: 'closure',
+        spliceLossDb: 0.08,
+        activeSpliceChannels: Array.from({ length: 12 }, (_, index) => index < 4),
+      },
+    },
+    {
+      id: 'fiber-distribution-xgs-suburb',
+      type: 'fiber',
+      position: { x: 1180, y: 300 },
+      data: {
+        kind: 'fiber',
+        cableType: 'distribution',
+        lengthKm: 1.2,
+        splices: 2,
+        connectors: 2,
+        wavelength: 1577,
+        attenuationOverrideDbPerKm: null,
+      },
+    },
+    {
+      id: 'nap-xgs-suburb',
+      type: 'nap',
+      position: { x: 1470, y: 300 },
+      data: { kind: 'nap', splitLossDb: 10.5 },
+    },
+    ...[0, 1, 2].flatMap((index): PonNode[] => {
+      const suffix = index + 1;
+      const y = 110 + index * 190;
+      return [
+        {
+          id: `fiber-drop-xgs-${suffix}`,
+          type: 'fiber',
+          position: { x: 1760, y },
+          data: {
+            kind: 'fiber',
+            cableType: 'drop',
+            lengthKm: 0.15,
+            splices: 1,
+            connectors: 2,
+            wavelength: 1577,
+            attenuationOverrideDbPerKm: null,
+          },
+        },
+        {
+          id: `gateway-xgs-${suffix}`,
+          type: 'gateway',
+          position: { x: 2070, y: y - 8 },
+          data: {
+            kind: 'gateway',
+            serial: `FLGW0010000${suffix}`,
+            subscriber: `Modern Suburb — Home ${suffix}`,
+            ssid: `FiberLAB-XGS-${String(suffix).padStart(2, '0')}`,
+            serviceIpAddress: `192.0.2.${100 + suffix}`,
+            sensitivityDbm: -28,
+          },
+        },
+      ];
+    }),
+  ];
+
+  const edges: PonEdge[] = [
+    edge('e-xgs-1', 'olt-xgs-suburb', 'odf-xgs-suburb', 'out', 'in-0'),
+    edge('e-xgs-2', 'odf-xgs-suburb', 'fiber-feeder-xgs-suburb', 'out-0'),
+    edge('e-xgs-3', 'fiber-feeder-xgs-suburb', 'closure-xgs-suburb', 'out', 'in-0'),
+    edge('e-xgs-4', 'closure-xgs-suburb', 'fiber-distribution-xgs-suburb', 'out-0'),
+    edge('e-xgs-5', 'fiber-distribution-xgs-suburb', 'nap-xgs-suburb', 'out'),
+    ...[0, 1, 2].flatMap((index): PonEdge[] => {
+      const suffix = index + 1;
+      return [
+        edge(`e-xgs-${6 + index * 2}`, 'nap-xgs-suburb', `fiber-drop-xgs-${suffix}`, `out-${index}`),
+        edge(`e-xgs-${7 + index * 2}`, `fiber-drop-xgs-${suffix}`, `gateway-xgs-${suffix}`, 'out'),
+      ];
+    }),
+  ];
+
+  return { nodes, edges };
+}
+
 export const PRESETS: Preset[] = [
   {
     id: 'standard-1x32',
@@ -340,6 +467,12 @@ export const PRESETS: Preset[] = [
     name: 'Failing Long-Distance Link',
     description: 'A 1:512 cascade over ~30 km — subscribers land in LOS / offline',
     build: buildFailingLink,
+  },
+  {
+    id: 'modern-10g-xgs-pon-suburb',
+    name: 'MODERN 10G XGS-PON SUBURB',
+    description: 'XGS-PON OLT → ODF → 3.5 km feeder → dome closure → 1.2 km distribution → 1:8 NAP → three 150 m drops and Wi-Fi 6 gateways',
+    build: buildModernXgsSuburb,
   },
 ];
 
