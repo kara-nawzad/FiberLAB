@@ -1,0 +1,99 @@
+FiberLAB UI experience
+
+FiberLAB has two main views: an Overview & Physics landing page and an interactive network studio. The app opens on the overview. Moving between the two does not reload the studio, so changes you’ve made to the network remain when you return.
+1. Overview & Physics landing page
+Navigation
+
+The top bar contains the FiberLAB identity, links to Capabilities and Reference, a Topologies menu for loading either preset, and Launch Studio. On smaller screens, the navigation links collapse to leave more room for the page.
+Hero and live waveguide
+
+The main heading introduces the lab, alongside an interactive diagram of a fiber and a 1:4 PLC splitter.
+
+    Optical Launch Power is adjustable from +1 to +7 dBm. The display calls out the Class C+ reference range of +3 to +7 dBm and notes when the slider is below it.
+    Wavelength buttons select 1310, 1490, or 1550 nm. Each has a color and a reference attenuation value: 0.35, 0.25, and 0.20 dB/km respectively.
+    The SVG diagram shows the fiber’s coating, cladding, core, ray path, splitter, and four output readouts. The ray angle changes with the selected wavelength.
+    The branch-power equation is Pbranch = Ptx − 7.2 dB. For example, +5.0 dBm launch power gives −2.2 dBm at each illustrated 1:4 branch.
+
+That last value is for the single splitter exhibit, not a complete subscriber route. The angle calculation is an educational Sellmeier-based schematic: it is calibrated to the approximate 82° reference at 1490 nm, but is not a measured fiber profile or a to-scale construction drawing. The 1550 nm option is shown on the landing page; the editable studio graph supports 1310 and 1490 nm.
+
+The hero also has quick-load buttons for the Standard 1:32 GPON Tree and Failing Link, plus Explore Guided Missions.
+Capabilities
+
+Three cards explain what you can do in the studio:
+
+    Deterministic Link Budgets — shows the idea of launch power minus accumulated losses.
+    Field Troubleshooting Missions — introduces the guided scenarios and offers a shortcut to the first one.
+    Instant Bill of Materials — previews plant totals and provides a shortcut to the studio.
+
+GPON reference strip and footer
+
+The reference table lists Class B+ and C+ launch ranges, OLT receive sensitivities, and nominal budgets. It also calls out the model’s ONT overload threshold above −8 dBm and LOS floor below −28 dBm. These figures are informational; actual equipment limits depend on the installed devices and their datasheets.
+
+The footer reiterates that this is a learning model, not a substitute for checking a live design against current standards and equipment specifications.
+2. Interactive network studio
+Top bar
+
+The studio header gives you the main controls:
+
+    Network health reports whether subscribers are optimal, marginal, down, or not yet provisioned. It also shows subscriber counts.
+    Overview & Physics returns to the landing page without discarding your canvas state.
+    Missions opens the guided scenarios.
+    Presets loads one of the two example topologies.
+    Margin edits the global safety margin.
+    Auto controls whether the budget recalculates after edits. With Auto off, use Run test; changed results are marked as stale until recalculated.
+    BOM opens the Bill of Materials.
+    Clear empties the canvas.
+
+Component Toolbox
+
+The left toolbox contains four types of network element:
+
+    OLT transceiver — the optical source; supports B+ and C+ classes.
+    PLC splitter — choose ratios from 1:2 to 1:64, with the catalogue insertion loss displayed.
+    Fiber plant — choose feeder, distribution, or drop spans.
+    ONT/ONU — a subscriber endpoint.
+
+You can drag components onto the canvas, double-click a card to place one, or use the shortcut controls for common splitter ratios and cable types. The toolbox also includes a small reference for wavelength attenuation, splice loss, connector loss, and interface-color cues.
+Network canvas
+
+The center is a graph editor for building and changing the network. It includes a dotted grid, zoom and pan controls, a minimap, and visible connection handles.
+
+A key distinction: fiber spans are nodes, not edges. Fiber nodes hold their own length, splice count, connector count, wavelength, and attenuation settings. The lines between elements represent the connections between those devices.
+
+Nodes have generic SVG equipment illustrations. Optical links show whether light is live, degraded, or idle and label the power at the far end. The default Studio view starts with the Standard 1:32 topology, showing three subscribers with a mix of healthy and marginal readings.
+Inspector and hardware reference
+
+Selecting a node opens the Inspector on the right. The available controls depend on the selected component—for example:
+
+    OLT class, transmit power, wavelength, and laser state.
+    Splitter ratio and excess loss.
+    Fiber type, span length, wavelength, attenuation override, splices, and connectors.
+    ONT subscriber details and its calculated receive status.
+
+The Inspector also includes a Field Hardware Card with a larger representative illustration, ports or construction details, field tips, and datasheet context. These drawings are generic illustrations—not product photographs or exact vendor models. Connector compatibility is not enforced by the graph; in real installations, APC and UPC interfaces should not be mated.
+
+For connected subscribers, the Inspector shows the path’s loss breakdown so you can see how the model reaches its result.
+Bill of Materials
+
+The BOM summarizes the network’s deployed fiber, splices, connectors, splitters, and subscriber budgets. It supports CSV and JSON export. Project import and automatic project saving are not currently provided.
+3. Guided missions
+
+The Missions drawer shows scenario briefs, objectives, live progress, field hints, and a completion recap. You can open it from the studio or from the landing-page CTA.
+
+    The Marginal Villa starts with a marginal subscriber. Bring all three connected ONTs into the ONLINE range, keep the safety margin at 2.0 dB, and keep OLT launch power at or below +5.0 dBm.
+    Diagnose the Silent ONT starts from the failing long-distance preset with an OLT laser switched off. Restore a path to Dukan Ridge — Tower 7 and bring the target ONT online.
+    Rescue the Unpatched Subscriber starts with a subscriber drop that is not connected. Patch the 1:16 splitter’s out-2 handle to the drop, connect the drop to the ONT, then reduce split loss until the subscriber is online.
+
+Mission objectives update against the live graph and simulation. The UI notes that dirty connector and macro-bend penalties are not separate modeled loss terms.
+4. What the budget means—and what it doesn’t
+
+The studio estimates receive power using:
+
+P_rx = P_tx − (fiber loss + splitter loss + splice loss + connector loss + safety margin)
+
+The model uses the configured fiber attenuation, catalogue splitter losses, 0.10 dB per counted fusion splice, 0.50 dB per counted connector, and the global safety margin. Its ONT statuses are OVERLOAD above −8 dBm, ONLINE from −24 to −8 dBm, WARNING from −28 to below −24 dBm, LOS below −28 dBm, or DISCONNECTED when there is no active path.
+
+This is a downstream learning simulator, not a certified network-design tool. It does not calculate a separate ONT-to-OLT upstream budget, model dirty connector or macro-bend penalties as separate terms, or save projects automatically. The landing waveguide is an educational display; the editable graph simulator is the part that calculates network paths.
+5. Responsive and accessible behavior
+
+The layout is designed to reflow from a two-column wide-screen hero to a stacked tablet layout and a single-column mobile layout, with a compact mobile waveguide drawing. Controls use keyboard-operable inputs and buttons, visible focus styling, and reduced-motion handling. These layouts are implemented in the CSS breakpoints; I haven’t visually checked them in a browser at exact 390, 768, and 1440 px widths.
