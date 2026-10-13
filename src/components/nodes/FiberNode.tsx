@@ -3,6 +3,7 @@ import { Cable } from 'lucide-react';
 import type { FiberNode as FiberFlowNode } from '../../types';
 import { CABLE_SPECS } from '../../types';
 import { computeFiberLoss } from '../../engine/opticalSimulator';
+import { getHardwareProfileForNode } from '../../data/componentCatalogue';
 import { Badge, NodeShell, Stat } from './nodeShared';
 
 /**
@@ -12,16 +13,34 @@ import { Badge, NodeShell, Stat } from './nodeShared';
 export function FiberNode({ data, selected }: NodeProps<FiberFlowNode>) {
   const spec = CABLE_SPECS[data.cableType];
   const loss = computeFiberLoss(data);
+  const hardware = getHardwareProfileForNode('fiber', data.cableType);
   const overridden = data.attenuationOverrideDbPerKm !== null;
 
   return (
     <div className="relative w-[244px]">
-      <Handle id="in" type="target" position={Position.Left} className="!top-1/2" style={{ left: -6 }} />
-      <Handle id="out" type="source" position={Position.Right} className="!top-1/2" style={{ right: -6 }} />
+      <Handle
+        id="in"
+        type="target"
+        position={Position.Left}
+        className="!top-1/2"
+        aria-label="SC/APC cable input"
+        title="SC/APC connector cue — verify polish and connector count"
+        style={{ left: -6, borderColor: '#16a34a', background: '#f0fdf4' }}
+      />
+      <Handle
+        id="out"
+        type="source"
+        position={Position.Right}
+        className="!top-1/2"
+        aria-label="SC/APC cable output"
+        title="SC/APC connector cue — verify polish and connector count"
+        style={{ right: -6, borderColor: '#16a34a', background: '#f0fdf4' }}
+      />
       <NodeShell
         eyebrow={spec.short}
         title={`${data.lengthKm.toFixed(3)} km span`}
         icon={<Cable size={14} />}
+        thumbnail={{ src: hardware.thumbnailSvg, alt: `${hardware.modelName} illustration` }}
         accent={spec.accent}
         selected={selected}
         ringClass="border-noc-600"
@@ -31,7 +50,7 @@ export function FiberNode({ data, selected }: NodeProps<FiberFlowNode>) {
               {loss.attenuationDbPerKm.toFixed(2)} dB/km @ {data.wavelength} nm
               {overridden ? ' *' : ''}
             </span>
-            <span className="font-mono text-[10px] font-semibold" style={{ color: spec.accent }}>
+            <span className="font-mono text-[10px] font-semibold text-amber-800">
               −{loss.totalDb.toFixed(2)} dB
             </span>
           </div>

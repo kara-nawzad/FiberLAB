@@ -33,10 +33,12 @@ export interface NodePlacement {
 }
 
 export const NODE_SIZES: Record<string, { width: number; height: number }> = {
-  olt: { width: 236, height: 132 },
-  splitter: { width: 224, height: 128 },
-  fiber: { width: 244, height: 132 },
-  ont: { width: 252, height: 138 },
+  // The 16 px height allowance accounts for the new 40 px hardware thumbnails
+  // in the shared node header (the previous icon block was 24 px tall).
+  olt: { width: 236, height: 148 },
+  splitter: { width: 224, height: 144 },
+  fiber: { width: 244, height: 148 },
+  ont: { width: 252, height: 154 },
 };
 
 let ontSequence = 0;

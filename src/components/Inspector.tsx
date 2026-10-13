@@ -41,6 +41,8 @@ import {
   isOntNode,
   isSplitterNode,
 } from '../engine/opticalSimulator';
+import { getHardwareProfileForNode } from '../data/componentCatalogue';
+import { FieldHardwareCard } from './FieldHardwareCard';
 
 /* ========================================================================== *
  * Properties Inspector — live editing of every physical parameter.
@@ -152,17 +154,43 @@ export function Inspector({
 
   const header = useMemo(() => {
     if (node) {
-      if (isOltNode(node)) return { icon: <Radio size={14} />, title: 'OLT Transceiver', accent: '#38bdf8' };
-      if (isSplitterNode(node)) return { icon: <Split size={14} />, title: 'Optical Splitter', accent: '#a78bfa' };
-      if (isFiberNode(node)) return { icon: <Cable size={14} />, title: 'Fiber Cable Span', accent: '#22d383' };
-      if (isOntNode(node)) return { icon: <Router size={14} />, title: 'ONT / ONU', accent: '#22d383' };
+      if (isOltNode(node)) return { icon: <Radio size={14} />, title: 'OLT Transceiver', accent: '#2563eb' };
+      if (isSplitterNode(node)) return { icon: <Split size={14} />, title: 'Optical Splitter', accent: '#7c3aed' };
+      if (isFiberNode(node)) return { icon: <Cable size={14} />, title: 'Fiber Cable Span', accent: '#a16207' };
+      if (isOntNode(node)) return { icon: <Router size={14} />, title: 'ONT / ONU', accent: '#16a34a' };
     }
-    return { icon: <Link2 size={14} />, title: 'Optical Patch Cord', accent: '#5d6c8f' };
+    return { icon: <Link2 size={14} />, title: 'Optical Patch Cord', accent: '#64748b' };
+  }, [node]);
+
+  const hardwareInfo = useMemo(() => {
+    if (!node) return null;
+    if (isOltNode(node)) {
+      return {
+        profile: getHardwareProfileForNode('olt', node.data.oltClass),
+        configurationLabel: `Class ${node.data.oltClass} · ${node.data.portName}`,
+      };
+    }
+    if (isSplitterNode(node)) {
+      return {
+        profile: getHardwareProfileForNode('splitter', String(node.data.ratio)),
+        configurationLabel: `Current split ratio · 1:${node.data.ratio}`,
+      };
+    }
+    if (isFiberNode(node)) {
+      return {
+        profile: getHardwareProfileForNode('fiber', node.data.cableType),
+        configurationLabel: `${CABLE_SPECS[node.data.cableType].label} · ${node.data.lengthKm.toFixed(3)} km`,
+      };
+    }
+    return {
+      profile: getHardwareProfileForNode('ont', 'indoor'),
+      configurationLabel: `Subscriber · ${node.data.subscriber}`,
+    };
   }, [node]);
 
   return (
-    <aside className="flex h-full w-[300px] shrink-0 flex-col border-l border-noc-700/70 bg-noc-900/70">
-      <div className="panel-header">
+    <aside className="fiberlab-inspector flex h-full w-[300px] shrink-0 flex-col border-l border-noc-700/70 bg-noc-900/70">
+      <div className="fiberlab-inspector-header panel-header">
         <div className="flex min-w-0 items-center gap-2">
           <span
             className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md"
@@ -188,7 +216,14 @@ export function Inspector({
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-3 py-3">
+      <div className="fiberlab-inspector-content flex-1 overflow-y-auto px-3 py-3">
+        {hardwareInfo ? (
+          <FieldHardwareCard
+            profile={hardwareInfo.profile}
+            configurationLabel={hardwareInfo.configurationLabel}
+          />
+        ) : null}
+
         {!node && !edge ? (
           <div className="mt-10 px-4 text-center">
             <CircleSlash size={28} className="mx-auto mb-3 text-noc-600" />

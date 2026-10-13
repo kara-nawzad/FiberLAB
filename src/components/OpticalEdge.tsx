@@ -49,13 +49,14 @@ export function OpticalEdge({
       />
       <EdgeLabelRenderer>
         <div
-          className="pointer-events-none absolute rounded border border-noc-700/80 bg-noc-950/90 px-1 py-[1px] font-mono text-[9px] text-noc-300"
+          className="pointer-events-none absolute inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-1.5 py-0.5 font-mono text-[9px] font-semibold text-slate-700 shadow-sm"
           style={{
             transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
             opacity: powerDbm === null ? 0.55 : 1,
             borderColor: powerDbm === null ? undefined : `${EDGE_STROKE[state]}66`,
           }}
         >
+          <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: EDGE_STROKE[state] }} />
           {powerDbm === null ? 'idle' : `${powerDbm >= 0 ? '+' : ''}${powerDbm.toFixed(1)} dBm`}
         </div>
       </EdgeLabelRenderer>

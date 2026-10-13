@@ -1,11 +1,13 @@
-# FTTH-Studio
+# FiberLAB
 
-A "Tinkercad for Fiber Optics" — visually design a Passive Optical Network on an
-interactive canvas, wire it up with optical patch cords, and watch a real-time,
-ITU-T compliant optical link budget resolve on every edit.
+A warm, hold-to-splice introduction leads into a responsive photonic waveguide and a mounted-in-place FTTH/PON engineering studio. Design a Passive Optical Network on the React Flow canvas, connect or unlink nodes, and inspect simulator-backed optical link budgets. The calculations use simplified GPON learning assumptions; this is not a certified design tool.
 
 Built with React 18 + Vite + TypeScript, `@xyflow/react` v12 for the graph canvas,
-Tailwind CSS for styling and `lucide-react` for iconography.
+Tailwind CSS for styling and `lucide-react` for iconography. The warm visual system uses the Google Font families `Sora`, `Manrope`, and `JetBrains Mono` with local system fallbacks.
+
+For a full explanation of the current features, data model, simulation, limitations,
+and roadmap for field-style learning and licensed component photography, see
+[`PROJECT_GUIDE.md`](./PROJECT_GUIDE.md).
 
 ---
 
@@ -15,7 +17,7 @@ Tailwind CSS for styling and `lucide-react` for iconography.
 npm install
 npm run dev        # http://localhost:5173
 npm run build      # tsc --noEmit && vite build
-npm run test       # 28 tests: physics engine + full-app DOM smoke
+npm run test       # 45 tests: engine, landing physics, hardware catalogue, missions + app smoke
 npm run typecheck  # strict TypeScript, no emit
 ```
 
@@ -59,16 +61,25 @@ the best (highest `P_rx`) one is shown; cycles are traversed once, never looped.
 
 ## Layout
 
-- **Top bar** — brand + live network health pulse, preset topologies, global safety
-  margin, auto-run toggle, `Run Light Test`, `Bill of Materials`, `Clear Canvas`.
+- **Landing overview** — warm fiber-splice hero with a hold-to-open interaction and receive-power readout sourced from the active studio simulation; preserved interactive 1310/1490/1550 nm waveguide, adjustable launch power, capability cards, and GPON reference strips. The ray-angle display is an educational Sellmeier-based schematic, not a measured fiber-profile claim; the studio graph itself supports 1310/1490 nm.
+- **Top bar** — FiberLAB wordmark + live network health, `Overview & Physics`, `Link nodes`, `Delete`, presets, missions, safety margin, Auto, `Run test`, BOM, and `Clear`.
 - **Left toolbox** — draggable OLT / splitter (1:2 … 1:64) / cable (feeder,
   distribution, drop) / ONT. Drag onto the canvas, or double-click to place.
-- **Canvas** — dotted grid, pan/zoom, minimap, custom nodes, animated optical edges.
-- **Right inspector** — edit any physical parameter of the selected element or patch
-  cord: Tx power, laser state, wavelength, span length, attenuation coefficient,
-  splice/connector counts, split ratio, subscriber identity.
+- **Canvas** — dotted grid, pan/zoom, minimap, custom nodes with compact hardware
+  thumbnails, softly glowing animated optical edges, handle-drag connections, and a two-node `Link nodes` mode that also removes an existing patch cord when the same pair is selected.
+- **Right inspector** — Field Hardware Card for selected nodes (representative SVG
+  equipment diagrams, ports/construction, and field tips), plus controls for physical
+  parameters: Tx power, laser state, wavelength, span length, attenuation coefficient,
+  splice/connector counts, split ratio, subscriber identity. The SVGs are generic
+  illustrations, not product photos or exact vendor models.
 - **BOM modal** — deployed fibre, splices, connectors, splitters by ratio, online vs
   offline counts, a per-subscriber optical budget table, and JSON / CSV export.
+- **Mission drawer** — three scenarios: “The Marginal Villa,” “Diagnose the Silent ONT,” and “Rescue the Unpatched Subscriber,” each with live objectives, hints, and completion recap.
+
+The hardware catalogue and SVGs are static, representative illustrations—not genuine
+product photographs or exact-vendor datasheets. The canvas uses light surfaces, with
+yellow cable, green SC/APC, and blue SC/UPC visual cues. Connector polish is not a
+modeled graph property; verify real interfaces and never mate APC to UPC.
 
 ### Presets
 
@@ -86,19 +97,26 @@ the best (highest `P_rx`) one is shown; cycles are traversed once, never looped.
 
 ```
 src/
-├── types.ts                       Domain model, loss catalogues, thresholds, telemetry types
+├── data/
+│   ├── componentCatalogue.ts      Hardware profiles, field tips, and SVG illustration data
+│   └── __tests__/componentCatalogue.test.ts
+├── types.ts                       Simulation model, loss catalogues, thresholds, telemetry types
 ├── engine/
 │   ├── opticalSimulator.ts        Graph traversal + loss maths + status classification
 │   ├── edgeDecoration.ts          Simulator telemetry → React Flow edge props
 │   ├── factories.ts               Node factories and default physical parameters
 │   ├── presets.ts                 The two reference topologies
+│   ├── missions.ts                Three guided scenarios, objective validators, progress
 │   ├── SimulationContext.ts       Telemetry broadcast to custom nodes
-│   └── __tests__/opticalSimulator.test.ts
+│   ├── __tests__/opticalSimulator.test.ts
+│   └── __tests__/missions.test.ts
 ├── components/
-│   ├── TopBar.tsx  Sidebar.tsx  Inspector.tsx  BOMModal.tsx  OpticalEdge.tsx
-│   └── nodes/  OLTNode · SplitterNode · FiberNode · ONTNode · nodeShared
-├── App.tsx                        Canvas, drag & drop, selection, simulation wiring
-└── __tests__/app.test.tsx         jsdom smoke tests over the mounted application
+│   ├── TopBar.tsx  Sidebar.tsx  Inspector.tsx  FieldHardwareCard.tsx
+│   ├── MissionDrawer.tsx  BOMModal.tsx  OpticalEdge.tsx
+│   ├── nodes/  OLTNode · SplitterNode · FiberNode · ONTNode · nodeShared
+│   └── landing/                   Editorial landing, responsive SVG exhibit, reference model
+├── App.tsx                        Persistent landing/studio shell, graph, commands, simulation
+└── __tests__/app.test.tsx         jsdom tests for landing navigation and the application
 ```
 
 `opticalSimulator.ts` deliberately has no runtime dependency on React or React Flow,

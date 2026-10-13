@@ -9,9 +9,9 @@ import type { EdgeTelemetry, FiberEdgeData, PonEdge } from '../types';
 
 /** Stroke colour per optical edge state — shared by the edge renderer. */
 export const EDGE_STROKE: Record<EdgeTelemetry['edgeState'], string> = {
-  live: '#22d383',
-  degraded: '#f0544f',
-  idle: '#4b5568',
+  live: '#0F8A5F',
+  degraded: '#C23B3B',
+  idle: '#85695A',
 };
 
 /** Applies the simulator's edge telemetry onto React Flow edges. */

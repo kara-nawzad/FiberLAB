@@ -5,7 +5,7 @@ export default defineWorkspace([
     test: {
       name: 'engine',
       environment: 'node',
-      include: ['src/engine/**/*.test.ts'],
+      include: ['src/engine/**/*.test.ts', 'src/data/**/*.test.ts', 'src/components/landing/**/*.test.ts'],
     },
   },
   {

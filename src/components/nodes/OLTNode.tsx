@@ -2,6 +2,7 @@ import { Handle, Position, type NodeProps } from '@xyflow/react';
 import { Power, PowerOff, Radio } from 'lucide-react';
 import type { OltNode as OltFlowNode } from '../../types';
 import { OLT_CLASS_SPECS } from '../../types';
+import { getHardwareProfileForNode } from '../../data/componentCatalogue';
 import { Badge, NodeShell, Stat } from './nodeShared';
 
 /**
@@ -10,7 +11,8 @@ import { Badge, NodeShell, Stat } from './nodeShared';
  */
 export function OLTNode({ data, selected }: NodeProps<OltFlowNode>) {
   const spec = OLT_CLASS_SPECS[data.oltClass];
-  const accent = data.laserOn ? '#38bdf8' : '#5d6c8f';
+  const hardware = getHardwareProfileForNode('olt', data.oltClass);
+  const accent = data.laserOn ? '#2563eb' : '#64748b';
 
   return (
     <div className="relative w-[236px]">
@@ -19,15 +21,18 @@ export function OLTNode({ data, selected }: NodeProps<OltFlowNode>) {
         type="source"
         position={Position.Right}
         className="!top-1/2"
-        style={{ right: -6 }}
+        aria-label="SC/UPC optical output"
+        title="SC/UPC port cue — confirm the installed optic"
+        style={{ right: -6, borderColor: '#2563eb', background: '#eff6ff' }}
       />
       <NodeShell
         eyebrow="Headend"
         title={data.portName}
         icon={<Radio size={14} />}
+        thumbnail={{ src: hardware.thumbnailSvg, alt: `${hardware.modelName} illustration` }}
         accent={accent}
         selected={selected}
-        ringClass={data.laserOn ? 'border-sky-500/50' : 'border-noc-600'}
+        ringClass={data.laserOn ? 'border-blue-300' : 'border-slate-300'}
         footer={
           <div className="flex items-center justify-between">
             <span
@@ -43,8 +48,9 @@ export function OLTNode({ data, selected }: NodeProps<OltFlowNode>) {
         }
       >
         <div className="mb-2 flex items-center gap-1.5">
-          <Badge className="border-sky-500/40 bg-sky-500/15 text-sky-200">Class {data.oltClass}</Badge>
-          <span className="truncate text-[10px] text-noc-400">budget {spec.linkBudgetDb.toFixed(0)} dB</span>
+          <Badge className="border-blue-200 bg-blue-50 text-blue-800">Class {data.oltClass}</Badge>
+          <Badge className="border-blue-200 bg-blue-50 text-blue-800">SC/UPC</Badge>
+          <span className="truncate text-[10px] text-noc-400">{spec.linkBudgetDb.toFixed(0)} dB budget</span>
         </div>
         <div className="grid grid-cols-2 gap-1.5">
           <Stat

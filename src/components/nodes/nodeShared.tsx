@@ -8,6 +8,10 @@ interface NodeShellProps {
   eyebrow: string;
   title: string;
   icon: ReactNode;
+  thumbnail?: {
+    src: string;
+    alt: string;
+  };
   accent: string;
   ringClass?: string;
   selected?: boolean;
@@ -19,6 +23,7 @@ export function NodeShell({
   eyebrow,
   title,
   icon,
+  thumbnail,
   accent,
   ringClass = 'border-noc-600',
   selected = false,
@@ -36,10 +41,19 @@ export function NodeShell({
         style={{ background: `linear-gradient(90deg, ${accent}1f, transparent 70%)` }}
       >
         <span
-          className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md"
-          style={{ background: `${accent}26`, color: accent }}
+          className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200"
+          style={{ background: thumbnail ? '#f8fafc' : `${accent}26`, color: accent }}
         >
-          {icon}
+          {thumbnail ? (
+            <img
+              src={thumbnail.src}
+              alt={thumbnail.alt}
+              draggable={false}
+              className="h-full w-full object-contain"
+            />
+          ) : (
+            icon
+          )}
         </span>
         <div className="min-w-0 flex-1">
           <div className="text-[9px] font-semibold uppercase tracking-[0.16em] text-noc-400">{eyebrow}</div>
