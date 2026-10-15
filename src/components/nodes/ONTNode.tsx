@@ -1,124 +1,35 @@
 import { Handle, Position, type NodeProps } from '@xyflow/react';
-import { Router, WifiOff } from 'lucide-react';
 import type { OntNode as OntFlowNode, OntStatus } from '../../types';
 import { STATUS_STYLES } from '../../types';
-import { describeStatus } from '../../engine/opticalSimulator';
 import { useSimulation } from '../../engine/SimulationContext';
-import { getHardwareProfileForNode } from '../../data/componentCatalogue';
-import { Badge, Led, NodeShell, Stat } from './nodeShared';
+import { HardwareArt } from '../hardware/HardwareArt';
 
-/* Meter scale: -35 dBm (left) .. -5 dBm (right) */
-const METER_MIN = -35;
-const METER_MAX = -5;
-const METER_SPAN = METER_MAX - METER_MIN;
-
-const toPercent = (value: number): number =>
-  Math.max(0, Math.min(100, ((value - METER_MIN) / METER_SPAN) * 100));
-
-const ZONES: Array<{ from: number; to: number; color: string }> = [
-  { from: -35, to: -28, color: 'rgba(220,38,38,0.16)' },
-  { from: -28, to: -24, color: 'rgba(161,98,7,0.16)' },
-  { from: -24, to: -8, color: 'rgba(22,163,74,0.15)' },
-  { from: -8, to: -5, color: 'rgba(124,58,237,0.15)' },
-];
-
-/**
- * ONT / ONU subscriber endpoint — reads live received power from the
- * simulation context and classifies it against the GPON receive window.
- */
+/** ONU / ONT — white desktop terminal with a name / status / dBm label card (design-image style). */
 export function ONTNode({ id, data, selected }: NodeProps<OntFlowNode>) {
   const simulation = useSimulation();
   const telemetry = simulation?.ontTelemetry[id];
-  const hardware = getHardwareProfileForNode('ont', 'indoor');
   const status: OntStatus = telemetry?.status ?? 'DISCONNECTED';
   const style = STATUS_STYLES[status];
   const rx = telemetry?.rxPowerDbm ?? null;
+  const tone = status === 'ONLINE' ? '' : status === 'WARNING' || status === 'OVERLOAD' ? 'warn' : status === 'LOS' ? 'bad' : '';
 
   return (
-    <div className="relative w-[252px]">
+    <div className="hw-onu" style={selected ? { outline: '2px solid var(--pu-pri)', outlineOffset: 4, borderRadius: 12 } : undefined}>
+      <HardwareArt kind="onu" width={100} />
+      <div className={`tag ${tone}`}>
+        <b>{data.subscriber}</b>
+        <em style={{ color: style.hex }}>● {style.label}</em>
+        <div style={{ color: 'var(--pu-mut)' }}>{rx === null ? '—' : `${rx >= 0 ? '+' : ''}${rx.toFixed(1)} dBm`}</div>
+      </div>
+
       <Handle
         id="in"
         type="target"
         position={Position.Left}
-        className="!top-1/2"
         aria-label="SC/APC ONT optical input"
-        title="SC/APC input cue — confirm the installed ONT connector"
-        style={{ left: -6, borderColor: '#16a34a', background: '#f0fdf4' }}
+        title="SC/APC optical input receptacle — drop patch cord here"
+        style={{ left: -6, top: 32, borderColor: '#0D9F6E', background: '#34D399' }}
       />
-      <NodeShell
-        eyebrow="Subscriber"
-        title={data.subscriber}
-        icon={rx === null ? <WifiOff size={14} /> : <Router size={14} />}
-        thumbnail={{ src: hardware.thumbnailSvg, alt: `${hardware.modelName} illustration` }}
-        accent={style.hex}
-        selected={selected}
-        ringClass={style.ring}
-        footer={
-          <div className="flex items-center justify-between">
-            <span className="truncate font-mono text-[10px] text-noc-400">{data.serial}</span>
-            <span className="font-mono text-[10px] text-noc-400">
-              {telemetry ? `${telemetry.fiberKm.toFixed(2)} km · 1:${telemetry.cumulativeSplitRatio}` : '—'}
-            </span>
-          </div>
-        }
-      >
-        <div className="mb-2 flex items-center gap-2">
-          <Led color={style.hex} pulse={status === 'ONLINE' || status === 'LOS'} size={10} />
-          <Badge className={style.badge}>{style.label}</Badge>
-          <span className="ml-auto font-mono text-[16px] font-bold leading-none" style={{ color: style.hex }}>
-            {rx === null ? '—' : `${rx >= 0 ? '+' : ''}${rx.toFixed(2)}`}
-          </span>
-          <span className="font-mono text-[10px] text-noc-400">dBm</span>
-        </div>
-
-        <div
-          className="relative h-2 w-full overflow-hidden rounded-full border border-noc-700/70"
-          title={`Receive window ${METER_MIN} … ${METER_MAX} dBm`}
-        >
-          {ZONES.map((zone) => (
-            <span
-              key={`${zone.from}-${zone.to}`}
-              className="absolute inset-y-0"
-              style={{
-                left: `${toPercent(zone.from)}%`,
-                width: `${toPercent(zone.to) - toPercent(zone.from)}%`,
-                background: zone.color,
-              }}
-            />
-          ))}
-          {rx !== null ? (
-            <span
-              className="absolute inset-y-0 w-[3px] rounded-full bg-slate-900 shadow-[0_0_0_1px_rgba(255,255,255,0.9)]"
-              style={{ left: `calc(${toPercent(rx)}% - 1.5px)` }}
-            />
-          ) : null}
-        </div>
-        <div className="mt-1 flex justify-between font-mono text-[9px] text-noc-500">
-          <span>{METER_MIN}</span>
-          <span>−28</span>
-          <span>−24</span>
-          <span>−8</span>
-          <span>{METER_MAX}</span>
-        </div>
-
-        <div className="mt-2 grid grid-cols-2 gap-1.5">
-          <Stat
-            label="Link Margin"
-            value={rx === null ? '—' : `${telemetry?.marginDb.toFixed(2)} dB`}
-            tone={
-              rx === null
-                ? 'text-noc-400'
-                : (telemetry?.marginDb ?? 0) > 4
-                  ? 'text-emerald-300'
-                  : (telemetry?.marginDb ?? 0) > 0
-                    ? 'text-amber-300'
-                    : 'text-red-300'
-            }
-          />
-          <Stat label="Path Loss" value={rx === null ? '—' : `${telemetry?.totalLossDb.toFixed(2)} dB`} />
-        </div>
-        <div className="mt-1.5 text-[10px] leading-tight text-noc-400">{describeStatus(status)}</div>
-      </NodeShell>
     </div>
   );
 }

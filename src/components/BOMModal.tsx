@@ -520,6 +520,7 @@ export function BOMModal({
                     <th className="px-2 py-2 text-right font-medium">Rx dBm</th>
                     <th className="px-2 py-2 text-right font-medium">Loss dB</th>
                     <th className="px-2 py-2 text-right font-medium">Margin</th>
+                    <th className="px-2 py-2 text-right font-medium">Upstream Δ</th>
                     <th className="px-2 py-2 text-right font-medium">Fiber km</th>
                     <th className="px-2 py-2 text-right font-medium">Split</th>
                     <th className="px-2 py-2 text-right font-medium">SPL</th>
@@ -530,7 +531,7 @@ export function BOMModal({
                 <tbody>
                   {subscriberRows.length === 0 ? (
                     <tr>
-                      <td className="px-2 py-3 text-noc-500" colSpan={10}>
+                      <td className="px-2 py-3 text-noc-500" colSpan={11}>
                         No subscriber endpoints on the canvas yet — drag an ONT or gateway in from the toolbox.
                       </td>
                     </tr>
@@ -576,6 +577,15 @@ export function BOMModal({
                           </td>
                           <td className="px-2 py-1.5 text-right">
                             {telemetry.rxPowerDbm === null ? '—' : `${telemetry.marginDb.toFixed(2)}`}
+                          </td>
+                          <td
+                            className={`px-2 py-1.5 text-right ${
+                              telemetry.upstreamDeltaDb !== null && telemetry.upstreamDeltaDb > 15
+                                ? 'font-semibold text-amber-400'
+                                : ''
+                            }`}
+                          >
+                            {telemetry.upstreamDeltaDb === null ? '—' : `${telemetry.upstreamDeltaDb.toFixed(2)} dB`}
                           </td>
                           <td className="px-2 py-1.5 text-right">{telemetry.fiberKm.toFixed(2)}</td>
                           <td className="px-2 py-1.5 text-right">

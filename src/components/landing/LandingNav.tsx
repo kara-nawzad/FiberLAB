@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Activity, ArrowRight, ChevronDown } from 'lucide-react';
+import { ArrowRight, ChevronDown } from 'lucide-react';
 import { PRESETS } from '../../engine/presets';
 
 interface LandingNavProps {
@@ -13,7 +13,6 @@ export function LandingNav({ onLaunchStudio, onLoadPreset }: LandingNavProps) {
   return (
     <nav className="landing-nav" aria-label="FiberLAB overview navigation">
       <a id="landing-overview-link" className="landing-brand" href="#top" aria-label="FiberLAB overview">
-        <span className="landing-brand-mark"><Activity size={18} aria-hidden="true" /></span>
         <span className="landing-brand-wordmark"><strong>Fiber</strong><b>LAB</b><small>OPTICAL ENGINEERING</small></span>
       </a>
 

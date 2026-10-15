@@ -4,6 +4,7 @@ import {
   computeClosureSpliceLoss,
   computeFiberLoss,
   computeSplitterLoss,
+  simulatePON,
   simulateTopology,
 } from '../opticalSimulator';
 import { decorateEdges } from '../edgeDecoration';
@@ -466,5 +467,46 @@ describe('graph behaviour', () => {
     expect(trunk?.data?.edgeState).toBe('live');
     expect(drop?.data?.edgeState).toBe('degraded');
     expect(decorated.every((edge) => edge.markerEnd !== undefined)).toBe(true);
+  });
+
+  it('calculates the 15.0 dB upstream burst-mode dynamic range differential across active ONTs', () => {
+    const { nodes, edges } = buildPreset('standard-1x32') as {
+      nodes: PonNode[];
+      edges: PonEdge[];
+    };
+    const baseline = simulatePON(nodes, edges, settings, 8);
+    // In standard-1x32: ont-a1 = -21.57 dBm, ont-a2 = -22.00 dBm, ont-a3 = -24.30 dBm -> delta = 2.73 dB <= 15 dB
+    expect(baseline.upstreamDeltaDb).toBeCloseTo(2.73, 2);
+    expect(baseline.upstreamDynamicRangeWarning).toBe(false);
+    expect(baseline.oltTelemetry['olt-a'].upstreamDeltaDb).toBeCloseTo(2.73, 2);
+    expect(baseline.oltTelemetry['olt-a'].upstreamDynamicRangeWarning).toBe(false);
+    expect(baseline.ontTelemetry['ont-a1'].upstreamDeltaDb).toBeCloseTo(0, 2);
+    expect(baseline.ontTelemetry['ont-a2'].upstreamDeltaDb).toBeCloseTo(0.43, 2);
+    expect(baseline.ontTelemetry['ont-a3'].upstreamDeltaDb).toBeCloseTo(2.73, 2);
+
+    // Create a >15.0 dB differential by extending drop-a3 so ont-a3 is 16.2 dB weaker than ont-a1
+    const imbalancedNodes = nodes.map((node) =>
+      node.type === 'fiber' && node.id === 'fiber-drop-a3'
+        ? {
+            ...node,
+            data: {
+              ...node.data,
+              lengthKm: 60,
+              splices: 0,
+              connectors: 4,
+              macroBendActive: true,
+              attenuationOverrideDbPerKm: 0.1979167,
+            },
+          }
+        : node,
+    ) as PonNode[];
+
+    const imbalanced = simulatePON(imbalancedNodes, edges, settings, 9);
+    expect(imbalanced.upstreamDeltaDb).toBeCloseTo(16.2, 1);
+    expect(imbalanced.upstreamDynamicRangeWarning).toBe(true);
+    expect(imbalanced.summary.upstreamDynamicRangeWarning).toBe(true);
+    expect(imbalanced.oltTelemetry['olt-a'].upstreamDynamicRangeWarning).toBe(true);
+    expect(imbalanced.ontTelemetry['ont-a1'].upstreamDeltaDb).toBeCloseTo(0, 2);
+    expect(imbalanced.ontTelemetry['ont-a3'].upstreamDeltaDb).toBeCloseTo(16.2, 1);
   });
 });

@@ -45,9 +45,8 @@ import {
   NODE_SIZES,
   nextId,
 } from './engine/factories';
-import { buildPreset } from './engine/presets';
+import { buildPreset, PRESETS } from './engine/presets';
 import {
-  formatDbm,
   isClosureNode,
   isFiberNode,
   isNapNode,
@@ -68,6 +67,8 @@ import { Sidebar, DND_MIME, type ToolboxPayload } from './components/Sidebar';
 import { Inspector } from './components/Inspector';
 import { BOMModal } from './components/BOMModal';
 import { TopBar } from './components/TopBar';
+import { CanvasToolbar } from './components/CanvasToolbar';
+import { BottomPanel } from './components/BottomPanel';
 import { MissionDrawer } from './components/MissionDrawer';
 import { LandingView } from './components/landing/LandingView';
 import { getMissionById, type Mission } from './engine/missions';
@@ -91,17 +92,18 @@ interface StudioWorkspaceProps {
   onOpenOverview: () => void;
   onSimulationChange: (simulation: SimulationResult, stale: boolean) => void;
   landingCommand: LandingCommand | null;
+  isActive?: boolean;
 }
 
 const MINIMAP_COLORS: Record<string, string> = {
-  olt: '#2F6BFF',
-  splitter: '#7447B6',
+  olt: '#1E293B',
+  splitter: '#7C3AED',
   fiber: '#FACC15',
-  closure: '#2b3033',
-  ont: '#0F8A5F',
-  odf: '#0f766e',
-  nap: '#c2410c',
-  gateway: '#2563eb',
+  closure: '#334155',
+  ont: '#16A34A',
+  odf: '#0F766E',
+  nap: '#EA580C',
+  gateway: '#2563EB',
 };
 
 function resolveProbeTarget(target: EventTarget | null): OpticalProbeTarget | null {
@@ -145,7 +147,7 @@ function initialTopology(): { nodes: PonNode[]; edges: PonEdge[] } {
  * Studio workspace — canvas, drag & drop, selection and simulation wiring.
  * ========================================================================== */
 
-function StudioWorkspace({ onOpenOverview, onSimulationChange, landingCommand }: StudioWorkspaceProps) {
+function StudioWorkspace({ onOpenOverview, onSimulationChange, landingCommand, isActive = true }: StudioWorkspaceProps) {
   const seeded = useMemo(initialTopology, []);
   const [nodes, setNodes, onNodesChange] = useNodesState<PonNode>(seeded.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState<PonEdge>(seeded.edges);
@@ -172,6 +174,10 @@ function StudioWorkspace({ onOpenOverview, onSimulationChange, landingCommand }:
   const [testing, setTesting] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [committedSim, setCommittedSim] = useState<SimulationResult | null>(null);
+  const [canvasTool, setCanvasTool] = useState<'select' | 'pan'>('select');
+  const [toolsOpen, setToolsOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [inspectorCollapsed, setInspectorCollapsed] = useState(false);
 
   const { screenToFlowPosition, deleteElements, fitView, getNodes, getEdges } = useReactFlow<PonNode, PonEdge>();
 
@@ -182,7 +188,16 @@ function StudioWorkspace({ onOpenOverview, onSimulationChange, landingCommand }:
     [nodes, edges, settings],
   );
 
-  const simulation = settings.autoRun ? liveSimulation : (committedSim ?? liveSimulation);
+  const activeMission = useMemo(
+    () => (activeMissionId ? getMissionById(activeMissionId) ?? null : null),
+    [activeMissionId],
+  );
+  const blindFaultMode = Boolean(activeMission?.blindFaultMode);
+
+  const simulation = useMemo(() => {
+    const base = settings.autoRun ? liveSimulation : (committedSim ?? liveSimulation);
+    return blindFaultMode ? { ...base, blindFaultMode: true } : base;
+  }, [settings.autoRun, liveSimulation, committedSim, blindFaultMode]);
 
   const simulationStale = !settings.autoRun && dirty;
   const costBreakdown = useMemo(
@@ -201,9 +216,37 @@ function StudioWorkspace({ onOpenOverview, onSimulationChange, landingCommand }:
     onSimulationChange(simulation, simulationStale);
   }, [simulation, simulationStale, onSimulationChange]);
 
+  const highlightedEdgeIds = useMemo(() => {
+    const ids = new Set<string>();
+    if (!selectedNodeId) return ids;
+    const bestPath = simulation.bestPaths[selectedNodeId];
+    if (bestPath && bestPath.nodeIds.length > 1) {
+      for (let i = 0; i < bestPath.nodeIds.length - 1; i += 1) {
+        const u = bestPath.nodeIds[i];
+        const v = bestPath.nodeIds[i + 1];
+        for (const edge of edges) {
+          if (edge.source === u && edge.target === v) {
+            ids.add(edge.id);
+          }
+        }
+      }
+      return ids;
+    }
+    for (const edge of edges) {
+      if (edge.source === selectedNodeId || edge.target === selectedNodeId) {
+        ids.add(edge.id);
+      }
+    }
+    return ids;
+  }, [selectedNodeId, simulation.bestPaths, edges]);
+
   const flowEdges = useMemo(
-    () => decorateEdges(edges, simulation.edgeTelemetry, nodes),
-    [edges, nodes, simulation],
+    () =>
+      decorateEdges(edges, simulation.edgeTelemetry, nodes, {
+        hideFaults: blindFaultMode,
+        highlightedEdgeIds,
+      }),
+    [edges, nodes, simulation, blindFaultMode, highlightedEdgeIds],
   );
 
   const runLightTest = useCallback(() => {
@@ -266,13 +309,13 @@ function StudioWorkspace({ onOpenOverview, onSimulationChange, landingCommand }:
     [updateOpmProbeFromEvent],
   );
   const handleOpmClickCapture = useCallback((event: ReactMouseEvent<HTMLElement>) => {
-    if (!opmActive || (event.target instanceof Element && event.target.closest('.opm-meter-hud'))) return;
+    if (!opmActive || (event.target instanceof Element && event.target.closest('.opm-meter-hud, .pu-toolbar'))) return;
     updateOpmProbeFromEvent(event);
     event.preventDefault();
     event.stopPropagation();
   }, [opmActive, updateOpmProbeFromEvent]);
   const handleOpmPointerLeave = useCallback((event: ReactPointerEvent<HTMLElement>) => {
-    if (!opmActive || (event.relatedTarget instanceof Element && event.relatedTarget.closest('.opm-meter-hud'))) return;
+    if (!opmActive || (event.relatedTarget instanceof Element && event.relatedTarget.closest('.opm-meter-hud, .pu-toolbar'))) return;
     opmProbeRef.current = null;
     setOpmProbe(null);
   }, [opmActive]);
@@ -456,8 +499,13 @@ function StudioWorkspace({ onOpenOverview, onSimulationChange, landingCommand }:
   );
 
   const handleSelectionChange = useCallback((params: OnSelectionChangeParams) => {
-    setSelectedNodeId(params.nodes.length === 1 ? params.nodes[0].id : null);
-    setSelectedEdgeId(params.edges.length === 1 ? params.edges[0].id : null);
+    const nextNodeId = params.nodes.length === 1 ? params.nodes[0].id : null;
+    const nextEdgeId = params.edges.length === 1 ? params.edges[0].id : null;
+    setSelectedNodeId(nextNodeId);
+    setSelectedEdgeId(nextEdgeId);
+    if (nextNodeId || nextEdgeId) {
+      setInspectorCollapsed(false);
+    }
     setSelection({
       nodeIds: params.nodes.map((node) => node.id),
       edgeIds: params.edges.map((edge) => edge.id),
@@ -697,7 +745,7 @@ function StudioWorkspace({ onOpenOverview, onSimulationChange, landingCommand }:
       opmProbeRef.current = null;
       setDirty(false);
       window.requestAnimationFrame(() => {
-        void fitView({ padding: 0.16, duration: 450 });
+        void fitView({ padding: 0.08, maxZoom: 1.15, duration: 350 });
       });
     },
     [setNodes, setEdges, fitView],
@@ -730,7 +778,7 @@ function StudioWorkspace({ onOpenOverview, onSimulationChange, landingCommand }:
       setBomOpen(false);
       setOtdrOpen(false);
       window.requestAnimationFrame(() => {
-        void fitView({ padding: 0.16, duration: 450 });
+        void fitView({ padding: 0.08, maxZoom: 1.15, duration: 350 });
       });
     },
     [setNodes, setEdges, fitView],
@@ -808,10 +856,18 @@ function StudioWorkspace({ onOpenOverview, onSimulationChange, landingCommand }:
 
   const handleInit = useCallback(
     (instance: ReactFlowInstance<PonNode, PonEdge>) => {
-      void instance.fitView({ padding: 0.16 });
+      void instance.fitView({ padding: 0.08, maxZoom: 1.15 });
     },
     [],
   );
+
+  useEffect(() => {
+    if (!isActive) return;
+    const timer = window.setTimeout(() => {
+      void fitView({ padding: 0.08, maxZoom: 1.15, duration: 200 });
+    }, 60);
+    return () => window.clearTimeout(timer);
+  }, [isActive, sidebarCollapsed, inspectorCollapsed, fitView]);
 
   /* -------------------------------- Selection ---------------------------- */
 
@@ -827,8 +883,56 @@ function StudioWorkspace({ onOpenOverview, onSimulationChange, landingCommand }:
 
   const summary = simulation.summary;
 
+  const { powerBars, worstLossDb } = useMemo(() => {
+    const oltNodes = nodes.filter(isOltNode);
+    const oltTxDbm = oltNodes.length > 0 ? Math.max(...oltNodes.map((n) => n.data.txPowerDbm)) : 3.0;
+    const splitterOutReadings = edges
+      .filter((e) => {
+        const src = nodes.find((n) => n.id === e.source);
+        return src && (isSplitterNode(src) || isNapNode(src));
+      })
+      .map((e) => simulation.edgeTelemetry[e.id]?.powerDbm ?? null)
+      .filter((v): v is number => v !== null);
+    const splitterDropDbm =
+      splitterOutReadings.length > 0 ? Math.max(...splitterOutReadings) : null;
+
+    const allEndpointTelemetries = [
+      ...Object.values(simulation.ontTelemetry),
+      ...Object.values(simulation.gatewayTelemetry),
+    ];
+    const subscriberReadings = allEndpointTelemetries
+      .map((t) => t.rxPowerDbm)
+      .filter((v): v is number => v !== null);
+    const activeLosses = allEndpointTelemetries
+      .filter((t) => t.rxPowerDbm !== null)
+      .map((t) => t.totalLossDb);
+
+    const bestRxDbm =
+      subscriberReadings.length > 0 ? Math.max(...subscriberReadings) : null;
+    const worstRxDbm = summary.worstRxDbm;
+    const maxLoss = activeLosses.length > 0 ? Math.max(...activeLosses) : null;
+
+    return {
+      worstLossDb: maxLoss,
+      powerBars: [
+        { label: 'OLT Launch', valueDbm: oltTxDbm, color: '#2563EB' },
+        { label: 'After Splitter', valueDbm: splitterDropDbm, color: '#7C3AED' },
+        { label: 'Closest ONT', valueDbm: bestRxDbm, color: '#16A34A' },
+        {
+          label: 'Farthest ONT',
+          valueDbm: worstRxDbm,
+          color: worstRxDbm !== null && worstRxDbm < -28 ? '#DC2626' : '#059669',
+        },
+      ],
+    };
+  }, [nodes, edges, simulation, summary.worstRxDbm]);
+
   return (
-    <div className="fiberlab-studio flex h-full w-full flex-col overflow-hidden bg-noc-950">
+    <div
+      className={`fiberlab-studio pu-shell ${
+        testing ? 'is-simulating-pulse' : ''
+      }`}
+    >
       <TopBar
         summary={summary}
         costBreakdown={costBreakdown}
@@ -853,16 +957,58 @@ function StudioWorkspace({ onOpenOverview, onSimulationChange, landingCommand }:
         activePresetId={activePresetId}
       />
 
-      <div className="fiberlab-studio__body flex min-h-0 flex-1">
-        <Sidebar onQuickAdd={handleQuickAdd} />
+      <div className="fiberlab-studio__body pu-body">
+        <Sidebar
+          onQuickAdd={handleQuickAdd}
+          onToggleOpm={handleToggleOpm}
+          onOpenOtdr={handleOpenOtdr}
+          onRunSimulation={runLightTest}
+          onOpenReports={() => setBomOpen(true)}
+          onOpenSettings={() => setToolsOpen(true)}
+          onOpenOverview={handleOpenOverview}
+          collapsed={sidebarCollapsed}
+          onToggleCollapse={() => setSidebarCollapsed((prev) => !prev)}
+        />
 
+        <div className="pu-center">
+        <div className="pu-tabstrip">
+          <span className="pu-doc-tab">{PRESETS.find((preset) => preset.id === activePresetId)?.name ?? 'FTTH Network Design'}</span>
+        </div>
         <main
           ref={studioMainRef}
-          className={`fiberlab-studio-main relative min-w-0 flex-1 ${opmActive ? 'opm-probe-mode' : ''}`}
+          className={`fiberlab-studio-main pu-canvas relative min-w-0 flex-1 ${opmActive ? 'opm-probe-mode' : ''}`}
           onPointerMoveCapture={handleOpmPointerMove}
           onClickCapture={handleOpmClickCapture}
           onPointerLeave={handleOpmPointerLeave}
         >
+          <CanvasToolbar
+            canvasTool={canvasTool}
+            linkMode={linkMode}
+            opmActive={opmActive}
+            selectionCount={selectionCount}
+            activeMissionTitle={activeMissionId ? getMissionById(activeMissionId)?.title ?? null : null}
+            settings={settings}
+            toolsOpen={toolsOpen}
+            onToolsOpenChange={setToolsOpen}
+            onSettingsChange={handleSettingsChange}
+            onSelectTool={() => {
+              setCanvasTool('select');
+              if (linkMode) handleToggleLink();
+            }}
+            onPanTool={() => {
+              setCanvasTool('pan');
+              if (linkMode) handleToggleLink();
+            }}
+            onToggleLink={handleToggleLink}
+            onAddNode={() => handleQuickAdd({ component: 'ont' })}
+            onDelete={handleDeleteSelection}
+            onFit={() => void fitView({ padding: 0.16, duration: 350 })}
+            onOpenOverview={handleOpenOverview}
+            onToggleOpm={handleToggleOpm}
+            onOpenOtdr={handleOpenOtdr}
+            onOpenMissions={() => setMissionsOpen(true)}
+            onClear={clearCanvas}
+          />
           <SimulationContext.Provider value={simulation}>
             <ReactFlow<PonNode, PonEdge>
               nodes={nodes}
@@ -877,32 +1023,32 @@ function StudioWorkspace({ onOpenOverview, onSimulationChange, landingCommand }:
               onInit={handleInit}
               onDragOver={handleDragOver}
               onDrop={handleDrop}
-              nodesDraggable={!opmActive}
+              nodesDraggable={!opmActive && canvasTool === 'select'}
               nodesConnectable={!opmActive}
               elementsSelectable={!opmActive}
-              selectionOnDrag={!opmActive}
+              selectionOnDrag={!opmActive && canvasTool === 'select'}
+              panOnDrag={canvasTool === 'pan' ? true : [1, 2]}
               deleteKeyCode={['Backspace', 'Delete']}
               minZoom={0.2}
               maxZoom={2.2}
               fitView
               proOptions={{ hideAttribution: true }}
-              className="bg-noc-950"
             >
-              <Background variant={BackgroundVariant.Dots} gap={22} size={1.25} color="#e4cdb3" />
+              <Background variant={BackgroundVariant.Dots} gap={18} size={1.3} color="#E6D5C3" />
               <Controls position="bottom-right" showInteractive={false} />
               <MiniMap
                 position="top-right"
                 pannable
                 zoomable
-                className="!h-[120px] !w-[180px]"
-                nodeColor={(node) => MINIMAP_COLORS[node.type ?? ''] ?? '#85695a'}
-                nodeStrokeColor="#85695a"
+                className="!h-[116px] !w-[176px]"
+                nodeColor={(node) => MINIMAP_COLORS[node.type ?? ''] ?? '#64748B'}
+                nodeStrokeColor="#475569"
                 nodeStrokeWidth={1.5}
-                maskColor="rgba(255,244,230,0.72)"
+                maskColor="rgba(248,250,252,0.75)"
               />
 
               {linkMode ? (
-                <Panel position="top-left" className="!m-3">
+                <Panel position="top-left" className="!m-3 !mt-14">
                   <div className="link-mode-panel panel flex max-w-[min(420px,calc(100vw-28px))] items-center gap-3 rounded-xl px-3 py-2.5 shadow-panel" role="status" aria-live="polite">
                     <span className="link-mode-panel-icon"><Link2 size={16} aria-hidden="true" /></span>
                     <span className="min-w-0 flex-1">
@@ -917,48 +1063,41 @@ function StudioWorkspace({ onOpenOverview, onSimulationChange, landingCommand }:
               ) : null}
 
               <Panel position="bottom-left" className="!m-3">
-                <div className="panel rounded-lg px-3 py-2 shadow-panel">
-                  <div className="eyebrow mb-1.5">Live optical telemetry</div>
-                  <div className="flex items-center gap-3 font-mono text-[11px]">
-                    <span className="text-noc-400">
-                      Plant <span className="text-sky-300">{summary.totalFiberKm.toFixed(2)} km</span>
-                    </span>
-                    <span className="text-noc-400">
-                      Splitters <span className="text-purple-300">{summary.splitterTotal}</span>
-                    </span>
-                    <span className="text-noc-400">
-                      Subscribers <span className="text-noc-200">{summary.subscriberCount}</span>
-                    </span>
-                    <span className="text-noc-400">
-                      Mean Rx{' '}
-                      <span className="text-emerald-300">{formatDbm(summary.meanRxDbm)}</span>
-                    </span>
-                    <span className="text-noc-400">
-                      Worst Rx{' '}
-                      <span
-                        className={
-                          summary.worstRxDbm !== null && summary.worstRxDbm < -28
-                            ? 'text-red-300'
-                            : 'text-amber-300'
-                        }
-                      >
-                        {formatDbm(summary.worstRxDbm)}
-                      </span>
-                    </span>
-                  </div>
-                </div>
+                <span
+                  className="pu-chip"
+                  style={{ position: 'static' }}
+                  role="status"
+                  aria-label={`Network ${summary.byStatus.LOS > 0 || summary.byStatus.DISCONNECTED > 0 ? 'fault' : summary.byStatus.WARNING > 0 ? 'marginal' : 'healthy'}`}
+                >
+                  <span
+                    className={`pu-health ${
+                      summary.byStatus.LOS > 0 || summary.byStatus.DISCONNECTED > 0
+                        ? 'red'
+                        : summary.byStatus.WARNING > 0 || summary.byStatus.OVERLOAD > 0
+                          ? 'amber'
+                          : ''
+                    }`}
+                  >
+                    ●{' '}
+                    {summary.byStatus.LOS > 0 || summary.byStatus.DISCONNECTED > 0
+                      ? 'Network Fault'
+                      : summary.byStatus.WARNING > 0 || summary.byStatus.OVERLOAD > 0
+                        ? 'Network Marginal'
+                        : 'Network Healthy'}
+                  </span>
+                </span>
               </Panel>
 
               {nodes.length === 0 ? (
-                <Panel position="top-center" className="!m-6">
+                <Panel position="top-center" className="!mt-16">
                   <div className="panel flex items-center gap-2.5 rounded-lg px-4 py-3 shadow-panel">
-                    <MousePointer2 size={16} className="text-sky-300" />
+                    <MousePointer2 size={16} className="text-[#E4673F]" />
                     <div>
-                      <div className="text-[12px] font-semibold text-noc-200">
+                      <div className="text-[12px] font-semibold text-slate-900">
                         The canvas is empty
                       </div>
-                      <div className="text-[11px] text-noc-400">
-                        Drag an OLT from the toolbox to start designing your PON.
+                      <div className="text-[11px] text-slate-500">
+                        Drag an OLT from the Component Library to start designing your PON.
                       </div>
                     </div>
                   </div>
@@ -978,6 +1117,22 @@ function StudioWorkspace({ onOpenOverview, onSimulationChange, landingCommand }:
             />
           ) : null}
         </main>
+        <BottomPanel
+          summary={summary}
+          simulation={simulation}
+          nodes={nodes}
+          edgeCount={edges.length}
+          powerBars={powerBars}
+          worstLossDb={worstLossDb}
+          onOpenReports={() => setBomOpen(true)}
+          onSelectNode={(nodeId) => {
+            setSelectedNodeId(nodeId);
+            setSelectedEdgeId(null);
+            setSelection({ nodeIds: [nodeId], edgeIds: [] });
+            setNodes((current) => current.map((node) => ({ ...node, selected: node.id === nodeId })));
+          }}
+        />
+        </div>
 
         <Inspector
           node={selectedNode}
@@ -989,6 +1144,8 @@ function StudioWorkspace({ onOpenOverview, onSimulationChange, landingCommand }:
           onPatchNode={handlePatchNode}
           onDeleteNode={handleDeleteNode}
           onDeleteEdge={handleDeleteEdge}
+          collapsed={inspectorCollapsed}
+          onToggleCollapse={() => setInspectorCollapsed((prev) => !prev)}
           onClose={() => {
             setSelectedNodeId(null);
             setSelectedEdgeId(null);
@@ -1080,7 +1237,12 @@ export default function App() {
           className={`studio-viewport ${viewMode === 'studio' ? 'is-active' : 'is-staged'}`}
           aria-hidden={viewMode !== 'studio'}
         >
-          <StudioWorkspace onOpenOverview={returnToOverview} onSimulationChange={updateLandingSimulation} landingCommand={landingCommand} />
+          <StudioWorkspace
+            onOpenOverview={returnToOverview}
+            onSimulationChange={updateLandingSimulation}
+            landingCommand={landingCommand}
+            isActive={viewMode === 'studio'}
+          />
         </div>
         <div
           ref={landingViewportRef}

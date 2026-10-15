@@ -54,48 +54,49 @@
 
 /* ------------------------------ Studio shell */
 .fiberlab-studio {
-  color: var(--fiber-ink);
-  background: var(--fiber-ground) !important;
+  color: #231712;
+  background: #fff4e6 !important;
   font-family: Manrope, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
 
 .fiberlab-topbar {
   position: relative;
   z-index: 25;
-  border-color: var(--fiber-hairline) !important;
-  background: rgba(255, 250, 242, 0.97) !important;
-  box-shadow: 0 3px 14px rgba(43, 26, 20, 0.035);
+  border-color: #eed8bf !important;
+  background: #fffaf2 !important;
+  box-shadow: 0 2px 12px rgba(43, 26, 20, 0.05);
 }
 
 .fiberlab-topbar .btn-ghost {
-  background: var(--fiber-surface);
-  border-color: var(--fiber-hairline);
-  color: #5a4133;
+  background: #fffaf2;
+  border-color: #eed8bf;
+  color: #2b1a14;
 }
 
 .fiberlab-topbar .btn-ghost:hover:not(:disabled) {
-  border-color: var(--fiber-strong);
-  background: #fff1df;
+  border-color: #e4673f;
+  background: #fff0df;
 }
 
 .fiberlab-topbar .btn-ghost:disabled {
-  color: #b18c72;
-  background: #f7eee2;
+  color: #a38b7d;
+  background: #f5e8d7;
 }
 
 .fiberlab-topbar .btn-primary {
-  color: #fffaf2;
-  border-color: #2456d6;
-  background: var(--fiber-cobalt);
+  color: #ffffff;
+  border-color: #d9532a;
+  background: linear-gradient(135deg, #e4673f, #d9532a);
+  box-shadow: 0 2px 8px rgba(228, 103, 63, 0.25);
 }
 
 .fiberlab-topbar .btn-primary:hover:not(:disabled) {
-  border-color: #1f49b3;
-  background: #2456d6;
+  border-color: #c4461f;
+  background: linear-gradient(135deg, #ec7048, #d9532a);
 }
 
 .fiberlab-topbar .btn-danger {
-  background: var(--fiber-surface);
+  background: #fffaf2;
 }
 
 .fiberlab-topbar-actions { min-width: 0; }
@@ -106,200 +107,221 @@
   min-height: 0;
   flex: 1 1 auto;
   overflow: hidden;
-  background: var(--fiber-ground);
+  background: #fff4e6;
 }
 
 .fiberlab-sidebar,
 .fiberlab-inspector {
   min-height: 0;
   overflow: hidden;
-  border-color: var(--fiber-hairline) !important;
-  background: var(--fiber-surface) !important;
+  border-color: #eed8bf !important;
+  background: #fffaf2 !important;
 }
 
 .fiberlab-sidebar-header,
 .fiberlab-inspector-header {
   min-height: 58px;
-  border-color: var(--fiber-hairline) !important;
-  background: rgba(255, 250, 242, 0.92);
+  border-color: #eed8bf !important;
+  background: #fffaf2;
 }
 
 .fiberlab-sidebar-content,
 .fiberlab-inspector-content {
   min-height: 0;
   overscroll-behavior: contain;
-  scrollbar-color: var(--fiber-strong) transparent;
+  scrollbar-color: #d8bfa0 transparent;
 }
 
 .fiberlab-sidebar-content .tool-card {
-  border-color: var(--fiber-hairline);
-  background: var(--fiber-surface);
+  border-color: #eed8bf;
+  background: #ffffff;
 }
 
 .fiberlab-sidebar-content .tool-card:hover {
-  border-color: #b8ccff;
-  background: #f4f6ff;
+  border-color: #e4673f;
+  background: #fff0df;
 }
 
 .fiberlab-studio .panel {
-  border-color: var(--fiber-hairline);
-  background: rgba(255, 250, 242, 0.97);
-  box-shadow: 0 3px 14px rgba(43, 26, 20, 0.07);
+  border-color: #eed8bf;
+  background: #fffaf2;
+  box-shadow: 0 4px 20px -4px rgba(43, 26, 20, 0.08);
 }
 
 .fiberlab-studio .panel-header {
-  border-color: var(--fiber-hairline);
-  background: rgba(255, 250, 242, 0.92);
+  border-color: #eed8bf;
+  background: #fff4e6;
 }
 
 .fiberlab-studio .btn-ghost {
-  border-color: var(--fiber-hairline);
-  background: var(--fiber-surface);
-  color: #5a4133;
+  border-color: #eed8bf;
+  background: #ffffff;
+  color: #2b1a14;
 }
 
 .fiberlab-studio .btn-ghost:hover:not(:disabled) {
-  border-color: var(--fiber-strong);
-  background: #fff1df;
+  border-color: #e4673f;
+  background: #fff0df;
 }
 
 .fiberlab-studio .input,
 .fiberlab-studio .select {
-  border-color: var(--fiber-strong);
-  background-color: var(--fiber-surface);
-  color: var(--fiber-ink);
+  border-color: #eed8bf;
+  background-color: #ffffff;
+  color: #231712;
 }
 
 .fiberlab-studio .metric {
-  border-color: var(--fiber-hairline);
-  background: #f8eddf;
+  border-color: #eed8bf;
+  background: #ffffff;
 }
 
 .fiberlab-studio-main {
   min-height: 0;
-  background: var(--fiber-ground);
+  background: #ffffff;
 }
 
-/* React Flow stays the real interactive canvas; only its surface and optics change. */
+/* React Flow stays the real interactive canvas; its ground stays pure white. */
 .fiberlab-studio .react-flow,
 .fiberlab-studio .react-flow__pane,
 .fiberlab-studio .react-flow__viewport {
-  background-color: var(--fiber-ground);
+  background-color: #ffffff;
 }
 
 .fiberlab-studio .react-flow__background pattern circle {
-  fill: #dfc7aa;
+  fill: #e6d5c3;
 }
 
 .fiberlab-studio .react-flow__handle {
-  border-color: #b18c72;
-  background: #fffaF2;
-  box-shadow: 0 1px 3px rgba(43, 26, 20, 0.14);
+  width: 12px;
+  height: 12px;
+  border: 2px solid #16a34a;
+  background: #dcfce7;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.22);
+  transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
 }
 
 .fiberlab-studio .react-flow__handle:hover {
-  border-color: var(--fiber-cobalt);
-  box-shadow: 0 0 0 4px rgba(47, 107, 255, 0.16), 0 0 10px rgba(47, 107, 255, 0.14);
+  border-color: #7c3aed !important;
+  box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.22), 0 0 10px rgba(124, 58, 237, 0.2);
+  transform: scale(1.22);
 }
 
 .fiberlab-studio .react-flow__handle.connectingto,
 .fiberlab-studio .react-flow__handle.valid {
-  border-color: var(--fiber-green);
-  background: #eaf8f1;
+  border-color: #16a34a !important;
+  background: #bbf7d0 !important;
+  box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.25);
 }
 
 .fiberlab-studio .react-flow__edge-path.optical-edge {
   stroke-linecap: round;
   stroke-width: 2.6;
-  transition: stroke-width 160ms ease, opacity 160ms ease;
+  transition: stroke-width 160ms ease, opacity 160ms ease, filter 160ms ease;
 }
 
 .fiberlab-studio .react-flow__edge-path.optical-edge.is-live {
-  stroke-dasharray: 10 7;
-  animation: optical-flow 1.25s linear infinite;
-  filter: drop-shadow(0 0 2px rgba(15, 138, 95, 0.28)) drop-shadow(0 1px 5px rgba(15, 138, 95, 0.12));
+  stroke-dasharray: 10 6;
+  animation: optical-flow 1.15s linear infinite;
+  filter: drop-shadow(0 0 3px rgba(37, 99, 235, 0.42)) drop-shadow(0 1px 4px rgba(37, 99, 235, 0.16));
 }
 
 .fiberlab-studio .react-flow__edge-path.optical-edge.is-degraded {
   stroke-dasharray: 8 6;
   animation: optical-flow 1.8s linear infinite;
-  filter: drop-shadow(0 0 2px rgba(196, 59, 59, 0.24)) drop-shadow(0 1px 5px rgba(196, 59, 59, 0.11));
+  filter: drop-shadow(0 0 3px rgba(220, 38, 38, 0.35)) drop-shadow(0 1px 5px rgba(220, 38, 38, 0.14));
 }
 
 .fiberlab-studio .react-flow__edge-path.optical-edge.is-idle {
   stroke-dasharray: 5 8;
-  opacity: 0.82;
+  opacity: 0.78;
 }
 
 @keyframes optical-flow {
-  to { stroke-dashoffset: -34; }
+  to { stroke-dashoffset: -32; }
+}
+
+@keyframes simulation-pulse-glow {
+  0%, 100% {
+    stroke-width: 2.6;
+    filter: drop-shadow(0 0 3px rgba(37, 99, 235, 0.42));
+  }
+  50% {
+    stroke-width: 4.2;
+    filter: drop-shadow(0 0 8px rgba(124, 58, 237, 0.72)) drop-shadow(0 0 14px rgba(37, 99, 235, 0.55));
+  }
+}
+
+.fiberlab-studio.is-simulating-pulse .react-flow__edge-path.optical-edge.is-live {
+  animation: optical-flow 0.65s linear infinite, simulation-pulse-glow 0.8s ease-in-out 2;
 }
 
 .fiberlab-studio .react-flow__edge.selected .react-flow__edge-path,
 .fiberlab-studio .react-flow__edge:hover .react-flow__edge-path {
-  stroke-width: 3.5;
-  filter: drop-shadow(0 0 5px rgba(47, 107, 255, 0.2));
+  stroke-width: 3.6;
+  filter: drop-shadow(0 0 6px rgba(124, 58, 237, 0.45));
 }
 
 .fiberlab-studio .react-flow__node.selected .node-shell {
-  border-color: var(--fiber-coral) !important;
-  box-shadow: 0 0 0 2px rgba(228, 103, 63, 0.16), 0 7px 18px rgba(43, 26, 20, 0.11) !important;
+  border-color: #7c3aed !important;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.22), 0 10px 24px -4px rgba(15, 23, 42, 0.16) !important;
+  transform: translateY(-1px);
 }
 
 .fiberlab-studio .node-shell {
-  border-color: var(--fiber-hairline);
-  background: var(--fiber-surface);
-  box-shadow: 0 2px 5px rgba(43, 26, 20, 0.07);
+  border-color: #e2e8f0;
+  background: #ffffff;
+  box-shadow: 0 4px 14px -2px rgba(15, 23, 42, 0.08), 0 1px 3px rgba(15, 23, 42, 0.05);
 }
 
 .fiberlab-studio .react-flow__node:hover .node-shell {
-  box-shadow: 0 7px 18px rgba(43, 26, 20, 0.12);
+  box-shadow: 0 10px 22px -4px rgba(15, 23, 42, 0.13);
 }
 
 .fiberlab-studio .react-flow__controls,
 .fiberlab-studio .react-flow__minimap {
-  border: 1px solid var(--fiber-hairline);
+  border: 1px solid #e2e8f0;
   border-radius: 12px;
-  background: var(--fiber-surface);
-  box-shadow: 0 4px 14px rgba(43, 26, 20, 0.1);
+  background: #ffffff;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
 }
 
 .fiberlab-studio .react-flow__controls-button {
-  border-color: var(--fiber-hairline);
-  background: var(--fiber-surface);
-  color: #5a4133;
+  border-color: #e2e8f0;
+  background: #ffffff;
+  color: #334155;
   fill: currentColor;
 }
 
 .fiberlab-studio .react-flow__controls-button:hover {
-  background: #f4e8d8;
-  color: var(--fiber-ink);
+  background: #f1f5f9;
+  color: #0f172a;
 }
 
 .fiberlab-studio .react-flow__minimap-mask {
-  fill: rgba(255, 244, 230, 0.76);
-  stroke: var(--fiber-cobalt);
+  fill: rgba(248, 250, 252, 0.76);
+  stroke: #7c3aed;
 }
 
 .fiberlab-studio .react-flow__edge-labels > div {
-  border-color: var(--fiber-hairline);
-  background: var(--fiber-surface);
-  color: #5a4133;
-  box-shadow: 0 2px 7px rgba(43, 26, 20, 0.12);
+  border-color: #e2e8f0;
+  background: rgba(255, 255, 255, 0.96);
+  color: #1e293b;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.09);
 }
 
 .fiberlab-studio input[type='range'] {
-  background: #dfc7aa;
+  background: #cbd5e1;
 }
 
 .fiberlab-studio input[type='range']::-webkit-slider-thumb {
-  background: var(--fiber-cobalt);
-  box-shadow: 0 0 0 1px var(--fiber-cobalt), 0 1px 4px rgba(43, 26, 20, 0.2);
+  background: #7c3aed;
+  box-shadow: 0 0 0 1px #7c3aed, 0 1px 4px rgba(15, 23, 42, 0.22);
 }
 
 .fiberlab-studio input[type='range']::-moz-range-thumb {
-  background: var(--fiber-cobalt);
-  box-shadow: 0 0 0 1px var(--fiber-cobalt), 0 1px 4px rgba(43, 26, 20, 0.2);
+  background: #7c3aed;
+  box-shadow: 0 0 0 1px #7c3aed, 0 1px 4px rgba(15, 23, 42, 0.22);
 }
 
 .link-mode-panel {
@@ -1034,11 +1056,6 @@
 
 /* ----------------------- Compact workbench breakpoints */
 @media (max-width: 1100px) {
-  .fiberlab-topbar { gap: 8px; padding-right: 10px; padding-left: 10px; }
-  .fiberlab-topbar-actions { flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; max-width: 100%; padding: 1px 0 4px; scrollbar-width: thin; }
-  .fiberlab-topbar-actions > * { flex: 0 0 auto; }
-  .fiberlab-sidebar { width: 218px !important; }
-  .fiberlab-inspector { width: 278px !important; }
   .landing-content { width: min(calc(100% - 48px), 1390px); }
   .landing-footer { width: min(calc(100% - 48px), 1390px); }
   .landing-hero { gap: 28px; padding: 30px; }
@@ -1047,53 +1064,6 @@
 }
 
 @media (max-width: 900px) {
-  .fiberlab-topbar { min-height: 0; align-content: center; }
-  .fiberlab-topbar > div:first-child { min-width: 145px; }
-  .fiberlab-topbar > div:nth-child(2) { min-width: 0; flex: 1 1 200px; }
-  .fiberlab-topbar-actions { width: 100%; margin-left: 0; }
-  .fiberlab-studio__body {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: minmax(250px, 1fr) auto minmax(150px, 31dvh);
-    overflow: hidden;
-  }
-  .fiberlab-studio-main { grid-row: 1; min-width: 0; min-height: 250px; }
-  .fiberlab-sidebar {
-    grid-row: 2;
-    width: 100% !important;
-    height: auto !important;
-    max-height: 155px;
-    border-right: 0 !important;
-    border-top: 1px solid var(--fiber-hairline) !important;
-  }
-  .fiberlab-sidebar-header { display: none; }
-  .fiberlab-sidebar-content {
-    display: flex;
-    flex: 1 1 auto;
-    flex-direction: row;
-    align-items: center;
-    gap: 9px;
-    overflow-x: auto;
-    overflow-y: hidden;
-    padding: 9px 11px;
-    scrollbar-width: thin;
-  }
-  .fiberlab-sidebar-content > .eyebrow { display: none; }
-  .fiberlab-sidebar-content > .tool-card { width: 190px; min-width: 190px; flex: 0 0 190px; }
-  .fiberlab-sidebar-settings { width: 195px; min-width: 195px; flex: 0 0 195px; margin: 0 !important; }
-  .fiberlab-sidebar-shortcuts { width: 140px; min-width: 140px; flex: 0 0 140px; margin: 0 !important; }
-  .fiberlab-sidebar-reference,
-  .fiberlab-sidebar-color-key { display: none; }
-  .fiberlab-inspector {
-    grid-row: 3;
-    width: 100% !important;
-    height: auto !important;
-    min-height: 150px;
-    border-top: 1px solid var(--fiber-hairline) !important;
-    border-left: 0 !important;
-  }
-  .fiberlab-inspector-header { min-height: 48px; }
-  .fiberlab-inspector-content { padding: 10px 12px; }
   .splice-hero-frame { min-height: 660px; height: min(790px, 100dvh); }
   .splice-hero-content { width: min(calc(100% - 76px), 1370px); min-height: 660px; }
   .splice-hero-content h1 { max-width: 620px; font-size: clamp(48px, 7vw, 68px); }
@@ -1112,22 +1082,8 @@
 }
 
 @media (max-width: 640px) {
-  .fiberlab-topbar > div:nth-child(2) { flex-basis: 100%; order: 2; }
-  .fiberlab-topbar-actions { order: 3; }
-  .fiberlab-studio__body { grid-template-rows: minmax(225px, 1fr) auto minmax(138px, 29dvh); }
-  .fiberlab-sidebar { max-height: 128px; }
-  .fiberlab-sidebar-content { gap: 7px; padding: 7px 9px; }
-  .fiberlab-sidebar-content > .tool-card { width: 172px; min-width: 172px; flex-basis: 172px; padding: 7px; }
-  .fiberlab-sidebar-content > .tool-card > span:first-child { width: 33px; height: 33px; }
-  .fiberlab-sidebar-settings { width: 174px; min-width: 174px; flex-basis: 174px; }
-  .fiberlab-sidebar-shortcuts { width: 126px; min-width: 126px; flex-basis: 126px; }
-  .fiberlab-inspector { min-height: 138px; }
-  .fiberlab-inspector-content .mt-10 { margin-top: 12px; }
   .fiberlab-studio .react-flow__minimap { display: none; }
   .fiberlab-studio .react-flow__controls { transform: scale(0.9); transform-origin: bottom right; }
-  .fiberlab-studio .react-flow__panel.bottom-left { right: 0; left: 0; max-width: calc(100vw - 14px); }
-  .fiberlab-studio .react-flow__panel.bottom-left .panel { width: max-content; max-width: calc(100vw - 26px); overflow-x: auto; padding: 8px; }
-  .fiberlab-studio .react-flow__panel.bottom-left .panel > div:last-child { flex-wrap: wrap; gap: 5px 10px; font-size: 9px; }
   .link-mode-panel { gap: 8px; padding: 8px; }
   .link-mode-panel-icon { width: 29px; height: 29px; }
   .link-mode-panel .btn-ghost { min-width: 0; gap: 3px; padding-right: 6px; padding-left: 6px; }

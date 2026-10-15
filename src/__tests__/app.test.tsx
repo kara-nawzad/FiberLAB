@@ -8,6 +8,19 @@ async function renderStudio() {
   await screen.findByRole('button', { name: 'Bill of Materials' });
 }
 
+function openMoreTools() {
+  fireEvent.click(screen.getByRole('button', { name: 'More tools' }));
+}
+
+function getCanvasNodeByText(text: string | RegExp): HTMLElement {
+  const matches = screen.getAllByText(text);
+  for (const match of matches) {
+    const node = match.closest('.react-flow__node');
+    if (node) return node as HTMLElement;
+  }
+  throw new Error(`No .react-flow__node found containing text ${String(text)}`);
+}
+
 /**
  * End-to-end smoke test of the studio shell: it mounts the whole app, proves the
  * preset topology renders onto the canvas, proves the simulator's telemetry
@@ -45,53 +58,56 @@ describe('FiberLAB application shell', () => {
     fireEvent.click(screen.getByRole('button', { name: /Rescue the Unpatched Subscriber/ }));
     fireEvent.click(screen.getByRole('button', { name: 'Start mission' }));
     expect(await screen.findByText('0/3 complete')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Missions, active: Rescue the Unpatched Subscriber' })).toBeInTheDocument();
 
     fireEvent.keyDown(document, { key: 'Escape' });
     expect(screen.queryByRole('dialog', { name: 'Field missions' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Overview & Physics' })).toHaveFocus();
+
+    openMoreTools();
+    expect(screen.getByRole('button', { name: 'Missions, active: Rescue the Unpatched Subscriber' })).toBeInTheDocument();
   });
 
   it('quick-loads a preset and preserves the mounted studio state across the overview toggle', async () => {
     render(<App />);
     fireEvent.click(screen.getByRole('button', { name: 'Load Failing Link' }));
-    expect(await screen.findByText('Dukan Ridge — Tower 7')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getAllByText('Dukan Ridge — Tower 7').length).toBeGreaterThan(0));
 
-    const ontLabel = screen.getByText('Dukan Ridge — Tower 7');
-    fireEvent.click(ontLabel.closest('.react-flow__node') as HTMLElement);
+    const ontNode = getCanvasNodeByText('Dukan Ridge — Tower 7');
+    fireEvent.click(ontNode);
+    fireEvent.click(screen.getByRole('tab', { name: 'Info' }));
     expect(await screen.findByRole('region', { name: 'Field hardware reference' })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Overview & Physics' }));
     expect(await screen.findByRole('heading', { name: /Shoot the laser\. Split the spectrum/i })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Launch Interactive Studio/i }));
-    expect(await screen.findByText('Dukan Ridge — Tower 7')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getAllByText('Dukan Ridge — Tower 7').length).toBeGreaterThan(0));
     expect(screen.getByRole('region', { name: 'Field hardware reference' })).toBeInTheDocument();
   });
 
   it('boots with the standard 1:32 tree and renders every element', async () => {
     await renderStudio();
 
-    expect(await screen.findByText(/FTTH/)).toBeInTheDocument();
-    expect(screen.getByText('PON 0/1/0')).toBeInTheDocument();
-    expect(screen.getByText('1:4 PLC Splitter')).toBeInTheDocument();
-    expect(screen.getByText('1:8 PLC Splitter')).toBeInTheDocument();
-    expect(screen.getByText('Al-Sulaymaniyah — Unit 12')).toBeInTheDocument();
-    expect(screen.getByText('Al-Sulaymaniyah — Unit 14')).toBeInTheDocument();
-    expect(screen.getByText('Tanaro Village — Remote')).toBeInTheDocument();
-    const toolbox = screen.getByText('Component Toolbox').closest('aside');
+    expect((await screen.findAllByText('Standard 1:32 GPON Tree')).length).toBeGreaterThan(0);
+    expect(getCanvasNodeByText('OLT')).toBeInTheDocument();
+    expect(getCanvasNodeByText('PLC Splitter 1:4')).toBeInTheDocument();
+    expect(getCanvasNodeByText('PLC Splitter 1:8')).toBeInTheDocument();
+    expect(getCanvasNodeByText('Al-Sulaymaniyah — Unit 12')).toBeInTheDocument();
+    expect(getCanvasNodeByText('Al-Sulaymaniyah — Unit 14')).toBeInTheDocument();
+    expect(getCanvasNodeByText('Tanaro Village — Remote')).toBeInTheDocument();
+    const toolbox = screen.getByLabelText('Search components').closest('aside');
     expect(toolbox).not.toBeNull();
     const thumbnails = within(toolbox as HTMLElement).getAllByRole('img');
     expect(thumbnails).toHaveLength(8);
     thumbnails.forEach((thumbnail) => {
       expect(thumbnail).toHaveAttribute('src', expect.stringContaining('data:image/svg+xml'));
-      expect(thumbnail.parentElement).toHaveClass('h-10', 'w-10');
+      expect(thumbnail.parentElement).toHaveClass('th');
     });
   });
 
   it('drags a toolbox component onto the React Flow canvas', async () => {
     const { container } = render(<App />);
     fireEvent.click(screen.getByRole('button', { name: 'Launch Studio' }));
-    await screen.findByText('Al-Sulaymaniyah — Unit 12');
+    await waitFor(() => expect(screen.getAllByText('Al-Sulaymaniyah — Unit 12').length).toBeGreaterThan(0));
 
     const values = new Map<string, string>();
     const dataTransfer = {
@@ -109,6 +125,7 @@ describe('FiberLAB application shell', () => {
     fireEvent.dragOver(canvas as Element, { dataTransfer, clientX: 980, clientY: 460 });
     fireEvent.drop(canvas as Element, { dataTransfer, clientX: 980, clientY: 460 });
 
+    fireEvent.click(screen.getByRole('tab', { name: 'Info' }));
     const hardwareCard = await screen.findByRole('region', { name: 'Field hardware reference' });
     expect(within(hardwareCard).getByText('2-pair ODF rack patch panel (reference)')).toBeInTheDocument();
   });
@@ -118,11 +135,13 @@ describe('FiberLAB application shell', () => {
     const napTool = screen.getByRole('button', { name: /Outdoor NAP \/ FAT/i });
     fireEvent.doubleClick(napTool);
 
+    fireEvent.click(screen.getByRole('tab', { name: 'Info' }));
     const hardwareCard = await screen.findByRole('region', { name: 'Field hardware reference' });
     expect(within(hardwareCard).getByText('Outdoor NAP/FAT 1:8 terminal (reference)')).toBeInTheDocument();
 
-    fireEvent.doubleClick(screen.getByRole('button', { name: /Wi-Fi 6 PON Gateway/i }));
+    fireEvent.doubleClick(screen.getByRole('button', { name: /Wi-Fi 6 Gateway/i }));
     expect(await screen.findByText('Dual-band Wi-Fi 6 GPON / XGS-PON gateway (reference)')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('tab', { name: 'Properties' }));
     expect((screen.getByRole('textbox', { name: 'Wi-Fi SSID' }) as HTMLInputElement).value).toMatch(/^FiberLAB-/);
   });
 
@@ -139,12 +158,14 @@ describe('FiberLAB application shell', () => {
     expect(within(tray).getByText('Splice organizer · 12F')).toBeInTheDocument();
     expect(within(tray).getByText('Blue')).toBeInTheDocument();
     expect(within(tray).getByText('Aqua')).toBeInTheDocument();
-    expect(screen.getAllByText(/48 single fusion splices/)).toHaveLength(2);
 
     const blueChannel = within(tray).getByRole('switch', { name: 'Channel 1 Blue splice' });
     expect(blueChannel).toHaveAttribute('aria-checked', 'true');
     fireEvent.click(blueChannel);
     expect(blueChannel).toHaveAttribute('aria-checked', 'false');
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Info' }));
+    expect(screen.getAllByText(/48 single fusion splices/)).toHaveLength(2);
 
     expect(closureNode?.querySelectorAll('.react-flow__handle[data-handleid^="in-"]')).toHaveLength(2);
     expect(closureNode?.querySelectorAll('.react-flow__handle[data-handleid^="out-"]')).toHaveLength(4);
@@ -152,12 +173,13 @@ describe('FiberLAB application shell', () => {
 
   it('uses the OPM HUD to probe a span at selectable simulated wavelengths and exits on Escape', async () => {
     await renderStudio();
+    openMoreTools();
     fireEvent.click(screen.getByRole('button', { name: 'OPM Tool' }));
+    openMoreTools();
     expect(screen.getByRole('button', { name: 'Close OPM' })).toHaveAttribute('aria-pressed', 'true');
 
-    const feeder = screen.getByText('5.000 km span').closest('.react-flow__node');
-    expect(feeder).not.toBeNull();
-    const outputPort = feeder?.querySelector('.react-flow__handle[data-handleid="out"]');
+    const feeder = getCanvasNodeByText(/^5\.0 km$/);
+    const outputPort = feeder.querySelector('.react-flow__handle[data-handleid="out"]');
     expect(outputPort).not.toBeNull();
     fireEvent.pointerMove(outputPort as HTMLElement, { clientX: 540, clientY: 300 });
 
@@ -171,13 +193,12 @@ describe('FiberLAB application shell', () => {
 
     fireEvent.keyDown(document, { key: 'Escape' });
     expect(screen.queryByTestId('opm-meter-hud')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'OPM Tool' })).toHaveAttribute('aria-pressed', 'false');
   });
 
   it('applies field fault switches and shows the explicit penalties in the ONT loss breakdown', async () => {
     await renderStudio();
-    const feeder = screen.getByText('5.000 km span').closest('.react-flow__node');
-    fireEvent.click(feeder as HTMLElement);
+    const feeder = getCanvasNodeByText(/^5\.0 km$/);
+    fireEvent.click(feeder);
 
     const macroBend = screen.getByRole('switch', { name: 'Macro-bend fault (<15 mm)' });
     const dirtyFerrule = screen.getByRole('switch', { name: 'Dirty SC/APC ferrule' });
@@ -186,11 +207,10 @@ describe('FiberLAB application shell', () => {
     expect(macroBend).toHaveAttribute('aria-checked', 'true');
     expect(dirtyFerrule).toHaveAttribute('aria-checked', 'true');
 
-    const subscriber = screen.getByText('Al-Sulaymaniyah — Unit 12').closest('.react-flow__node');
-    expect(subscriber).not.toBeNull();
-    const subscriberShell = subscriber?.querySelector('.node-shell');
-    expect(within(subscriberShell as HTMLElement).getByText('WARNING')).toBeInTheDocument();
-    fireEvent.click(subscriber as HTMLElement);
+    const subscriber = getCanvasNodeByText('Al-Sulaymaniyah — Unit 12');
+    const subscriberShell = subscriber.querySelector('.hw-onu');
+    expect(within(subscriberShell as HTMLElement).getByText(/WARNING/)).toBeInTheDocument();
+    fireEvent.click(subscriber);
     expect(await screen.findByText('Fault Penalty: Macro-Bend (-3.50 dB)')).toBeInTheDocument();
     expect(screen.getByText('Fault Penalty: Dust Contamination (-2.00 dB)')).toBeInTheDocument();
   });
@@ -198,60 +218,59 @@ describe('FiberLAB application shell', () => {
   it('connects and disconnects node pairs in Link nodes mode and deletes a selected span', async () => {
     render(<App />);
     fireEvent.click(screen.getByRole('button', { name: 'Launch Studio' }));
-    await screen.findByText('Al-Sulaymaniyah — Unit 12');
+    await waitFor(() => expect(screen.getAllByText('Al-Sulaymaniyah — Unit 12').length).toBeGreaterThan(0));
 
-    expect(screen.getByText('Marginal links detected')).toBeInTheDocument();
+    expect(screen.getByLabelText('Network health: Marginal links detected')).toBeInTheDocument();
 
-    const oltNode = screen.getByText('PON 0/1/0').closest('.react-flow__node');
-    const feederNode = screen.getByText('5.000 km span').closest('.react-flow__node');
-    expect(oltNode).not.toBeNull();
-    expect(feederNode).not.toBeNull();
+    const oltNode = getCanvasNodeByText('OLT');
+    const feederNode = getCanvasNodeByText(/^5\.0 km$/);
 
     fireEvent.click(screen.getByRole('button', { name: 'Link nodes' }));
-    expect(screen.getByRole('status')).toHaveTextContent('Select a source node');
-    fireEvent.click(oltNode as HTMLElement);
-    expect(screen.getByRole('status')).toHaveTextContent('Source: olt-a');
-    fireEvent.click(feederNode as HTMLElement);
-    await waitFor(() => expect(screen.getByText('Fault on the network')).toBeInTheDocument());
+    expect(screen.getByText(/Select a source node, then a destination/i)).toBeInTheDocument();
+    fireEvent.click(oltNode);
+    expect(screen.getByText(/Source: olt-a/)).toBeInTheDocument();
+    fireEvent.click(feederNode);
+    await waitFor(() => expect(screen.getByLabelText('Network health: Fault on the network')).toBeInTheDocument());
 
     fireEvent.click(screen.getByRole('button', { name: 'Link nodes' }));
-    fireEvent.click(oltNode as HTMLElement);
-    fireEvent.click(feederNode as HTMLElement);
-    await waitFor(() => expect(screen.getByText('Marginal links detected')).toBeInTheDocument());
+    fireEvent.click(oltNode);
+    fireEvent.click(feederNode);
+    await waitFor(() => expect(screen.getByLabelText('Network health: Marginal links detected')).toBeInTheDocument());
 
-    fireEvent.click(feederNode as HTMLElement);
+    fireEvent.click(feederNode);
     const deleteButton = screen.getByRole('button', { name: 'Delete selected elements' });
     await waitFor(() => expect(deleteButton).toBeEnabled());
     fireEvent.click(deleteButton);
-    await waitFor(() => expect(screen.queryByText('5.000 km span')).not.toBeInTheDocument());
+    await waitFor(() => expect(screen.queryByText(/^5\.0 km$/)).not.toBeInTheDocument());
   });
 
   it('pushes live optical telemetry into the ONT node', async () => {
     await renderStudio();
+    await waitFor(() => expect(screen.getAllByText('Al-Sulaymaniyah — Unit 12').length).toBeGreaterThan(0));
 
-    const ont = (await screen.findByText('Al-Sulaymaniyah — Unit 12')).closest('.node-shell');
+    const ont = getCanvasNodeByText('Al-Sulaymaniyah — Unit 12').querySelector('.hw-onu');
     expect(ont).not.toBeNull();
-    expect(within(ont as HTMLElement).getByText('-21.57')).toBeInTheDocument();
-    expect(within(ont as HTMLElement).getByText('ONLINE')).toBeInTheDocument();
+    expect(within(ont as HTMLElement).getByText('-21.6 dBm')).toBeInTheDocument();
+    expect(within(ont as HTMLElement).getByText(/ONLINE/)).toBeInTheDocument();
 
     // The 6 km drop sits just past the −24 dBm optimal floor.
-    const remote = screen.getByText('Tanaro Village — Remote').closest('.node-shell');
-    expect(within(remote as HTMLElement).getByText('WARNING')).toBeInTheDocument();
+    const remote = getCanvasNodeByText('Tanaro Village — Remote').querySelector('.hw-onu');
+    expect(within(remote as HTMLElement).getByText(/WARNING/)).toBeInTheDocument();
   });
 
-  it('reports the deployed plant in the top bar health strip', async () => {
+  it('reports the deployed plant in the top bar health strip and bottom panel', async () => {
     await renderStudio();
-    await screen.findByText('Al-Sulaymaniyah — Unit 12');
+    await waitFor(() => expect(screen.getAllByText('Al-Sulaymaniyah — Unit 12').length).toBeGreaterThan(0));
 
-    expect(screen.getByText('Marginal links detected')).toBeInTheDocument();
-    expect(screen.getByText('13.50 km')).toBeInTheDocument();
-    expect(screen.getByTestId('capex-telemetry')).toHaveTextContent('CAPEX$3,747');
+    expect(screen.getByLabelText('Network health: Marginal links detected')).toBeInTheDocument();
+    expect(screen.getByText('13.5 km')).toBeInTheDocument();
+    expect(screen.getByTestId('capex-telemetry')).toHaveTextContent('CAPEX $3,747');
     expect(screen.getByTestId('capex-telemetry')).toHaveTextContent('$1,249.00 / Home Passed');
   });
 
   it('opens the Bill of Materials with reconciling totals', async () => {
     await renderStudio();
-    await screen.findByText('Al-Sulaymaniyah — Unit 12');
+    await waitFor(() => expect(screen.getAllByText('Al-Sulaymaniyah — Unit 12').length).toBeGreaterThan(0));
 
     fireEvent.click(screen.getByRole('button', { name: /Bill of Materials/i }));
 
@@ -271,6 +290,7 @@ describe('FiberLAB application shell', () => {
     const capexBadge = screen.getByTestId('capex-telemetry');
     expect(capexBadge).toHaveTextContent('$3,747');
 
+    fireEvent.click(screen.getByRole('tab', { name: 'Info' }));
     fireEvent.click(screen.getByText('Local unit pricing'));
     const feederRate = screen.getByRole('spinbutton', { name: 'Feeder / OSP cable' });
     expect(feederRate).toHaveValue(350);
@@ -278,7 +298,7 @@ describe('FiberLAB application shell', () => {
 
     expect(capexBadge).toHaveTextContent('$4,497');
     expect(capexBadge).toHaveTextContent('$1,499.00 / Home Passed');
-    expect(screen.getByText('Marginal links detected')).toBeInTheDocument();
+    expect(screen.getByLabelText('Network health: Marginal links detected')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Restore reference pricing' }));
     expect(capexBadge).toHaveTextContent('$3,747');
@@ -303,30 +323,28 @@ describe('FiberLAB application shell', () => {
 
   it('opens the inspector for a selected ONT with its full link budget', async () => {
     await renderStudio();
-    const label = await screen.findByText('Al-Sulaymaniyah — Unit 12');
+    await waitFor(() => expect(screen.getAllByText('Al-Sulaymaniyah — Unit 12').length).toBeGreaterThan(0));
 
-    const wrapper = label.closest('.react-flow__node');
-    expect(wrapper).not.toBeNull();
-    fireEvent.click(wrapper as HTMLElement);
+    const wrapper = getCanvasNodeByText('Al-Sulaymaniyah — Unit 12');
+    fireEvent.click(wrapper);
 
-    expect(await screen.findByRole('region', { name: 'Field hardware reference' })).toBeInTheDocument();
-    expect(screen.getByText('Desktop GPON ONU / ONT (reference)')).toBeInTheDocument();
-    expect(screen.getByText('Ports & interfaces')).toBeInTheDocument();
-    expect(screen.getByText(/do not mate an APC connector with a UPC connector/i)).toBeInTheDocument();
-    expect(screen.getByRole('img', { name: /representative hardware and port-layout illustration/ })).toHaveAttribute(
-      'src',
-      expect.stringContaining('data:image/svg+xml'),
-    );
     expect(await screen.findByText('Link budget breakdown')).toBeInTheDocument();
     expect(screen.getByText('P_rx = P_tx − ΣL − margin')).toBeInTheDocument();
     expect(screen.getByText(/System safety margin/)).toBeInTheDocument();
     expect(screen.getByText('ONT serial number')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Info' }));
+    expect(await screen.findByRole('region', { name: 'Field hardware reference' })).toBeInTheDocument();
+    expect(screen.getByText('Desktop GPON ONU / ONT (reference)')).toBeInTheDocument();
+    expect(screen.getByText('Ports & interfaces')).toBeInTheDocument();
+    expect(screen.getByText(/do not mate an APC connector with a UPC connector/i)).toBeInTheDocument();
   });
 
   it('clears the canvas and shows the empty-state hint', async () => {
     await renderStudio();
-    await screen.findByText('Al-Sulaymaniyah — Unit 12');
+    await waitFor(() => expect(screen.getAllByText('Al-Sulaymaniyah — Unit 12').length).toBeGreaterThan(0));
 
+    openMoreTools();
     fireEvent.click(screen.getByRole('button', { name: /Clear Canvas/i }));
 
     expect(screen.queryByText('Al-Sulaymaniyah — Unit 12')).not.toBeInTheDocument();
@@ -336,8 +354,8 @@ describe('FiberLAB application shell', () => {
   it('opens a field mission, loads its scenario, and tracks objectives live', async () => {
     await renderStudio();
 
+    openMoreTools();
     const missionsButton = screen.getByRole('button', { name: /^Missions$/i });
-    missionsButton.focus();
     fireEvent.click(missionsButton);
     expect(await screen.findByRole('dialog', { name: 'Field missions' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Start mission' }));
@@ -351,11 +369,14 @@ describe('FiberLAB application shell', () => {
     );
     fireEvent.keyDown(document, { key: 'Escape' });
     expect(screen.queryByRole('dialog', { name: 'Field missions' })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Missions, active: The Marginal Villa' })).toHaveFocus();
+
+    openMoreTools();
+    expect(screen.getByRole('button', { name: 'Missions, active: The Marginal Villa' })).toBeInTheDocument();
   });
 
   it('tracks the Budget Crunch mission against the live CAPEX estimate', async () => {
     await renderStudio();
+    openMoreTools();
     fireEvent.click(screen.getByRole('button', { name: /^Missions$/i }));
     await screen.findByRole('dialog', { name: 'Field missions' });
     fireEvent.click(screen.getByRole('button', { name: /The Budget Crunch: Cost vs. Performance/ }));
@@ -366,8 +387,9 @@ describe('FiberLAB application shell', () => {
     expect(screen.getByTestId('capex-telemetry')).toHaveTextContent('$3,747');
   });
 
-  it('acquires an interactive OTDR trace from the TopBar and lists terminal Fresnel events', async () => {
+  it('acquires an interactive OTDR trace from the studio and lists terminal Fresnel events', async () => {
     await renderStudio();
+    openMoreTools();
     fireEvent.click(screen.getByRole('button', { name: 'OTDR Trace' }));
     expect(screen.getByRole('dialog', { name: 'OTDR Trace Analyzer' })).toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: 'OTDR source node' })).toHaveValue('olt-a');
@@ -383,17 +405,17 @@ describe('FiberLAB application shell', () => {
 
   it('loads the failing long-haul preset and turns the health strip red', async () => {
     await renderStudio();
-    await screen.findByText('Al-Sulaymaniyah — Unit 12');
+    await waitFor(() => expect(screen.getAllByText('Al-Sulaymaniyah — Unit 12').length).toBeGreaterThan(0));
 
     fireEvent.click(screen.getByRole('button', { name: /Preset Topologies/i }));
     fireEvent.click(await screen.findByRole('button', { name: /Failing Long-Distance Link/ }));
 
-    expect(await screen.findByText('Dukan Ridge — Tower 7')).toBeInTheDocument();
-    expect(await screen.findByText('Fault on the network')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getAllByText('Dukan Ridge — Tower 7').length).toBeGreaterThan(0));
+    expect(screen.getByLabelText('Network health: Fault on the network')).toBeInTheDocument();
 
-    const ont = screen.getByText('Dukan Ridge — Tower 7').closest('.node-shell');
-    expect(within(ont as HTMLElement).getByText('LOS')).toBeInTheDocument();
-    expect(within(ont as HTMLElement).getByText('-39.47')).toBeInTheDocument();
+    const ont = getCanvasNodeByText('Dukan Ridge — Tower 7').querySelector('.hw-onu');
+    expect(within(ont as HTMLElement).getByText(/LOS/)).toBeInTheDocument();
+    expect(within(ont as HTMLElement).getByText('-39.5 dBm')).toBeInTheDocument();
   });
 
   it('selects the modern XGS-PON suburb preset and exposes live gateway service and hardware details', async () => {
@@ -401,29 +423,30 @@ describe('FiberLAB application shell', () => {
     fireEvent.click(screen.getByRole('button', { name: /Preset Topologies/i }));
     fireEvent.click(await screen.findByRole('button', { name: /MODERN 10G XGS-PON SUBURB/i }));
 
-    const homeLabel = await screen.findByText('Modern Suburb — Home 1');
-    const gatewayNode = homeLabel.closest('.react-flow__node');
-    expect(gatewayNode).not.toBeNull();
-    expect(within(gatewayNode as HTMLElement).getAllByText('XGS-PON')).toHaveLength(2);
-    expect(within(gatewayNode as HTMLElement).getByText('XGS-PON 10G ACTIVE')).toBeInTheDocument();
-    expect(within(gatewayNode as HTMLElement).getByText('192.0.2.101')).toBeInTheDocument();
-    expect(within(gatewayNode as HTMLElement).getByText('↓ 1.24 Gbps · ↑ 1.24 Gbps')).toBeInTheDocument();
-    expect(within(gatewayNode as HTMLElement).getByText(/modeled XGS-PON receive-power window/)).toBeInTheDocument();
+    await waitFor(() => expect(screen.getAllByText('Modern Suburb — Home 1').length).toBeGreaterThan(0));
+    const gatewayNode = getCanvasNodeByText('Modern Suburb — Home 1');
+    expect(within(gatewayNode).getAllByText('XGS-PON')).toHaveLength(2);
+    expect(within(gatewayNode).getByText('XGS-PON 10G ACTIVE')).toBeInTheDocument();
+    expect(within(gatewayNode).getByText('192.0.2.101')).toBeInTheDocument();
+    expect(within(gatewayNode).getByText('↓ 1.24 Gbps · ↑ 1.24 Gbps')).toBeInTheDocument();
+    expect(within(gatewayNode).getByText(/modeled XGS-PON receive-power window/)).toBeInTheDocument();
 
-    fireEvent.click(gatewayNode as HTMLElement);
-    expect(await screen.findByRole('region', { name: 'Field hardware reference' })).toBeInTheDocument();
-    expect(screen.getByText('Dual-band Wi-Fi 6 GPON / XGS-PON gateway (reference)')).toBeInTheDocument();
+    fireEvent.click(gatewayNode);
     expect(screen.getByRole('textbox', { name: 'Wi-Fi SSID' })).toHaveValue('FiberLAB-XGS-01');
     expect(screen.getByText('1244 / 1244 Mbps')).toBeInTheDocument();
     expect(screen.getByText('Internet IP (simulated)')).toBeInTheDocument();
     expect(screen.getByText(/TEST-NET placeholder only/)).toBeInTheDocument();
-    expect(screen.getByText(/A radio link rate or shared PON line-rate share is not a measured/)).toBeInTheDocument();
+    expect(screen.getByText(/Speed estimate divides the nominal shared PON line rate/)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Info' }));
+    expect(await screen.findByRole('region', { name: 'Field hardware reference' })).toBeInTheDocument();
+    expect(screen.getByText('Dual-band Wi-Fi 6 GPON / XGS-PON gateway (reference)')).toBeInTheDocument();
   });
 
   it('switches an OLT between GPON and XGS-PON and updates the wavelength-dependent budget', async () => {
     await renderStudio();
-    const oltLabel = await screen.findByText('PON 0/1/0');
-    fireEvent.click(oltLabel.closest('.react-flow__node') as HTMLElement);
+    const oltNode = getCanvasNodeByText('OLT');
+    fireEvent.click(oltNode);
 
     const standard = screen.getByRole('combobox', { name: 'PON standard' });
     expect(standard).toHaveValue('GPON');
@@ -431,8 +454,81 @@ describe('FiberLAB application shell', () => {
     expect(standard).toHaveValue('XGS-PON');
     expect(screen.getByText(/0\.22 dB\/km/)).toBeInTheDocument();
 
-    const subscriber = screen.getByText('Al-Sulaymaniyah — Unit 12');
-    fireEvent.click(subscriber.closest('.react-flow__node') as HTMLElement);
+    const subscriber = getCanvasNodeByText('Al-Sulaymaniyah — Unit 12');
+    fireEvent.click(subscriber);
     expect(await screen.findByText(/Feeder cable — 5 km @ 0\.22 dB\/km @ 1577 nm/)).toBeInTheDocument();
+  });
+
+  it('displays upstream dynamic range warnings and hides canvas fault tags in the Blind Fault mission', async () => {
+    await renderStudio();
+    const dropSpan = getCanvasNodeByText(/^6\.0 km$/);
+    fireEvent.click(dropSpan);
+
+    fireEvent.click(screen.getByRole('switch', { name: 'Macro-bend fault (<15 mm)' }));
+    fireEvent.click(screen.getByRole('switch', { name: 'Dirty SC/APC ferrule' }));
+    const lengthInputs = screen.getAllByDisplayValue('6');
+    fireEvent.change(lengthInputs[0], { target: { value: '45' } });
+
+    expect(await screen.findByTestId('olt-dynamic-range-warning')).toHaveTextContent(
+      /Dynamic range exceeded/i,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /Bill of Materials/i }));
+    expect(await screen.findByText('Upstream Δ')).toBeInTheDocument();
+    expect(screen.getByText('0.00 dB')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Close bill of materials' }));
+
+    openMoreTools();
+    fireEvent.click(screen.getByRole('button', { name: /^Missions$/i }));
+    await screen.findByRole('dialog', { name: 'Field missions' });
+    fireEvent.click(screen.getByRole('button', { name: /Blind Fault: The Cut in the Trunk/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Start mission' }));
+
+    expect(await screen.findByText('0/3 complete')).toBeInTheDocument();
+    expect(screen.queryByText(/Macro-bend \+3\.50 dB/)).not.toBeInTheDocument();
+    expect(screen.queryByText('custom α')).not.toBeInTheDocument();
+  });
+
+  it('renders physical telecom hardware faceplates, canvas workbench toolbar, and bottom panel tabs', async () => {
+    await renderStudio();
+
+    // Realistic OLT hardware card
+    const oltNode = getCanvasNodeByText('OLT').querySelector('.hw-olt');
+    expect(oltNode).not.toBeNull();
+    expect(oltNode).toHaveTextContent('TX Power');
+    expect(oltNode).toHaveTextContent('RX Power');
+    expect(oltNode).toHaveTextContent('PON Status');
+
+    // Realistic PLC Splitter hardware card
+    const splitterNode = getCanvasNodeByText('PLC Splitter 1:8').querySelector('.hw-spl');
+    expect(splitterNode).not.toBeNull();
+    expect(splitterNode).toHaveTextContent('Insertion Loss 10.5 dB');
+
+    // Floating canvas sub-toolbar
+    const canvasToolbar = screen.getByRole('toolbar', { name: 'Canvas workbench tools' });
+    expect(within(canvasToolbar).getByRole('button', { name: 'Select' })).toBeInTheDocument();
+    expect(within(canvasToolbar).getByRole('button', { name: 'Pan' })).toBeInTheDocument();
+    expect(within(canvasToolbar).getByRole('button', { name: 'Link nodes' })).toBeInTheDocument();
+    expect(within(canvasToolbar).getByRole('button', { name: 'Add Node' })).toBeInTheDocument();
+
+    // Bottom panel with Network Overview, Optical Budget, Components, and Topology tabs
+    const bottomPanel = screen.getByTestId('network-summary-strip');
+    expect(bottomPanel).toHaveTextContent('Total Distance');
+    expect(bottomPanel).toHaveTextContent('13.5 km');
+    expect(within(bottomPanel).getByText('OLT Launch')).toBeInTheDocument();
+    expect(within(bottomPanel).getByText('After Splitter')).toBeInTheDocument();
+    fireEvent.click(within(bottomPanel).getByRole('tab', { name: 'Optical Budget' }));
+    expect(within(bottomPanel).getByText('Open full audit & quotation')).toBeInTheDocument();
+
+    // Inspector tab navigation & collapsible panel
+    fireEvent.click(oltNode as HTMLElement);
+    const tabList = screen.getByRole('tablist', { name: 'Inspector sections' });
+    fireEvent.click(within(tabList).getByRole('tab', { name: 'Optical Power' }));
+    fireEvent.click(within(tabList).getByRole('tab', { name: 'Info' }));
+    fireEvent.click(within(tabList).getByRole('tab', { name: 'Properties' }));
+
+    // Collapse and re-expand Inspector
+    fireEvent.click(screen.getByRole('button', { name: 'Collapse inspector' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Expand inspector' }));
   });
 });

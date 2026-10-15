@@ -218,6 +218,9 @@ export const SPLICE_TRAY_CHANNELS: SpliceTrayChannel[] = [
 /** Default system / ageing / repair allowance. */
 export const DEFAULT_SAFETY_MARGIN_DB = 2.0;
 
+/** Maximum allowable upstream burst-mode dynamic range on a GPON OLT receiver (ITU-T G.984.2). */
+export const UPSTREAM_DYNAMIC_RANGE_MAX_DB = 15.0;
+
 /* -------------------------------------------------------------------------- *
  * ONT status classification (ITU-T G.984 GPON)
  * -------------------------------------------------------------------------- */
@@ -397,6 +400,8 @@ export interface FiberEdgeData extends Record<string, unknown> {
   edgeState: EdgeState;
   /** Non-empty on the output patch cord of a faulted cable span. */
   faultLabels?: string[];
+  /** True when this edge belongs to the currently selected component's optical path. */
+  isHighlightedPath?: boolean;
 }
 
 export type EdgeState = 'live' | 'degraded' | 'idle';
@@ -440,6 +445,8 @@ export interface SubscriberOpticalTelemetry {
   marginDb: number;
   /** Distance from the overload ceiling (-8 dBm). */
   headroomDb: number;
+  /** Upstream burst power differential relative to the strongest ONT on the same PON port, in dB. */
+  upstreamDeltaDb: number | null;
   sourceOltId: string | null;
   fiberKm: number;
   splitStages: number;
@@ -467,6 +474,15 @@ export interface GatewayTelemetry extends SubscriberOpticalTelemetry {
   estimatedUpMbps: number | null;
 }
 
+export interface OltTelemetry {
+  oltId: string;
+  connectedSubscriberCount: number;
+  maxRxPowerDbm: number | null;
+  minRxPowerDbm: number | null;
+  upstreamDeltaDb: number;
+  upstreamDynamicRangeWarning: boolean;
+}
+
 export interface EdgeTelemetry {
   powerDbm: number | null;
   edgeState: EdgeState;
@@ -489,6 +505,10 @@ export interface NetworkSummary {
   /** Mean received power across all subscriber endpoints that have signal. */
   meanRxDbm: number | null;
   worstRxDbm: number | null;
+  /** Maximum upstream burst differential across active connected endpoints on a PON port. */
+  upstreamDeltaDb: number;
+  /** True when the upstream burst differential exceeds the 15.0 dB OLT dynamic range limit. */
+  upstreamDynamicRangeWarning: boolean;
   /** True when every subscriber endpoint sits inside the optimal window. */
   allOptimal: boolean;
   hasFault: boolean;
@@ -497,10 +517,15 @@ export interface NetworkSummary {
 export interface SimulationResult {
   ontTelemetry: Record<string, OntTelemetry>;
   gatewayTelemetry: Record<string, GatewayTelemetry>;
+  oltTelemetry: Record<string, OltTelemetry>;
   /** Best path per ONT or gateway id. */
   bestPaths: Record<string, OpticalPath>;
   edgeTelemetry: Record<string, EdgeTelemetry>;
   summary: NetworkSummary;
+  upstreamDeltaDb: number;
+  upstreamDynamicRangeWarning: boolean;
+  /** Optional mission-level flag when visual fault indicators are hidden on the canvas. */
+  blindFaultMode?: boolean;
   /** Monotonic counter so consumers can animate on re-run. */
   runId: number;
   safetyMarginDb: number;

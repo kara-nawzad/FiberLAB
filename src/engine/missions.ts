@@ -34,6 +34,8 @@ export interface Mission {
   /** Existing topology preset used as the mission's editable starting point. */
   presetId: string;
   safetyMarginDb: number;
+  /** When true, fault badges and warning glyphs are hidden on the canvas. */
+  blindFaultMode?: boolean;
   /** Optional scenario-specific setup applied to a fresh copy of the preset. */
   prepareTopology?: (topology: MissionTopology) => MissionTopology;
 }
@@ -46,6 +48,15 @@ export interface MissionObjectiveProgress {
 function isOnline(simulation: NetworkSimulationResult, ontId: string): boolean {
   const reading = simulation.ontTelemetry[ontId];
   return reading?.status === 'ONLINE' && reading.rxPowerDbm !== null;
+}
+
+function isFaultyOrSeveredSpan(node: PonNode): boolean {
+  if (node.type !== 'fiber') return false;
+  return Boolean(
+    node.data.macroBendActive ||
+      node.data.dirtyConnectorActive ||
+      (node.data.attenuationOverrideDbPerKm !== null && node.data.attenuationOverrideDbPerKm > 1),
+  );
 }
 
 const marginalVillaAudit: Mission = {
@@ -229,14 +240,97 @@ const budgetCrunchMission: Mission = {
   ],
 };
 
+const blindFaultTrunkCutMission: Mission = {
+  id: 'blind-fault',
+  title: 'Blind Fault: The Cut in the Trunk',
+  difficulty: 'Advanced',
+  scenarioBrief:
+    'A sudden outage has taken down all subscribers on a neighborhood distribution branch. Visual inspection tags are disabled. Use the handheld OPM probe and launch an OTDR laser trace from the Central Office to locate the exact break distance, replace the damaged span, and restore service.',
+  presetId: 'standard-1x32',
+  safetyMarginDb: DEFAULT_SAFETY_MARGIN_DB,
+  blindFaultMode: true,
+  prepareTopology: (topology) => ({
+    ...topology,
+    nodes: topology.nodes.map((node) => {
+      if (node.type === 'fiber' && node.id === 'fiber-dist-a') {
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            macroBendActive: true,
+            attenuationOverrideDbPerKm: 45,
+          },
+        };
+      }
+      if (node.type === 'fiber' && node.id === 'fiber-drop-a3') {
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            lengthKm: 0.8,
+            splices: 1,
+            connectors: 2,
+          },
+        };
+      }
+      return node;
+    }),
+  }),
+  objectives: [
+    {
+      id: 'locate-remove-faulty-span',
+      description: 'Locate and remove the faulty/severed fiber span.',
+      isMet: (_simulation, nodes) => !nodes.some(isFaultyOrSeveredSpan),
+    },
+    {
+      id: 'splice-healthy-distribution',
+      description: 'Splice in a healthy replacement distribution span.',
+      isMet: (_simulation, nodes, edges) =>
+        nodes.some(
+          (node) =>
+            node.type === 'fiber' &&
+            node.data.cableType === 'distribution' &&
+            !isFaultyOrSeveredSpan(node) &&
+            edges.some((edge) => edge.target === node.id) &&
+            edges.some((edge) => edge.source === node.id),
+        ),
+    },
+    {
+      id: 'restore-subscribers-online',
+      description: 'Restore all affected subscribers to ONLINE status (-8 to -24 dBm).',
+      isMet: (simulation, nodes, edges) => {
+        const onts = nodes.filter((node) => node.type === 'ont');
+        return (
+          onts.length === 3 &&
+          onts.every(
+            (ont) =>
+              edges.some((edge) => edge.target === ont.id) &&
+              isOnline(simulation, ont.id),
+          )
+        );
+      },
+    },
+  ],
+  fieldHints: [
+    'Visual fault badges and patch-cord warning glyphs are hidden on the canvas in this mission.',
+    'Open OTDR Trace in the TopBar, select a failing subscriber branch, and click Acquire Trace / Pulse Laser to inspect the backscatter curve.',
+    'Notice where the trace drops to the -45 dB noise floor between 5.0 km and 6.0 km—right inside the 1.0 km neighborhood distribution span after the 1:4 splitter.',
+    'Delete the severed distribution span, drag in a healthy replacement distribution cable span, and patch it between the 1:4 splitter (out-0) and the 1:8 splitter.',
+  ],
+};
+
 export const MISSIONS: Mission[] = [
   marginalVillaAudit,
   silentOntAudit,
   unpatchedSubscriberAudit,
   budgetCrunchMission,
+  blindFaultTrunkCutMission,
 ];
 
 export function getMissionById(id: string): Mission | undefined {
+  if (id === 'blind-fault-trunk-cut' || id === 'the-cut-in-the-trunk') {
+    return blindFaultTrunkCutMission;
+  }
   return MISSIONS.find((mission) => mission.id === id);
 }
 

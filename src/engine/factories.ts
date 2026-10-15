@@ -45,16 +45,14 @@ export interface NodePlacement {
 }
 
 export const NODE_SIZES: Record<string, { width: number; height: number }> = {
-  // The 16 px height allowance accounts for the new 40 px hardware thumbnails
-  // in the shared node header (the previous icon block was 24 px tall).
-  olt: { width: 236, height: 148 },
-  splitter: { width: 224, height: 144 },
-  fiber: { width: 244, height: 148 },
-  closure: { width: 248, height: 166 },
-  ont: { width: 252, height: 154 },
-  odf: { width: 236, height: 148 },
-  nap: { width: 248, height: 166 },
-  gateway: { width: 252, height: 178 },
+  olt: { width: 248, height: 136 },
+  splitter: { width: 188, height: 132 },
+  fiber: { width: 168, height: 108 },
+  closure: { width: 208, height: 144 },
+  ont: { width: 208, height: 138 },
+  odf: { width: 208, height: 132 },
+  nap: { width: 208, height: 156 },
+  gateway: { width: 224, height: 164 },
 };
 
 let ontSequence = 0;
