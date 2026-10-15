@@ -87,11 +87,14 @@ export function MissionDrawer({
     return () => {
       document.removeEventListener('keydown', onKeyDown);
       const previouslyFocused = previouslyFocusedRef.current;
-      const previousIsHidden = Boolean(previouslyFocused?.closest('[aria-hidden="true"], [inert]'));
+      const previousIsHidden =
+        !previouslyFocused ||
+        !document.body.contains(previouslyFocused) ||
+        Boolean(previouslyFocused.closest('[aria-hidden="true"], [inert]'));
       if (previousIsHidden) {
         document.getElementById('studio-overview-toggle')?.focus({ preventScroll: true });
       } else {
-        previouslyFocused?.focus();
+        previouslyFocused.focus();
       }
       previouslyFocusedRef.current = null;
     };

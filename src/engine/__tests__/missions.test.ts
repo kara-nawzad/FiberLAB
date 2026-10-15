@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_SETTINGS, type PonEdge } from '../../types';
 import { buildPreset } from '../presets';
+import { decorateEdges } from '../edgeDecoration';
+import { createFiberNode } from '../factories';
+import { generateOtdrTrace } from '../otdrSimulator';
 import { simulateTopology } from '../opticalSimulator';
 import { evaluateMissionObjectives, getMissionById } from '../missions';
 import { calculateNetworkCost } from '../../data/pricingCatalogue';
@@ -137,5 +140,76 @@ describe('guided troubleshooting missions', () => {
     });
     expect(evaluateMissionObjectives(mission, optimizedSimulation, optimizedNodes, topology.edges, localMarketQuote)[1].isMet)
       .toBe(false);
+  });
+
+  it('runs the Blind Fault mission with hidden visual fault tags, OTDR break detection, and span replacement', () => {
+    const mission = getMissionById('blind-fault');
+    const preset = buildPreset(mission?.presetId ?? 'standard-1x32');
+    expect(mission).toBeDefined();
+    expect(mission?.title).toBe('Blind Fault: The Cut in the Trunk');
+    expect(mission?.blindFaultMode).toBe(true);
+    expect(preset).not.toBeNull();
+    if (!mission || !preset) return;
+
+    const topology = mission.prepareTopology?.(preset) ?? preset;
+    const initialSimulation = simulateTopology(topology.nodes, topology.edges, DEFAULT_SETTINGS);
+
+    // All three neighborhood subscribers start in outage (LOS)
+    expect(initialSimulation.summary.byStatus.LOS).toBe(3);
+    expect(evaluateMissionObjectives(mission, initialSimulation, topology.nodes, topology.edges).map((item) => item.isMet))
+      .toEqual([false, false, false]);
+
+    // Visual fault tags are hidden on edges in blindFaultMode
+    const decorated = decorateEdges(topology.edges, initialSimulation.edgeTelemetry, topology.nodes, {
+      hideFaults: Boolean(mission.blindFaultMode),
+    });
+    expect(decorated.every((edge) => (edge.data?.faultLabels ?? []).length === 0)).toBe(true);
+
+    // OTDR trace identifies the break dropping to the -45 dB noise floor in the distribution span
+    const trace = generateOtdrTrace(topology.nodes, topology.edges, 'olt-a', 'ont-a1', 1490, 100);
+    expect(trace.events.some((event) => event.type === 'fault_bend' && event.passFail === 'FAIL')).toBe(true);
+    expect(trace.tracePoints.some((point) => point.distanceKm <= 6.0 && point.powerDb === -45)).toBe(true);
+
+    // Step 1: Remove the severed distribution span
+    const nodesAfterRemoval = topology.nodes.filter((node) => node.id !== 'fiber-dist-a');
+    const edgesAfterRemoval = topology.edges.filter(
+      (edge) => edge.source !== 'fiber-dist-a' && edge.target !== 'fiber-dist-a',
+    );
+    const removedSimulation = simulateTopology(nodesAfterRemoval, edgesAfterRemoval, DEFAULT_SETTINGS);
+    expect(
+      evaluateMissionObjectives(mission, removedSimulation, nodesAfterRemoval, edgesAfterRemoval).map(
+        (item) => item.isMet,
+      ),
+    ).toEqual([true, false, false]);
+
+    // Step 2 & 3: Splice in a healthy replacement distribution span and restore all subscribers to ONLINE
+    const replacementDist = createFiberNode('distribution', { id: 'fiber-dist-replacement' });
+    const repairedNodes = [...nodesAfterRemoval, replacementDist];
+    const repairedEdges: PonEdge[] = [
+      ...edgesAfterRemoval,
+      {
+        id: 'e-repair-in',
+        source: 'splitter-1x4-a',
+        sourceHandle: 'out-0',
+        target: replacementDist.id,
+        targetHandle: 'in',
+        type: 'optical',
+      },
+      {
+        id: 'e-repair-out',
+        source: replacementDist.id,
+        sourceHandle: 'out',
+        target: 'splitter-1x8-a',
+        targetHandle: 'in',
+        type: 'optical',
+      },
+    ];
+    const repairedSimulation = simulateTopology(repairedNodes, repairedEdges, DEFAULT_SETTINGS);
+    expect(repairedSimulation.summary.byStatus.ONLINE).toBe(3);
+    expect(
+      evaluateMissionObjectives(mission, repairedSimulation, repairedNodes, repairedEdges).every(
+        (item) => item.isMet,
+      ),
+    ).toBe(true);
   });
 });

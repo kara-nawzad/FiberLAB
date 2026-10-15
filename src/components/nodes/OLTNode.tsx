@@ -1,68 +1,42 @@
 import { Handle, Position, type NodeProps } from '@xyflow/react';
-import { Power, PowerOff, Radio } from 'lucide-react';
 import type { OltNode as OltFlowNode } from '../../types';
-import { OLT_CLASS_SPECS, PON_STANDARD_SPECS } from '../../types';
-import { getHardwareProfileForNode } from '../../data/componentCatalogue';
-import { Badge, NodeShell, Stat } from './nodeShared';
+import { OLT_CLASS_SPECS } from '../../types';
+import { useSimulation } from '../../engine/SimulationContext';
+import { HardwareArt } from '../hardware/HardwareArt';
 
-/**
- * OLT transceiver — the light source of the PON.
- * Displays launch power, PON port identity, wavelength and laser state.
- */
-export function OLTNode({ data, selected }: NodeProps<OltFlowNode>) {
+/** OLT — dark 1U chassis with PON port LEDs and an information card beneath (design-image style). */
+export function OLTNode({ id, data, selected }: NodeProps<OltFlowNode>) {
+  const simulation = useSimulation();
+  const telemetry = simulation?.oltTelemetry?.[id];
   const spec = OLT_CLASS_SPECS[data.oltClass];
-  const ponStandard = data.ponStandard ?? 'GPON';
-  const ponSpec = PON_STANDARD_SPECS[ponStandard];
-  const hardware = getHardwareProfileForNode('olt', data.oltClass);
-  const accent = data.laserOn ? '#2563eb' : '#64748b';
+  const rx = telemetry?.maxRxPowerDbm ?? null;
+  const online = data.laserOn;
 
   return (
-    <div className="relative w-[236px]">
+    <div className="hw-olt" style={selected ? { outline: '2px solid var(--pu-pri)', outlineOffset: 4, borderRadius: 8 } : undefined}>
+      <HardwareArt kind="olt" width={230} />
+
+      <div className="hw-card">
+        <b>OLT</b>
+        <small>Class {data.oltClass} · {data.portName}</small>
+        <div className="hw-kv"><span>TX Power</span><b style={{ fontSize: 10.5 }}>{data.txPowerDbm >= 0 ? '+' : ''}{data.txPowerDbm.toFixed(1)} dBm</b></div>
+        <div className="hw-kv"><span>RX Power</span><b style={{ fontSize: 10.5 }}>{rx !== null ? `${rx.toFixed(1)} dBm` : `${spec.rxSensitivityDbm.toFixed(0)} dBm sens`}</b></div>
+        <div className="hw-kv"><span>PON Status</span><b style={{ fontSize: 10.5, color: online ? 'var(--pu-ok)' : 'var(--pu-mut)' }}>● {online ? 'ONLINE' : 'OFFLINE'}</b></div>
+        {telemetry?.upstreamDynamicRangeWarning ? (
+          <div data-testid="olt-dynamic-range-warning" style={{ marginTop: 6, padding: '4px 6px', borderRadius: 6, background: 'var(--pu-warn-soft)', color: '#B36B00', fontSize: 9.5, fontWeight: 600 }}>
+            ⚠ Dynamic range exceeded (Δ {telemetry.upstreamDeltaDb.toFixed(1)} dB &gt; 15 dB)
+          </div>
+        ) : null}
+      </div>
+
       <Handle
         id="out"
         type="source"
         position={Position.Right}
-        className="!top-1/2"
         aria-label="SC/UPC optical output"
-        title="SC/UPC port cue — confirm the installed optic"
-        style={{ right: -6, borderColor: '#2563eb', background: '#eff6ff' }}
+        title="SC/UPC OLT optical output port — drag to connect"
+        style={{ right: -7, top: 35, borderColor: '#0D9F6E', background: '#34D399' }}
       />
-      <NodeShell
-        eyebrow="Headend"
-        title={data.portName}
-        icon={<Radio size={14} />}
-        thumbnail={{ src: hardware.thumbnailSvg, alt: `${hardware.modelName} illustration` }}
-        accent={accent}
-        selected={selected}
-        ringClass={data.laserOn ? 'border-blue-300' : 'border-slate-300'}
-        footer={
-          <div className="flex items-center justify-between">
-            <span
-              className={`inline-flex items-center gap-1 font-mono text-[10px] font-semibold uppercase tracking-wide ${
-                data.laserOn ? 'text-emerald-300' : 'text-noc-400'
-              }`}
-            >
-              {data.laserOn ? <Power size={11} /> : <PowerOff size={11} />}
-              Laser {data.laserOn ? 'On' : 'Off'}
-            </span>
-            <span className="font-mono text-[10px] text-noc-400">{data.wavelength} nm</span>
-          </div>
-        }
-      >
-        <div className="mb-2 flex items-center gap-1.5">
-          <Badge className="border-blue-200 bg-blue-50 text-blue-800">{ponStandard}</Badge>
-          <Badge className="border-blue-200 bg-blue-50 text-blue-800">Class {data.oltClass}</Badge>
-          <span className="truncate text-[10px] text-noc-400">{ponSpec.downstreamGbps.toFixed(3)} / {ponSpec.upstreamGbps.toFixed(3)} Gbps</span>
-        </div>
-        <div className="grid grid-cols-2 gap-1.5">
-          <Stat
-            label="Tx Power"
-            value={`${data.txPowerDbm >= 0 ? '+' : ''}${data.txPowerDbm.toFixed(1)} dBm`}
-            tone={data.laserOn ? 'text-sky-300' : 'text-noc-400'}
-          />
-          <Stat label="Rx Sens." value={`${spec.rxSensitivityDbm.toFixed(0)} dBm`} />
-        </div>
-      </NodeShell>
     </div>
   );
 }

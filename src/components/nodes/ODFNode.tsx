@@ -1,20 +1,104 @@
 import { Handle, Position, useStore, type NodeProps } from '@xyflow/react';
-import { PanelsTopLeft } from 'lucide-react';
 import type { OdfNode as OdfFlowNode } from '../../types';
 import { computeOdfLoss } from '../../engine/opticalSimulator';
-import { getHardwareProfileForNode } from '../../data/componentCatalogue';
-import { Badge, NodeShell, Stat } from './nodeShared';
 
-/** Two matched, independent adapter through-pairs in a representative ODF. */
+/**
+ * Optical Distribution Frame (ODF) — rendered as a 1U rack-mounted metal
+ * patch panel with numbered SC/APC bulkhead adapter ports (01–12), rack mounting
+ * ears, and two matched optical through-coupler pairs (in-0/out-0, in-1/out-1).
+ */
 export function ODFNode({ id, data, selected }: NodeProps<OdfFlowNode>) {
-  const hardware = getHardwareProfileForNode('odf');
   const edges = useStore((state) => state.edges);
   const inputCount = edges.filter((edge) => edge.target === id).length;
   const outputCount = edges.filter((edge) => edge.source === id).length;
   const lossDb = computeOdfLoss(data.throughPortLossDb);
 
   return (
-    <div className="relative w-[236px]">
+    <div className="relative w-[208px]">
+      {/* Left & Right SC/APC Adapter Bulkhead Boots aligned with Handles */}
+      {[0, 1].map((index) => {
+        const topPct = ((index + 1) / 3) * 100;
+        return (
+          <div
+            key={`left-boot-${index}`}
+            aria-hidden="true"
+            className="pointer-events-none absolute -left-2.5 -translate-y-1/2 flex items-center"
+            style={{ top: `${topPct}%` }}
+          >
+            <span className="h-4 w-3 rounded-l border border-emerald-500 bg-emerald-600 shadow-sm" />
+          </div>
+        );
+      })}
+      {[0, 1].map((index) => {
+        const topPct = ((index + 1) / 3) * 100;
+        return (
+          <div
+            key={`right-boot-${index}`}
+            aria-hidden="true"
+            className="pointer-events-none absolute -right-2.5 -translate-y-1/2 flex items-center"
+            style={{ top: `${topPct}%` }}
+          >
+            <span className="h-4 w-3 rounded-r border border-emerald-500 bg-emerald-600 shadow-sm" />
+          </div>
+        );
+      })}
+
+      <div
+        className={`node-shell relative overflow-hidden rounded-lg border-2 bg-slate-800 p-2.5 text-slate-100 transition-all duration-150 ${
+          selected ? 'border-violet-600 shadow-lg' : 'border-slate-600'
+        }`}
+      >
+        {/* Top 1U Patch Panel Silkscreen Bar */}
+        <div className="flex items-center justify-between border-b border-slate-700 pb-1.5">
+          <div>
+            <div className="font-mono text-[8.5px] font-bold uppercase tracking-wider text-teal-300">
+              1U RACK PATCH FIELD · SC/APC
+            </div>
+            <div className="font-sans text-[13px] font-bold leading-tight text-white">
+              ODF rack panel
+            </div>
+          </div>
+          <span className="rounded border border-teal-500/40 bg-teal-950/80 px-1.5 py-0.5 font-mono text-[9px] font-semibold text-teal-200">
+            −{lossDb.toFixed(2)} dB / pair
+          </span>
+        </div>
+
+        {/* 12-Port SC/APC Coupling Adapter Row (01 through 12) */}
+        <div className="my-2 rounded border border-slate-700 bg-slate-900 p-1.5">
+          <div className="grid grid-cols-6 gap-1">
+            {Array.from({ length: 6 }, (_, idx) => {
+              const portNum = String(idx + 1).padStart(2, '0');
+              const isMatchedPair = idx < 2;
+              return (
+                <div
+                  key={portNum}
+                  className={`flex flex-col items-center rounded border py-0.5 font-mono text-[7.5px] ${
+                    isMatchedPair
+                      ? 'border-emerald-500/80 bg-emerald-950 text-emerald-200'
+                      : 'border-slate-700 bg-slate-800 text-slate-400'
+                  }`}
+                >
+                  <span>{portNum}</span>
+                  <span
+                    className={`mt-0.5 h-1.5 w-2.5 rounded-xs ${
+                      isMatchedPair ? 'bg-emerald-500' : 'bg-slate-600'
+                    }`}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Matched Through-Pair Status Footer */}
+        <div className="flex items-center justify-between font-mono text-[9.5px] text-slate-300">
+          <span>2 × matched pair</span>
+          <span>
+            {inputCount}/2 in · {outputCount}/2 out patched
+          </span>
+        </div>
+      </div>
+
       {[0, 1].map((index) => (
         <Handle
           key={`in-${index}`}
@@ -24,10 +108,10 @@ export function ODFNode({ id, data, selected }: NodeProps<OdfFlowNode>) {
           aria-label={`ODF input ${index + 1}`}
           title={`ODF matched through-pair ${index + 1} input`}
           style={{
-            left: -6,
+            left: -10,
             top: `${((index + 1) / 3) * 100}%`,
-            borderColor: '#0f766e',
-            background: '#ecfdf5',
+            borderColor: '#16A34A',
+            background: '#DCFCE7',
           }}
         />
       ))}
@@ -40,37 +124,13 @@ export function ODFNode({ id, data, selected }: NodeProps<OdfFlowNode>) {
           aria-label={`ODF output ${index + 1}`}
           title={`ODF matched through-pair ${index + 1} output`}
           style={{
-            right: -6,
+            right: -10,
             top: `${((index + 1) / 3) * 100}%`,
-            borderColor: '#0f766e',
-            background: '#ecfdf5',
+            borderColor: '#16A34A',
+            background: '#DCFCE7',
           }}
         />
       ))}
-      <NodeShell
-        eyebrow="HEADEND PATCH FIELD"
-        title="ODF rack panel"
-        icon={<PanelsTopLeft size={14} />}
-        thumbnail={{ src: hardware.thumbnailSvg, alt: `${hardware.modelName} illustration` }}
-        accent="#0f766e"
-        selected={selected}
-        ringClass="border-teal-300"
-        footer={
-          <div className="flex items-center justify-between">
-            <span className="font-mono text-[10px] text-noc-400">{inputCount}/2 in · {outputCount}/2 out patched</span>
-            <span className="font-mono text-[10px] font-semibold text-teal-200">−{lossDb.toFixed(2)} dB / pair</span>
-          </div>
-        }
-      >
-        <div className="mb-2 flex flex-wrap items-center gap-1.5">
-          <Badge className="border-teal-200 bg-teal-50 text-teal-800">2 × matched pair</Badge>
-          <Badge className="border-emerald-200 bg-emerald-50 text-emerald-800">Passive</Badge>
-        </div>
-        <div className="grid grid-cols-2 gap-1.5">
-          <Stat label="Through loss" value={`${lossDb.toFixed(2)} dB`} tone="text-teal-200" />
-          <Stat label="Port pairs" value="2 in / 2 out" />
-        </div>
-      </NodeShell>
     </div>
   );
 }

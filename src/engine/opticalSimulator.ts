@@ -7,6 +7,7 @@ import type {
   LossSegment,
   NetworkSummary,
   OltNodeData,
+  OltTelemetry,
   OntStatus,
   OntTelemetry,
   OpticalPath,
@@ -35,6 +36,7 @@ import {
   PON_STANDARD_SPECS,
   SPLITTER_LOSS_DB,
   SPLICE_LOSS_DB,
+  UPSTREAM_DYNAMIC_RANGE_MAX_DB,
 } from '../types';
 
 /* ========================================================================== *
@@ -475,6 +477,7 @@ export function simulateTopology(
 
   const ontTelemetry: Record<string, OntTelemetry> = {};
   const gatewayTelemetry: Record<string, GatewayTelemetry> = {};
+  const oltTelemetry: Record<string, OltTelemetry> = {};
   const bestPaths: Record<string, OpticalPath> = {};
 
   const opticalReading = (candidates: OpticalPath[]) => {
@@ -487,6 +490,7 @@ export function simulateTopology(
       totalLossDb: best ? round2(best.totalLossDb) : 0,
       marginDb: rxPowerDbm === null ? 0 : round2(rxPowerDbm - ONT_THRESHOLDS.losFloorDbm),
       headroomDb: rxPowerDbm === null ? 0 : round2(ONT_THRESHOLDS.overloadDbm - rxPowerDbm),
+      upstreamDeltaDb: null as number | null,
       sourceOltId: best ? best.oltId : null,
       fiberKm: best ? round3(best.fiberKm) : 0,
       splitStages: best ? best.splitStages : 0,
@@ -524,6 +528,7 @@ export function simulateTopology(
         totalLossDb: reading.totalLossDb,
         marginDb: reading.marginDb,
         headroomDb: reading.headroomDb,
+        upstreamDeltaDb: reading.upstreamDeltaDb,
         sourceOltId: reading.sourceOltId,
         fiberKm: reading.fiberKm,
         splitStages: reading.splitStages,
@@ -546,6 +551,48 @@ export function simulateTopology(
     }
   }
 
+  /* -------------- Upstream burst-mode dynamic range telemetry ------------ */
+
+  const allEndpoints = [
+    ...Object.values(ontTelemetry),
+    ...Object.values(gatewayTelemetry),
+  ];
+
+  for (const node of nodes) {
+    if (!isOltNode(node)) continue;
+    const connectedOnOlt = allEndpoints.filter(
+      (endpoint) => endpoint.sourceOltId === node.id && endpoint.rxPowerDbm !== null,
+    );
+    const rxValues = connectedOnOlt
+      .map((endpoint) => endpoint.rxPowerDbm)
+      .filter((val): val is number => val !== null);
+
+    const maxRxPowerDbm = rxValues.length > 0 ? Math.max(...rxValues) : null;
+    const minRxPowerDbm = rxValues.length > 0 ? Math.min(...rxValues) : null;
+    const upstreamDeltaDb =
+      rxValues.length >= 2 && maxRxPowerDbm !== null && minRxPowerDbm !== null
+        ? round2(maxRxPowerDbm - minRxPowerDbm)
+        : 0;
+    const upstreamDynamicRangeWarning = upstreamDeltaDb > UPSTREAM_DYNAMIC_RANGE_MAX_DB;
+
+    oltTelemetry[node.id] = {
+      oltId: node.id,
+      connectedSubscriberCount: connectedOnOlt.length,
+      maxRxPowerDbm,
+      minRxPowerDbm,
+      upstreamDeltaDb,
+      upstreamDynamicRangeWarning,
+    };
+
+    if (maxRxPowerDbm !== null) {
+      for (const endpoint of connectedOnOlt) {
+        if (endpoint.rxPowerDbm !== null) {
+          endpoint.upstreamDeltaDb = round2(maxRxPowerDbm - endpoint.rxPowerDbm);
+        }
+      }
+    }
+  }
+
   /* --------------------------- Edge telemetry ---------------------------- */
 
   const edgeTelemetry: Record<string, EdgeTelemetry> = {};
@@ -561,24 +608,30 @@ export function simulateTopology(
 
   /* ------------------------------ Summary -------------------------------- */
 
-  const summary = summarise(nodes, ontTelemetry, gatewayTelemetry);
+  const summary = summarise(nodes, ontTelemetry, gatewayTelemetry, oltTelemetry);
 
   return {
     ontTelemetry,
     gatewayTelemetry,
+    oltTelemetry,
     bestPaths,
     edgeTelemetry,
     summary,
+    upstreamDeltaDb: summary.upstreamDeltaDb,
+    upstreamDynamicRangeWarning: summary.upstreamDynamicRangeWarning,
     runId,
     safetyMarginDb,
     computedAt: Date.now(),
   };
 }
 
+export const simulatePON = simulateTopology;
+
 function summarise(
   nodes: PonNode[],
   ontTelemetry: Record<string, OntTelemetry>,
   gatewayTelemetry: Record<string, GatewayTelemetry>,
+  oltTelemetry: Record<string, OltTelemetry>,
 ): NetworkSummary {
   const byStatus: Record<OntStatus, number> = {
     OVERLOAD: 0,
@@ -634,6 +687,12 @@ function summarise(
     }
   }
 
+  const upstreamDeltaDb = Object.values(oltTelemetry).reduce(
+    (max, entry) => Math.max(max, entry.upstreamDeltaDb),
+    0,
+  );
+  const upstreamDynamicRangeWarning = upstreamDeltaDb > UPSTREAM_DYNAMIC_RANGE_MAX_DB;
+
   const liveCount = byStatus.ONLINE + byStatus.WARNING + byStatus.OVERLOAD + byStatus.LOS;
 
   return {
@@ -650,6 +709,8 @@ function summarise(
     oltActive,
     meanRxDbm: rxCount > 0 ? round2(rxSum / rxCount) : null,
     worstRxDbm,
+    upstreamDeltaDb,
+    upstreamDynamicRangeWarning,
     allOptimal: subscriberCount > 0 && byStatus.ONLINE === subscriberCount,
     hasFault: byStatus.LOS > 0 || byStatus.DISCONNECTED > 0 || (subscriberCount > 0 && liveCount < subscriberCount),
   };

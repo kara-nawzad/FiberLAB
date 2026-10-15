@@ -42,7 +42,7 @@ function buildStandardTree(): { nodes: PonNode[]; edges: PonEdge[] } {
     {
       id: 'olt-a',
       type: 'olt',
-      position: { x: 40, y: 208 },
+      position: { x: 20, y: 196 },
       data: {
         kind: 'olt',
         portName: 'PON 0/1/0',
@@ -55,7 +55,7 @@ function buildStandardTree(): { nodes: PonNode[]; edges: PonEdge[] } {
     {
       id: 'fiber-feeder-a',
       type: 'fiber',
-      position: { x: 320, y: 208 },
+      position: { x: 300, y: 206 },
       data: {
         kind: 'fiber',
         cableType: 'feeder',
@@ -69,13 +69,13 @@ function buildStandardTree(): { nodes: PonNode[]; edges: PonEdge[] } {
     {
       id: 'splitter-1x4-a',
       type: 'splitter',
-      position: { x: 610, y: 216 },
+      position: { x: 500, y: 200 },
       data: { kind: 'splitter', ratio: 4, excessLossDb: 0 },
     },
     {
       id: 'fiber-dist-a',
       type: 'fiber',
-      position: { x: 880, y: 208 },
+      position: { x: 720, y: 206 },
       data: {
         kind: 'fiber',
         cableType: 'distribution',
@@ -89,13 +89,13 @@ function buildStandardTree(): { nodes: PonNode[]; edges: PonEdge[] } {
     {
       id: 'splitter-1x8-a',
       type: 'splitter',
-      position: { x: 1170, y: 216 },
+      position: { x: 920, y: 200 },
       data: { kind: 'splitter', ratio: 8, excessLossDb: 0 },
     },
     {
       id: 'fiber-drop-a1',
       type: 'fiber',
-      position: { x: 1450, y: 56 },
+      position: { x: 1140, y: 44 },
       data: {
         kind: 'fiber',
         cableType: 'drop',
@@ -109,7 +109,7 @@ function buildStandardTree(): { nodes: PonNode[]; edges: PonEdge[] } {
     {
       id: 'ont-a1',
       type: 'ont',
-      position: { x: 1750, y: 48 },
+      position: { x: 1345, y: 30 },
       data: {
         kind: 'ont',
         serial: 'HWTC00100001',
@@ -120,7 +120,7 @@ function buildStandardTree(): { nodes: PonNode[]; edges: PonEdge[] } {
     {
       id: 'fiber-drop-a2',
       type: 'fiber',
-      position: { x: 1450, y: 240 },
+      position: { x: 1140, y: 206 },
       data: {
         kind: 'fiber',
         cableType: 'drop',
@@ -134,7 +134,7 @@ function buildStandardTree(): { nodes: PonNode[]; edges: PonEdge[] } {
     {
       id: 'ont-a2',
       type: 'ont',
-      position: { x: 1750, y: 232 },
+      position: { x: 1345, y: 192 },
       data: {
         kind: 'ont',
         serial: 'HWTC00100002',
@@ -145,7 +145,7 @@ function buildStandardTree(): { nodes: PonNode[]; edges: PonEdge[] } {
     {
       id: 'fiber-drop-a3',
       type: 'fiber',
-      position: { x: 1450, y: 424 },
+      position: { x: 1140, y: 368 },
       data: {
         kind: 'fiber',
         cableType: 'drop',
@@ -159,7 +159,7 @@ function buildStandardTree(): { nodes: PonNode[]; edges: PonEdge[] } {
     {
       id: 'ont-a3',
       type: 'ont',
-      position: { x: 1750, y: 416 },
+      position: { x: 1345, y: 354 },
       data: {
         kind: 'ont',
         serial: 'HWTC00100003',
@@ -192,7 +192,7 @@ function buildFailingLink(): { nodes: PonNode[]; edges: PonEdge[] } {
     {
       id: 'olt-b',
       type: 'olt',
-      position: { x: 40, y: 200 },
+      position: { x: 20, y: 196 },
       data: {
         kind: 'olt',
         portName: 'PON 0/2/3',
@@ -205,7 +205,7 @@ function buildFailingLink(): { nodes: PonNode[]; edges: PonEdge[] } {
     {
       id: 'fiber-feeder-b',
       type: 'fiber',
-      position: { x: 320, y: 200 },
+      position: { x: 300, y: 206 },
       data: {
         kind: 'fiber',
         cableType: 'feeder',
@@ -219,13 +219,13 @@ function buildFailingLink(): { nodes: PonNode[]; edges: PonEdge[] } {
     {
       id: 'splitter-1x32-b',
       type: 'splitter',
-      position: { x: 610, y: 208 },
+      position: { x: 500, y: 200 },
       data: { kind: 'splitter', ratio: 32, excessLossDb: 0 },
     },
     {
       id: 'fiber-dist-b',
       type: 'fiber',
-      position: { x: 880, y: 200 },
+      position: { x: 720, y: 206 },
       data: {
         kind: 'fiber',
         cableType: 'distribution',
@@ -239,13 +239,13 @@ function buildFailingLink(): { nodes: PonNode[]; edges: PonEdge[] } {
     {
       id: 'splitter-1x16-b',
       type: 'splitter',
-      position: { x: 1170, y: 208 },
+      position: { x: 920, y: 200 },
       data: { kind: 'splitter', ratio: 16, excessLossDb: 0 },
     },
     {
       id: 'fiber-drop-b1',
       type: 'fiber',
-      position: { x: 1450, y: 48 },
+      position: { x: 1140, y: 44 },
       data: {
         kind: 'fiber',
         cableType: 'drop',
@@ -259,7 +259,7 @@ function buildFailingLink(): { nodes: PonNode[]; edges: PonEdge[] } {
     {
       id: 'ont-b1',
       type: 'ont',
-      position: { x: 1750, y: 40 },
+      position: { x: 1345, y: 30 },
       data: {
         kind: 'ont',
         serial: 'ZTEG00200001',
@@ -270,7 +270,7 @@ function buildFailingLink(): { nodes: PonNode[]; edges: PonEdge[] } {
     {
       id: 'fiber-drop-b2',
       type: 'fiber',
-      position: { x: 1450, y: 232 },
+      position: { x: 1140, y: 206 },
       data: {
         kind: 'fiber',
         cableType: 'drop',
@@ -284,7 +284,7 @@ function buildFailingLink(): { nodes: PonNode[]; edges: PonEdge[] } {
     {
       id: 'ont-b2',
       type: 'ont',
-      position: { x: 1750, y: 224 },
+      position: { x: 1345, y: 192 },
       data: {
         kind: 'ont',
         serial: 'ZTEG00200002',
@@ -295,7 +295,7 @@ function buildFailingLink(): { nodes: PonNode[]; edges: PonEdge[] } {
     {
       id: 'fiber-drop-b3',
       type: 'fiber',
-      position: { x: 1450, y: 416 },
+      position: { x: 1140, y: 368 },
       data: {
         kind: 'fiber',
         cableType: 'drop',
@@ -309,7 +309,7 @@ function buildFailingLink(): { nodes: PonNode[]; edges: PonEdge[] } {
     {
       id: 'ont-b3',
       type: 'ont',
-      position: { x: 1750, y: 408 },
+      position: { x: 1345, y: 354 },
       data: {
         kind: 'ont',
         serial: 'ZTEG00200003',
@@ -341,7 +341,7 @@ function buildModernXgsSuburb(): { nodes: PonNode[]; edges: PonEdge[] } {
     {
       id: 'olt-xgs-suburb',
       type: 'olt',
-      position: { x: 40, y: 300 },
+      position: { x: 20, y: 210 },
       data: {
         kind: 'olt',
         portName: 'XGS-PON 0/1/0',
@@ -355,13 +355,13 @@ function buildModernXgsSuburb(): { nodes: PonNode[]; edges: PonEdge[] } {
     {
       id: 'odf-xgs-suburb',
       type: 'odf',
-      position: { x: 320, y: 300 },
+      position: { x: 295, y: 214 },
       data: { kind: 'odf', throughPortLossDb: 0.5 },
     },
     {
       id: 'fiber-feeder-xgs-suburb',
       type: 'fiber',
-      position: { x: 600, y: 300 },
+      position: { x: 525, y: 220 },
       data: {
         kind: 'fiber',
         cableType: 'feeder',
@@ -375,7 +375,7 @@ function buildModernXgsSuburb(): { nodes: PonNode[]; edges: PonEdge[] } {
     {
       id: 'closure-xgs-suburb',
       type: 'closure',
-      position: { x: 890, y: 300 },
+      position: { x: 715, y: 210 },
       data: {
         kind: 'closure',
         spliceLossDb: 0.08,
@@ -385,7 +385,7 @@ function buildModernXgsSuburb(): { nodes: PonNode[]; edges: PonEdge[] } {
     {
       id: 'fiber-distribution-xgs-suburb',
       type: 'fiber',
-      position: { x: 1180, y: 300 },
+      position: { x: 945, y: 220 },
       data: {
         kind: 'fiber',
         cableType: 'distribution',
@@ -399,17 +399,17 @@ function buildModernXgsSuburb(): { nodes: PonNode[]; edges: PonEdge[] } {
     {
       id: 'nap-xgs-suburb',
       type: 'nap',
-      position: { x: 1470, y: 300 },
+      position: { x: 1135, y: 204 },
       data: { kind: 'nap', splitLossDb: 10.5 },
     },
     ...[0, 1, 2].flatMap((index): PonNode[] => {
       const suffix = index + 1;
-      const y = 110 + index * 190;
+      const y = 40 + index * 176;
       return [
         {
           id: `fiber-drop-xgs-${suffix}`,
           type: 'fiber',
-          position: { x: 1760, y },
+          position: { x: 1365, y: y + 12 },
           data: {
             kind: 'fiber',
             cableType: 'drop',
@@ -423,7 +423,7 @@ function buildModernXgsSuburb(): { nodes: PonNode[]; edges: PonEdge[] } {
         {
           id: `gateway-xgs-${suffix}`,
           type: 'gateway',
-          position: { x: 2070, y: y - 8 },
+          position: { x: 1560, y },
           data: {
             kind: 'gateway',
             serial: `FLGW0010000${suffix}`,

@@ -17,7 +17,7 @@ and roadmap for field-style learning and licensed component photography, see
 npm install
 npm run dev        # http://localhost:5173
 npm run build      # tsc --noEmit && vite build
-npm run test       # 85 tests: optical engine, OPM, OTDR, equipment, CAPEX, missions, and app interactions
+npm run test       # 88 tests: optical engine, upstream dynamic range, OPM, OTDR, equipment, CAPEX, missions, and app interactions
 npm run typecheck  # strict TypeScript, no emit
 ```
 
@@ -71,6 +71,11 @@ selected 1310/1490/1550 nm calibration without changing the saved topology.
 
 Where a subscriber is reachable from more than one OLT, every path is retained and
 the best (highest `P_rx`) one is shown; cycles are traversed once, never looped.
+Across active connected endpoints on each OLT port, the simulator also calculates
+the upstream burst-mode power differential (`ΔP_upstream = P_rx,max − P_rx,min`) and
+flags `upstreamDynamicRangeWarning` when `upstreamDeltaDb > 15.0 dB`, surfacing an
+amber warning on the OLT node and TopBar and listing per-subscriber differentials in
+the BOM optical audit table.
 
 ## The commercial budget
 
@@ -110,8 +115,8 @@ Open **OTDR Trace** in the TopBar to pulse a selected OLT output or fiber-span s
 - **Left toolbox** — draggable or double-click quick-add OLT / ODF / splitter (1:2 … 1:64) / cable (feeder, distribution, drop) / FOSC-style dome closure / 1:8 NAP/FAT / ONT / Wi-Fi 6 gateway.
 - **Canvas** — dotted grid, pan/zoom, minimap, compact hardware thumbnails, softly glowing animated optical edges, handle-drag connections, Link nodes mode, and an OPM probe cursor/HUD for port and patch-cord power. Faulted fiber spans mark their outgoing patch cord with a warning glyph.
 - **Right inspector** — Field Hardware Cards for all eight component kinds; a GPON/XGS-PON OLT selector; five fiber/OTDR wavelengths; gateway optical/service telemetry, Wi-Fi SSID and a clearly marked TEST-NET IP placeholder; fiber fault toggles; a 12-color closure splice tray; and editable local USD reference rates. Price edits recalculate CAPEX without changing optical results. The SVGs are representative illustrations, not product photos or exact vendor models.
-- **BOM modal** — an Optical Budget Audit and Commercial Quotation & CAPEX view, with material/labor/project/subscriber metrics, detailed quote lines, gateway SSID/IP/PON-rate fields, and JSON / combined CSV export.
-- **Mission drawer** — four scenarios: “The Marginal Villa,” “Diagnose the Silent ONT,” “Rescue the Unpatched Subscriber,” and “The Budget Crunch: Cost vs. Performance,” each with live objectives, hints, and completion recap. Budget Crunch requires three ONLINE homes, CAPEX below $1,600, and at least 2 dB global safety margin.
+- **BOM modal** — an Optical Budget Audit (including per-subscriber `Upstream Δ` differentials) and Commercial Quotation & CAPEX view, with material/labor/project/subscriber metrics, detailed quote lines, gateway SSID/IP/PON-rate fields, and JSON / combined CSV export.
+- **Mission drawer** — five scenarios: “The Marginal Villa,” “Diagnose the Silent ONT,” “Rescue the Unpatched Subscriber,” “The Budget Crunch: Cost vs. Performance,” and “Blind Fault: The Cut in the Trunk,” each with live objectives, hints, and completion recap. Budget Crunch requires three ONLINE homes, CAPEX below $1,600, and at least 2 dB global safety margin; Blind Fault hides visual fault badges on the canvas so learners diagnose a distribution break with the OPM and OTDR.
 
 The hardware catalogue and SVGs are static, representative illustrations—not genuine
 product photographs or exact-vendor datasheets. The closure profile's up-to-48-splice

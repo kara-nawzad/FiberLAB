@@ -29,7 +29,8 @@ The current app already includes:
 - A dual-view bill of materials/quotation with material, labor, project, and subscriber metrics; a pure topology-derived estimator; editable local reference rates; and financial data in CSV/JSON downloads.
 - A static, React/DOM-independent catalogue of ten representative hardware profiles, 40 × 40 SVG thumbnails in the toolbox and canvas nodes, and a selected-node Field Hardware Card in the Inspector.
 - A light optical-engineering workbench palette, live edge states, equipment/interface color cues, and field-oriented copy.
-- Four guided missions with fresh scenario setup, live objective progress, field hints, and completion recaps, including a three-home cost-versus-performance challenge.
+- Upstream burst-mode dynamic range telemetry (`upstreamDeltaDb`, `upstreamDynamicRangeWarning`) flagging when the power differential across active connected ONTs on a PON port exceeds 15.0 dB, with amber indicators on the OLT node and TopBar plus per-subscriber upstream differentials in the BOM optical table.
+- Five guided missions with fresh scenario setup, live objective progress, field hints, and completion recaps, including a three-home cost-versus-performance challenge and a blind trunk-cut troubleshooting mission with hidden canvas fault indicators.
 
 The current app still does **not** include genuine manufacturer/product photographs, a broad lesson library, quizzes or scoring, exact vendor/SKU integrations, accounts, a server, or saved projects. The hardware visuals are carefully authored vector references, not photos or exact vendor/SKU representations.
 
@@ -157,6 +158,7 @@ Open **Missions** in the top bar or choose **Explore Guided Missions** on the la
 - **Diagnose the Silent ONT:** starts from the Failing Long-Distance Link with `olt-b` laser switched off. Re-enable an OLT source, restore an optical path to Dukan Ridge — Tower 7, and bring that target ONT into the ONLINE window.
 - **Rescue the Unpatched Subscriber:** starts from the same long-haul preset with Dukan Ridge — Not Yet Wired unpatched. Connect the 1:16 splitter's `out-2` handle to its drop, connect the drop to the ONT, then reduce cascaded split loss until that subscriber is ONLINE. Optional macro-bend and dirty-ferrule switches add separate educational penalties to the path breakdown.
 - **The Budget Crunch: Cost vs. Performance:** connect all three homes, keep every ONT ONLINE (−24 to −8 dBm), stay below $1,600 total reference CAPEX, and preserve at least 2 dB global safety margin. The default topology starts over budget; shorten spans and adjust the layout without sacrificing optical acceptance. Editable local rates are shared by the TopBar, quotation, export, and objective evaluation.
+- **Blind Fault: The Cut in the Trunk:** a neighborhood distribution branch outage with visual fault badges and warning glyphs disabled on the canvas (`blindFaultMode`). Use the handheld OPM probe and launch an OTDR laser trace from the Central Office to locate the exact break distance where the backscatter curve drops to the −45 dB noise floor, remove the faulty/severed span, splice in a healthy replacement distribution span, and restore all affected subscribers to ONLINE status (−8 to −24 dBm).
 
 These are guided practice missions, not a scored course. They do not add graph component types or change the simulator's core equations.
 
@@ -314,6 +316,7 @@ The UI's `marginDb` is calculated as the distance above the −28 dBm LOS floor.
 - Network totals count placed physical nodes, including unconnected fiber spans. The mean receive power includes all ONT and gateway subscriber endpoints that have a reading.
 - Health status and subscriber counts include both endpoint types. The detailed table/export retains each endpoint's actual status.
 - `allOptimal` is true only when there is at least one subscriber endpoint and every endpoint is ONLINE. `hasFault` is based on LOS/disconnected states; the top-bar health strip separately shows warnings/overload as amber.
+- **Upstream burst-mode dynamic range (ITU-T G.984.2 reference):** the simulator (`simulateTopology` / `simulatePON`) computes $\Delta P_{\text{upstream}} = P_{\text{rx, max}} - P_{\text{rx, min}}$ across active connected endpoints on each OLT PON port. When `upstreamDeltaDb > 15.0` dB, `upstreamDynamicRangeWarning` is flagged, the OLT node and TopBar show `⚠️ Dynamic Range Exceeded (Delta: X.X dB > 15 dB max) — Attenuate near-end ONTs`, and the BOM optical table lists each subscriber's upstream differential (`Upstream Δ`).
 
 ### 5.7 Independent CAPEX and quotation model
 
@@ -460,7 +463,7 @@ On 13 October 2026, after the ODF/NAP/gateway and XGS-PON expansion:
 
 - `npm ci --no-audit`: passed; dependencies installed from the lockfile. No automatic dependency fixes were applied.
 - `npm run typecheck`: passed.
-- `npm test -- --reporter=dot`: **85 tests passed** across 11 files (25 optical-simulator, 5 OPM, 5 OTDR, 5 XGS-PON/equipment, 5 mission, 5 pricing, 3 commercial-export, 7 hardware-catalogue, 2 landing-physics, 22 app, and 1 splice-hero tests). The historical 73-test baseline remains covered, with 12 focused tests added for the expansion.
+- `npm test -- --reporter=dot`: **88 tests passed** across 11 files (26 optical-simulator, 5 OPM, 5 OTDR, 5 XGS-PON/equipment, 6 mission, 5 pricing, 3 commercial-export, 7 hardware-catalogue, 2 landing-physics, 23 app, and 1 splice-hero tests). The historical 85-test baseline remains covered, with 3 focused tests added for upstream dynamic range and blind fault troubleshooting.
 - `npm run build`: passed, including strict TypeScript checking and a Vite production build. Vite reports an informational large-chunk advisory for the 608.08 kB minified JavaScript bundle.
 - `git diff --check`: passed.
 - A previous audit scan reported **13 dependency findings** (5 moderate, 6 high, 2 critical). Review these before production; no `npm audit fix` was run.
