@@ -3,7 +3,7 @@ import { Activity, ChevronDown, Gauge, LayoutDashboard, PlayCircle, Search, Sett
 import type { CableType, SplitRatio } from '../types';
 import { CABLE_SPECS, SPLIT_RATIOS, SPLITTER_LOSS_DB } from '../types';
 import { getHardwareProfileForNode } from '../data/componentCatalogue';
-import { artDataUri, FIBER_ART, OLT_ART, ONU_ART, SPLITTER_ART } from './hardware/hardwareArt';
+import { artDataUri, FIBER_ART, OLT_ART, ONU_ART, SPLITTER_ART } from '../data/hardwareArtwork';
 
 /* ========================================================================== *
  * Left side: icon rail (Design / Simulation / Reports / Settings) +

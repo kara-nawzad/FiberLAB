@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { artForNode } from './hardware/hardwareArt';
+import { artForNode } from '../data/hardwareArtwork';
 import {
   Cable,
   AlertTriangle,

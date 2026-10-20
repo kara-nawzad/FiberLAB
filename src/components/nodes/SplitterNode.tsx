@@ -3,7 +3,7 @@ import type { SplitterNode as SplitterFlowNode } from '../../types';
 import { SPLITTER_OUTPUT_PORTS } from '../../types';
 import { computeSplitterLoss } from '../../engine/opticalSimulator';
 import { HardwareArt } from '../hardware/HardwareArt';
-import { splitterOutputY } from '../hardware/hardwareArt';
+import { splitterOutputY } from '../../data/hardwareArtwork';
 
 /** PLC splitter — compact black cassette with a title card underneath. Handles sit on the real ports. */
 export function SplitterNode({ id, data, selected }: NodeProps<SplitterFlowNode>) {

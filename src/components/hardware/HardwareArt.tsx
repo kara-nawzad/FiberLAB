@@ -1,4 +1,4 @@
-import { OLT_ART, ONU_ART, FIBER_ART, CONNECTOR_ART, SPLICE_ART, SPLITTER_ART } from './hardwareArt';
+import { OLT_ART, ONU_ART, FIBER_ART, CONNECTOR_ART, SPLICE_ART, SPLITTER_ART } from '../../data/hardwareArtwork';
 
 export type HardwareArtKind = 'olt' | 'onu' | 'fiber' | 'connector' | 'splice' | 'splitter';
 
