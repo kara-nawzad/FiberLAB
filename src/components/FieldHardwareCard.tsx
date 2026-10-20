@@ -114,7 +114,8 @@ export function FieldHardwareCard({ profile, configurationLabel }: FieldHardware
             </div>
           </dl>
           <p className="mt-2 border-t border-noc-700/40 pt-1.5 text-[8px] leading-relaxed text-noc-500">
-            Values are generic learning context. Verify operating limits, optical specifications, and compliance against the exact product datasheet before deployment.
+            Values are generic learning context. Verify operating limits, optical specifications, and compliance against
+            the exact product datasheet before deployment.
           </p>
         </details>
       </div>

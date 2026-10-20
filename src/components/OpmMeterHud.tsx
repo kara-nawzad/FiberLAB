@@ -62,22 +62,36 @@ export const OpmMeterHud = forwardRef<HTMLElement, OpmMeterHudProps>(function Op
       onClick={(event) => event.stopPropagation()}
     >
       <header className="opm-meter-header">
-        <span className="opm-meter-brand"><Crosshair size={14} aria-hidden="true" /> FIELD OPM</span>
-        <span className="opm-meter-battery" aria-hidden="true"><BatteryFull size={17} aria-hidden="true" /></span>
+        <span className="opm-meter-brand">
+          <Crosshair size={14} aria-hidden="true" /> FIELD OPM
+        </span>
+        <span className="opm-meter-battery" aria-hidden="true">
+          <BatteryFull size={17} aria-hidden="true" />
+        </span>
         <button type="button" className="opm-meter-close" aria-label="Close OPM" onClick={onClose}>
           <X size={14} aria-hidden="true" />
         </button>
       </header>
 
       <div className="opm-meter-reading-wrap">
-        <div className="opm-meter-target" title={targetLabel(target)}>{targetLabel(target)}</div>
+        <div className="opm-meter-target" title={targetLabel(target)}>
+          {targetLabel(target)}
+        </div>
         <output className="opm-meter-reading" aria-label="Optical power reading" aria-live="polite">
           {display}
-          <span className="opm-meter-unit">{display === 'LO' || display === 'UNDER' ? '' : relativeMode ? ' dB' : ' dBm'}</span>
+          <span className="opm-meter-unit">
+            {display === 'LO' || display === 'UNDER' ? '' : relativeMode ? ' dB' : ' dBm'}
+          </span>
         </output>
         <div className="opm-meter-state">
           <span className="opm-meter-led" aria-hidden="true" />
-          {readingDbm === null ? 'NO LIGHT DETECTED' : readingDbm < -60 ? 'BELOW METER RANGE' : relativeMode ? 'REFERENCE DELTA' : `SIMULATED PATH @ ${wavelength} nm`}
+          {readingDbm === null
+            ? 'NO LIGHT DETECTED'
+            : readingDbm < -60
+              ? 'BELOW METER RANGE'
+              : relativeMode
+                ? 'REFERENCE DELTA'
+                : `SIMULATED PATH @ ${wavelength} nm`}
         </div>
       </div>
 
@@ -104,12 +118,16 @@ export const OpmMeterHud = forwardRef<HTMLElement, OpmMeterHudProps>(function Op
           onClick={toggleReference}
           disabled={!inRange && !relativeMode}
           aria-pressed={relativeMode}
-          title={relativeMode ? 'Clear reference and return to absolute dBm' : 'Store this reading as the 0 dB reference'}
+          title={
+            relativeMode ? 'Clear reference and return to absolute dBm' : 'Store this reading as the 0 dB reference'
+          }
         >
           REF
         </button>
         <span>{relativeMode && referenceDbm !== null ? `REF ${referenceDbm.toFixed(2)} dBm` : 'CAL · SIMULATOR'}</span>
-        <button type="button" className="opm-meter-close-text" onClick={onClose}>Close OPM</button>
+        <button type="button" className="opm-meter-close-text" onClick={onClose}>
+          Close OPM
+        </button>
       </footer>
     </section>
   );

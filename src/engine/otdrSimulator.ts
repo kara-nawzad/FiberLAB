@@ -86,27 +86,25 @@ function attenuationAt(wavelengthNm: number): number {
 function stableOutgoingEdges(edges: PonEdge[], nodeId: string): PonEdge[] {
   return edges
     .filter((edge) => edge.source === nodeId)
-    .sort((left, right) => (
-      (left.sourceHandle ?? '').localeCompare(right.sourceHandle ?? '', undefined, { numeric: true }) ||
-      left.target.localeCompare(right.target) ||
-      left.id.localeCompare(right.id)
-    ));
+    .sort(
+      (left, right) =>
+        (left.sourceHandle ?? '').localeCompare(right.sourceHandle ?? '', undefined, { numeric: true }) ||
+        left.target.localeCompare(right.target) ||
+        left.id.localeCompare(right.id),
+    );
 }
 
-function findRoute(
-  nodes: PonNode[],
-  edges: PonEdge[],
-  startNodeId: string,
-  targetOntId: string,
-): TraceRoute | null {
+function findRoute(nodes: PonNode[], edges: PonEdge[], startNodeId: string, targetOntId: string): TraceRoute | null {
   const nodeById = new Map(nodes.map((node) => [node.id, node]));
   const startNode = nodeById.get(startNodeId);
   const targetNode = nodeById.get(targetOntId);
   if (
     !startNode ||
     (targetNode?.type !== 'ont' && targetNode?.type !== 'gateway') ||
-    startNode.type === 'ont' || startNode.type === 'gateway'
-  ) return null;
+    startNode.type === 'ont' ||
+    startNode.type === 'gateway'
+  )
+    return null;
 
   const pathNodes: PonNode[] = [startNode];
   const pathEdges: PonEdge[] = [];
@@ -210,11 +208,10 @@ export function generateOtdrTrace(
   pulseWidthNs: number = 100,
 ): OtdrAnalysisResult {
   const measuredWavelengthNm = isSupportedWavelength(wavelengthNm) ? wavelengthNm : 1490;
-  const measuredPulseWidthNs = OTDR_PULSE_WIDTHS_NS.includes(pulseWidthNs as OtdrPulseWidthNs)
-    ? pulseWidthNs
-    : 100;
+  const measuredPulseWidthNs = OTDR_PULSE_WIDTHS_NS.includes(pulseWidthNs as OtdrPulseWidthNs) ? pulseWidthNs : 100;
   const startNode = nodes.find((node) => node.id === startNodeId);
-  if (!startNode || startNode.type === 'ont' || startNode.type === 'gateway') return makeEmptyTrace(measuredWavelengthNm, measuredPulseWidthNs);
+  if (!startNode || startNode.type === 'ont' || startNode.type === 'gateway')
+    return makeEmptyTrace(measuredWavelengthNm, measuredPulseWidthNs);
 
   let route: TraceRoute | null;
   if (targetOntId) {
@@ -225,9 +222,10 @@ export function generateOtdrTrace(
       .filter((candidate): candidate is TraceRoute => candidate !== null)
       .map((candidate) => ({
         route: candidate,
-        distance: candidate.nodes.reduce((sum, node) => (
-          node.type === 'fiber' ? sum + Math.max(0, node.data.lengthKm) : sum
-        ), 0),
+        distance: candidate.nodes.reduce(
+          (sum, node) => (node.type === 'fiber' ? sum + Math.max(0, node.data.lengthKm) : sum),
+          0,
+        ),
         targetId: candidate.nodes[candidate.nodes.length - 1]?.id ?? '',
       }))
       .sort((left, right) => right.distance - left.distance || left.targetId.localeCompare(right.targetId));
@@ -272,9 +270,10 @@ export function generateOtdrTrace(
     if (node.type === 'fiber') {
       const lengthKm = Number.isFinite(node.data.lengthKm) ? Math.max(0, node.data.lengthKm) : 0;
       const configuredAttenuation = node.data.attenuationOverrideDbPerKm;
-      const alpha = typeof configuredAttenuation === 'number' && Number.isFinite(configuredAttenuation) && configuredAttenuation > 0
-        ? configuredAttenuation
-        : attenuationAt(measuredWavelengthNm);
+      const alpha =
+        typeof configuredAttenuation === 'number' && Number.isFinite(configuredAttenuation) && configuredAttenuation > 0
+          ? configuredAttenuation
+          : attenuationAt(measuredWavelengthNm);
       const spanStartKm = distanceKm;
       const spanEndKm = spanStartKm + lengthKm;
       fiberRanges.push({ startKm: spanStartKm, endKm: spanEndKm, attenuationDbPerKm: alpha });
@@ -388,9 +387,10 @@ export function generateOtdrTrace(
     }
 
     if (node.type === 'odf') {
-      const lossDb = Number.isFinite(node.data.throughPortLossDb) && node.data.throughPortLossDb >= 0
-        ? node.data.throughPortLossDb
-        : DEFAULT_ODF_THROUGH_PORT_LOSS_DB;
+      const lossDb =
+        Number.isFinite(node.data.throughPortLossDb) && node.data.throughPortLossDb >= 0
+          ? node.data.throughPortLossDb
+          : DEFAULT_ODF_THROUGH_PORT_LOSS_DB;
       cumulativeLossDb += lossDb;
       const description = `ODF adapter through-port · ${lossDb.toFixed(2)} dB reference loss`;
       pointLosses.push({
@@ -407,9 +407,10 @@ export function generateOtdrTrace(
     }
 
     if (node.type === 'nap') {
-      const lossDb = Number.isFinite(node.data.splitLossDb) && node.data.splitLossDb >= 0
-        ? node.data.splitLossDb
-        : NAP_SPLIT_LOSS_DB;
+      const lossDb =
+        Number.isFinite(node.data.splitLossDb) && node.data.splitLossDb >= 0
+          ? node.data.splitLossDb
+          : NAP_SPLIT_LOSS_DB;
       cumulativeLossDb += lossDb;
       const description = `Outdoor NAP/FAT internal 1:${NAP_SPLIT_RATIO} · ${lossDb.toFixed(2)} dB reference split loss`;
       pointLosses.push({
@@ -471,28 +472,30 @@ export function generateOtdrTrace(
   const uniformSampleCount = Math.max(100, Math.min(200, 300 - sampledEvents.length * 2));
   const traceSamples: Array<{ distanceKm: number; powerDb: number; order: number }> = [];
 
-  const distributedLossAt = (sampleDistanceKm: number): number => fiberRanges.reduce((sum, range) => {
-    const coveredDistance = Math.max(0, Math.min(sampleDistanceKm, range.endKm) - range.startKm);
-    return sum + coveredDistance * range.attenuationDbPerKm;
-  }, 0);
+  const distributedLossAt = (sampleDistanceKm: number): number =>
+    fiberRanges.reduce((sum, range) => {
+      const coveredDistance = Math.max(0, Math.min(sampleDistanceKm, range.endKm) - range.startKm);
+      return sum + coveredDistance * range.attenuationDbPerKm;
+    }, 0);
   const powerBeforePointLoss = (point: PointLoss): number => {
-    const priorPointLossDb = pointLosses.reduce((sum, candidate) => (
-      candidate.distanceKm < point.distanceKm ||
-      (candidate.distanceKm === point.distanceKm && candidate.order < point.order)
-        ? sum + candidate.lossDb
-        : sum
-    ), 0);
+    const priorPointLossDb = pointLosses.reduce(
+      (sum, candidate) =>
+        candidate.distanceKm < point.distanceKm ||
+        (candidate.distanceKm === point.distanceKm && candidate.order < point.order)
+          ? sum + candidate.lossDb
+          : sum,
+      0,
+    );
     return Math.max(TRACE_NOISE_FLOOR_DB, -(distributedLossAt(point.distanceKm) + priorPointLossDb));
   };
 
   for (let index = 0; index < uniformSampleCount - 1; index += 1) {
-    const sampleDistanceKm = totalDistanceKm > 0
-      ? (totalDistanceKm * index) / (uniformSampleCount - 1)
-      : 0;
+    const sampleDistanceKm = totalDistanceKm > 0 ? (totalDistanceKm * index) / (uniformSampleCount - 1) : 0;
     if (sampledEvents.some((point) => Math.abs(point.distanceKm - sampleDistanceKm) < 1e-9)) continue;
-    const discreteLossDb = pointLosses.reduce((sum, point) => (
-      point.distanceKm <= sampleDistanceKm ? sum + point.lossDb : sum
-    ), 0);
+    const discreteLossDb = pointLosses.reduce(
+      (sum, point) => (point.distanceKm <= sampleDistanceKm ? sum + point.lossDb : sum),
+      0,
+    );
     traceSamples.push({
       distanceKm: sampleDistanceKm,
       powerDb: Math.max(TRACE_NOISE_FLOOR_DB, -(distributedLossAt(sampleDistanceKm) + discreteLossDb)),

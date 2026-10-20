@@ -1,8 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  HARDWARE_CATALOGUE,
-  getHardwareProfileForNode,
-} from '../componentCatalogue';
+import { HARDWARE_CATALOGUE, getHardwareProfileForNode } from '../componentCatalogue';
 
 describe('static hardware catalogue', () => {
   it('contains the representative OLT, passive, fiber, closure, ONT, and gateway profiles', () => {

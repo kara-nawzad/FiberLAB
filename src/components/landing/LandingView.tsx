@@ -45,9 +45,13 @@ export function LandingView({
       </main>
 
       <footer className="landing-footer">
-        <div className="landing-footer-brand"><span>F</span> FiberLAB</div>
+        <div className="landing-footer-brand">
+          <span>F</span> FiberLAB
+        </div>
         <p>
-          Learning model · downstream link-budget terms are explicit, but product-specific optics, bend penalties, and upstream receiver budgets are not fully modeled. Confirm every live-network decision against current standards and device datasheets.
+          Learning model · downstream link-budget terms are explicit, but product-specific optics, bend penalties, and
+          upstream receiver budgets are not fully modeled. Confirm every live-network decision against current standards
+          and device datasheets.
         </p>
         <button type="button" className="landing-footer-link" onClick={onLaunchStudio}>
           Open the engineering canvas <ArrowUpRight size={13} aria-hidden="true" />

@@ -1,4 +1,14 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type DragEvent, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type DragEvent,
+  type MouseEvent as ReactMouseEvent,
+  type PointerEvent as ReactPointerEvent,
+} from 'react';
 import {
   Background,
   BackgroundVariant,
@@ -58,7 +68,12 @@ import {
 } from './engine/opticalSimulator';
 import { decorateEdges } from './engine/edgeDecoration';
 import { SimulationContext } from './context/SimulationContext';
-import { readOpticalPowerAtProbe, sameProbeTarget, simulateAtMeterWavelength, type OpticalProbeTarget } from './engine/opticalProbe';
+import {
+  readOpticalPowerAtProbe,
+  sameProbeTarget,
+  simulateAtMeterWavelength,
+  type OpticalProbeTarget,
+} from './engine/opticalProbe';
 import { OpmMeterHud } from './components/OpmMeterHud';
 import { OtdrModal } from './components/OtdrModal';
 import { nodeTypes } from './components/nodes';
@@ -82,9 +97,7 @@ import {
 const edgeTypes = { optical: OpticalEdge };
 
 type LandingCommandInput =
-  | { kind: 'preset'; presetId: string }
-  | { kind: 'mission'; missionId: string }
-  | { kind: 'missions' };
+  { kind: 'preset'; presetId: string } | { kind: 'mission'; missionId: string } | { kind: 'missions' };
 
 type LandingCommand = LandingCommandInput & { requestId: number };
 
@@ -147,7 +160,12 @@ function initialTopology(): { nodes: PonNode[]; edges: PonEdge[] } {
  * Studio workspace — canvas, drag & drop, selection and simulation wiring.
  * ========================================================================== */
 
-function StudioWorkspace({ onOpenOverview, onSimulationChange, landingCommand, isActive = true }: StudioWorkspaceProps) {
+function StudioWorkspace({
+  onOpenOverview,
+  onSimulationChange,
+  landingCommand,
+  isActive = true,
+}: StudioWorkspaceProps) {
   const seeded = useMemo(initialTopology, []);
   const [nodes, setNodes, onNodesChange] = useNodesState<PonNode>(seeded.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState<PonEdge>(seeded.edges);
@@ -183,13 +201,10 @@ function StudioWorkspace({ onOpenOverview, onSimulationChange, landingCommand, i
 
   /* --------------------------- Simulation core --------------------------- */
 
-  const liveSimulation = useMemo(
-    () => simulateTopology(nodes, edges, settings, 0),
-    [nodes, edges, settings],
-  );
+  const liveSimulation = useMemo(() => simulateTopology(nodes, edges, settings, 0), [nodes, edges, settings]);
 
   const activeMission = useMemo(
-    () => (activeMissionId ? getMissionById(activeMissionId) ?? null : null),
+    () => (activeMissionId ? (getMissionById(activeMissionId) ?? null) : null),
     [activeMissionId],
   );
   const blindFaultMode = Boolean(activeMission?.blindFaultMode);
@@ -200,17 +215,13 @@ function StudioWorkspace({ onOpenOverview, onSimulationChange, landingCommand, i
   }, [settings.autoRun, liveSimulation, committedSim, blindFaultMode]);
 
   const simulationStale = !settings.autoRun && dirty;
-  const costBreakdown = useMemo(
-    () => calculateNetworkCost(nodes, edges, unitCosts),
-    [nodes, edges, unitCosts],
-  );
+  const costBreakdown = useMemo(() => calculateNetworkCost(nodes, edges, unitCosts), [nodes, edges, unitCosts]);
   const opmSimulation = useMemo(
     () => (opmActive ? simulateAtMeterWavelength(nodes, edges, settings, meterWavelength) : null),
     [opmActive, nodes, edges, settings, meterWavelength],
   );
-  const opmReading = opmActive && opmProbe && opmSimulation
-    ? readOpticalPowerAtProbe(opmProbe, nodes, edges, opmSimulation)
-    : null;
+  const opmReading =
+    opmActive && opmProbe && opmSimulation ? readOpticalPowerAtProbe(opmProbe, nodes, edges, opmSimulation) : null;
 
   useEffect(() => {
     onSimulationChange(simulation, simulationStale);
@@ -257,68 +268,78 @@ function StudioWorkspace({ onOpenOverview, onSimulationChange, landingCommand, i
     window.setTimeout(() => setTesting(false), 700);
   }, [nodes, edges, settings]);
 
-  const updateOpmProbeFromEvent = useCallback((event: {
-    target: EventTarget | null;
-    clientX: number;
-    clientY: number;
-  }) => {
-    if (!opmActive) return;
-    if (event.target instanceof Element && event.target.closest('.opm-meter-hud')) return;
+  const updateOpmProbeFromEvent = useCallback(
+    (event: { target: EventTarget | null; clientX: number; clientY: number }) => {
+      if (!opmActive) return;
+      if (event.target instanceof Element && event.target.closest('.opm-meter-hud')) return;
 
-    const target = resolveProbeTarget(event.target);
-    if (!target) {
-      if (opmProbeRef.current !== null) {
-        opmProbeRef.current = null;
-        setOpmProbe(null);
+      const target = resolveProbeTarget(event.target);
+      if (!target) {
+        if (opmProbeRef.current !== null) {
+          opmProbeRef.current = null;
+          setOpmProbe(null);
+        }
+        return;
       }
-      return;
-    }
 
-    const changed = !sameProbeTarget(opmProbeRef.current, target);
-    if (changed) {
-      opmProbeRef.current = target;
-      setOpmProbe(target);
-    }
+      const changed = !sameProbeTarget(opmProbeRef.current, target);
+      if (changed) {
+        opmProbeRef.current = target;
+        setOpmProbe(target);
+      }
 
-    const bounds = studioMainRef.current?.getBoundingClientRect();
-    if (!bounds) return;
-    const hudWidth = opmHudRef.current?.offsetWidth || 288;
-    const hudHeight = opmHudRef.current?.offsetHeight || 230;
-    const clientX = Number.isFinite(event.clientX) ? event.clientX : bounds.left + 18;
-    const clientY = Number.isFinite(event.clientY) ? event.clientY : bounds.top + 18;
-    const localX = clientX - bounds.left;
-    const localY = clientY - bounds.top;
-    let x = localX + 18;
-    let y = localY + 18;
-    if (x + hudWidth > bounds.width - 8) x = localX - hudWidth - 18;
-    if (y + hudHeight > bounds.height - 8) y = localY - hudHeight - 18;
-    x = Math.max(8, Math.min(x, Math.max(8, bounds.width - hudWidth - 8)));
-    y = Math.max(8, Math.min(y, Math.max(8, bounds.height - hudHeight - 8)));
+      const bounds = studioMainRef.current?.getBoundingClientRect();
+      if (!bounds) return;
+      const hudWidth = opmHudRef.current?.offsetWidth || 288;
+      const hudHeight = opmHudRef.current?.offsetHeight || 230;
+      const clientX = Number.isFinite(event.clientX) ? event.clientX : bounds.left + 18;
+      const clientY = Number.isFinite(event.clientY) ? event.clientY : bounds.top + 18;
+      const localX = clientX - bounds.left;
+      const localY = clientY - bounds.top;
+      let x = localX + 18;
+      let y = localY + 18;
+      if (x + hudWidth > bounds.width - 8) x = localX - hudWidth - 18;
+      if (y + hudHeight > bounds.height - 8) y = localY - hudHeight - 18;
+      x = Math.max(8, Math.min(x, Math.max(8, bounds.width - hudWidth - 8)));
+      y = Math.max(8, Math.min(y, Math.max(8, bounds.height - hudHeight - 8)));
 
-    if (opmHudRef.current) {
-      // Move the small HUD imperatively; don't schedule a React Flow tree render
-      // on every pointer frame while the canvas is being panned.
-      opmHudRef.current.style.left = `${x}px`;
-      opmHudRef.current.style.top = `${y}px`;
-    }
-    if (changed) setOpmAnchor({ x, y });
-  }, [opmActive]);
+      if (opmHudRef.current) {
+        // Move the small HUD imperatively; don't schedule a React Flow tree render
+        // on every pointer frame while the canvas is being panned.
+        opmHudRef.current.style.left = `${x}px`;
+        opmHudRef.current.style.top = `${y}px`;
+      }
+      if (changed) setOpmAnchor({ x, y });
+    },
+    [opmActive],
+  );
 
   const handleOpmPointerMove = useCallback(
     (event: ReactPointerEvent<HTMLElement>) => updateOpmProbeFromEvent(event),
     [updateOpmProbeFromEvent],
   );
-  const handleOpmClickCapture = useCallback((event: ReactMouseEvent<HTMLElement>) => {
-    if (!opmActive || (event.target instanceof Element && event.target.closest('.opm-meter-hud, .pu-toolbar'))) return;
-    updateOpmProbeFromEvent(event);
-    event.preventDefault();
-    event.stopPropagation();
-  }, [opmActive, updateOpmProbeFromEvent]);
-  const handleOpmPointerLeave = useCallback((event: ReactPointerEvent<HTMLElement>) => {
-    if (!opmActive || (event.relatedTarget instanceof Element && event.relatedTarget.closest('.opm-meter-hud, .pu-toolbar'))) return;
-    opmProbeRef.current = null;
-    setOpmProbe(null);
-  }, [opmActive]);
+  const handleOpmClickCapture = useCallback(
+    (event: ReactMouseEvent<HTMLElement>) => {
+      if (!opmActive || (event.target instanceof Element && event.target.closest('.opm-meter-hud, .pu-toolbar')))
+        return;
+      updateOpmProbeFromEvent(event);
+      event.preventDefault();
+      event.stopPropagation();
+    },
+    [opmActive, updateOpmProbeFromEvent],
+  );
+  const handleOpmPointerLeave = useCallback(
+    (event: ReactPointerEvent<HTMLElement>) => {
+      if (
+        !opmActive ||
+        (event.relatedTarget instanceof Element && event.relatedTarget.closest('.opm-meter-hud, .pu-toolbar'))
+      )
+        return;
+      opmProbeRef.current = null;
+      setOpmProbe(null);
+    },
+    [opmActive],
+  );
 
   /* ------------------------------ Mutations ------------------------------ */
 
@@ -464,7 +485,9 @@ function StudioWorkspace({ onOpenOverview, onSimulationChange, landingCommand, i
           source,
           target,
           sourceHandle: connection.sourceHandle ?? null,
-          targetHandle: connection.targetHandle ?? (targetNode && (isClosureNode(targetNode) || isOdfNode(targetNode)) ? 'in-0' : 'in'),
+          targetHandle:
+            connection.targetHandle ??
+            (targetNode && (isClosureNode(targetNode) || isOdfNode(targetNode)) ? 'in-0' : 'in'),
           type: 'optical',
         };
 
@@ -476,20 +499,19 @@ function StudioWorkspace({ onOpenOverview, onSimulationChange, landingCommand, i
         // Multi-input hardware replaces only the patch on the selected port.
         if (targetNode && (isClosureNode(targetNode) || isOdfNode(targetNode))) {
           const targetHandle = connection.targetHandle ?? 'in-0';
-          filtered = filtered.filter(
-            (edge) => edge.target !== target || edge.targetHandle !== targetHandle,
-          );
+          filtered = filtered.filter((edge) => edge.target !== target || edge.targetHandle !== targetHandle);
         }
         // An OLT port or a cable span has a single output.
         if (sourceNode && (isOltNode(sourceNode) || isFiberNode(sourceNode))) {
           filtered = filtered.filter((edge) => edge.source !== source);
         }
         // Each physical output on a passive branching/patch component is single-cord.
-        if (sourceNode && (isSplitterNode(sourceNode) || isClosureNode(sourceNode) || isOdfNode(sourceNode) || isNapNode(sourceNode))) {
+        if (
+          sourceNode &&
+          (isSplitterNode(sourceNode) || isClosureNode(sourceNode) || isOdfNode(sourceNode) || isNapNode(sourceNode))
+        ) {
           const sourceHandle = connection.sourceHandle;
-          filtered = filtered.filter(
-            (edge) => edge.source !== source || edge.sourceHandle !== sourceHandle,
-          );
+          filtered = filtered.filter((edge) => edge.source !== source || edge.sourceHandle !== sourceHandle);
         }
         return [...filtered, nextEdge];
       });
@@ -577,131 +599,134 @@ function StudioWorkspace({ onOpenOverview, onSimulationChange, landingCommand, i
     return () => document.removeEventListener('keydown', cancelOnEscape);
   }, [linkMode]);
 
-  const handleNodeClick = useCallback((
-    _event: ReactMouseEvent,
-    clickedNode: PonNode,
-  ) => {
-    if (!linkMode) return;
+  const handleNodeClick = useCallback(
+    (_event: ReactMouseEvent, clickedNode: PonNode) => {
+      if (!linkMode) return;
 
-    if (linkStartNodeId === null) {
-      if (isSubscriberEndpointNode(clickedNode)) {
-        setLinkMessage('Subscriber endpoints are destinations; choose a source component.');
+      if (linkStartNodeId === null) {
+        if (isSubscriberEndpointNode(clickedNode)) {
+          setLinkMessage('Subscriber endpoints are destinations; choose a source component.');
+          return;
+        }
+        setLinkStartNodeId(clickedNode.id);
+        setLinkMessage(`Source: ${clickedNode.id}. Now choose a destination node.`);
         return;
       }
-      setLinkStartNodeId(clickedNode.id);
-      setLinkMessage(`Source: ${clickedNode.id}. Now choose a destination node.`);
-      return;
-    }
 
-    if (clickedNode.id === linkStartNodeId) {
-      setLinkStartNodeId(null);
-      setLinkMessage('Source cleared. Choose a source node, then a destination.');
-      return;
-    }
+      if (clickedNode.id === linkStartNodeId) {
+        setLinkStartNodeId(null);
+        setLinkMessage('Source cleared. Choose a source node, then a destination.');
+        return;
+      }
 
-    const currentNodes = getNodes();
-    const sourceNode = currentNodes.find((node) => node.id === linkStartNodeId);
-    const targetNode = currentNodes.find((node) => node.id === clickedNode.id);
-    if (!sourceNode || !targetNode) {
-      setLinkStartNodeId(null);
-      setLinkMessage('A node changed. Choose a source node, then a destination.');
-      return;
-    }
-    if (isSubscriberEndpointNode(sourceNode)) {
-      setLinkStartNodeId(null);
-      setLinkMessage('Subscriber endpoints are destination nodes. Choose another source.');
-      return;
-    }
-    if (isOltNode(targetNode)) {
-      setLinkMessage('An OLT has no optical input. Choose another destination.');
-      return;
-    }
+      const currentNodes = getNodes();
+      const sourceNode = currentNodes.find((node) => node.id === linkStartNodeId);
+      const targetNode = currentNodes.find((node) => node.id === clickedNode.id);
+      if (!sourceNode || !targetNode) {
+        setLinkStartNodeId(null);
+        setLinkMessage('A node changed. Choose a source node, then a destination.');
+        return;
+      }
+      if (isSubscriberEndpointNode(sourceNode)) {
+        setLinkStartNodeId(null);
+        setLinkMessage('Subscriber endpoints are destination nodes. Choose another source.');
+        return;
+      }
+      if (isOltNode(targetNode)) {
+        setLinkMessage('An OLT has no optical input. Choose another destination.');
+        return;
+      }
 
-    const currentEdges = getEdges();
-    const existingEdge = currentEdges.find(
-      (edge) => edge.source === sourceNode.id && edge.target === targetNode.id,
-    );
-    if (existingEdge) {
-      handleDeleteEdge(existingEdge.id);
+      const currentEdges = getEdges();
+      const existingEdge = currentEdges.find((edge) => edge.source === sourceNode.id && edge.target === targetNode.id);
+      if (existingEdge) {
+        handleDeleteEdge(existingEdge.id);
+        setLinkMode(false);
+        setLinkStartNodeId(null);
+        setLinkMessage(`Removed the patch cord from ${sourceNode.id} to ${targetNode.id}.`);
+        return;
+      }
+
+      let sourceHandle: string | undefined = 'out';
+      if (isSplitterNode(sourceNode)) {
+        const usedHandles = new Set(
+          currentEdges.filter((edge) => edge.source === sourceNode.id).map((edge) => edge.sourceHandle),
+        );
+        const outputCount = SPLITTER_OUTPUT_PORTS[sourceNode.data.ratio];
+        sourceHandle = Array.from({ length: outputCount }, (_, index) => `out-${index}`).find(
+          (handle) => !usedHandles.has(handle),
+        );
+        if (!sourceHandle) {
+          setLinkMessage(`All 1:${sourceNode.data.ratio} splitter outputs are already patched.`);
+          return;
+        }
+      } else if (isClosureNode(sourceNode)) {
+        const usedHandles = new Set(
+          currentEdges.filter((edge) => edge.source === sourceNode.id).map((edge) => edge.sourceHandle),
+        );
+        sourceHandle = Array.from({ length: CLOSURE_OUTPUT_PORTS }, (_, index) => `out-${index}`).find(
+          (handle, index) => sourceNode.data.activeSpliceChannels[index] && !usedHandles.has(handle),
+        );
+        if (!sourceHandle) {
+          setLinkMessage('No active, unpatched closure branch is available. Splice a tray channel first.');
+          return;
+        }
+      } else if (isOdfNode(sourceNode)) {
+        const usedHandles = new Set(
+          currentEdges.filter((edge) => edge.source === sourceNode.id).map((edge) => edge.sourceHandle),
+        );
+        sourceHandle = Array.from({ length: ODF_OUTPUT_PORTS }, (_, index) => `out-${index}`).find(
+          (handle) => !usedHandles.has(handle),
+        );
+        if (!sourceHandle) {
+          setLinkMessage('Both ODF through-pair outputs are already patched.');
+          return;
+        }
+      } else if (isNapNode(sourceNode)) {
+        const usedHandles = new Set(
+          currentEdges.filter((edge) => edge.source === sourceNode.id).map((edge) => edge.sourceHandle),
+        );
+        sourceHandle = Array.from({ length: NAP_OUTPUT_PORTS }, (_, index) => `out-${index}`).find(
+          (handle) => !usedHandles.has(handle),
+        );
+        if (!sourceHandle) {
+          setLinkMessage('All eight NAP drop outputs are already patched.');
+          return;
+        }
+      }
+
+      let targetHandle = 'in';
+      if (isClosureNode(targetNode) || isOdfNode(targetNode)) {
+        const usedInputs = new Set(
+          currentEdges.filter((edge) => edge.target === targetNode.id).map((edge) => edge.targetHandle),
+        );
+        const inputCount = isClosureNode(targetNode) ? CLOSURE_INPUT_PORTS : ODF_INPUT_PORTS;
+        const availableInput = Array.from({ length: inputCount }, (_, index) => `in-${index}`).find(
+          (handle) => !usedInputs.has(handle),
+        );
+        if (!availableInput) {
+          setLinkMessage(
+            isClosureNode(targetNode)
+              ? 'Both closure feeder entries are already patched.'
+              : 'Both ODF input pairs are already patched.',
+          );
+          return;
+        }
+        targetHandle = availableInput;
+      }
+
+      handleConnect({
+        source: sourceNode.id,
+        target: targetNode.id,
+        sourceHandle,
+        targetHandle,
+      });
       setLinkMode(false);
       setLinkStartNodeId(null);
-      setLinkMessage(`Removed the patch cord from ${sourceNode.id} to ${targetNode.id}.`);
-      return;
-    }
-
-    let sourceHandle: string | undefined = 'out';
-    if (isSplitterNode(sourceNode)) {
-      const usedHandles = new Set(
-        currentEdges
-          .filter((edge) => edge.source === sourceNode.id)
-          .map((edge) => edge.sourceHandle),
-      );
-      const outputCount = SPLITTER_OUTPUT_PORTS[sourceNode.data.ratio];
-      sourceHandle = Array.from({ length: outputCount }, (_, index) => `out-${index}`)
-        .find((handle) => !usedHandles.has(handle));
-      if (!sourceHandle) {
-        setLinkMessage(`All 1:${sourceNode.data.ratio} splitter outputs are already patched.`);
-        return;
-      }
-    } else if (isClosureNode(sourceNode)) {
-      const usedHandles = new Set(
-        currentEdges.filter((edge) => edge.source === sourceNode.id).map((edge) => edge.sourceHandle),
-      );
-      sourceHandle = Array.from({ length: CLOSURE_OUTPUT_PORTS }, (_, index) => `out-${index}`)
-        .find((handle, index) => sourceNode.data.activeSpliceChannels[index] && !usedHandles.has(handle));
-      if (!sourceHandle) {
-        setLinkMessage('No active, unpatched closure branch is available. Splice a tray channel first.');
-        return;
-      }
-    } else if (isOdfNode(sourceNode)) {
-      const usedHandles = new Set(
-        currentEdges.filter((edge) => edge.source === sourceNode.id).map((edge) => edge.sourceHandle),
-      );
-      sourceHandle = Array.from({ length: ODF_OUTPUT_PORTS }, (_, index) => `out-${index}`)
-        .find((handle) => !usedHandles.has(handle));
-      if (!sourceHandle) {
-        setLinkMessage('Both ODF through-pair outputs are already patched.');
-        return;
-      }
-    } else if (isNapNode(sourceNode)) {
-      const usedHandles = new Set(
-        currentEdges.filter((edge) => edge.source === sourceNode.id).map((edge) => edge.sourceHandle),
-      );
-      sourceHandle = Array.from({ length: NAP_OUTPUT_PORTS }, (_, index) => `out-${index}`)
-        .find((handle) => !usedHandles.has(handle));
-      if (!sourceHandle) {
-        setLinkMessage('All eight NAP drop outputs are already patched.');
-        return;
-      }
-    }
-
-    let targetHandle = 'in';
-    if (isClosureNode(targetNode) || isOdfNode(targetNode)) {
-      const usedInputs = new Set(
-        currentEdges.filter((edge) => edge.target === targetNode.id).map((edge) => edge.targetHandle),
-      );
-      const inputCount = isClosureNode(targetNode) ? CLOSURE_INPUT_PORTS : ODF_INPUT_PORTS;
-      const availableInput = Array.from({ length: inputCount }, (_, index) => `in-${index}`)
-        .find((handle) => !usedInputs.has(handle));
-      if (!availableInput) {
-        setLinkMessage(isClosureNode(targetNode)
-          ? 'Both closure feeder entries are already patched.'
-          : 'Both ODF input pairs are already patched.');
-        return;
-      }
-      targetHandle = availableInput;
-    }
-
-    handleConnect({
-      source: sourceNode.id,
-      target: targetNode.id,
-      sourceHandle,
-      targetHandle,
-    });
-    setLinkMode(false);
-    setLinkStartNodeId(null);
-    setLinkMessage(`Connected ${sourceNode.id} to ${targetNode.id}.`);
-  }, [getEdges, getNodes, handleConnect, handleDeleteEdge, linkMode, linkStartNodeId]);
+      setLinkMessage(`Connected ${sourceNode.id} to ${targetNode.id}.`);
+    },
+    [getEdges, getNodes, handleConnect, handleDeleteEdge, linkMode, linkStartNodeId],
+  );
 
   const closeMissions = useCallback(() => setMissionsOpen(false), []);
   const closeOtdr = useCallback(() => setOtdrOpen(false), []);
@@ -854,12 +879,9 @@ function StudioWorkspace({ onOpenOverview, onSimulationChange, landingCommand, i
     [screenToFlowPosition, addComponent],
   );
 
-  const handleInit = useCallback(
-    (instance: ReactFlowInstance<PonNode, PonEdge>) => {
-      void instance.fitView({ padding: 0.08, maxZoom: 1.15 });
-    },
-    [],
-  );
+  const handleInit = useCallback((instance: ReactFlowInstance<PonNode, PonEdge>) => {
+    void instance.fitView({ padding: 0.08, maxZoom: 1.15 });
+  }, []);
 
   useEffect(() => {
     if (!isActive) return;
@@ -871,15 +893,9 @@ function StudioWorkspace({ onOpenOverview, onSimulationChange, landingCommand, i
 
   /* -------------------------------- Selection ---------------------------- */
 
-  const selectedNode = useMemo(
-    () => nodes.find((node) => node.id === selectedNodeId) ?? null,
-    [nodes, selectedNodeId],
-  );
+  const selectedNode = useMemo(() => nodes.find((node) => node.id === selectedNodeId) ?? null, [nodes, selectedNodeId]);
 
-  const selectedEdge = useMemo(
-    () => edges.find((edge) => edge.id === selectedEdgeId) ?? null,
-    [edges, selectedEdgeId],
-  );
+  const selectedEdge = useMemo(() => edges.find((edge) => edge.id === selectedEdgeId) ?? null, [edges, selectedEdgeId]);
 
   const summary = simulation.summary;
 
@@ -893,22 +909,16 @@ function StudioWorkspace({ onOpenOverview, onSimulationChange, landingCommand, i
       })
       .map((e) => simulation.edgeTelemetry[e.id]?.powerDbm ?? null)
       .filter((v): v is number => v !== null);
-    const splitterDropDbm =
-      splitterOutReadings.length > 0 ? Math.max(...splitterOutReadings) : null;
+    const splitterDropDbm = splitterOutReadings.length > 0 ? Math.max(...splitterOutReadings) : null;
 
     const allEndpointTelemetries = [
       ...Object.values(simulation.ontTelemetry),
       ...Object.values(simulation.gatewayTelemetry),
     ];
-    const subscriberReadings = allEndpointTelemetries
-      .map((t) => t.rxPowerDbm)
-      .filter((v): v is number => v !== null);
-    const activeLosses = allEndpointTelemetries
-      .filter((t) => t.rxPowerDbm !== null)
-      .map((t) => t.totalLossDb);
+    const subscriberReadings = allEndpointTelemetries.map((t) => t.rxPowerDbm).filter((v): v is number => v !== null);
+    const activeLosses = allEndpointTelemetries.filter((t) => t.rxPowerDbm !== null).map((t) => t.totalLossDb);
 
-    const bestRxDbm =
-      subscriberReadings.length > 0 ? Math.max(...subscriberReadings) : null;
+    const bestRxDbm = subscriberReadings.length > 0 ? Math.max(...subscriberReadings) : null;
     const worstRxDbm = summary.worstRxDbm;
     const maxLoss = activeLosses.length > 0 ? Math.max(...activeLosses) : null;
 
@@ -928,11 +938,7 @@ function StudioWorkspace({ onOpenOverview, onSimulationChange, landingCommand, i
   }, [nodes, edges, simulation, summary.worstRxDbm]);
 
   return (
-    <div
-      className={`fiberlab-studio pu-shell ${
-        testing ? 'is-simulating-pulse' : ''
-      }`}
-    >
+    <div className={`fiberlab-studio pu-shell ${testing ? 'is-simulating-pulse' : ''}`}>
       <TopBar
         summary={summary}
         costBreakdown={costBreakdown}
@@ -959,167 +965,173 @@ function StudioWorkspace({ onOpenOverview, onSimulationChange, landingCommand, i
         />
 
         <div className="pu-center">
-        <div className="pu-tabstrip">
-          <span className="pu-doc-tab">{PRESETS.find((preset) => preset.id === activePresetId)?.name ?? 'FTTH Network Design'}</span>
-        </div>
-        <main
-          ref={studioMainRef}
-          className={`fiberlab-studio-main pu-canvas relative min-w-0 flex-1 ${opmActive ? 'opm-probe-mode' : ''}`}
-          onPointerMoveCapture={handleOpmPointerMove}
-          onClickCapture={handleOpmClickCapture}
-          onPointerLeave={handleOpmPointerLeave}
-        >
-          <CanvasToolbar
-            canvasTool={canvasTool}
-            linkMode={linkMode}
-            opmActive={opmActive}
-            selectionCount={selectionCount}
-            activeMissionTitle={activeMissionId ? getMissionById(activeMissionId)?.title ?? null : null}
-            settings={settings}
-            toolsOpen={toolsOpen}
-            onToolsOpenChange={setToolsOpen}
-            onSettingsChange={handleSettingsChange}
-            onSelectTool={() => {
-              setCanvasTool('select');
-              if (linkMode) handleToggleLink();
-            }}
-            onPanTool={() => {
-              setCanvasTool('pan');
-              if (linkMode) handleToggleLink();
-            }}
-            onToggleLink={handleToggleLink}
-            onAddNode={() => handleQuickAdd({ component: 'ont' })}
-            onDelete={handleDeleteSelection}
-            onFit={() => void fitView({ padding: 0.16, duration: 350 })}
-            onOpenOverview={handleOpenOverview}
-            onToggleOpm={handleToggleOpm}
-            onOpenOtdr={handleOpenOtdr}
-            onOpenMissions={() => setMissionsOpen(true)}
-            onClear={clearCanvas}
-          />
-          <SimulationContext.Provider value={simulation}>
-            <ReactFlow<PonNode, PonEdge>
-              nodes={nodes}
-              edges={flowEdges}
-              nodeTypes={nodeTypes}
-              edgeTypes={edgeTypes}
-              onNodesChange={onNodesChange}
-              onEdgesChange={onEdgesChange}
-              onConnect={handleConnect}
-              onNodeClick={handleNodeClick}
-              onSelectionChange={handleSelectionChange}
-              onInit={handleInit}
-              onDragOver={handleDragOver}
-              onDrop={handleDrop}
-              nodesDraggable={!opmActive && canvasTool === 'select'}
-              nodesConnectable={!opmActive}
-              elementsSelectable={!opmActive}
-              selectionOnDrag={!opmActive && canvasTool === 'select'}
-              panOnDrag={canvasTool === 'pan' ? true : [1, 2]}
-              deleteKeyCode={['Backspace', 'Delete']}
-              minZoom={0.2}
-              maxZoom={2.2}
-              fitView
-              proOptions={{ hideAttribution: true }}
-            >
-              <Background variant={BackgroundVariant.Dots} gap={18} size={1.3} color="#E6D5C3" />
-              <Controls position="bottom-right" showInteractive={false} />
-              <MiniMap
-                position="top-right"
-                pannable
-                zoomable
-                className="!h-[116px] !w-[176px]"
-                nodeColor={(node) => MINIMAP_COLORS[node.type ?? ''] ?? '#64748B'}
-                nodeStrokeColor="#475569"
-                nodeStrokeWidth={1.5}
-                maskColor="rgba(248,250,252,0.75)"
-              />
+          <div className="pu-tabstrip">
+            <span className="pu-doc-tab">
+              {PRESETS.find((preset) => preset.id === activePresetId)?.name ?? 'FTTH Network Design'}
+            </span>
+          </div>
+          <main
+            ref={studioMainRef}
+            className={`fiberlab-studio-main pu-canvas relative min-w-0 flex-1 ${opmActive ? 'opm-probe-mode' : ''}`}
+            onPointerMoveCapture={handleOpmPointerMove}
+            onClickCapture={handleOpmClickCapture}
+            onPointerLeave={handleOpmPointerLeave}
+          >
+            <CanvasToolbar
+              canvasTool={canvasTool}
+              linkMode={linkMode}
+              opmActive={opmActive}
+              selectionCount={selectionCount}
+              activeMissionTitle={activeMissionId ? (getMissionById(activeMissionId)?.title ?? null) : null}
+              settings={settings}
+              toolsOpen={toolsOpen}
+              onToolsOpenChange={setToolsOpen}
+              onSettingsChange={handleSettingsChange}
+              onSelectTool={() => {
+                setCanvasTool('select');
+                if (linkMode) handleToggleLink();
+              }}
+              onPanTool={() => {
+                setCanvasTool('pan');
+                if (linkMode) handleToggleLink();
+              }}
+              onToggleLink={handleToggleLink}
+              onAddNode={() => handleQuickAdd({ component: 'ont' })}
+              onDelete={handleDeleteSelection}
+              onFit={() => void fitView({ padding: 0.16, duration: 350 })}
+              onOpenOverview={handleOpenOverview}
+              onToggleOpm={handleToggleOpm}
+              onOpenOtdr={handleOpenOtdr}
+              onOpenMissions={() => setMissionsOpen(true)}
+              onClear={clearCanvas}
+            />
+            <SimulationContext.Provider value={simulation}>
+              <ReactFlow<PonNode, PonEdge>
+                nodes={nodes}
+                edges={flowEdges}
+                nodeTypes={nodeTypes}
+                edgeTypes={edgeTypes}
+                onNodesChange={onNodesChange}
+                onEdgesChange={onEdgesChange}
+                onConnect={handleConnect}
+                onNodeClick={handleNodeClick}
+                onSelectionChange={handleSelectionChange}
+                onInit={handleInit}
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+                nodesDraggable={!opmActive && canvasTool === 'select'}
+                nodesConnectable={!opmActive}
+                elementsSelectable={!opmActive}
+                selectionOnDrag={!opmActive && canvasTool === 'select'}
+                panOnDrag={canvasTool === 'pan' ? true : [1, 2]}
+                deleteKeyCode={['Backspace', 'Delete']}
+                minZoom={0.2}
+                maxZoom={2.2}
+                fitView
+                proOptions={{ hideAttribution: true }}
+              >
+                <Background variant={BackgroundVariant.Dots} gap={18} size={1.3} color="#E6D5C3" />
+                <Controls position="bottom-right" showInteractive={false} />
+                <MiniMap
+                  position="top-right"
+                  pannable
+                  zoomable
+                  className="!h-[116px] !w-[176px]"
+                  nodeColor={(node) => MINIMAP_COLORS[node.type ?? ''] ?? '#64748B'}
+                  nodeStrokeColor="#475569"
+                  nodeStrokeWidth={1.5}
+                  maskColor="rgba(248,250,252,0.75)"
+                />
 
-              {linkMode ? (
-                <Panel position="top-left" className="!m-3 !mt-14">
-                  <div className="link-mode-panel panel flex max-w-[min(420px,calc(100vw-28px))] items-center gap-3 rounded-xl px-3 py-2.5 shadow-panel" role="status" aria-live="polite">
-                    <span className="link-mode-panel-icon"><Link2 size={16} aria-hidden="true" /></span>
-                    <span className="min-w-0 flex-1">
-                      <strong>{linkStartNodeId ? 'Choose a destination' : 'Link nodes'}</strong>
-                      <small>{linkMessage}</small>
-                    </span>
-                    <button type="button" className="btn-ghost !min-h-8 !px-2" onClick={handleToggleLink}>
-                      <X size={13} aria-hidden="true" /> Cancel
-                    </button>
-                  </div>
-                </Panel>
-              ) : null}
+                {linkMode ? (
+                  <Panel position="top-left" className="!m-3 !mt-14">
+                    <div
+                      className="link-mode-panel panel flex max-w-[min(420px,calc(100vw-28px))] items-center gap-3 rounded-xl px-3 py-2.5 shadow-panel"
+                      role="status"
+                      aria-live="polite"
+                    >
+                      <span className="link-mode-panel-icon">
+                        <Link2 size={16} aria-hidden="true" />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <strong>{linkStartNodeId ? 'Choose a destination' : 'Link nodes'}</strong>
+                        <small>{linkMessage}</small>
+                      </span>
+                      <button type="button" className="btn-ghost !min-h-8 !px-2" onClick={handleToggleLink}>
+                        <X size={13} aria-hidden="true" /> Cancel
+                      </button>
+                    </div>
+                  </Panel>
+                ) : null}
 
-              <Panel position="bottom-left" className="!m-3">
-                <span
-                  className="pu-chip"
-                  style={{ position: 'static' }}
-                  role="status"
-                  aria-label={`Network ${summary.byStatus.LOS > 0 || summary.byStatus.DISCONNECTED > 0 ? 'fault' : summary.byStatus.WARNING > 0 ? 'marginal' : 'healthy'}`}
-                >
+                <Panel position="bottom-left" className="!m-3">
                   <span
-                    className={`pu-health ${
-                      summary.byStatus.LOS > 0 || summary.byStatus.DISCONNECTED > 0
-                        ? 'red'
-                        : summary.byStatus.WARNING > 0 || summary.byStatus.OVERLOAD > 0
-                          ? 'amber'
-                          : ''
-                    }`}
+                    className="pu-chip"
+                    style={{ position: 'static' }}
+                    role="status"
+                    aria-label={`Network ${summary.byStatus.LOS > 0 || summary.byStatus.DISCONNECTED > 0 ? 'fault' : summary.byStatus.WARNING > 0 ? 'marginal' : 'healthy'}`}
                   >
-                    ●{' '}
-                    {summary.byStatus.LOS > 0 || summary.byStatus.DISCONNECTED > 0
-                      ? 'Network Fault'
-                      : summary.byStatus.WARNING > 0 || summary.byStatus.OVERLOAD > 0
-                        ? 'Network Marginal'
-                        : 'Network Healthy'}
+                    <span
+                      className={`pu-health ${
+                        summary.byStatus.LOS > 0 || summary.byStatus.DISCONNECTED > 0
+                          ? 'red'
+                          : summary.byStatus.WARNING > 0 || summary.byStatus.OVERLOAD > 0
+                            ? 'amber'
+                            : ''
+                      }`}
+                    >
+                      ●{' '}
+                      {summary.byStatus.LOS > 0 || summary.byStatus.DISCONNECTED > 0
+                        ? 'Network Fault'
+                        : summary.byStatus.WARNING > 0 || summary.byStatus.OVERLOAD > 0
+                          ? 'Network Marginal'
+                          : 'Network Healthy'}
+                    </span>
                   </span>
-                </span>
-              </Panel>
+                </Panel>
 
-              {nodes.length === 0 ? (
-                <Panel position="top-center" className="!mt-16">
-                  <div className="panel flex items-center gap-2.5 rounded-lg px-4 py-3 shadow-panel">
-                    <MousePointer2 size={16} className="text-[#E4673F]" />
-                    <div>
-                      <div className="text-[12px] font-semibold text-slate-900">
-                        The canvas is empty
-                      </div>
-                      <div className="text-[11px] text-slate-500">
-                        Drag an OLT from the Component Library to start designing your PON.
+                {nodes.length === 0 ? (
+                  <Panel position="top-center" className="!mt-16">
+                    <div className="panel flex items-center gap-2.5 rounded-lg px-4 py-3 shadow-panel">
+                      <MousePointer2 size={16} className="text-[#E4673F]" />
+                      <div>
+                        <div className="text-[12px] font-semibold text-slate-900">The canvas is empty</div>
+                        <div className="text-[11px] text-slate-500">
+                          Drag an OLT from the Component Library to start designing your PON.
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </Panel>
-              ) : null}
-            </ReactFlow>
-          </SimulationContext.Provider>
-          {opmActive && opmProbe ? (
-            <OpmMeterHud
-              ref={opmHudRef}
-              target={opmProbe}
-              position={opmAnchor}
-              readingDbm={opmReading}
-              wavelength={meterWavelength}
-              onWavelengthChange={setMeterWavelength}
-              onClose={handleToggleOpm}
-            />
-          ) : null}
-        </main>
-        <BottomPanel
-          summary={summary}
-          simulation={simulation}
-          nodes={nodes}
-          edgeCount={edges.length}
-          powerBars={powerBars}
-          worstLossDb={worstLossDb}
-          onOpenReports={() => setBomOpen(true)}
-          onSelectNode={(nodeId) => {
-            setSelectedNodeId(nodeId);
-            setSelectedEdgeId(null);
-            setSelection({ nodeIds: [nodeId], edgeIds: [] });
-            setNodes((current) => current.map((node) => ({ ...node, selected: node.id === nodeId })));
-          }}
-        />
+                  </Panel>
+                ) : null}
+              </ReactFlow>
+            </SimulationContext.Provider>
+            {opmActive && opmProbe ? (
+              <OpmMeterHud
+                ref={opmHudRef}
+                target={opmProbe}
+                position={opmAnchor}
+                readingDbm={opmReading}
+                wavelength={meterWavelength}
+                onWavelengthChange={setMeterWavelength}
+                onClose={handleToggleOpm}
+              />
+            ) : null}
+          </main>
+          <BottomPanel
+            summary={summary}
+            simulation={simulation}
+            nodes={nodes}
+            edgeCount={edges.length}
+            powerBars={powerBars}
+            worstLossDb={worstLossDb}
+            onOpenReports={() => setBomOpen(true)}
+            onSelectNode={(nodeId) => {
+              setSelectedNodeId(nodeId);
+              setSelectedEdgeId(null);
+              setSelection({ nodeIds: [nodeId], edgeIds: [] });
+              setNodes((current) => current.map((node) => ({ ...node, selected: node.id === nodeId })));
+            }}
+          />
         </div>
 
         <Inspector
@@ -1208,9 +1220,8 @@ export default function App() {
   useEffect(() => {
     if (viewMode === 'studio') {
       hasEnteredStudio.current = true;
-      const missionHeading = landingCommand?.kind === 'missions'
-        ? document.getElementById('mission-drawer-title')
-        : null;
+      const missionHeading =
+        landingCommand?.kind === 'missions' ? document.getElementById('mission-drawer-title') : null;
       (missionHeading ?? document.getElementById('studio-overview-toggle'))?.focus({ preventScroll: true });
     } else if (hasEnteredStudio.current) {
       document.getElementById('landing-overview-link')?.focus({ preventScroll: true });

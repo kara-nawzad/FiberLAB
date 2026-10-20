@@ -1,11 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { PonEdge, PonNode } from '../../types';
 import { createClosureNode } from '../../engine/factories';
-import {
-  calculateNetworkCost,
-  DEFAULT_UNIT_COSTS,
-  resolveUnitCosts,
-} from '../pricingCatalogue';
+import { calculateNetworkCost, DEFAULT_UNIT_COSTS, resolveUnitCosts } from '../pricingCatalogue';
 import { buildPreset } from '../../engine/presets';
 
 function standardTopology(): { nodes: PonNode[]; edges: PonEdge[] } {
@@ -76,8 +72,22 @@ describe('commercial pricing catalogue', () => {
     };
     const nodes: PonNode[] = [pricedClosure];
     const edges: PonEdge[] = [
-      { id: 'active-branch', source: closure.id, sourceHandle: 'out-0', target: 'fiber-a', targetHandle: 'in', type: 'optical' },
-      { id: 'inactive-branch', source: closure.id, sourceHandle: 'out-1', target: 'fiber-b', targetHandle: 'in', type: 'optical' },
+      {
+        id: 'active-branch',
+        source: closure.id,
+        sourceHandle: 'out-0',
+        target: 'fiber-a',
+        targetHandle: 'in',
+        type: 'optical',
+      },
+      {
+        id: 'inactive-branch',
+        source: closure.id,
+        sourceHandle: 'out-1',
+        target: 'fiber-b',
+        targetHandle: 'in',
+        type: 'optical',
+      },
     ];
     const quote = calculateNetworkCost(nodes, edges);
 

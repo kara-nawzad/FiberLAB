@@ -29,7 +29,8 @@ interface TopBarProps {
 function deriveHealth(summary: NetworkSummary): Health {
   if (summary.subscriberCount === 0) return 'idle';
   if (summary.byStatus.LOS > 0 || summary.byStatus.DISCONNECTED > 0) return 'red';
-  if (summary.byStatus.WARNING > 0 || summary.byStatus.OVERLOAD > 0 || summary.upstreamDynamicRangeWarning) return 'amber';
+  if (summary.byStatus.WARNING > 0 || summary.byStatus.OVERLOAD > 0 || summary.upstreamDynamicRangeWarning)
+    return 'amber';
   return 'green';
 }
 
@@ -82,7 +83,9 @@ export function TopBar({
         title="Return to Overview & Physics"
         style={{ background: 'transparent', border: 0, cursor: 'pointer', color: 'var(--pu-ink)', padding: 0 }}
       >
-        <span>Fiber<b>LAB</b></span>
+        <span>
+          Fiber<b>LAB</b>
+        </span>
       </button>
       <span className="pu-sep" />
 
@@ -110,15 +113,22 @@ export function TopBar({
                 }}
               >
                 <strong style={{ fontSize: 12.5 }}>{preset.name}</strong>
-                {activePresetId === preset.id ? <span style={{ float: 'right', color: 'var(--pu-pri)', fontSize: 10, fontWeight: 700 }}>LOADED</span> : null}
-                <div className="pu-mut" style={{ fontSize: 10.5, marginTop: 3 }}>{preset.description}</div>
+                {activePresetId === preset.id ? (
+                  <span style={{ float: 'right', color: 'var(--pu-pri)', fontSize: 10, fontWeight: 700 }}>LOADED</span>
+                ) : null}
+                <div className="pu-mut" style={{ fontSize: 10.5, marginTop: 3 }}>
+                  {preset.description}
+                </div>
               </button>
             ))}
           </div>
         ) : null}
       </div>
       <div className="pu-health-wrap" style={{ display: 'flex', gap: 10, alignItems: 'center', marginLeft: 8 }}>
-        <span className={`pu-health ${health === 'green' ? '' : health}`} aria-label={`Network health: ${HEALTH_TEXT[health]}`}>
+        <span
+          className={`pu-health ${health === 'green' ? '' : health}`}
+          aria-label={`Network health: ${HEALTH_TEXT[health]}`}
+        >
           ● {HEALTH_TEXT[health]}
         </span>
         <span
@@ -143,10 +153,18 @@ export function TopBar({
         </button>
         {zoomOpen ? (
           <div className="pu-menu" style={{ top: 'calc(100% + 8px)', right: 0, minWidth: 160 }}>
-            <button type="button" onClick={() => void zoomIn({ duration: 200 })}>Zoom in</button>
-            <button type="button" onClick={() => void zoomOut({ duration: 200 })}>Zoom out</button>
-            <button type="button" onClick={() => void zoomTo(1, { duration: 200 })}>Reset to 100%</button>
-            <button type="button" onClick={() => void fitView({ padding: 0.16, duration: 350 })}>Fit to screen</button>
+            <button type="button" onClick={() => void zoomIn({ duration: 200 })}>
+              Zoom in
+            </button>
+            <button type="button" onClick={() => void zoomOut({ duration: 200 })}>
+              Zoom out
+            </button>
+            <button type="button" onClick={() => void zoomTo(1, { duration: 200 })}>
+              Reset to 100%
+            </button>
+            <button type="button" onClick={() => void fitView({ padding: 0.16, duration: 350 })}>
+              Fit to screen
+            </button>
           </div>
         ) : null}
       </div>

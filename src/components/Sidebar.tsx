@@ -115,13 +115,24 @@ export function Sidebar({
   return (
     <>
       <nav className="pu-rail" aria-label="Workbench sections">
-        <button type="button" className={collapsed ? '' : 'is-active'} onClick={onToggleCollapse} aria-label="Design" title="Show or hide the component library">
+        <button
+          type="button"
+          className={collapsed ? '' : 'is-active'}
+          onClick={onToggleCollapse}
+          aria-label="Design"
+          title="Show or hide the component library"
+        >
           <LayoutDashboard size={20} /> Design
         </button>
         <button type="button" onClick={onRunSimulation} aria-label="Simulation" title="Run the optical simulation">
           <PlayCircle size={20} /> Simulation
         </button>
-        <button type="button" onClick={onOpenReports} aria-label="Reports" title="Bill of materials & optical budget audit">
+        <button
+          type="button"
+          onClick={onOpenReports}
+          aria-label="Reports"
+          title="Bill of materials & optical budget audit"
+        >
           <FileText size={20} /> Reports
         </button>
         <button type="button" onClick={onOpenSettings} aria-label="Settings" title="Safety margin, OPM, OTDR and more">
@@ -129,7 +140,11 @@ export function Sidebar({
         </button>
       </nav>
 
-      <aside className="fiberlab-sidebar pu-comp" style={collapsed ? { display: 'none' } : undefined} aria-label="Component library">
+      <aside
+        className="fiberlab-sidebar pu-comp"
+        style={collapsed ? { display: 'none' } : undefined}
+        aria-label="Component library"
+      >
         <h3>Components</h3>
         <label className="pu-search">
           <Search size={14} aria-hidden="true" />
@@ -145,17 +160,36 @@ export function Sidebar({
         <div className="pu-comp-scroll">
           <Section title="OLT / Headend">
             {matches('olt transceiver headend gpon xgs-pon chassis') ? (
-              <ToolItem title="OLT" subtitle="Class B+" thumbnail={art(OLT_ART, 'OLT illustration')} payload={{ component: 'olt' }} onQuickAdd={onQuickAdd} />
+              <ToolItem
+                title="OLT"
+                subtitle="Class B+"
+                thumbnail={art(OLT_ART, 'OLT illustration')}
+                payload={{ component: 'olt' }}
+                onQuickAdd={onQuickAdd}
+              />
             ) : null}
             {matches('odf rack panel patch frame adapter') ? (
-              <ToolItem title="ODF Rack Panel" subtitle="1U SC/APC patch field" thumbnail={thumb(odf)} payload={{ component: 'odf' }} onQuickAdd={onQuickAdd} />
+              <ToolItem
+                title="ODF Rack Panel"
+                subtitle="1U SC/APC patch field"
+                thumbnail={thumb(odf)}
+                payload={{ component: 'odf' }}
+                onQuickAdd={onQuickAdd}
+              />
             ) : null}
           </Section>
 
           <Section title="Passive Splitting">
-            <select className="pu-sel" aria-label="Splitter ratio" value={ratioDraft} onChange={(event) => setRatioDraft(Number(event.target.value) as SplitRatio)}>
+            <select
+              className="pu-sel"
+              aria-label="Splitter ratio"
+              value={ratioDraft}
+              onChange={(event) => setRatioDraft(Number(event.target.value) as SplitRatio)}
+            >
               {SPLIT_RATIOS.map((ratio) => (
-                <option key={ratio} value={ratio}>1:{ratio} — {SPLITTER_LOSS_DB[ratio].toFixed(1)} dB</option>
+                <option key={ratio} value={ratio}>
+                  1:{ratio} — {SPLITTER_LOSS_DB[ratio].toFixed(1)} dB
+                </option>
               ))}
             </select>
             {matches(`plc splitter passive cassette 1:${ratioDraft}`) ? (
@@ -185,26 +219,57 @@ export function Sidebar({
               ))}
             </div>
             {matches('dome splice closure osp joint fosc') ? (
-              <ToolItem title="Dome Splice Closure" subtitle="OSP IP68 · 48-splice tray" thumbnail={thumb(closure)} payload={{ component: 'closure' }} onQuickAdd={onQuickAdd} />
+              <ToolItem
+                title="Dome Splice Closure"
+                subtitle="OSP IP68 · 48-splice tray"
+                thumbnail={thumb(closure)}
+                payload={{ component: 'closure' }}
+                onQuickAdd={onQuickAdd}
+              />
             ) : null}
             {matches('outdoor nap fat access box 1:8 drop') ? (
-              <ToolItem title="Outdoor NAP / FAT" subtitle="1:8 pole / wall box" thumbnail={thumb(nap)} payload={{ component: 'nap' }} onQuickAdd={onQuickAdd} />
+              <ToolItem
+                title="Outdoor NAP / FAT"
+                subtitle="1:8 pole / wall box"
+                thumbnail={thumb(nap)}
+                payload={{ component: 'nap' }}
+                onQuickAdd={onQuickAdd}
+              />
             ) : null}
           </Section>
 
           <Section title="Access">
             {matches('ont onu subscriber terminal endpoint') ? (
-              <ToolItem title="ONU / ONT" subtitle="GPON / XGS-PON" thumbnail={art(ONU_ART, 'ONU illustration')} payload={{ component: 'ont' }} onQuickAdd={onQuickAdd} />
+              <ToolItem
+                title="ONU / ONT"
+                subtitle="GPON / XGS-PON"
+                thumbnail={art(ONU_ART, 'ONU illustration')}
+                payload={{ component: 'ont' }}
+                onQuickAdd={onQuickAdd}
+              />
             ) : null}
             {matches('wi-fi 6 pon gateway router xgs-pon') ? (
-              <ToolItem title="Wi-Fi 6 Gateway" subtitle="Dual-band optical router" thumbnail={thumb(gateway)} payload={{ component: 'gateway' }} onQuickAdd={onQuickAdd} />
+              <ToolItem
+                title="Wi-Fi 6 Gateway"
+                subtitle="Dual-band optical router"
+                thumbnail={thumb(gateway)}
+                payload={{ component: 'gateway' }}
+                onQuickAdd={onQuickAdd}
+              />
             ) : null}
           </Section>
 
           <Section title="Fiber Plant">
-            <select className="pu-sel" aria-label="Cable type" value={cableDraft} onChange={(event) => setCableDraft(event.target.value as CableType)}>
+            <select
+              className="pu-sel"
+              aria-label="Cable type"
+              value={cableDraft}
+              onChange={(event) => setCableDraft(event.target.value as CableType)}
+            >
               {(Object.keys(CABLE_SPECS) as CableType[]).map((cable) => (
-                <option key={cable} value={cable}>{CABLE_SPECS[cable].label} ({CABLE_SPECS[cable].defaultLengthKm} km)</option>
+                <option key={cable} value={cable}>
+                  {CABLE_SPECS[cable].label} ({CABLE_SPECS[cable].defaultLengthKm} km)
+                </option>
               ))}
             </select>
             {matches(`fiber cable span ${CABLE_SPECS[cableDraft].label}`) ? (
@@ -219,16 +284,38 @@ export function Sidebar({
           </Section>
 
           <Section title="Tools">
-            {onToggleOpm ? <ToolItem icon={<Gauge size={22} />} title="Power Meter" subtitle="Probe a port or patch cord" onClick={onToggleOpm} /> : null}
-            {onOpenOtdr ? <ToolItem icon={<Activity size={22} />} title="OTDR Trace" subtitle="Find events and breaks" onClick={onOpenOtdr} /> : null}
+            {onToggleOpm ? (
+              <ToolItem
+                icon={<Gauge size={22} />}
+                title="Power Meter"
+                subtitle="Probe a port or patch cord"
+                onClick={onToggleOpm}
+              />
+            ) : null}
+            {onOpenOtdr ? (
+              <ToolItem
+                icon={<Activity size={22} />}
+                title="OTDR Trace"
+                subtitle="Find events and breaks"
+                onClick={onOpenOtdr}
+              />
+            ) : null}
           </Section>
         </div>
 
         <div className="pu-foot">
           Need help?{' '}
-          <button type="button" onClick={onOpenOverview} style={{ color: 'var(--pu-pri)', fontWeight: 600 }}>Learn</button> ·{' '}
-          <a href="https://github.com/kara-nawzad/FiberLAB/tree/main/docs" target="_blank" rel="noopener noreferrer">Docs</a> ·{' '}
-          <a href="https://github.com/kara-nawzad/FiberLAB" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <button type="button" onClick={onOpenOverview} style={{ color: 'var(--pu-pri)', fontWeight: 600 }}>
+            Learn
+          </button>{' '}
+          ·{' '}
+          <a href="https://github.com/kara-nawzad/FiberLAB/tree/main/docs" target="_blank" rel="noopener noreferrer">
+            Docs
+          </a>{' '}
+          ·{' '}
+          <a href="https://github.com/kara-nawzad/FiberLAB" target="_blank" rel="noopener noreferrer">
+            GitHub
+          </a>
         </div>
       </aside>
     </>

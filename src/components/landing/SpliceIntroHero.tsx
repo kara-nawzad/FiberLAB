@@ -45,10 +45,12 @@ export function SpliceIntroHero({ simulation, simulationStale, onLaunchStudio }:
   const reading = useMemo(() => {
     if (!simulation) return null;
     const values = Object.values(simulation.ontTelemetry);
-    return values.find((value) => value.status === 'ONLINE' && value.rxPowerDbm !== null)
-      ?? values.find((value) => value.rxPowerDbm !== null)
-      ?? values[0]
-      ?? null;
+    return (
+      values.find((value) => value.status === 'ONLINE' && value.rxPowerDbm !== null) ??
+      values.find((value) => value.rxPowerDbm !== null) ??
+      values[0] ??
+      null
+    );
   }, [simulation]);
 
   const cancelFrame = useCallback(() => {
@@ -94,32 +96,38 @@ export function SpliceIntroHero({ simulation, simulationStale, onLaunchStudio }:
     frameRef.current = scheduleFrame(advance);
   }, [onLaunchStudio]);
 
-  useEffect(() => () => {
-    cancelFrame();
-    if (launchTimerRef.current !== null) window.clearTimeout(launchTimerRef.current);
-  }, [cancelFrame]);
+  useEffect(
+    () => () => {
+      cancelFrame();
+      if (launchTimerRef.current !== null) window.clearTimeout(launchTimerRef.current);
+    },
+    [cancelFrame],
+  );
 
-  const readingLabel = reading?.rxPowerDbm === null || reading?.rxPowerDbm === undefined
-    ? '— —'
-    : formatDbm(reading.rxPowerDbm);
+  const readingLabel =
+    reading?.rxPowerDbm === null || reading?.rxPowerDbm === undefined ? '— —' : formatDbm(reading.rxPowerDbm);
   const readingStatus = reading ? STATUS_LABELS[reading.status] : 'NO SIMULATED PATH';
   const readingStateClass = reading ? `is-${reading.status.toLowerCase()}` : 'is-idle';
 
   return (
     <section className={`splice-hero${fused ? ' is-fused' : ''}`} aria-labelledby="splice-hero-title">
       <div className={`splice-hero-scene${fused ? ' is-done' : ''}`} aria-hidden="true">
-        <div
-          className="splice-hero-svg"
-          dangerouslySetInnerHTML={{ __html: spliceHeroScene }}
-        />
+        <div className="splice-hero-svg" dangerouslySetInnerHTML={{ __html: spliceHeroScene }} />
         <div className="splice-hero-scene-wash" />
       </div>
 
       <div className="splice-hero-content">
-        <div className="splice-hero-eyebrow"><span /> THE OPTICAL ACCESS NETWORK LAB</div>
-        <h1 id="splice-hero-title">Splice the fiber.<br /><em>Light the home.</em></h1>
+        <div className="splice-hero-eyebrow">
+          <span /> THE OPTICAL ACCESS NETWORK LAB
+        </div>
+        <h1 id="splice-hero-title">
+          Splice the fiber.
+          <br />
+          <em>Light the home.</em>
+        </h1>
         <p className="splice-hero-lede">
-          Connect the exchange to the doorstep. Build a fiber access network, then watch the real link budget reveal where light reaches.
+          Connect the exchange to the doorstep. Build a fiber access network, then watch the real link budget reveal
+          where light reaches.
         </p>
 
         <button
@@ -157,22 +165,39 @@ export function SpliceIntroHero({ simulation, simulationStale, onLaunchStudio }:
           </span>
         </button>
         <p id="splice-hold-hint" className="splice-hold-hint">
-          <CircleHelp size={13} aria-hidden="true" /> Hold for a moment · or <button type="button" onClick={onLaunchStudio}>open the studio now</button>
+          <CircleHelp size={13} aria-hidden="true" /> Hold for a moment · or{' '}
+          <button type="button" onClick={onLaunchStudio}>
+            open the studio now
+          </button>
         </p>
-        <span className="sr-only" aria-live="polite">{announcement}</span>
+        <span className="sr-only" aria-live="polite">
+          {announcement}
+        </span>
 
         <div className="splice-live-readout" aria-label="Current studio simulation readout">
           <div className="splice-live-readout-label">
-            <span className="splice-live-icon"><Radio size={15} aria-hidden="true" /></span>
-            <span><small>{simulationStale ? 'LAST COMMITTED RUN' : 'LIVE STUDIO SIMULATION'}</small><strong>Receive power · best available ONT path</strong></span>
-          </div>
-          <div className="splice-live-value-wrap">
-            <strong className="splice-live-value" aria-live="polite">{readingLabel}</strong>
-            <span className={`splice-live-status ${readingStateClass}`}>
-              <i aria-hidden="true" />{readingStatus}
+            <span className="splice-live-icon">
+              <Radio size={15} aria-hidden="true" />
+            </span>
+            <span>
+              <small>{simulationStale ? 'LAST COMMITTED RUN' : 'LIVE STUDIO SIMULATION'}</small>
+              <strong>Receive power · best available ONT path</strong>
             </span>
           </div>
-          <p>{simulationStale ? 'Auto is off. Run a studio test to refresh the committed reading.' : 'Readouts come from the active React Flow network and optical simulator.'}</p>
+          <div className="splice-live-value-wrap">
+            <strong className="splice-live-value" aria-live="polite">
+              {readingLabel}
+            </strong>
+            <span className={`splice-live-status ${readingStateClass}`}>
+              <i aria-hidden="true" />
+              {readingStatus}
+            </span>
+          </div>
+          <p>
+            {simulationStale
+              ? 'Auto is off. Run a studio test to refresh the committed reading.'
+              : 'Readouts come from the active React Flow network and optical simulator.'}
+          </p>
         </div>
 
         <div className="splice-hero-footnote">

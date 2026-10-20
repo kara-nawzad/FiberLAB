@@ -54,8 +54,8 @@ function isFaultyOrSeveredSpan(node: PonNode): boolean {
   if (node.type !== 'fiber') return false;
   return Boolean(
     node.data.macroBendActive ||
-      node.data.dirtyConnectorActive ||
-      (node.data.attenuationOverrideDbPerKm !== null && node.data.attenuationOverrideDbPerKm > 1),
+    node.data.dirtyConnectorActive ||
+    (node.data.attenuationOverrideDbPerKm !== null && node.data.attenuationOverrideDbPerKm > 1),
   );
 }
 
@@ -75,11 +75,7 @@ const marginalVillaAudit: Mission = {
         const onts = nodes.filter((node) => node.type === 'ont');
         return (
           onts.length === 3 &&
-          onts.every(
-            (ont) =>
-              edges.some((edge) => edge.target === ont.id) &&
-              isOnline(simulation, ont.id),
-          )
+          onts.every((ont) => edges.some((edge) => edge.target === ont.id) && isOnline(simulation, ont.id))
         );
       },
     },
@@ -117,31 +113,24 @@ const silentOntAudit: Mission = {
     // Introduce a clear first checkpoint: the source is dark. Once corrected,
     // the learner still has to diagnose the long, high-loss optical plant.
     nodes: topology.nodes.map((node) =>
-      node.type === 'olt' && node.id === 'olt-b'
-        ? { ...node, data: { ...node.data, laserOn: false } }
-        : node,
+      node.type === 'olt' && node.id === 'olt-b' ? { ...node, data: { ...node.data, laserOn: false } } : node,
     ),
   }),
   objectives: [
     {
       id: 'source-laser',
       description: 'Confirm at least one OLT laser is enabled.',
-      isMet: (_simulation, nodes) =>
-        nodes.some((node) => node.type === 'olt' && node.data.laserOn),
+      isMet: (_simulation, nodes) => nodes.some((node) => node.type === 'olt' && node.data.laserOn),
     },
     {
       id: 'restore-path',
       description: 'Restore an OLT-to-ONT optical path to Dukan Ridge — Tower 7.',
       isMet: (simulation, nodes, edges) => {
-        const target = nodes.find(
-          (node) => node.type === 'ont' && node.id === 'ont-b1',
-        );
+        const target = nodes.find((node) => node.type === 'ont' && node.id === 'ont-b1');
         if (!target) return false;
         const reading = simulation.ontTelemetry[target.id];
         return Boolean(
-          reading?.sourceOltId &&
-            reading.rxPowerDbm !== null &&
-            edges.some((edge) => edge.target === target.id),
+          reading?.sourceOltId && reading.rxPowerDbm !== null && edges.some((edge) => edge.target === target.id),
         );
       },
     },
@@ -174,9 +163,7 @@ const unpatchedSubscriberAudit: Mission = {
       isMet: (_simulation, _nodes, edges) =>
         edges.some(
           (edge) =>
-            edge.source === 'splitter-1x16-b' &&
-            edge.sourceHandle === 'out-2' &&
-            edge.target === 'fiber-drop-b3',
+            edge.source === 'splitter-1x16-b' && edge.sourceHandle === 'out-2' && edge.target === 'fiber-drop-b3',
         ),
     },
     {
@@ -213,18 +200,20 @@ const budgetCrunchMission: Mission = {
       description: 'Keep all 3 connected customer ONTs ONLINE (−24 to −8 dBm).',
       isMet: (simulation, nodes, edges) => {
         const onts = nodes.filter((node) => node.type === 'ont');
-        return onts.length === 3 && onts.every((ont) => (
-          edges.some((edge) => edge.target === ont.id) &&
-          simulation.ontTelemetry[ont.id]?.status === 'ONLINE'
-        ));
+        return (
+          onts.length === 3 &&
+          onts.every(
+            (ont) =>
+              edges.some((edge) => edge.target === ont.id) && simulation.ontTelemetry[ont.id]?.status === 'ONLINE',
+          )
+        );
       },
     },
     {
       id: 'capex-under-budget',
       description: 'Keep the total reference CAPEX below $1,600.00.',
-      isMet: (_simulation, nodes, edges, costBreakdown) => (
-        (costBreakdown ?? calculateNetworkCost(nodes, edges)).totalCapex < 1600
-      ),
+      isMet: (_simulation, nodes, edges, costBreakdown) =>
+        (costBreakdown ?? calculateNetworkCost(nodes, edges)).totalCapex < 1600,
     },
     {
       id: 'budget-safety-margin',
@@ -302,11 +291,7 @@ const blindFaultTrunkCutMission: Mission = {
         const onts = nodes.filter((node) => node.type === 'ont');
         return (
           onts.length === 3 &&
-          onts.every(
-            (ont) =>
-              edges.some((edge) => edge.target === ont.id) &&
-              isOnline(simulation, ont.id),
-          )
+          onts.every((ont) => edges.some((edge) => edge.target === ont.id) && isOnline(simulation, ont.id))
         );
       },
     },

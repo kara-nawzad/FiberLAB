@@ -45,9 +45,26 @@ export interface CanvasToolbarProps {
 
 export function CanvasToolbar(props: CanvasToolbarProps) {
   const {
-    canvasTool, linkMode, opmActive, selectionCount, activeMissionTitle, settings,
-    toolsOpen, onToolsOpenChange, onSettingsChange, onSelectTool, onPanTool, onToggleLink,
-    onAddNode, onDelete, onFit, onOpenOverview, onToggleOpm, onOpenOtdr, onOpenMissions, onClear,
+    canvasTool,
+    linkMode,
+    opmActive,
+    selectionCount,
+    activeMissionTitle,
+    settings,
+    toolsOpen,
+    onToolsOpenChange,
+    onSettingsChange,
+    onSelectTool,
+    onPanTool,
+    onToggleLink,
+    onAddNode,
+    onDelete,
+    onFit,
+    onOpenOverview,
+    onToggleOpm,
+    onOpenOtdr,
+    onOpenMissions,
+    onClear,
   } = props;
   const menuRef = useRef<HTMLDivElement | null>(null);
 
@@ -67,10 +84,18 @@ export function CanvasToolbar(props: CanvasToolbarProps) {
 
   return (
     <div role="toolbar" aria-label="Canvas workbench tools" className="pu-toolbar">
-      <button type="button" className={`pu-btn ${canvasTool === 'select' && !linkMode ? 'is-active' : ''}`} onClick={onSelectTool}>
+      <button
+        type="button"
+        className={`pu-btn ${canvasTool === 'select' && !linkMode ? 'is-active' : ''}`}
+        onClick={onSelectTool}
+      >
         <MousePointer2 size={14} /> Select
       </button>
-      <button type="button" className={`pu-btn ${canvasTool === 'pan' && !linkMode ? 'is-active' : ''}`} onClick={onPanTool}>
+      <button
+        type="button"
+        className={`pu-btn ${canvasTool === 'pan' && !linkMode ? 'is-active' : ''}`}
+        onClick={onPanTool}
+      >
         <Hand size={14} /> Pan
       </button>
       <button
@@ -115,17 +140,39 @@ export function CanvasToolbar(props: CanvasToolbarProps) {
             <button type="button" onClick={close(onOpenOverview)} aria-label="Overview & Physics">
               <ArrowLeft size={13} style={{ display: 'inline', marginRight: 8 }} /> Overview &amp; Physics
             </button>
-            <button type="button" onClick={close(onToggleOpm)} aria-pressed={opmActive} aria-label={opmActive ? 'Close OPM' : 'OPM Tool'}>
-              <Crosshair size={13} style={{ display: 'inline', marginRight: 8 }} /> {opmActive ? 'Close OPM' : 'OPM Tool'} — probe a port
+            <button
+              type="button"
+              onClick={close(onToggleOpm)}
+              aria-pressed={opmActive}
+              aria-label={opmActive ? 'Close OPM' : 'OPM Tool'}
+            >
+              <Crosshair size={13} style={{ display: 'inline', marginRight: 8 }} />{' '}
+              {opmActive ? 'Close OPM' : 'OPM Tool'} — probe a port
             </button>
             <button type="button" onClick={close(onOpenOtdr)} aria-label="OTDR Trace">
               <ScanLine size={13} style={{ display: 'inline', marginRight: 8 }} /> OTDR Trace
             </button>
-            <button type="button" onClick={close(onOpenMissions)} aria-label={activeMissionTitle ? `Missions, active: ${activeMissionTitle}` : 'Missions'}>
-              <ClipboardList size={13} style={{ display: 'inline', marginRight: 8 }} /> Missions{activeMissionTitle ? ` · ${activeMissionTitle}` : ''}
+            <button
+              type="button"
+              onClick={close(onOpenMissions)}
+              aria-label={activeMissionTitle ? `Missions, active: ${activeMissionTitle}` : 'Missions'}
+            >
+              <ClipboardList size={13} style={{ display: 'inline', marginRight: 8 }} /> Missions
+              {activeMissionTitle ? ` · ${activeMissionTitle}` : ''}
             </button>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderBottom: '1px solid var(--pu-line)', fontSize: 12 }}>
-              <label htmlFor="safety-margin" style={{ fontWeight: 600 }}>Safety margin</label>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '10px 14px',
+                borderBottom: '1px solid var(--pu-line)',
+                fontSize: 12,
+              }}
+            >
+              <label htmlFor="safety-margin" style={{ fontWeight: 600 }}>
+                Safety margin
+              </label>
               <input
                 id="safety-margin"
                 type="number"
@@ -134,7 +181,13 @@ export function CanvasToolbar(props: CanvasToolbarProps) {
                 step={0.5}
                 value={settings.safetyMarginDb}
                 onChange={(event) => onSettingsChange({ safetyMarginDb: Math.max(0, Number(event.target.value) || 0) })}
-                style={{ width: 54, padding: '4px 6px', border: '1px solid var(--pu-line)', borderRadius: 7, textAlign: 'center' }}
+                style={{
+                  width: 54,
+                  padding: '4px 6px',
+                  border: '1px solid var(--pu-line)',
+                  borderRadius: 7,
+                  textAlign: 'center',
+                }}
               />
               <span className="pu-mut">dB</span>
               <button
@@ -143,12 +196,26 @@ export function CanvasToolbar(props: CanvasToolbarProps) {
                 aria-checked={settings.autoRun}
                 onClick={() => onSettingsChange({ autoRun: !settings.autoRun })}
                 title="Recalculate the optical budget on every edit"
-                style={{ marginLeft: 'auto', width: 'auto', padding: '4px 10px', borderRadius: 99, border: '1px solid var(--pu-line)', fontWeight: 700, color: settings.autoRun ? 'var(--pu-ok)' : 'var(--pu-mut)' }}
+                style={{
+                  marginLeft: 'auto',
+                  width: 'auto',
+                  padding: '4px 10px',
+                  borderRadius: 99,
+                  border: '1px solid var(--pu-line)',
+                  fontWeight: 700,
+                  color: settings.autoRun ? 'var(--pu-ok)' : 'var(--pu-mut)',
+                }}
               >
                 Auto {settings.autoRun ? 'on' : 'off'}
               </button>
             </div>
-            <button type="button" onClick={close(onClear)} aria-label="Clear Canvas" title="Remove every element" style={{ color: 'var(--pu-bad)' }}>
+            <button
+              type="button"
+              onClick={close(onClear)}
+              aria-label="Clear Canvas"
+              title="Remove every element"
+              style={{ color: 'var(--pu-bad)' }}
+            >
               <Trash2 size={13} style={{ display: 'inline', marginRight: 8 }} /> Clear canvas
             </button>
           </div>

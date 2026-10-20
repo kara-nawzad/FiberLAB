@@ -54,9 +54,7 @@ export function ODFNode({ id, data, selected }: NodeProps<OdfFlowNode>) {
             <div className="font-mono text-[8.5px] font-bold uppercase tracking-wider text-teal-300">
               1U RACK PATCH FIELD · SC/APC
             </div>
-            <div className="font-sans text-[13px] font-bold leading-tight text-white">
-              ODF rack panel
-            </div>
+            <div className="font-sans text-[13px] font-bold leading-tight text-white">ODF rack panel</div>
           </div>
           <span className="rounded border border-teal-500/40 bg-teal-950/80 px-1.5 py-0.5 font-mono text-[9px] font-semibold text-teal-200">
             −{lossDb.toFixed(2)} dB / pair
@@ -80,9 +78,7 @@ export function ODFNode({ id, data, selected }: NodeProps<OdfFlowNode>) {
                 >
                   <span>{portNum}</span>
                   <span
-                    className={`mt-0.5 h-1.5 w-2.5 rounded-xs ${
-                      isMatchedPair ? 'bg-emerald-500' : 'bg-slate-600'
-                    }`}
+                    className={`mt-0.5 h-1.5 w-2.5 rounded-xs ${isMatchedPair ? 'bg-emerald-500' : 'bg-slate-600'}`}
                   />
                 </div>
               );

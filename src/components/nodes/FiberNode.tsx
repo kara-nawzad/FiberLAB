@@ -21,12 +21,31 @@ export function FiberNode({ data, selected }: NodeProps<FiberFlowNode>) {
       style={selected ? { borderColor: 'var(--pu-pri)', boxShadow: '0 0 0 3px var(--pu-pri-soft)' } : undefined}
       title={`${data.cableType} cable · ${data.splices} splice · ${data.connectors} conn · ${loss.attenuationDbPerKm.toFixed(2)} dB/km @ ${data.wavelength} nm`}
     >
-      {faulted ? <AlertTriangle size={11} className="fiber-fault-badge" style={{ display: 'inline', marginRight: 4, color: '#B36B00' }} /> : null}
+      {faulted ? (
+        <AlertTriangle
+          size={11}
+          className="fiber-fault-badge"
+          style={{ display: 'inline', marginRight: 4, color: '#B36B00' }}
+        />
+      ) : null}
       {data.lengthKm.toFixed(1)} km
       <span>−{loss.totalDb.toFixed(1)} dB</span>
-
-      <Handle id="in" type="target" position={Position.Left} aria-label="SC/APC cable input" title="SC/APC input connector — drop patch cord here" style={{ left: -7, borderColor: '#0D9F6E', background: '#34D399' }} />
-      <Handle id="out" type="source" position={Position.Right} aria-label="SC/APC cable output" title="SC/APC output connector — drag to connect" style={{ right: -7, borderColor: '#0D9F6E', background: '#34D399' }} />
+      <Handle
+        id="in"
+        type="target"
+        position={Position.Left}
+        aria-label="SC/APC cable input"
+        title="SC/APC input connector — drop patch cord here"
+        style={{ left: -7, borderColor: '#0D9F6E', background: '#34D399' }}
+      />
+      <Handle
+        id="out"
+        type="source"
+        position={Position.Right}
+        aria-label="SC/APC cable output"
+        title="SC/APC output connector — drag to connect"
+        style={{ right: -7, borderColor: '#0D9F6E', background: '#34D399' }}
+      />
     </div>
   );
 }

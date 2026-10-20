@@ -15,13 +15,7 @@ interface WaveguideCanvasProps {
   branchPowerDbm: number;
 }
 
-function makeRayPath(
-  startX: number,
-  endX: number,
-  topY: number,
-  bottomY: number,
-  axialAngleDeg: number,
-): string {
+function makeRayPath(startX: number, endX: number, topY: number, bottomY: number, axialAngleDeg: number): string {
   const slope = Math.tan((axialAngleDeg * Math.PI) / 180);
   const centerY = (topY + bottomY) / 2;
   const commands = [`M ${startX.toFixed(2)} ${centerY.toFixed(2)}`];
@@ -89,7 +83,10 @@ function DesktopWaveguide({
         </linearGradient>
         <filter id="ray-glow-wide" x="-20%" y="-80%" width="140%" height="260%">
           <feGaussianBlur stdDeviation="3" result="blur" />
-          <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
         </filter>
       </defs>
       <rect width="1000" height="330" fill="url(#waveguide-grid-wide)" opacity="0.42" />
@@ -101,11 +98,27 @@ function DesktopWaveguide({
       </text>
 
       {/* Fiber jacket, cladding, and the 9 µm core are shown as nested layers. */}
-      <rect x="24" y="84" width="492" height="154" rx="22" fill="url(#jacket-wide)" stroke="#d8bfa0" strokeWidth="1.2" />
+      <rect
+        x="24"
+        y="84"
+        width="492"
+        height="154"
+        rx="22"
+        fill="url(#jacket-wide)"
+        stroke="#d8bfa0"
+        strokeWidth="1.2"
+      />
       <rect x="24" y="122" width="492" height="78" rx="15" fill="#f4e8d8" stroke="#b18c72" strokeWidth="1" />
       <rect x="24" y="158.3" width="492" height="5.4" rx="2.7" fill={rayColor} opacity="0.24" />
       <path d={ray} fill="none" stroke={rayColor} strokeWidth="2" strokeLinejoin="round" filter="url(#ray-glow-wide)" />
-      <path className="waveguide-ray-pulse" d={ray} fill="none" stroke="#fffaF2" strokeWidth="1.1" strokeLinecap="round" />
+      <path
+        className="waveguide-ray-pulse"
+        d={ray}
+        fill="none"
+        stroke="#fffaF2"
+        strokeWidth="1.1"
+        strokeLinecap="round"
+      />
       <text x="42" y="104" fill="#713f12" fontFamily="ui-monospace, monospace" fontSize="11" fontWeight="700">
         ACRYLATE COATING · {COATING_DIAMETER_UM} μm
       </text>
@@ -129,18 +142,35 @@ function DesktopWaveguide({
         <circle r="11" fill="#eed8bf" stroke="#b18c72" strokeWidth="1" />
         <circle r="1.1" fill={rayColor} />
         <path d="M24 -12H43" stroke="#85695a" strokeWidth="0.8" />
-        <text x="48" y="-9" fill="#705443" fontFamily="ui-monospace, monospace" fontSize="9">{COATING_DIAMETER_UM} μm coating</text>
+        <text x="48" y="-9" fill="#705443" fontFamily="ui-monospace, monospace" fontSize="9">
+          {COATING_DIAMETER_UM} μm coating
+        </text>
         <path d="M12 8H43" stroke="#85695a" strokeWidth="0.8" />
-        <text x="48" y="11" fill="#705443" fontFamily="ui-monospace, monospace" fontSize="9">{CLADDING_DIAMETER_UM} μm cladding / {CORE_DIAMETER_UM} μm core</text>
+        <text x="48" y="11" fill="#705443" fontFamily="ui-monospace, monospace" fontSize="9">
+          {CLADDING_DIAMETER_UM} μm cladding / {CORE_DIAMETER_UM} μm core
+        </text>
       </g>
 
       {/* PLC cassette and its four measured output branches. */}
       <path d="M516 161H536" stroke={rayColor} strokeWidth="2.2" />
       <rect x="536" y="111" width="142" height="101" rx="12" fill="#fffaF2" stroke="#d8bfa0" strokeWidth="1.4" />
-      <text x="607" y="133" textAnchor="middle" fill="#2b1a14" fontFamily="ui-monospace, monospace" fontSize="11" fontWeight="700">
+      <text
+        x="607"
+        y="133"
+        textAnchor="middle"
+        fill="#2b1a14"
+        fontFamily="ui-monospace, monospace"
+        fontSize="11"
+        fontWeight="700"
+      >
         1:4 PLC
       </text>
-      <path d="M558 160H579M579 160L604 145M579 160L604 156M579 160L604 168M579 160L604 179" fill="none" stroke="#85695a" strokeWidth="1.2" />
+      <path
+        d="M558 160H579M579 160L604 145M579 160L604 156M579 160L604 168M579 160L604 179"
+        fill="none"
+        stroke="#85695a"
+        strokeWidth="1.2"
+      />
       <circle cx="579" cy="160" r="3" fill={rayColor} />
       <text x="607" y="198" textAnchor="middle" fill="#705443" fontFamily="ui-monospace, monospace" fontSize="10">
         −{PLC_1X4_INSERTION_LOSS_DB.toFixed(2)} dB
@@ -154,13 +184,27 @@ function DesktopWaveguide({
         return (
           <g key={port}>
             <path d={path} fill="none" stroke={rayColor} strokeWidth="1.6" opacity="0.72" />
-            <path className="waveguide-ray-pulse" d={path} fill="none" stroke="#fffaF2" strokeWidth="0.9" strokeLinecap="round" />
+            <path
+              className="waveguide-ray-pulse"
+              d={path}
+              fill="none"
+              stroke="#fffaF2"
+              strokeWidth="0.9"
+              strokeLinecap="round"
+            />
             <circle cx="678" cy={startY} r="2.5" fill={rayColor} />
             <rect x="823" y={endY - 19} width="157" height="38" rx="8" fill="#fffaF2" stroke="#d8bfa0" />
             <text x="835" y={endY - 4} fill="#85695a" fontFamily="ui-monospace, monospace" fontSize="8.5">
               PIGTAIL {port}
             </text>
-            <text x="835" y={endY + 10} fill="#2b1a14" fontFamily="ui-monospace, monospace" fontSize="12" fontWeight="700">
+            <text
+              x="835"
+              y={endY + 10}
+              fill="#2b1a14"
+              fontFamily="ui-monospace, monospace"
+              fontSize="12"
+              fontWeight="700"
+            >
               {powerLabel(branchPowerDbm)}
             </text>
           </g>
@@ -198,7 +242,10 @@ function MobileWaveguide({
         </pattern>
         <filter id="ray-glow-mobile" x="-20%" y="-80%" width="140%" height="260%">
           <feGaussianBlur stdDeviation="2" result="blur" />
-          <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
         </filter>
       </defs>
       <rect width="360" height="590" fill="url(#waveguide-grid-mobile)" opacity="0.38" />
@@ -209,7 +256,14 @@ function MobileWaveguide({
       <rect x="16" y="70" width="328" height="56" rx="12" fill="#f4e8d8" stroke="#b18c72" />
       <rect x="16" y="92.8" width="328" height="3.4" rx="1.7" fill={rayColor} opacity="0.26" />
       <path d={ray} fill="none" stroke={rayColor} strokeWidth="1.8" filter="url(#ray-glow-mobile)" />
-      <path className="waveguide-ray-pulse" d={ray} fill="none" stroke="#fffaF2" strokeWidth="0.8" strokeLinecap="round" />
+      <path
+        className="waveguide-ray-pulse"
+        d={ray}
+        fill="none"
+        stroke="#fffaF2"
+        strokeWidth="0.8"
+        strokeLinecap="round"
+      />
       <text x="27" y="61" fill="#713f12" fontFamily="ui-monospace, monospace" fontSize="8.5" fontWeight="700">
         COATING {COATING_DIAMETER_UM} μm · CLADDING {CLADDING_DIAMETER_UM} μm · CORE {CORE_DIAMETER_UM} μm
       </text>
@@ -219,10 +273,32 @@ function MobileWaveguide({
 
       {/* Optical trunk bends from the longitudinal guide into the PLC cassette. */}
       <path d="M 335 95 C 351 119, 330 168, 247 210" fill="none" stroke={rayColor} strokeWidth="1.8" />
-      <path className="waveguide-ray-pulse" d="M 335 95 C 351 119, 330 168, 247 210" fill="none" stroke="#fffaF2" strokeWidth="0.8" strokeLinecap="round" />
+      <path
+        className="waveguide-ray-pulse"
+        d="M 335 95 C 351 119, 330 168, 247 210"
+        fill="none"
+        stroke="#fffaF2"
+        strokeWidth="0.8"
+        strokeLinecap="round"
+      />
       <rect x="116" y="178" width="128" height="91" rx="12" fill="#fffaF2" stroke="#d8bfa0" strokeWidth="1.3" />
-      <text x="180" y="200" textAnchor="middle" fill="#2b1a14" fontFamily="ui-monospace, monospace" fontSize="12" fontWeight="700">1:4 PLC</text>
-      <path d="M139 222H159M159 222L181 211M159 222L181 218M159 222L181 226M159 222L181 233" fill="none" stroke="#85695a" strokeWidth="1.3" />
+      <text
+        x="180"
+        y="200"
+        textAnchor="middle"
+        fill="#2b1a14"
+        fontFamily="ui-monospace, monospace"
+        fontSize="12"
+        fontWeight="700"
+      >
+        1:4 PLC
+      </text>
+      <path
+        d="M139 222H159M159 222L181 211M159 222L181 218M159 222L181 226M159 222L181 233"
+        fill="none"
+        stroke="#85695a"
+        strokeWidth="1.3"
+      />
       <circle cx="159" cy="222" r="3" fill={rayColor} />
       <text x="180" y="252" textAnchor="middle" fill="#705443" fontFamily="ui-monospace, monospace" fontSize="10">
         −{PLC_1X4_INSERTION_LOSS_DB.toFixed(2)} dB
@@ -236,10 +312,28 @@ function MobileWaveguide({
         return (
           <g key={port}>
             <path d={path} fill="none" stroke={rayColor} strokeWidth="1.6" opacity="0.72" />
-            <path className="waveguide-ray-pulse" d={path} fill="none" stroke="#fffaF2" strokeWidth="0.8" strokeLinecap="round" />
+            <path
+              className="waveguide-ray-pulse"
+              d={path}
+              fill="none"
+              stroke="#fffaF2"
+              strokeWidth="0.8"
+              strokeLinecap="round"
+            />
             <rect x={x} y={y} width="160" height="58" rx="9" fill="#fffaF2" stroke="#d8bfa0" />
-            <text x={x + 11} y={y + 20} fill="#85695a" fontFamily="ui-monospace, monospace" fontSize="9">PIGTAIL {port}</text>
-            <text x={x + 11} y={y + 41} fill="#2b1a14" fontFamily="ui-monospace, monospace" fontSize="12" fontWeight="700">{powerLabel(branchPowerDbm)}</text>
+            <text x={x + 11} y={y + 20} fill="#85695a" fontFamily="ui-monospace, monospace" fontSize="9">
+              PIGTAIL {port}
+            </text>
+            <text
+              x={x + 11}
+              y={y + 41}
+              fill="#2b1a14"
+              fontFamily="ui-monospace, monospace"
+              fontSize="12"
+              fontWeight="700"
+            >
+              {powerLabel(branchPowerDbm)}
+            </text>
           </g>
         );
       })}
@@ -247,8 +341,12 @@ function MobileWaveguide({
         <circle r="17" fill="#fff1c2" stroke="#d8bfa0" />
         <circle r="8.5" fill="#eed8bf" stroke="#b18c72" />
         <circle r="0.7" fill={rayColor} />
-        <text x="26" y="-3" fill="#705443" fontFamily="ui-monospace, monospace" fontSize="9">END-FACE · {COATING_DIAMETER_UM} / {CLADDING_DIAMETER_UM} / {CORE_DIAMETER_UM} μm</text>
-        <text x="26" y="12" fill="#85695a" fontFamily="ui-monospace, monospace" fontSize="8">Magnified for legibility</text>
+        <text x="26" y="-3" fill="#705443" fontFamily="ui-monospace, monospace" fontSize="9">
+          END-FACE · {COATING_DIAMETER_UM} / {CLADDING_DIAMETER_UM} / {CORE_DIAMETER_UM} μm
+        </text>
+        <text x="26" y="12" fill="#85695a" fontFamily="ui-monospace, monospace" fontSize="8">
+          Magnified for legibility
+        </text>
       </g>
       <text x="346" y="574" textAnchor="end" fill="#85695a" fontFamily="ui-monospace, monospace" fontSize="8">
         Pbranch = Ptx − {PLC_1X4_INSERTION_LOSS_DB.toFixed(2)} dB
@@ -263,7 +361,10 @@ export function WaveguideCanvas(props: WaveguideCanvasProps) {
       <DesktopWaveguide {...props} />
       <MobileWaveguide {...props} />
       <figcaption className="landing-waveguide-caption">
-        Each ray reflects at the core–cladding interface in an educational schematic. Its illustrative index step is calibrated to the brief’s approximate 82° reference at 1490 nm; that is a modeling assumption, not a measured fiber profile or a guaranteed deployed-fiber angle. The small Sellmeier dispersion shift is shown numerically rather than exaggerated in the drawing.
+        Each ray reflects at the core–cladding interface in an educational schematic. Its illustrative index step is
+        calibrated to the brief’s approximate 82° reference at 1490 nm; that is a modeling assumption, not a measured
+        fiber profile or a guaranteed deployed-fiber angle. The small Sellmeier dispersion shift is shown numerically
+        rather than exaggerated in the drawing.
       </figcaption>
     </figure>
   );

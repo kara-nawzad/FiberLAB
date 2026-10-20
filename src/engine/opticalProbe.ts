@@ -1,10 +1,4 @@
-import type {
-  DesignSettings,
-  MeterWavelength,
-  PonEdge,
-  PonNode,
-  SimulationResult,
-} from '../types';
+import type { DesignSettings, MeterWavelength, PonEdge, PonNode, SimulationResult } from '../types';
 import {
   computeClosureSpliceLoss,
   computeFiberLoss,
@@ -74,9 +68,11 @@ function outputPowerAtUnpatchedPort(
 
   const outputIndex = Number(/^out-(\d+)$/.exec(handleId ?? '')?.[1] ?? -1);
   const inputEdgeIds = edges
-    .filter((edge) => edge.target === node.id && (
-      !isOdfNode(node) || edge.targetHandle === `in-${outputIndex < 0 ? 0 : outputIndex}`
-    ))
+    .filter(
+      (edge) =>
+        edge.target === node.id &&
+        (!isOdfNode(node) || edge.targetHandle === `in-${outputIndex < 0 ? 0 : outputIndex}`),
+    )
     .map((edge) => edge.id);
   const incomingPower = strongestPower(inputEdgeIds, simulation);
   if (incomingPower === null) return null;
@@ -116,33 +112,45 @@ export function readOpticalPowerAtProbe(
     const inputEdges = edges.filter(
       (edge) => edge.target === node.id && (!target.handleId || edge.targetHandle === target.handleId),
     );
-    return strongestPower(inputEdges.map((edge) => edge.id), simulation);
+    return strongestPower(
+      inputEdges.map((edge) => edge.id),
+      simulation,
+    );
   }
 
   if (target.handleType === 'source') {
     const outputEdges = edges.filter(
       (edge) => edge.source === node.id && (!target.handleId || edge.sourceHandle === target.handleId),
     );
-    if (outputEdges.length > 0) return strongestPower(outputEdges.map((edge) => edge.id), simulation);
+    if (outputEdges.length > 0)
+      return strongestPower(
+        outputEdges.map((edge) => edge.id),
+        simulation,
+      );
     return outputPowerAtUnpatchedPort(node, target.handleId, nodes, edges, simulation);
   }
 
   if (isOltNode(node)) return node.data.laserOn ? node.data.txPowerDbm : null;
 
   const outputEdges = edges.filter((edge) => edge.source === node.id);
-  if (outputEdges.length > 0) return strongestPower(outputEdges.map((edge) => edge.id), simulation);
+  if (outputEdges.length > 0)
+    return strongestPower(
+      outputEdges.map((edge) => edge.id),
+      simulation,
+    );
 
   const inputEdges = edges.filter((edge) => edge.target === node.id);
-  if (inputEdges.length > 0) return strongestPower(inputEdges.map((edge) => edge.id), simulation);
+  if (inputEdges.length > 0)
+    return strongestPower(
+      inputEdges.map((edge) => edge.id),
+      simulation,
+    );
 
   return outputPowerAtUnpatchedPort(node, null, nodes, edges, simulation);
 }
 
 /** Stable identity comparison used by the pointer-move handler to avoid frame-by-frame renders. */
-export function sameProbeTarget(
-  left: OpticalProbeTarget | null,
-  right: OpticalProbeTarget | null,
-): boolean {
+export function sameProbeTarget(left: OpticalProbeTarget | null, right: OpticalProbeTarget | null): boolean {
   if (left === right) return true;
   if (!left || !right || left.kind !== right.kind || left.id !== right.id) return false;
   if (left.kind === 'edge' || right.kind === 'edge') return left.kind === right.kind;

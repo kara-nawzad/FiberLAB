@@ -26,21 +26,23 @@ describe('pure OTDR trace analyzer', () => {
     expect(events.at(-1)?.type).toBe('end_of_fiber');
     expect(events.some((event) => event.type === 'fiber_span')).toBe(true);
     expect(events.some((event) => event.type === 'splice')).toBe(true);
-    expect(events.filter((event) => event.type === 'splitter').map((event) => event.relativeLossDb))
-      .toEqual([-7.2, -10.5]);
-    expect(events.findIndex((event) => event.type === 'fiber_span'))
-      .toBeLessThan(events.findIndex((event) => event.type === 'splitter'));
+    expect(events.filter((event) => event.type === 'splitter').map((event) => event.relativeLossDb)).toEqual([
+      -7.2, -10.5,
+    ]);
+    expect(events.findIndex((event) => event.type === 'fiber_span')).toBeLessThan(
+      events.findIndex((event) => event.type === 'splitter'),
+    );
     expect(first.totalLossDb).toBeCloseTo(22.575, 3);
   });
 
   it('detects a macro-bend as a failing non-reflective step and retains splitter cliffs', () => {
     const topology = buildPreset('standard-1x32');
     if (!topology) throw new Error('The standard reference topology is missing.');
-    const nodes = topology.nodes.map((node) => (
+    const nodes = topology.nodes.map((node) =>
       node.type === 'fiber' && node.id === 'fiber-feeder-a'
         ? { ...node, data: { ...node.data, macroBendActive: true } }
-        : node
-    ));
+        : node,
+    );
     const trace = generateOtdrTrace(nodes, topology.edges, 'olt-a', 'ont-a1', 1490);
     const bend = trace.events.find((event) => event.type === 'fault_bend');
 
@@ -50,8 +52,9 @@ describe('pure OTDR trace analyzer', () => {
       passFail: 'FAIL',
     });
     expect(bend?.reflectionPeakDb).toBeUndefined();
-    expect(trace.events.filter((event) => event.type === 'splitter').map((event) => event.relativeLossDb))
-      .toEqual([-7.2, -10.5]);
+    expect(trace.events.filter((event) => event.type === 'splitter').map((event) => event.relativeLossDb)).toEqual([
+      -7.2, -10.5,
+    ]);
     expect(trace.totalLossDb).toBeCloseTo(26.075, 3);
   });
 
@@ -74,18 +77,29 @@ describe('pure OTDR trace analyzer', () => {
   it('uses the selected wavelength attenuation and can start from a feeder span', () => {
     const nodes: PonNode[] = [
       {
-        id: 'olt-test', type: 'olt', position: { x: 0, y: 0 },
+        id: 'olt-test',
+        type: 'olt',
+        position: { x: 0, y: 0 },
         data: { kind: 'olt', portName: 'PON 0/1/0', oltClass: 'B+', txPowerDbm: 3, laserOn: true, wavelength: 1490 },
       },
       {
-        id: 'fiber-test', type: 'fiber', position: { x: 100, y: 0 },
+        id: 'fiber-test',
+        type: 'fiber',
+        position: { x: 100, y: 0 },
         data: {
-          kind: 'fiber', cableType: 'feeder', lengthKm: 10, splices: 0, connectors: 0,
-          wavelength: 1490, attenuationOverrideDbPerKm: null,
+          kind: 'fiber',
+          cableType: 'feeder',
+          lengthKm: 10,
+          splices: 0,
+          connectors: 0,
+          wavelength: 1490,
+          attenuationOverrideDbPerKm: null,
         },
       },
       {
-        id: 'ont-test', type: 'ont', position: { x: 200, y: 0 },
+        id: 'ont-test',
+        type: 'ont',
+        position: { x: 200, y: 0 },
         data: { kind: 'ont', serial: 'OTDR-001', subscriber: 'Test home', sensitivityDbm: -28 },
       },
     ];
@@ -113,19 +127,9 @@ describe('pure OTDR trace analyzer', () => {
     const topology = buildPreset('modern-10g-xgs-pon-suburb');
     if (!topology) throw new Error('The modern XGS-PON suburb preset is missing.');
     const targets = getReachableOtdrTargets(topology.nodes, topology.edges, 'olt-xgs-suburb');
-    expect(targets.map((node) => node.id)).toEqual([
-      'gateway-xgs-1',
-      'gateway-xgs-2',
-      'gateway-xgs-3',
-    ]);
+    expect(targets.map((node) => node.id)).toEqual(['gateway-xgs-1', 'gateway-xgs-2', 'gateway-xgs-3']);
 
-    const trace = generateOtdrTrace(
-      topology.nodes,
-      topology.edges,
-      'olt-xgs-suburb',
-      'gateway-xgs-1',
-      1577,
-    );
+    const trace = generateOtdrTrace(topology.nodes, topology.edges, 'olt-xgs-suburb', 'gateway-xgs-1', 1577);
     expect(trace.wavelengthNm).toBe(1577);
     expect(trace.totalDistanceKm).toBeCloseTo(4.85, 5);
     expect(trace.totalLossDb).toBeCloseTo(15.447, 3);

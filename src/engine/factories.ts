@@ -108,10 +108,7 @@ export function createClosureNode(placement: NodePlacement = {}): PonNode {
   const data: ClosureNodeData = {
     kind: 'closure',
     spliceLossDb: DEFAULT_CLOSURE_SPLICE_LOSS_DB,
-    activeSpliceChannels: Array.from(
-      { length: SPLICE_TRAY_CHANNEL_COUNT },
-      (_, index) => index < CLOSURE_OUTPUT_PORTS,
-    ),
+    activeSpliceChannels: Array.from({ length: SPLICE_TRAY_CHANNEL_COUNT }, (_, index) => index < CLOSURE_OUTPUT_PORTS),
   };
   return {
     id: placement.id ?? nextId('closure'),

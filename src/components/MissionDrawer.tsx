@@ -3,11 +3,7 @@ import { Check, ChevronDown, CircleHelp, Flag, Play, RotateCcw, X } from 'lucide
 import type { PonEdge, PonNode, SimulationResult } from '../types';
 import type { NetworkCostBreakdown } from '../data/pricingCatalogue';
 import { formatDbm } from '../engine/opticalSimulator';
-import {
-  evaluateMissionObjectives,
-  MISSIONS,
-  type Mission,
-} from '../engine/missions';
+import { evaluateMissionObjectives, MISSIONS, type Mission } from '../engine/missions';
 
 interface MissionDrawerProps {
   open: boolean;
@@ -21,11 +17,12 @@ interface MissionDrawerProps {
 }
 
 function DifficultyPill({ difficulty }: { difficulty: Mission['difficulty'] }) {
-  const tone = difficulty === 'Beginner'
-    ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
-    : difficulty === 'Intermediate'
-      ? 'border-amber-200 bg-amber-50 text-amber-800'
-      : 'border-violet-200 bg-violet-50 text-violet-800';
+  const tone =
+    difficulty === 'Beginner'
+      ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+      : difficulty === 'Intermediate'
+        ? 'border-amber-200 bg-amber-50 text-amber-800'
+        : 'border-violet-200 bg-violet-50 text-violet-800';
 
   return (
     <span className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold ${tone}`}>
@@ -44,9 +41,7 @@ export function MissionDrawer({
   onClose,
   onStartMission,
 }: MissionDrawerProps) {
-  const [selectedMissionId, setSelectedMissionId] = useState(
-    activeMissionId ?? MISSIONS[0]?.id ?? '',
-  );
+  const [selectedMissionId, setSelectedMissionId] = useState(activeMissionId ?? MISSIONS[0]?.id ?? '');
   const dialogRef = useRef<HTMLElement | null>(null);
   const previouslyFocusedRef = useRef<HTMLElement | null>(null);
 
@@ -56,11 +51,10 @@ export function MissionDrawer({
 
   useEffect(() => {
     if (!open) return;
-    previouslyFocusedRef.current = document.activeElement instanceof HTMLElement
-      ? document.activeElement
-      : null;
+    previouslyFocusedRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const dialog = dialogRef.current;
-    const focusableSelector = 'button:not([disabled]), summary, a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+    const focusableSelector =
+      'button:not([disabled]), summary, a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
     const getFocusable = () => Array.from(dialog?.querySelectorAll<HTMLElement>(focusableSelector) ?? []);
     const title = dialog?.querySelector<HTMLElement>('#mission-drawer-title');
     (title ?? getFocusable()[0])?.focus();
@@ -108,9 +102,7 @@ export function MissionDrawer({
   if (!open || !mission) return null;
 
   const isActive = activeMissionId === mission.id;
-  const progress = isActive
-    ? evaluateMissionObjectives(mission, simulation, nodes, edges, costBreakdown)
-    : [];
+  const progress = isActive ? evaluateMissionObjectives(mission, simulation, nodes, edges, costBreakdown) : [];
   const completedCount = progress.filter((item) => item.isMet).length;
   const isComplete = isActive && completedCount === mission.objectives.length;
   const progressPercent = isActive ? (completedCount / mission.objectives.length) * 100 : 0;
@@ -214,7 +206,10 @@ export function MissionDrawer({
 
           <section className="mt-4" aria-labelledby="mission-objectives-title">
             <div className="mb-2 flex items-center justify-between">
-              <h3 id="mission-objectives-title" className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-700">
+              <h3
+                id="mission-objectives-title"
+                className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-700"
+              >
                 Objectives
               </h3>
               {isActive ? (
@@ -264,7 +259,9 @@ export function MissionDrawer({
                     >
                       {met ? <Check size={12} strokeWidth={3} /> : index + 1}
                     </span>
-                    <span className={`text-[11px] leading-relaxed ${met ? 'font-medium text-emerald-900' : 'text-slate-700'}`}>
+                    <span
+                      className={`text-[11px] leading-relaxed ${met ? 'font-medium text-emerald-900' : 'text-slate-700'}`}
+                    >
                       {objective.description}
                     </span>
                   </li>
@@ -290,19 +287,26 @@ export function MissionDrawer({
               <div className="mt-3 grid grid-cols-3 gap-1.5">
                 <div className="rounded-md border border-emerald-200/80 bg-white/80 p-2">
                   <div className="text-[8px] font-semibold uppercase tracking-wide text-slate-500">Mean Rx</div>
-                  <div className="mt-0.5 font-mono text-[11px] font-bold text-slate-900">{formatDbm(simulation.summary.meanRxDbm)}</div>
+                  <div className="mt-0.5 font-mono text-[11px] font-bold text-slate-900">
+                    {formatDbm(simulation.summary.meanRxDbm)}
+                  </div>
                 </div>
                 <div className="rounded-md border border-emerald-200/80 bg-white/80 p-2">
                   <div className="text-[8px] font-semibold uppercase tracking-wide text-slate-500">Worst Rx</div>
-                  <div className="mt-0.5 font-mono text-[11px] font-bold text-slate-900">{formatDbm(simulation.summary.worstRxDbm)}</div>
+                  <div className="mt-0.5 font-mono text-[11px] font-bold text-slate-900">
+                    {formatDbm(simulation.summary.worstRxDbm)}
+                  </div>
                 </div>
                 <div className="rounded-md border border-emerald-200/80 bg-white/80 p-2">
                   <div className="text-[8px] font-semibold uppercase tracking-wide text-slate-500">Margin</div>
-                  <div className="mt-0.5 font-mono text-[11px] font-bold text-slate-900">{simulation.safetyMarginDb.toFixed(1)} dB</div>
+                  <div className="mt-0.5 font-mono text-[11px] font-bold text-slate-900">
+                    {simulation.safetyMarginDb.toFixed(1)} dB
+                  </div>
                 </div>
               </div>
               <p className="mt-2 text-[9px] text-emerald-800">
-                {simulation.summary.byStatus.ONLINE} online · {connectedCount} connected · {simulation.summary.totalFiberKm.toFixed(2)} km of plant
+                {simulation.summary.byStatus.ONLINE} online · {connectedCount} connected ·{' '}
+                {simulation.summary.totalFiberKm.toFixed(2)} km of plant
               </p>
             </section>
           ) : null}
@@ -324,7 +328,8 @@ export function MissionDrawer({
         </div>
 
         <footer className="shrink-0 border-t border-slate-200 bg-white px-5 py-3 text-[9px] leading-relaxed text-slate-500">
-          Learning simulation only. Confirm live-network decisions against current standards, product datasheets, and qualified field procedures.
+          Learning simulation only. Confirm live-network decisions against current standards, product datasheets, and
+          qualified field procedures.
         </footer>
       </aside>
     </div>

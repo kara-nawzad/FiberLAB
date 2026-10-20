@@ -94,9 +94,7 @@ export function isGatewayNode(node: PonNode): node is Extract<PonNode, { type: '
   return node.type === 'gateway';
 }
 
-export function isSubscriberEndpointNode(
-  node: PonNode,
-): node is Extract<PonNode, { type: 'ont' | 'gateway' }> {
+export function isSubscriberEndpointNode(node: PonNode): node is Extract<PonNode, { type: 'ont' | 'gateway' }> {
   return isOntNode(node) || isGatewayNode(node);
 }
 
@@ -331,9 +329,10 @@ export function simulateTopology(
     if (isFiberNode(node)) {
       // The XGS-PON downstream uses 1577 nm throughout this route. Legacy GPON
       // still uses each span's own selected wavelength, preserving its equation.
-      const effectiveFiberData = oltData.ponStandard === 'XGS-PON'
-        ? { ...node.data, wavelength: PON_STANDARD_SPECS['XGS-PON'].downstreamWavelength }
-        : node.data;
+      const effectiveFiberData =
+        oltData.ponStandard === 'XGS-PON'
+          ? { ...node.data, wavelength: PON_STANDARD_SPECS['XGS-PON'].downstreamWavelength }
+          : node.data;
       const loss = computeFiberLoss(effectiveFiberData);
       nextState.lossDb += loss.totalDb;
       nextState.fiberKm += Math.max(0, node.data.lengthKm);
@@ -502,17 +501,13 @@ export function simulateTopology(
 
   for (const node of nodes) {
     if (isOntNode(node)) {
-      const candidates = [...(candidatesByOnt.get(node.id) ?? [])].sort(
-        (a, b) => b.rxPowerDbm - a.rxPowerDbm,
-      );
+      const candidates = [...(candidatesByOnt.get(node.id) ?? [])].sort((a, b) => b.rxPowerDbm - a.rxPowerDbm);
       const reading = opticalReading(candidates);
       const { best, ...telemetry } = reading;
       ontTelemetry[node.id] = { ontId: node.id, ...telemetry };
       if (best) bestPaths[node.id] = best;
     } else if (isGatewayNode(node)) {
-      const candidates = [...(candidatesByGateway.get(node.id) ?? [])].sort(
-        (a, b) => b.rxPowerDbm - a.rxPowerDbm,
-      );
+      const candidates = [...(candidatesByGateway.get(node.id) ?? [])].sort((a, b) => b.rxPowerDbm - a.rxPowerDbm);
       const reading = opticalReading(candidates);
       const standard = reading.best?.ponStandard ?? null;
       const standardSpec = standard ? PON_STANDARD_SPECS[standard] : null;
@@ -538,12 +533,9 @@ export function simulateTopology(
         ponStandard: standard,
         downstreamLineRateGbps: standardSpec?.downstreamGbps ?? null,
         upstreamLineRateGbps: standardSpec?.upstreamGbps ?? null,
-        estimatedDownMbps: standardSpec && splitRatio
-          ? round2((standardSpec.downstreamGbps * 1000) / splitRatio)
-          : null,
-        estimatedUpMbps: standardSpec && splitRatio
-          ? round2((standardSpec.upstreamGbps * 1000) / splitRatio)
-          : null,
+        estimatedDownMbps:
+          standardSpec && splitRatio ? round2((standardSpec.downstreamGbps * 1000) / splitRatio) : null,
+        estimatedUpMbps: standardSpec && splitRatio ? round2((standardSpec.upstreamGbps * 1000) / splitRatio) : null,
       };
       if (reading.best) bestPaths[node.id] = reading.best;
     }
@@ -551,19 +543,14 @@ export function simulateTopology(
 
   /* -------------- Upstream burst-mode dynamic range telemetry ------------ */
 
-  const allEndpoints = [
-    ...Object.values(ontTelemetry),
-    ...Object.values(gatewayTelemetry),
-  ];
+  const allEndpoints = [...Object.values(ontTelemetry), ...Object.values(gatewayTelemetry)];
 
   for (const node of nodes) {
     if (!isOltNode(node)) continue;
     const connectedOnOlt = allEndpoints.filter(
       (endpoint) => endpoint.sourceOltId === node.id && endpoint.rxPowerDbm !== null,
     );
-    const rxValues = connectedOnOlt
-      .map((endpoint) => endpoint.rxPowerDbm)
-      .filter((val): val is number => val !== null);
+    const rxValues = connectedOnOlt.map((endpoint) => endpoint.rxPowerDbm).filter((val): val is number => val !== null);
 
     const maxRxPowerDbm = rxValues.length > 0 ? Math.max(...rxValues) : null;
     const minRxPowerDbm = rxValues.length > 0 ? Math.min(...rxValues) : null;
@@ -643,10 +630,7 @@ function summarise(
   const ontCount = Object.keys(ontTelemetry).length;
   const gatewayCount = Object.keys(gatewayTelemetry).length;
   const subscriberCount = ontCount + gatewayCount;
-  const endpointReadings = [
-    ...Object.values(ontTelemetry),
-    ...Object.values(gatewayTelemetry),
-  ];
+  const endpointReadings = [...Object.values(ontTelemetry), ...Object.values(gatewayTelemetry)];
   let rxSum = 0;
   let rxCount = 0;
   let worstRxDbm: number | null = null;
@@ -686,10 +670,7 @@ function summarise(
     }
   }
 
-  const upstreamDeltaDb = Object.values(oltTelemetry).reduce(
-    (max, entry) => Math.max(max, entry.upstreamDeltaDb),
-    0,
-  );
+  const upstreamDeltaDb = Object.values(oltTelemetry).reduce((max, entry) => Math.max(max, entry.upstreamDeltaDb), 0);
   const upstreamDynamicRangeWarning = upstreamDeltaDb > UPSTREAM_DYNAMIC_RANGE_MAX_DB;
 
   const liveCount = byStatus.ONLINE + byStatus.WARNING + byStatus.OVERLOAD + byStatus.LOS;
@@ -722,15 +703,12 @@ function summarise(
 export const formatDbm = (value: number | null): string =>
   value === null ? '—' : `${value >= 0 ? '+' : ''}${value.toFixed(2)} dBm`;
 
-
 export function describeStatus(status: OntStatus, ponStandard?: PonStandard): string {
   switch (status) {
     case 'OVERLOAD':
       return 'Optical saturation / burn risk';
     case 'ONLINE':
-      return ponStandard === 'XGS-PON'
-        ? 'Within modeled XGS-PON receive-power window'
-        : 'Within GPON optimal window';
+      return ponStandard === 'XGS-PON' ? 'Within modeled XGS-PON receive-power window' : 'Within GPON optimal window';
     case 'WARNING':
       return 'Marginal — high BER risk';
     case 'LOS':

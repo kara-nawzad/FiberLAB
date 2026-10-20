@@ -39,33 +39,33 @@ transceiver and terminates at each reachable ONT or Wi-Fi gateway:
 P_rx = P_tx − (L_fiber + L_splitters + L_ODF + L_NAP + L_splices + L_connectors + L_field_faults + L_closure + Safety_Margin)
 ```
 
-| Term | Model |
-| --- | --- |
-| `L_fiber` | `length_km × α` — reference values: 0.35 dB/km @ 1270/1310 nm, 0.25 dB/km @ 1490 nm, 0.20 dB/km @ 1550 nm, and 0.22 dB/km @ 1577 nm; a manual per-span override takes precedence |
-| `L_splitters` | Catalogue insertion loss: 1:2 = 3.7, 1:4 = 7.2, 1:8 = 10.5, 1:16 = 13.8, 1:32 = 17.5, 1:64 = 20.8 dB (+ optional excess loss) |
-| `L_ODF` | 0.50 dB per modeled matched adapter through-pair; the two ODF pairs are isolated and do not cross-connect |
-| `L_NAP` | Fixed 10.5 dB per connected branch for the NAP's internal 1:8 split (one modeled split stage) |
-| `L_splices` | `count × 0.1 dB` for fusion splices counted on cable spans |
-| `L_connectors` | `count × 0.5 dB` (SC/APC) |
-| `L_field_faults` | Separate training allowances: +3.50 dB macro-bend and +2.00 dB dirty SC/APC ferrule |
-| `L_closure` | One adjustable 0.05–0.10 dB through-splice allowance per active closure output branch |
-| `Safety_Margin` | Global, default 2.0 dB |
+| Term             | Model                                                                                                                                                                            |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `L_fiber`        | `length_km × α` — reference values: 0.35 dB/km @ 1270/1310 nm, 0.25 dB/km @ 1490 nm, 0.20 dB/km @ 1550 nm, and 0.22 dB/km @ 1577 nm; a manual per-span override takes precedence |
+| `L_splitters`    | Catalogue insertion loss: 1:2 = 3.7, 1:4 = 7.2, 1:8 = 10.5, 1:16 = 13.8, 1:32 = 17.5, 1:64 = 20.8 dB (+ optional excess loss)                                                    |
+| `L_ODF`          | 0.50 dB per modeled matched adapter through-pair; the two ODF pairs are isolated and do not cross-connect                                                                        |
+| `L_NAP`          | Fixed 10.5 dB per connected branch for the NAP's internal 1:8 split (one modeled split stage)                                                                                    |
+| `L_splices`      | `count × 0.1 dB` for fusion splices counted on cable spans                                                                                                                       |
+| `L_connectors`   | `count × 0.5 dB` (SC/APC)                                                                                                                                                        |
+| `L_field_faults` | Separate training allowances: +3.50 dB macro-bend and +2.00 dB dirty SC/APC ferrule                                                                                              |
+| `L_closure`      | One adjustable 0.05–0.10 dB through-splice allowance per active closure output branch                                                                                            |
+| `Safety_Margin`  | Global, default 2.0 dB                                                                                                                                                           |
 
 ### ONT classification (ITU-T G.984 GPON)
 
-| Status | Condition | Colour |
-| --- | --- | --- |
-| `OVERLOAD` | `P_rx > −8.0 dBm` | Purple — saturation / burn risk |
-| `ONLINE` | `−24.0 ≤ P_rx ≤ −8.0 dBm` | Green |
-| `WARNING` | `−28.0 ≤ P_rx < −24.0 dBm` | Amber — high BER risk |
-| `LOS` | `P_rx < −28.0 dBm` | Red |
-| `DISCONNECTED` | no active OLT path | Grey |
+| Status         | Condition                  | Colour                          |
+| -------------- | -------------------------- | ------------------------------- |
+| `OVERLOAD`     | `P_rx > −8.0 dBm`          | Purple — saturation / burn risk |
+| `ONLINE`       | `−24.0 ≤ P_rx ≤ −8.0 dBm`  | Green                           |
+| `WARNING`      | `−28.0 ≤ P_rx < −24.0 dBm` | Amber — high BER risk           |
+| `LOS`          | `P_rx < −28.0 dBm`         | Red                             |
+| `DISCONNECTED` | no active OLT path         | Grey                            |
 
 The existing GPON receive-power classification is retained and reused for XGS-PON endpoints; XGS-specific receiver-class budgets are not separately implemented. The standards selector shows the following nominal line rates and wavelength references:
 
-| OLT standard | Downstream | Upstream | Modeled fiber reference |
-| --- | --- | --- | --- |
-| GPON (G.984) | 1490 nm · 2.488 Gbps | 1310 nm · 1.244 Gbps | 0.25 dB/km @ 1490 nm by default |
+| OLT standard       | Downstream           | Upstream             | Modeled fiber reference         |
+| ------------------ | -------------------- | -------------------- | ------------------------------- |
+| GPON (G.984)       | 1490 nm · 2.488 Gbps | 1310 nm · 1.244 Gbps | 0.25 dB/km @ 1490 nm by default |
 | XGS-PON (G.9807.1) | 1577 nm · 9.953 Gbps | 1270 nm · 9.953 Gbps | 0.22 dB/km @ 1577 nm by default |
 
 XGS-PON route simulation uses the downstream 1577 nm reference. The upstream wavelength and rate are displayed as capability references; upstream transmission, protocol overhead, OLT optical-class budgets, and service-plan limits are not simulated. A gateway's per-subscriber rate estimate divides the nominal shared line rate by the topology's cumulative split ratio—it is not a measured speed test.
@@ -88,20 +88,20 @@ the BOM optical audit table.
 
 CAPEX is a parallel, graph-derived estimate; it is not folded into or allowed to alter the optical link-budget equation. Default USD planning rates are:
 
-| Line item | Reference rate |
-| --- | ---: |
-| Feeder / OSP cable | $350 / km |
-| Distribution cable | $250 / km |
-| Drop cable | $150 / km |
-| Fusion-splice labor | $12.50 / splice |
-| SC/APC connector termination | $4.00 / connector end |
-| PLC splitter | 1:2 $14 · 1:4 $18 · 1:8 $26 · 1:16 $42 · 1:32 $68 · 1:64 $120 |
-| Dome splice closure (FOSC-style reference) | $85 / each |
-| ODF rack panel / 2-pair patch field (reference) | $110 / each |
-| Outdoor NAP/FAT with internal 1:8 splitter (reference) | $65 / each |
-| OLT PON port module (C+ reference) | $240 / each |
-| Customer ONT terminal | $55 / each |
-| Wi-Fi 6 GPON/XGS-PON gateway (reference) | $85 / each |
+| Line item                                              |                                                Reference rate |
+| ------------------------------------------------------ | ------------------------------------------------------------: |
+| Feeder / OSP cable                                     |                                                     $350 / km |
+| Distribution cable                                     |                                                     $250 / km |
+| Drop cable                                             |                                                     $150 / km |
+| Fusion-splice labor                                    |                                               $12.50 / splice |
+| SC/APC connector termination                           |                                         $4.00 / connector end |
+| PLC splitter                                           | 1:2 $14 · 1:4 $18 · 1:8 $26 · 1:16 $42 · 1:32 $68 · 1:64 $120 |
+| Dome splice closure (FOSC-style reference)             |                                                    $85 / each |
+| ODF rack panel / 2-pair patch field (reference)        |                                                   $110 / each |
+| Outdoor NAP/FAT with internal 1:8 splitter (reference) |                                                    $65 / each |
+| OLT PON port module (C+ reference)                     |                                                   $240 / each |
+| Customer ONT terminal                                  |                                                    $55 / each |
+| Wi-Fi 6 GPON/XGS-PON gateway (reference)               |                                                    $85 / each |
 
 The estimator separates materials from labor, reports CAPEX per home passed and per connected subscriber (ONT or gateway), and derives quantities from placed nodes, including ODF panels, NAP/FATs, gateways, and active closure branches. Edit/reset the local rates in the Inspector's **Local unit pricing** panel. The BOM has an **Optical Budget Audit** tab and a **Commercial Quotation & CAPEX** tab; its version-2 JSON and combined quotation/optical CSV exports include the rates, deployed quantities, unit prices, extensions, totals, and subscriber budgets.
 
@@ -138,7 +138,7 @@ fixed allowances, not universal measured values.
 ### Presets
 
 - **Standard 1:32 GPON Tree** — `OLT → 5 km feeder → 1:4 → 1 km distribution → 1:8
-  → 300 m drop → ONT`, with two further drops hanging off the 1:8 so the tree shows
+→ 300 m drop → ONT`, with two further drops hanging off the 1:8 so the tree shows
   optimal, healthy and marginal subscribers at once. The 300 m subscriber lands at
   **−21.57 dBm (ONLINE)**.
 - **Failing Long-Distance Link** — a 1:512 cascade stretched over ~30 km from a

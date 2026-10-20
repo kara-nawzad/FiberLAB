@@ -10,9 +10,7 @@ import { computeNapLoss } from '../../engine/opticalSimulator';
  * grommets on the right.
  */
 export function NAPNode({ id, data, selected }: NodeProps<NapFlowNode>) {
-  const outputCount = useStore((state) =>
-    state.edges.filter((edge) => edge.source === id).length,
-  );
+  const outputCount = useStore((state) => state.edges.filter((edge) => edge.source === id).length);
   const lossDb = computeNapLoss(data.splitLossDb);
 
   return (
@@ -66,9 +64,7 @@ export function NAPNode({ id, data, selected }: NodeProps<NapFlowNode>) {
               1:{NAP_SPLIT_RATIO}
             </span>
           </div>
-          <div className="font-sans text-[13px] font-bold leading-tight text-slate-900">
-            NAP / FAT · 1:8
-          </div>
+          <div className="font-sans text-[13px] font-bold leading-tight text-slate-900">NAP / FAT · 1:8</div>
         </div>
 
         {/* Internal SC/APC Drop Adapter Cassette Bay */}
@@ -91,7 +87,9 @@ export function NAPNode({ id, data, selected }: NodeProps<NapFlowNode>) {
 
         {/* Footer Telemetry */}
         <div className="flex items-center justify-between font-mono text-[9.5px] text-slate-600">
-          <span>{outputCount}/{NAP_OUTPUT_PORTS} drops patched</span>
+          <span>
+            {outputCount}/{NAP_OUTPUT_PORTS} drops patched
+          </span>
           <span className="font-semibold text-slate-800">SC/APC drops</span>
         </div>
       </div>

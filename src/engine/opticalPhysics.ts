@@ -33,7 +33,7 @@ export const WAVELENGTH_REFERENCES: Record<WaveguideWavelength, WavelengthRefere
   1550: {
     wavelengthNm: 1550,
     direction: 'Extended low-loss window',
-    attenuationDbPerKm: 0.20,
+    attenuationDbPerKm: 0.2,
     color: '#8B5CF6',
     shortLabel: 'Low-loss',
   },
@@ -56,11 +56,13 @@ export function fusedSilicaIndex(wavelengthNm: number): number {
     [0.4079426, 0.1162414 ** 2],
     [0.8974794, 9.896161 ** 2],
   ] as const;
-  const indexSquared = 1 + terms.reduce(
-    (sum, [coefficient, resonanceSquared]) =>
-      sum + (coefficient * lambdaSquared) / (lambdaSquared - resonanceSquared),
-    0,
-  );
+  const indexSquared =
+    1 +
+    terms.reduce(
+      (sum, [coefficient, resonanceSquared]) =>
+        sum + (coefficient * lambdaSquared) / (lambdaSquared - resonanceSquared),
+      0,
+    );
   return Math.sqrt(indexSquared);
 }
 
@@ -69,8 +71,7 @@ export function fusedSilicaIndex(wavelengthNm: number): number {
 // Ge-doped step, not a claim about a specific G.652 fiber's measured profile.
 const REFERENCE_CLADDING_INDEX = fusedSilicaIndex(REFERENCE_WAVELENGTH_NM);
 const REFERENCE_INDEX_STEP =
-  REFERENCE_CLADDING_INDEX / Math.sin((TARGET_REFERENCE_CRITICAL_ANGLE_DEG * Math.PI) / 180) -
-  REFERENCE_CLADDING_INDEX;
+  REFERENCE_CLADDING_INDEX / Math.sin((TARGET_REFERENCE_CRITICAL_ANGLE_DEG * Math.PI) / 180) - REFERENCE_CLADDING_INDEX;
 
 export interface WaveguideOptics {
   claddingIndex: number;
@@ -87,8 +88,7 @@ export interface WaveguideOptics {
 export function getWaveguideOptics(wavelengthNm: WaveguideWavelength): WaveguideOptics {
   const claddingIndex = fusedSilicaIndex(wavelengthNm);
   const coreIndex = claddingIndex + REFERENCE_INDEX_STEP;
-  const criticalAngleDeg =
-    (Math.asin(claddingIndex / coreIndex) * 180) / Math.PI;
+  const criticalAngleDeg = (Math.asin(claddingIndex / coreIndex) * 180) / Math.PI;
   return {
     claddingIndex,
     coreIndex,
@@ -98,9 +98,6 @@ export function getWaveguideOptics(wavelengthNm: WaveguideWavelength): Waveguide
 }
 
 /** dBm is absolute power; splitter insertion loss is a relative dB quantity. */
-export function splitterBranchPowerDbm(
-  launchPowerDbm: number,
-  insertionLossDb = PLC_1X4_INSERTION_LOSS_DB,
-): number {
+export function splitterBranchPowerDbm(launchPowerDbm: number, insertionLossDb = PLC_1X4_INSERTION_LOSS_DB): number {
   return launchPowerDbm - insertionLossDb;
 }
