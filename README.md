@@ -7,7 +7,7 @@ Tailwind CSS for styling and `lucide-react` for iconography. The warm visual sys
 
 For a full explanation of the current features, data model, simulation, limitations,
 and roadmap for field-style learning and licensed component photography, see
-[`PROJECT_GUIDE.md`](./PROJECT_GUIDE.md).
+[`PROJECT_GUIDE.md`](./docs/PROJECT_GUIDE.md).
 
 ---
 
