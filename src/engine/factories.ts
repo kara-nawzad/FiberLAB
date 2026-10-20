@@ -11,7 +11,6 @@ import type {
   PonNode,
   SplitRatio,
   SplitterNodeData,
-  Wavelength,
 } from '../types';
 import {
   CABLE_SPECS,
@@ -33,10 +32,6 @@ let sequence = 0;
 export function nextId(kind: string): string {
   sequence += 1;
   return `${kind}-${Date.now().toString(36)}-${sequence.toString(36)}`;
-}
-
-export function resetIdSequence(): void {
-  sequence = 0;
 }
 
 export interface NodePlacement {
@@ -192,18 +187,4 @@ export function createGatewayNode(
     position: placement.position ?? { x: 0, y: 0 },
     data,
   };
-}
-
-/** Retunes the optical window of a light source or a cable span. */
-export function setWavelengthOnNode(node: PonNode, wavelength: Wavelength): PonNode {
-  if (node.type === 'olt') {
-    return { ...node, data: { ...node.data, wavelength } };
-  }
-  if (node.type === 'fiber') {
-    return {
-      ...node,
-      data: { ...node.data, wavelength, attenuationOverrideDbPerKm: null },
-    };
-  }
-  return node;
 }

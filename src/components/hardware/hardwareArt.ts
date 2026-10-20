@@ -15,9 +15,6 @@ export const SPLITTER_ART: Record<number, string> = {
 
 /** Port centre heights (in the 130×122 splitter viewBox) for 2- and 4-output cassettes. */
 export const splitterOutputY = (ports: number): number[] => (ports === 2 ? [48, 72] : [27, 50, 73, 96]);
-export const SPLITTER_VIEWBOX = { width: 130, height: 122, inputY: 60 };
-export const OLT_VIEWBOX = { width: 320, height: 96, outY: 49 };
-export const ONU_VIEWBOX = { width: 120, height: 62, inY: 39 };
 
 export const artDataUri = (svg: string): string => `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 

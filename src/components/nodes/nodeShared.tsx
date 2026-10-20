@@ -4,68 +4,6 @@ import type { ReactNode } from 'react';
  * Shared visual chrome for the custom PON nodes.
  * ========================================================================== */
 
-interface NodeShellProps {
-  eyebrow: string;
-  title: string;
-  icon: ReactNode;
-  thumbnail?: {
-    src: string;
-    alt: string;
-  };
-  accent: string;
-  ringClass?: string;
-  selected?: boolean;
-  children: ReactNode;
-  footer?: ReactNode;
-}
-
-export function NodeShell({
-  eyebrow,
-  title,
-  icon,
-  thumbnail,
-  accent,
-  ringClass = 'border-noc-600',
-  selected = false,
-  children,
-  footer,
-}: NodeShellProps) {
-  return (
-    <div
-      className={`node-shell w-full rounded-xl border bg-noc-900/95 shadow-panel backdrop-blur-sm transition-all duration-200 ${ringClass} ${
-        selected ? 'border-sky-400/90' : ''
-      }`}
-    >
-      <div
-        className="flex items-center gap-2 border-b border-noc-700/70 px-2.5 py-1.5"
-        style={{ background: `linear-gradient(90deg, ${accent}1f, transparent 70%)` }}
-      >
-        <span
-          className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200"
-          style={{ background: thumbnail ? '#f8fafc' : `${accent}26`, color: accent }}
-        >
-          {thumbnail ? (
-            <img
-              src={thumbnail.src}
-              alt={thumbnail.alt}
-              draggable={false}
-              className="h-full w-full object-contain"
-            />
-          ) : (
-            icon
-          )}
-        </span>
-        <div className="min-w-0 flex-1">
-          <div className="text-[9px] font-semibold uppercase tracking-[0.16em] text-noc-400">{eyebrow}</div>
-          <div className="truncate text-[13px] font-semibold leading-tight text-noc-200">{title}</div>
-        </div>
-      </div>
-      <div className="px-2.5 py-2">{children}</div>
-      {footer ? <div className="border-t border-noc-700/60 px-2.5 py-1.5">{footer}</div> : null}
-    </div>
-  );
-}
-
 interface LedProps {
   color: string;
   pulse?: boolean;

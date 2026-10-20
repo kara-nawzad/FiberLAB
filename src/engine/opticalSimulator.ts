@@ -31,7 +31,6 @@ import {
   NAP_OUTPUT_PORTS,
   NAP_SPLIT_LOSS_DB,
   NAP_SPLIT_RATIO,
-  OLT_CLASS_SPECS,
   ONT_THRESHOLDS,
   PON_STANDARD_SPECS,
   SPLITTER_LOSS_DB,
@@ -56,7 +55,6 @@ import {
 
 const MAX_WALK_DEPTH = 96;
 
-export const round1 = (value: number): number => Math.round(value * 10) / 10;
 export const round2 = (value: number): number => Math.round(value * 100) / 100;
 export const round3 = (value: number): number => Math.round(value * 1000) / 1000;
 
@@ -625,6 +623,7 @@ export function simulateTopology(
   };
 }
 
+/** Public alias kept for the test suite (`opticalSimulator.test.ts`). */
 export const simulatePON = simulateTopology;
 
 function summarise(
@@ -723,7 +722,6 @@ function summarise(
 export const formatDbm = (value: number | null): string =>
   value === null ? '—' : `${value >= 0 ? '+' : ''}${value.toFixed(2)} dBm`;
 
-export const formatDb = (value: number): string => `${value.toFixed(2)} dB`;
 
 export function describeStatus(status: OntStatus, ponStandard?: PonStandard): string {
   switch (status) {
@@ -742,9 +740,4 @@ export function describeStatus(status: OntStatus, ponStandard?: PonStandard): st
     default:
       return 'Unknown';
   }
-}
-
-/** Nominal link budget of an OLT class, for the inspector's headroom gauge. */
-export function classLinkBudget(oltClass: keyof typeof OLT_CLASS_SPECS): number {
-  return OLT_CLASS_SPECS[oltClass].linkBudgetDb;
 }
