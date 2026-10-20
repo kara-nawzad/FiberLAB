@@ -216,7 +216,7 @@ export function generateOtdrTrace(
   const startNode = nodes.find((node) => node.id === startNodeId);
   if (!startNode || startNode.type === 'ont' || startNode.type === 'gateway') return makeEmptyTrace(measuredWavelengthNm, measuredPulseWidthNs);
 
-  let route: TraceRoute | null = null;
+  let route: TraceRoute | null;
   if (targetOntId) {
     route = findRoute(nodes, edges, startNodeId, targetOntId);
   } else {

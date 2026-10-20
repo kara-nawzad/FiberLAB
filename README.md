@@ -24,6 +24,8 @@ npm run dev        # http://localhost:5173
 npm run build      # tsc --noEmit && vite build
 npm run test       # 89 tests: optical engine, upstream dynamic range, OPM, OTDR, equipment, CAPEX, missions, and app interactions
 npm run typecheck  # strict TypeScript, no emit
+npm run lint       # ESLint checks for source and configuration files
+npm run format:check  # verify Prettier formatting
 ```
 
 ---
@@ -176,10 +178,13 @@ fixed allowances, not universal measured values.
 │   ├── main.tsx                   Browser entry and stylesheet import order
 │   ├── types.ts                   Graph, simulation, and UI types
 │   └── vite-env.d.ts              Vite ambient type declarations
+├── .editorconfig                 Shared whitespace and encoding rules
 ├── .gitignore                     Repository ignore rules
 ├── .nvmrc                         Node 22 selector
+├── .prettierrc.json               Prettier formatting settings
 ├── LICENSE                        MIT license
 ├── THIRD_PARTY_NOTICES.md         Runtime font notices
+├── eslint.config.js               Flat ESLint configuration
 ├── index.html                     Vite document shell and Google Font imports
 ├── package.json / package-lock.json
 ├── postcss.config.js / tailwind.config.js

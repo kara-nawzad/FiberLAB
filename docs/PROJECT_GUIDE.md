@@ -400,8 +400,10 @@ The app is a client-side React/TypeScript application. There is no backend servi
 |---|---|
 | `.github/workflows/ci.yml` | Continuous-integration workflow for `main`, pull requests, and manual dispatch. |
 | `.github/workflows/deploy.yml` | GitHub Pages build and deployment workflow. |
+| `.editorconfig` | Shared encoding, line-ending, indentation, and whitespace rules. |
 | `.gitignore` | Ignored dependency, build, environment, cache, editor, and OS artifacts. |
 | `.nvmrc` | Node.js 22 selector. |
+| `.prettierrc.json` | Project Prettier formatting policy. |
 | `LICENSE` | MIT licence for FiberLAB. |
 | `README.md` | Project overview, quick start, live link, and high-level source map. |
 | `THIRD_PARTY_NOTICES.md` | SIL OFL notices for runtime Google Fonts. |
@@ -409,6 +411,7 @@ The app is a client-side React/TypeScript application. There is no backend servi
 | `docs/design/hardware-ui-mock.html` | Archived self-contained hardware UI mock. |
 | `docs/design/hardware-ui-mock.md` | Archived design-reference notes for the mock. |
 | `docs/design/workbench-reference.jpg` | Archived workbench visual reference. |
+| `eslint.config.js` | Flat ESLint policy for TypeScript source and Node-side configuration. |
 | `index.html` | Vite document shell and runtime Google Font imports. |
 | `package.json` | Package metadata, scripts, Node requirement, and dependencies. |
 | `package-lock.json` | Exact npm dependency resolution. |
