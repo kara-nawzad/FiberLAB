@@ -9,15 +9,20 @@ For a full explanation of the current features, data model, simulation, limitati
 and roadmap for field-style learning and licensed component photography, see
 [`PROJECT_GUIDE.md`](./docs/PROJECT_GUIDE.md).
 
+**Live demo:** [https://kara-nawzad.github.io/FiberLAB/](https://kara-nawzad.github.io/FiberLAB/)
+
 ---
 
 ## Running it
 
+FiberLAB requires **Node.js 22 or later**. Use `nvm use` when using nvm; the
+repository's `.nvmrc` selects Node 22.
+
 ```bash
-npm install
+npm ci
 npm run dev        # http://localhost:5173
 npm run build      # tsc --noEmit && vite build
-npm run test       # 88 tests: optical engine, upstream dynamic range, OPM, OTDR, equipment, CAPEX, missions, and app interactions
+npm run test       # 89 tests: optical engine, upstream dynamic range, OPM, OTDR, equipment, CAPEX, missions, and app interactions
 npm run typecheck  # strict TypeScript, no emit
 ```
 
@@ -111,7 +116,9 @@ Open **OTDR Trace** in the TopBar to pulse a selected OLT output or fiber-span s
 ## Layout
 
 - **Landing overview** — warm fiber-splice hero with a hold-to-open interaction and receive-power readout sourced from the active studio simulation; preserved interactive 1310/1490/1550 nm waveguide, adjustable launch power, capability cards, and GPON reference strips. The ray-angle display is an educational Sellmeier-based schematic, not a measured fiber-profile claim. The graph simulator supports 1270/1310/1490/1550/1577 nm; its OPM calibration control remains 1310/1490/1550 nm.
-- **Top bar** — FiberLAB wordmark + live optical health and CAPEX (including cost per home passed), `Overview & Physics`, `Link nodes`, `OPM Tool`, `OTDR Trace`, `Delete`, presets, missions, safety margin, Auto, `Run test`, BOM, and `Clear`.
+- **Top bar** — FiberLAB wordmark + live optical health and CAPEX (including cost per home passed), overview, preset picker, zoom controls, `Run Simulation`, and Reports.
+- **Canvas toolbar** — `Link nodes`, `OPM Tool`, `OTDR Trace`, `Delete`, missions, safety margin, Auto, and Clear controls beside the workbench.
+- **Bottom panel** — compact live topology and simulation readouts below the canvas.
 - **Left toolbox** — draggable or double-click quick-add OLT / ODF / splitter (1:2 … 1:64) / cable (feeder, distribution, drop) / FOSC-style dome closure / 1:8 NAP/FAT / ONT / Wi-Fi 6 gateway.
 - **Canvas** — dotted grid, pan/zoom, minimap, compact hardware thumbnails, softly glowing animated optical edges, handle-drag connections, Link nodes mode, and an OPM probe cursor/HUD for port and patch-cord power. Faulted fiber spans mark their outgoing patch cord with a warning glyph.
 - **Right inspector** — Field Hardware Cards for all eight component kinds; a GPON/XGS-PON OLT selector; five fiber/OTDR wavelengths; gateway optical/service telemetry, Wi-Fi SSID and a clearly marked TEST-NET IP placeholder; fiber fault toggles; a 12-color closure splice tray; and editable local USD reference rates. Price edits recalculate CAPEX without changing optical results. The SVGs are representative illustrations, not product photos or exact vendor models.
@@ -146,29 +153,38 @@ fixed allowances, not universal measured values.
 ## Source map
 
 ```
-src/
-├── data/
-│   ├── componentCatalogue.ts      Static hardware profiles and SVG illustration data
-│   ├── pricingCatalogue.ts        Pure graph-to-CAPEX estimator and editable rate defaults
-│   └── __tests__/                 Hardware, pricing, and quotation export tests
-├── types.ts                       Graph types, wavelength/loss catalogues, and telemetry
-├── engine/
-│   ├── opticalSimulator.ts        Graph traversal, ODF/NAP/fiber/closure/fault losses, GPON/XGS telemetry
-│   ├── opticalProbe.ts            Wavelength-calibrated readings at nodes, handles, and edges
-│   ├── otdrSimulator.ts           Pure route-based event detection and sampled Rayleigh trace
-│   ├── edgeDecoration.ts          Simulator telemetry and fault markers → React Flow props
-│   ├── factories.ts               Node factories and defaults for all equipment kinds
-│   ├── presets.ts  missions.ts    Reference topologies and guided scenarios
-│   ├── SimulationContext.ts       Telemetry broadcast to custom nodes
-│   └── __tests__/                 Optical engine, OPM, OTDR, and mission tests
-├── components/
-│   ├── TopBar.tsx  Sidebar.tsx  Inspector.tsx  PricingSettings.tsx
-│   ├── FieldHardwareCard.tsx  OpmMeterHud.tsx  OtdrModal.tsx
-│   ├── MissionDrawer.tsx  BOMModal.tsx  OpticalEdge.tsx
-│   ├── nodes/  OLTNode · ODFNode · SplitterNode · FiberNode · ClosureNode · NAPNode · ONTNode · GatewayNode
-│   └── landing/                   Warm landing, splice hero, and waveguide exhibit
-├── App.tsx                        Persistent shell, graph, optical simulation, CAPEX, OPM, and OTDR wiring
-└── __tests__/app.test.tsx         jsdom tests for landing, closure, OPM/OTDR, faults, and studio
+.
+├── .github/workflows/
+│   ├── ci.yml                     Main / pull-request verification workflow
+│   └── deploy.yml                 GitHub Pages deployment workflow
+├── docs/
+│   ├── PROJECT_GUIDE.md           Architecture, operation, and learning-model guide
+│   └── design/                    Archived self-contained mock and workbench references
+├── src/
+│   ├── assets/                    Bundled cursor and splice-hero SVG assets
+│   ├── components/
+│   │   ├── hardware/HardwareArt.tsx
+│   │   ├── landing/               LandingNav, LandingView, hero, waveguide, and splice UI
+│   │   └── nodes/                 React Flow node renderers and NodePrimitives
+│   ├── context/SimulationContext.ts
+│   ├── data/                      Catalogues, hardwareArtwork, pricing, and data tests
+│   ├── engine/                    Pure simulation, opticalPhysics, presets, missions, and engine tests
+│   ├── styles/                    global.css, theme.css, and photo-ui.css
+│   ├── test/setup.ts              Vitest / Testing Library setup
+│   ├── __tests__/app.test.tsx     Mounted application tests
+│   ├── App.tsx                    Persistent studio shell and orchestration
+│   ├── main.tsx                   Browser entry and stylesheet import order
+│   ├── types.ts                   Graph, simulation, and UI types
+│   └── vite-env.d.ts              Vite ambient type declarations
+├── .gitignore                     Repository ignore rules
+├── .nvmrc                         Node 22 selector
+├── LICENSE                        MIT license
+├── THIRD_PARTY_NOTICES.md         Runtime font notices
+├── index.html                     Vite document shell and Google Font imports
+├── package.json / package-lock.json
+├── postcss.config.js / tailwind.config.js
+├── tsconfig.json / vite.config.ts / vitest.workspace.ts
+└── README.md                      Project overview and quick start
 ```
 
 `opticalSimulator.ts` and `otdrSimulator.ts` deliberately have no runtime dependency on React or React Flow, so their independent calculations run under a plain Node test environment.

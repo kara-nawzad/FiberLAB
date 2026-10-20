@@ -47,7 +47,7 @@ describe('FiberLAB application shell', () => {
       'false',
     );
 
-    fireEvent.click(screen.getByRole('button', { name: /Explore Guided Missions \(4 Scenarios\)/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Explore Guided Missions \(5 Scenarios\)/i }));
     expect(await screen.findByRole('dialog', { name: 'Field missions' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /The Marginal Villa/ })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Diagnose the Silent ONT/ })).toBeInTheDocument();
