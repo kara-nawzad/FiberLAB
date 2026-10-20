@@ -60,7 +60,6 @@
 .pu-top { display:flex; align-items:center; gap:14px; height:60px; padding:0 18px; background:var(--pu-panel) !important; border-bottom:1px solid var(--pu-line) !important; flex-shrink:0; }
 .pu-logo { display:flex; align-items:center; gap:0; font-family:Sora,Manrope,sans-serif; font-size:21px; font-weight:800; letter-spacing:-.06em; color:#1E1612 !important; }
 .pu-logo b { color:var(--pu-pri); font-weight:800; }
-.pu-logo-mark { display:none !important; }
 .pu-sep { width:1px; height:28px; background:var(--pu-line); }
 .pu-select { display:flex; align-items:center; gap:8px; padding:7px 10px; border-radius:9px; background:transparent; font-size:13px; font-weight:600; color:var(--pu-ink); }
 .pu-select:hover { background:var(--pu-elevated); }
@@ -71,7 +70,6 @@
 .pu-btn.is-active { background:var(--pu-pri-soft); color:var(--pu-pri); border-color:#F0C5A5; }
 .pu-btn.pri { background:linear-gradient(135deg, #E4673F 0%, #D9532A 100%); color:#fff; border-color:var(--pu-pri); box-shadow:0 4px 12px rgba(228,103,63,.28); }
 .pu-btn.pri:hover:not(:disabled) { background:linear-gradient(135deg, #EC7048 0%, #E05A30 100%); color:#fff; }
-.pu-btn.danger { color:var(--pu-bad); }
 .pu-avatar { width:34px; height:34px; border-radius:50%; background:var(--pu-pri); color:#fff; display:grid; place-items:center; font-size:12px; font-weight:700; }
 .pu-health { display:inline-flex; align-items:center; gap:7px; padding:6px 11px; border-radius:99px; font-size:11px; font-weight:700; background:var(--pu-ok-soft); color:var(--pu-ok); }
 .pu-health.amber { background:var(--pu-warn-soft); color:#B36B00; }

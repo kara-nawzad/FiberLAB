@@ -110,12 +110,6 @@
   .metric-value {
     @apply font-mono text-sm font-semibold text-slate-900;
   }
-
-  .tool-card {
-    @apply flex cursor-grab items-center gap-2.5 rounded-lg border border-slate-200 bg-white
-      px-2.5 py-2 text-left transition-all duration-150 hover:border-blue-200 hover:bg-blue-50/40
-      active:cursor-grabbing;
-  }
 }
 
 /* ---------------------------------------------------------------- React Flow */
@@ -271,6 +265,17 @@ input[type='range']::-moz-range-thumb {
 }
 
 /* Mission drawer ------------------------------------------------------------ */
+
+@keyframes mission-drawer-in {
+  from { transform: translateX(24px); opacity: 0.8; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+
+@keyframes mission-check-in {
+  0%   { transform: scale(0.7);  opacity: 0.4; }
+  65%  { transform: scale(1.12); opacity: 1; }
+  100% { transform: scale(1);    opacity: 1; }
+}
 
 .mission-drawer {
   animation: mission-drawer-in 220ms ease-out both;

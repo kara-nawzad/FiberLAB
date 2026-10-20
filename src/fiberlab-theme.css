@@ -67,40 +67,6 @@
   box-shadow: 0 2px 12px rgba(43, 26, 20, 0.05);
 }
 
-.fiberlab-topbar .btn-ghost {
-  background: #fffaf2;
-  border-color: #eed8bf;
-  color: #2b1a14;
-}
-
-.fiberlab-topbar .btn-ghost:hover:not(:disabled) {
-  border-color: #e4673f;
-  background: #fff0df;
-}
-
-.fiberlab-topbar .btn-ghost:disabled {
-  color: #a38b7d;
-  background: #f5e8d7;
-}
-
-.fiberlab-topbar .btn-primary {
-  color: #ffffff;
-  border-color: #d9532a;
-  background: linear-gradient(135deg, #e4673f, #d9532a);
-  box-shadow: 0 2px 8px rgba(228, 103, 63, 0.25);
-}
-
-.fiberlab-topbar .btn-primary:hover:not(:disabled) {
-  border-color: #c4461f;
-  background: linear-gradient(135deg, #ec7048, #d9532a);
-}
-
-.fiberlab-topbar .btn-danger {
-  background: #fffaf2;
-}
-
-.fiberlab-topbar-actions { min-width: 0; }
-
 .fiberlab-studio__body {
   display: flex;
   min-width: 0;
@@ -118,28 +84,10 @@
   background: #fffaf2 !important;
 }
 
-.fiberlab-sidebar-header,
-.fiberlab-inspector-header {
-  min-height: 58px;
-  border-color: #eed8bf !important;
-  background: #fffaf2;
-}
-
-.fiberlab-sidebar-content,
 .fiberlab-inspector-content {
   min-height: 0;
   overscroll-behavior: contain;
   scrollbar-color: #d8bfa0 transparent;
-}
-
-.fiberlab-sidebar-content .tool-card {
-  border-color: #eed8bf;
-  background: #ffffff;
-}
-
-.fiberlab-sidebar-content .tool-card:hover {
-  border-color: #e4673f;
-  background: #fff0df;
 }
 
 .fiberlab-studio .panel {
@@ -475,17 +423,6 @@
   gap: 10px;
   color: var(--fiber-ink);
   text-decoration: none;
-}
-
-.landing-brand-mark {
-  display: grid;
-  width: 38px;
-  height: 38px;
-  place-items: center;
-  border: 1px solid #f0d1b1;
-  border-radius: 12px;
-  background: #fff0df;
-  color: var(--fiber-coral);
 }
 
 .landing-brand-wordmark {
@@ -1098,7 +1035,6 @@
   .landing-nav-wrap { top: 12px; padding: 0 12px; }
   .landing-nav { min-height: 58px; gap: 8px; padding: 6px 7px 6px 10px; }
   .landing-brand { gap: 7px; }
-  .landing-brand-mark { width: 33px; height: 33px; }
   .landing-brand-wordmark strong,
   .landing-brand-wordmark b { font-size: 15px; }
   .landing-brand-wordmark small { font-size: 6px; }
@@ -1161,7 +1097,6 @@
   .fiberlab-topbar { padding: 7px; }
   .fiberlab-topbar > div:first-child { min-width: 0; }
   .fiberlab-topbar > div:first-child > div:last-child > div:last-child { display: none; }
-  .fiberlab-topbar .btn { min-height: 32px; padding: 5px 7px; font-size: 10px; }
   .splice-hero-frame { min-height: 750px; }
   .splice-hero-content { min-height: 750px; }
   .splice-live-value-wrap { gap: 6px; }
@@ -1338,7 +1273,6 @@
 
 /* Dome closure and splice-organizer tray ----------------------------------- */
 
-.closure-node-ports { color: #6b5748; font: 700 8px/1 'JetBrains Mono', ui-monospace, monospace; }
 .splice-tray {
   margin: 0 0 12px;
   padding: 10px;
@@ -1435,39 +1369,6 @@
 }
 
 /* ------------------------------ Commercial CAPEX */
-.capex-telemetry {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  min-height: 42px;
-  padding: 5px 10px;
-  border: 1px solid #d5a548;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #332219, #211b17);
-  color: #fff7e8;
-  box-shadow: 0 4px 12px rgba(67, 43, 25, 0.12);
-  white-space: nowrap;
-}
-
-.capex-telemetry-label {
-  color: #f4c86b;
-  font: 800 8px/1 'JetBrains Mono', ui-monospace, monospace;
-  letter-spacing: 0.12em;
-}
-
-.capex-telemetry strong {
-  color: #fffaf1;
-  font: 700 14px/1 'JetBrains Mono', ui-monospace, monospace;
-  letter-spacing: -0.04em;
-}
-
-.capex-telemetry-home {
-  padding-left: 8px;
-  border-left: 1px solid rgba(244, 200, 107, 0.3);
-  color: #decdb1;
-  font: 500 8px/1.25 'JetBrains Mono', ui-monospace, monospace;
-}
-
 .local-pricing-settings {
   margin-top: 14px;
   overflow: hidden;
@@ -1575,12 +1476,6 @@
 .bom-tab:hover { color: #e5edf4; background: rgba(148, 163, 184, 0.08); }
 .bom-tab.is-active { border-color: rgba(125, 211, 252, 0.28); border-bottom-color: #0c1926; background: rgba(56, 189, 248, 0.1); color: #bae6fd; }
 .bom-tab:focus-visible { outline: 2px solid #38bdf8; outline-offset: 1px; }
-
-@media (max-width: 720px) {
-  .capex-telemetry { min-height: 36px; gap: 6px; padding: 4px 7px; }
-  .capex-telemetry strong { font-size: 12px; }
-  .capex-telemetry-home { padding-left: 6px; font-size: 7px; }
-}
 
 /* Interactive OTDR analyzer */
 .otdr-modal-backdrop {
