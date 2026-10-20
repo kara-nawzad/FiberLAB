@@ -2,7 +2,7 @@ import { Handle, Position, type NodeProps } from '@xyflow/react';
 import { AlertTriangle } from 'lucide-react';
 import type { FiberNode as FiberFlowNode } from '../../types';
 import { computeFiberLoss } from '../../engine/opticalSimulator';
-import { useSimulation } from '../../engine/SimulationContext';
+import { useSimulation } from '../../context/SimulationContext';
 
 /**
  * Fiber span — an inline "20.4 km / −3.2 dB" pill that sits on the line between two devices,

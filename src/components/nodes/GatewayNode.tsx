@@ -3,7 +3,7 @@ import { Wifi } from 'lucide-react';
 import type { GatewayNode as GatewayFlowNode, OntStatus } from '../../types';
 import { STATUS_STYLES } from '../../types';
 import { describeStatus } from '../../engine/opticalSimulator';
-import { useSimulation } from '../../engine/SimulationContext';
+import { useSimulation } from '../../context/SimulationContext';
 import { Badge, Led, Stat } from './NodePrimitives';
 
 function formatMbps(value: number | null | undefined): string {

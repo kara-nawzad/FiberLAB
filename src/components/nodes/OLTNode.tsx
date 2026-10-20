@@ -1,7 +1,7 @@
 import { Handle, Position, type NodeProps } from '@xyflow/react';
 import type { OltNode as OltFlowNode } from '../../types';
 import { OLT_CLASS_SPECS } from '../../types';
-import { useSimulation } from '../../engine/SimulationContext';
+import { useSimulation } from '../../context/SimulationContext';
 import { HardwareArt } from '../hardware/HardwareArt';
 
 /** OLT — dark 1U chassis with PON port LEDs and an information card beneath (design-image style). */

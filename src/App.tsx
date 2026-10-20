@@ -57,7 +57,7 @@ import {
   simulateTopology,
 } from './engine/opticalSimulator';
 import { decorateEdges } from './engine/edgeDecoration';
-import { SimulationContext } from './engine/SimulationContext';
+import { SimulationContext } from './context/SimulationContext';
 import { readOpticalPowerAtProbe, sameProbeTarget, simulateAtMeterWavelength, type OpticalProbeTarget } from './engine/opticalProbe';
 import { OpmMeterHud } from './components/OpmMeterHud';
 import { OtdrModal } from './components/OtdrModal';
