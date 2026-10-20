@@ -3,8 +3,8 @@ import { Wifi } from 'lucide-react';
 import type { GatewayNode as GatewayFlowNode, OntStatus } from '../../types';
 import { STATUS_STYLES } from '../../types';
 import { describeStatus } from '../../engine/opticalSimulator';
-import { useSimulation } from '../../engine/SimulationContext';
-import { Badge, Led, Stat } from './nodeShared';
+import { useSimulation } from '../../context/SimulationContext';
+import { Badge, Led, Stat } from './NodePrimitives';
 
 function formatMbps(value: number | null | undefined): string {
   if (value === null || value === undefined) return '—';
@@ -31,10 +31,7 @@ export function GatewayNode({ id, data, selected }: NodeProps<GatewayFlowNode>) 
   return (
     <div className="relative w-[224px] pt-3">
       {/* Dual-Band Wi-Fi 6 Dipole Antennas along Top */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute top-0 left-7 right-7 flex justify-between px-2"
-      >
+      <div aria-hidden="true" className="pointer-events-none absolute top-0 left-7 right-7 flex justify-between px-2">
         <span className="h-3.5 w-2 rounded-t-full border border-slate-300 bg-slate-200" />
         <span className="h-4 w-2 rounded-t-full border border-slate-300 bg-slate-200" />
         <span className="h-4 w-2 rounded-t-full border border-slate-300 bg-slate-200" />
@@ -76,10 +73,7 @@ export function GatewayNode({ id, data, selected }: NodeProps<GatewayFlowNode>) 
           {standard === 'XGS-PON' ? (
             <Badge className="border-sky-200 bg-sky-50 text-sky-900">XGS-PON 10G ACTIVE</Badge>
           ) : null}
-          <span
-            className="ml-auto font-mono text-[13px] font-bold"
-            style={{ color: style.hex }}
-          >
+          <span className="ml-auto font-mono text-[13px] font-bold" style={{ color: style.hex }}>
             {rx === null ? '—' : rx.toFixed(2)}
           </span>
           <span className="font-mono text-[9.5px] text-slate-500">dBm</span>
@@ -92,10 +86,7 @@ export function GatewayNode({ id, data, selected }: NodeProps<GatewayFlowNode>) 
             value={standard ?? 'Awaiting link'}
             tone={standard === 'XGS-PON' ? 'text-blue-700' : 'text-slate-800'}
           />
-          <Stat
-            label="Optical margin"
-            value={rx === null ? '—' : `${telemetry?.marginDb.toFixed(2)} dB`}
-          />
+          <Stat label="Optical margin" value={rx === null ? '—' : `${telemetry?.marginDb.toFixed(2)} dB`} />
           <Stat label="Est. down / up" value={speedLabel} tone="text-emerald-700" />
           <Stat
             label="Simulated IPv4"
@@ -106,7 +97,8 @@ export function GatewayNode({ id, data, selected }: NodeProps<GatewayFlowNode>) 
 
         {telemetry ? (
           <div className="mt-1.5 text-[9px] leading-snug text-slate-500">
-            {describeStatus(telemetry.status, telemetry.ponStandard ?? undefined)} · shared line-rate estimate, not a measured speed test.
+            {describeStatus(telemetry.status, telemetry.ponStandard ?? undefined)} · shared line-rate estimate, not a
+            measured speed test.
           </div>
         ) : (
           <div className="mt-1.5 flex items-center gap-1 text-[9px] text-slate-500">
@@ -119,9 +111,7 @@ export function GatewayNode({ id, data, selected }: NodeProps<GatewayFlowNode>) 
           <span className="truncate font-mono text-[9px] text-slate-500" title={data.ssid}>
             SSID · {data.ssid}
           </span>
-          <span className="shrink-0 font-mono text-[9px] font-semibold text-slate-600">
-            {standard ?? 'GPON / XGS'}
-          </span>
+          <span className="shrink-0 font-mono text-[9px] font-semibold text-slate-600">{standard ?? 'GPON / XGS'}</span>
         </div>
       </div>
 

@@ -15,7 +15,13 @@
 
   body {
     @apply bg-noc-950 text-noc-200 antialiased;
-    font-family: Manrope, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+    font-family:
+      Manrope,
+      ui-sans-serif,
+      system-ui,
+      -apple-system,
+      'Segoe UI',
+      sans-serif;
     overscroll-behavior: none;
   }
 
@@ -96,10 +102,14 @@
 
   .select {
     @apply input appearance-none pr-6;
-    background-image: linear-gradient(45deg, transparent 50%, #85695a 50%),
-      linear-gradient(135deg, #85695a 50%, transparent 50%);
-    background-position: calc(100% - 14px) 50%, calc(100% - 9px) 50%;
-    background-size: 5px 5px, 5px 5px;
+    background-image:
+      linear-gradient(45deg, transparent 50%, #85695a 50%), linear-gradient(135deg, #85695a 50%, transparent 50%);
+    background-position:
+      calc(100% - 14px) 50%,
+      calc(100% - 9px) 50%;
+    background-size:
+      5px 5px,
+      5px 5px;
     background-repeat: no-repeat;
   }
 
@@ -109,12 +119,6 @@
 
   .metric-value {
     @apply font-mono text-sm font-semibold text-slate-900;
-  }
-
-  .tool-card {
-    @apply flex cursor-grab items-center gap-2.5 rounded-lg border border-slate-200 bg-white
-      px-2.5 py-2 text-left transition-all duration-150 hover:border-blue-200 hover:bg-blue-50/40
-      active:cursor-grabbing;
   }
 }
 
@@ -133,9 +137,12 @@
   height: 12px;
   border: 2px solid #b18c72;
   border-radius: 9999px;
-  background: #fffaF2;
+  background: #fffaf2;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
-  transition: border-color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    transform 150ms ease;
 }
 
 .react-flow__handle:hover {
@@ -186,11 +193,13 @@
 
 .react-flow__node.selected .node-shell {
   border-color: #2f6bff !important;
-  box-shadow: 0 0 0 2px rgba(47, 107, 255, 0.16), 0 4px 14px rgba(15, 23, 42, 0.1) !important;
+  box-shadow:
+    0 0 0 2px rgba(47, 107, 255, 0.16),
+    0 4px 14px rgba(15, 23, 42, 0.1) !important;
 }
 
 .node-shell {
-  background: #fffaF2;
+  background: #fffaf2;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.07);
 }
 
@@ -202,15 +211,17 @@
   overflow: hidden;
   border: 1px solid #eed8bf;
   border-radius: 10px;
-  background: #fffaF2;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 8px 20px -16px rgba(15, 23, 42, 0.35);
+  background: #fffaf2;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.06),
+    0 8px 20px -16px rgba(15, 23, 42, 0.35);
 }
 
 .react-flow__controls-button {
   width: 30px;
   height: 30px;
   border-bottom: 1px solid #eed8bf;
-  background: #fffaF2;
+  background: #fffaf2;
   color: #604738;
   fill: currentColor;
 }
@@ -228,7 +239,7 @@
   overflow: hidden;
   border: 1px solid #eed8bf;
   border-radius: 10px;
-  background: #fffaF2;
+  background: #fffaf2;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
 }
 
@@ -252,25 +263,55 @@ input[type='range'] {
 input[type='range']::-webkit-slider-thumb {
   width: 15px;
   height: 15px;
-  border: 2px solid #fffaF2;
+  border: 2px solid #fffaf2;
   border-radius: 50%;
   appearance: none;
   background: #2f6bff;
-  box-shadow: 0 0 0 1px #2f6bff, 0 1px 3px rgba(15, 23, 42, 0.22);
+  box-shadow:
+    0 0 0 1px #2f6bff,
+    0 1px 3px rgba(15, 23, 42, 0.22);
   cursor: pointer;
 }
 
 input[type='range']::-moz-range-thumb {
   width: 12px;
   height: 12px;
-  border: 2px solid #fffaF2;
+  border: 2px solid #fffaf2;
   border-radius: 50%;
   background: #2f6bff;
-  box-shadow: 0 0 0 1px #2f6bff, 0 1px 3px rgba(15, 23, 42, 0.22);
+  box-shadow:
+    0 0 0 1px #2f6bff,
+    0 1px 3px rgba(15, 23, 42, 0.22);
   cursor: pointer;
 }
 
 /* Mission drawer ------------------------------------------------------------ */
+
+@keyframes mission-drawer-in {
+  from {
+    transform: translateX(24px);
+    opacity: 0.8;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes mission-check-in {
+  0% {
+    transform: scale(0.7);
+    opacity: 0.4;
+  }
+  65% {
+    transform: scale(1.12);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
 
 .mission-drawer {
   animation: mission-drawer-in 220ms ease-out both;
@@ -292,4 +333,4 @@ details[open] .details-chevron {
   transform: rotate(180deg);
 }
 
-/* Landing layout and warm brand styling are maintained in fiberlab-theme.css. */
+/* Landing layout and warm brand styling are maintained in theme.css. */

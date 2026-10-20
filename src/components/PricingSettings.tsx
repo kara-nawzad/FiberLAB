@@ -66,7 +66,8 @@ export function PricingSettings({ unitCosts, onChange, onReset }: PricingSetting
       </summary>
       <div className="local-pricing-body">
         <p className="local-pricing-note">
-          Reference planning rates in USD. Local edits affect CAPEX and the budget mission only—not optical loss or status.
+          Reference planning rates in USD. Local edits affect CAPEX and the budget mission only—not optical loss or
+          status.
         </p>
 
         <div className="pricing-rate-group">
@@ -97,14 +98,54 @@ export function PricingSettings({ unitCosts, onChange, onReset }: PricingSetting
 
         <div className="pricing-rate-group">
           <h3>Equipment &amp; field labor</h3>
-          <RateInput label="Dome closure (FOSC)" unit="/ each" value={unitCosts.foscClosure} onChange={(foscClosure) => onChange({ ...unitCosts, foscClosure })} />
-          <RateInput label="ODF rack / patch panel" unit="/ each" value={unitCosts.odfRackPanel} onChange={(odfRackPanel) => onChange({ ...unitCosts, odfRackPanel })} />
-          <RateInput label="Outdoor NAP/FAT 1:8" unit="/ each" value={unitCosts.napFat} onChange={(napFat) => onChange({ ...unitCosts, napFat })} />
-          <RateInput label="OLT PON port module" unit="/ each" value={unitCosts.oltPortModule} onChange={(oltPortModule) => onChange({ ...unitCosts, oltPortModule })} />
-          <RateInput label="Customer ONT terminal" unit="/ each" value={unitCosts.ontTerminal} onChange={(ontTerminal) => onChange({ ...unitCosts, ontTerminal })} />
-          <RateInput label="Wi-Fi 6 PON gateway" unit="/ each" value={unitCosts.wifi6Gateway} onChange={(wifi6Gateway) => onChange({ ...unitCosts, wifi6Gateway })} />
-          <RateInput label="Fusion splice labor" unit="/ splice" value={unitCosts.laborPerSplice} onChange={(laborPerSplice) => onChange({ ...unitCosts, laborPerSplice })} />
-          <RateInput label="SC/APC termination" unit="/ connector" value={unitCosts.connectorPerEnd} onChange={(connectorPerEnd) => onChange({ ...unitCosts, connectorPerEnd })} />
+          <RateInput
+            label="Dome closure (FOSC)"
+            unit="/ each"
+            value={unitCosts.foscClosure}
+            onChange={(foscClosure) => onChange({ ...unitCosts, foscClosure })}
+          />
+          <RateInput
+            label="ODF rack / patch panel"
+            unit="/ each"
+            value={unitCosts.odfRackPanel}
+            onChange={(odfRackPanel) => onChange({ ...unitCosts, odfRackPanel })}
+          />
+          <RateInput
+            label="Outdoor NAP/FAT 1:8"
+            unit="/ each"
+            value={unitCosts.napFat}
+            onChange={(napFat) => onChange({ ...unitCosts, napFat })}
+          />
+          <RateInput
+            label="OLT PON port module"
+            unit="/ each"
+            value={unitCosts.oltPortModule}
+            onChange={(oltPortModule) => onChange({ ...unitCosts, oltPortModule })}
+          />
+          <RateInput
+            label="Customer ONT terminal"
+            unit="/ each"
+            value={unitCosts.ontTerminal}
+            onChange={(ontTerminal) => onChange({ ...unitCosts, ontTerminal })}
+          />
+          <RateInput
+            label="Wi-Fi 6 PON gateway"
+            unit="/ each"
+            value={unitCosts.wifi6Gateway}
+            onChange={(wifi6Gateway) => onChange({ ...unitCosts, wifi6Gateway })}
+          />
+          <RateInput
+            label="Fusion splice labor"
+            unit="/ splice"
+            value={unitCosts.laborPerSplice}
+            onChange={(laborPerSplice) => onChange({ ...unitCosts, laborPerSplice })}
+          />
+          <RateInput
+            label="SC/APC termination"
+            unit="/ connector"
+            value={unitCosts.connectorPerEnd}
+            onChange={(connectorPerEnd) => onChange({ ...unitCosts, connectorPerEnd })}
+          />
         </div>
 
         <button type="button" className="btn-ghost mt-2 w-full" onClick={onReset}>

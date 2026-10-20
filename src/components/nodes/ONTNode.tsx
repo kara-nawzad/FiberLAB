@@ -1,7 +1,7 @@
 import { Handle, Position, type NodeProps } from '@xyflow/react';
 import type { OntNode as OntFlowNode, OntStatus } from '../../types';
 import { STATUS_STYLES } from '../../types';
-import { useSimulation } from '../../engine/SimulationContext';
+import { useSimulation } from '../../context/SimulationContext';
 import { HardwareArt } from '../hardware/HardwareArt';
 
 /** ONU / ONT — white desktop terminal with a name / status / dBm label card (design-image style). */
@@ -11,10 +11,14 @@ export function ONTNode({ id, data, selected }: NodeProps<OntFlowNode>) {
   const status: OntStatus = telemetry?.status ?? 'DISCONNECTED';
   const style = STATUS_STYLES[status];
   const rx = telemetry?.rxPowerDbm ?? null;
-  const tone = status === 'ONLINE' ? '' : status === 'WARNING' || status === 'OVERLOAD' ? 'warn' : status === 'LOS' ? 'bad' : '';
+  const tone =
+    status === 'ONLINE' ? '' : status === 'WARNING' || status === 'OVERLOAD' ? 'warn' : status === 'LOS' ? 'bad' : '';
 
   return (
-    <div className="hw-onu" style={selected ? { outline: '2px solid var(--pu-pri)', outlineOffset: 4, borderRadius: 12 } : undefined}>
+    <div
+      className="hw-onu"
+      style={selected ? { outline: '2px solid var(--pu-pri)', outlineOffset: 4, borderRadius: 12 } : undefined}
+    >
       <HardwareArt kind="onu" width={100} />
       <div className={`tag ${tone}`}>
         <b>{data.subscriber}</b>

@@ -299,8 +299,6 @@ export const STATUS_STYLES: Record<OntStatus, StatusStyle> = {
  * Node data payloads
  * -------------------------------------------------------------------------- */
 
-export type ComponentKind = 'olt' | 'splitter' | 'fiber' | 'closure' | 'ont' | 'odf' | 'nap' | 'gateway';
-
 export interface OltNodeData extends Record<string, unknown> {
   kind: 'olt';
   portName: string;
@@ -570,15 +568,4 @@ export interface TopologyExport {
     connectedSubscriberCount: number;
     costPerConnectedSubscriber: number;
   };
-}
-
-/* -------------------------------------------------------------------------- *
- * Node factory signatures (used by the toolbox + presets)
- * -------------------------------------------------------------------------- */
-
-export interface NodeFactory {
-  data: AnyNodeData;
-  /** Canvas size hint so presets can lay out cleanly. */
-  width: number;
-  height: number;
 }

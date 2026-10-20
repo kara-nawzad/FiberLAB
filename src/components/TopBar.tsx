@@ -1,15 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { useReactFlow, useStore } from '@xyflow/react';
 import { ChevronDown, FileBarChart, LayoutGrid, Loader2, Play } from 'lucide-react';
-import type { DesignSettings, NetworkSummary } from '../types';
+import type { NetworkSummary } from '../types';
 import type { NetworkCostBreakdown } from '../data/pricingCatalogue';
 import { formatUsd } from '../data/pricingCatalogue';
 import { PRESETS } from '../engine/presets';
 
 /* ========================================================================== *
  * Top bar — logo, topology picker, zoom, Run Simulation, Design / Reports.
- * Props are unchanged so App.tsx wiring keeps working; tool buttons that used
- * to live here (OPM, OTDR, Missions, Margin, Clear…) moved to CanvasToolbar.
+ * Tool buttons that used to live here (OPM, OTDR, Missions, Margin, Clear…)
+ * are in CanvasToolbar.
  * ========================================================================== */
 
 type Health = 'green' | 'amber' | 'red' | 'idle';
@@ -17,34 +17,20 @@ type Health = 'green' | 'amber' | 'red' | 'idle';
 interface TopBarProps {
   summary: NetworkSummary;
   costBreakdown: NetworkCostBreakdown;
-  settings: DesignSettings;
-  onSettingsChange: (patch: Partial<DesignSettings>) => void;
   onPreset: (presetId: string) => void;
   onRunTest: () => void;
   onOpenBOM: () => void;
-  onOpenOtdr: () => void;
-  onOpenMissions: () => void;
   onOpenOverview: () => void;
-  onToggleLink: () => void;
-  onToggleOpm: () => void;
-  onDeleteSelection: () => void;
-  linkMode: boolean;
-  opmActive: boolean;
-  selectionCount: number;
-  activeMissionTitle: string | null;
-  onClear: () => void;
   testing: boolean;
   stale: boolean;
   activePresetId: string | null;
 }
 
-/** Initials shown in the avatar bubble. Change to your own. */
-const AVATAR_INITIALS = 'SN';
-
 function deriveHealth(summary: NetworkSummary): Health {
   if (summary.subscriberCount === 0) return 'idle';
   if (summary.byStatus.LOS > 0 || summary.byStatus.DISCONNECTED > 0) return 'red';
-  if (summary.byStatus.WARNING > 0 || summary.byStatus.OVERLOAD > 0 || summary.upstreamDynamicRangeWarning) return 'amber';
+  if (summary.byStatus.WARNING > 0 || summary.byStatus.OVERLOAD > 0 || summary.upstreamDynamicRangeWarning)
+    return 'amber';
   return 'green';
 }
 
@@ -97,7 +83,9 @@ export function TopBar({
         title="Return to Overview & Physics"
         style={{ background: 'transparent', border: 0, cursor: 'pointer', color: 'var(--pu-ink)', padding: 0 }}
       >
-        <span>Fiber<b>LAB</b></span>
+        <span>
+          Fiber<b>LAB</b>
+        </span>
       </button>
       <span className="pu-sep" />
 
@@ -125,18 +113,22 @@ export function TopBar({
                 }}
               >
                 <strong style={{ fontSize: 12.5 }}>{preset.name}</strong>
-                {activePresetId === preset.id ? <span style={{ float: 'right', color: 'var(--pu-pri)', fontSize: 10, fontWeight: 700 }}>LOADED</span> : null}
-                <div className="pu-mut" style={{ fontSize: 10.5, marginTop: 3 }}>{preset.description}</div>
+                {activePresetId === preset.id ? (
+                  <span style={{ float: 'right', color: 'var(--pu-pri)', fontSize: 10, fontWeight: 700 }}>LOADED</span>
+                ) : null}
+                <div className="pu-mut" style={{ fontSize: 10.5, marginTop: 3 }}>
+                  {preset.description}
+                </div>
               </button>
             ))}
           </div>
         ) : null}
       </div>
-      <span className="pu-sep" />
-      <span className="pu-select pu-mut">Project 1</span>
-
       <div className="pu-health-wrap" style={{ display: 'flex', gap: 10, alignItems: 'center', marginLeft: 8 }}>
-        <span className={`pu-health ${health === 'green' ? '' : health}`} aria-label={`Network health: ${HEALTH_TEXT[health]}`}>
+        <span
+          className={`pu-health ${health === 'green' ? '' : health}`}
+          aria-label={`Network health: ${HEALTH_TEXT[health]}`}
+        >
           ● {HEALTH_TEXT[health]}
         </span>
         <span
@@ -161,10 +153,18 @@ export function TopBar({
         </button>
         {zoomOpen ? (
           <div className="pu-menu" style={{ top: 'calc(100% + 8px)', right: 0, minWidth: 160 }}>
-            <button type="button" onClick={() => void zoomIn({ duration: 200 })}>Zoom in</button>
-            <button type="button" onClick={() => void zoomOut({ duration: 200 })}>Zoom out</button>
-            <button type="button" onClick={() => void zoomTo(1, { duration: 200 })}>Reset to 100%</button>
-            <button type="button" onClick={() => void fitView({ padding: 0.16, duration: 350 })}>Fit to screen</button>
+            <button type="button" onClick={() => void zoomIn({ duration: 200 })}>
+              Zoom in
+            </button>
+            <button type="button" onClick={() => void zoomOut({ duration: 200 })}>
+              Zoom out
+            </button>
+            <button type="button" onClick={() => void zoomTo(1, { duration: 200 })}>
+              Reset to 100%
+            </button>
+            <button type="button" onClick={() => void fitView({ padding: 0.16, duration: 350 })}>
+              Fit to screen
+            </button>
           </div>
         ) : null}
       </div>
@@ -173,11 +173,9 @@ export function TopBar({
         {testing ? <Loader2 size={15} className="animate-spin" /> : <Play size={15} fill="currentColor" />}
         Run Simulation
       </button>
-      <button type="button" className="pu-btn is-active" aria-label="Design" aria-pressed="true">Design</button>
       <button type="button" className="pu-btn" onClick={onOpenBOM} aria-label="Bill of Materials">
         <FileBarChart size={15} /> Reports
       </button>
-      <span className="pu-avatar" aria-hidden="true">{AVATAR_INITIALS}</span>
     </header>
   );
 }

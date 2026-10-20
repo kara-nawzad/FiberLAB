@@ -68,9 +68,7 @@ export function ClosureNode({ id, data, selected }: NodeProps<ClosureFlowNode>) 
             <div className="font-mono text-[8.5px] font-bold uppercase tracking-wider text-amber-300">
               OSP JOINT ENCLOSURE · IP68
             </div>
-            <div className="font-sans text-[13px] font-bold leading-tight text-white">
-              Dome splice closure
-            </div>
+            <div className="font-sans text-[13px] font-bold leading-tight text-white">Dome splice closure</div>
           </div>
           <span className="rounded border border-slate-600 bg-slate-900 px-1.5 py-0.5 font-mono text-[9px] font-semibold text-amber-300">
             −{spliceLossDb.toFixed(2)} dB
@@ -97,10 +95,7 @@ export function ClosureNode({ id, data, selected }: NodeProps<ClosureFlowNode>) 
                   }`}
                 >
                   <span>{branch}</span>
-                  <span
-                    className="h-2 w-2 rounded-full"
-                    style={{ background: ch.hex }}
-                  />
+                  <span className="h-2 w-2 rounded-full" style={{ background: ch.hex }} />
                 </div>
               );
             })}

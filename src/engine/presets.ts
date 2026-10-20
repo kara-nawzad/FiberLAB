@@ -20,13 +20,7 @@ export interface Preset {
   build: () => { nodes: PonNode[]; edges: PonEdge[] };
 }
 
-const edge = (
-  id: string,
-  source: string,
-  target: string,
-  sourceHandle: string,
-  targetHandle = 'in',
-): PonEdge => ({
+const edge = (id: string, source: string, target: string, sourceHandle: string, targetHandle = 'in'): PonEdge => ({
   id,
   source,
   target,
@@ -471,7 +465,8 @@ export const PRESETS: Preset[] = [
   {
     id: 'modern-10g-xgs-pon-suburb',
     name: 'MODERN 10G XGS-PON SUBURB',
-    description: 'XGS-PON OLT → ODF → 3.5 km feeder → dome closure → 1.2 km distribution → 1:8 NAP → three 150 m drops and Wi-Fi 6 gateways',
+    description:
+      'XGS-PON OLT → ODF → 3.5 km feeder → dome closure → 1.2 km distribution → 1:8 NAP → three 150 m drops and Wi-Fi 6 gateways',
     build: buildModernXgsSuburb,
   },
 ];

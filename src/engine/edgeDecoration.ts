@@ -30,12 +30,13 @@ export function decorateEdges(
   return edges.map((edge) => {
     const reading: EdgeTelemetry = telemetry[edge.id] ?? { powerDbm: null, edgeState: 'idle' };
     const sourceNode = nodeById.get(edge.source);
-    const faultLabels = !options.hideFaults && sourceNode?.type === 'fiber'
-      ? [
-          sourceNode.data.macroBendActive ? 'Macro-bend loss on this span' : null,
-          sourceNode.data.dirtyConnectorActive ? 'Dust contamination loss on this span' : null,
-        ].filter((label): label is string => label !== null)
-      : [];
+    const faultLabels =
+      !options.hideFaults && sourceNode?.type === 'fiber'
+        ? [
+            sourceNode.data.macroBendActive ? 'Macro-bend loss on this span' : null,
+            sourceNode.data.dirtyConnectorActive ? 'Dust contamination loss on this span' : null,
+          ].filter((label): label is string => label !== null)
+        : [];
     const isHighlightedPath = Boolean(options.highlightedEdgeIds?.has(edge.id));
     const data: FiberEdgeData = {
       powerDbm: reading.powerDbm,

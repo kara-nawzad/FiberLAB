@@ -4,19 +4,6 @@ export default {
   theme: {
     extend: {
       colors: {
-        fiberlab: {
-          ground: '#FFF4E6',
-          surface: '#FFFAF2',
-          elevated: '#F4E8D8',
-          ink: '#2B1A14',
-          muted: '#85695A',
-          hairline: '#EED8BF',
-          strong: '#D8BFA0',
-          cobalt: '#2F6BFF',
-          sun: '#FF9F1C',
-          coral: '#E4673F',
-          green: '#0F8A5F',
-        },
         // Bright, clean Tinkercad-inspired engineering workbench palette.
         noc: {
           950: '#F8FAFC',
@@ -30,14 +17,6 @@ export default {
           300: '#334155',
           200: '#0F172A',
           100: '#020617',
-        },
-        optical: {
-          green: '#16A34A',
-          amber: '#D97706',
-          red: '#DC2626',
-          purple: '#7C3AED',
-          idle: '#94A3B8',
-          cyan: '#2563EB',
         },
         slate: {
           50: '#F8FAFC',
@@ -137,40 +116,10 @@ export default {
       },
       fontFamily: {
         sans: ['Manrope', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
-        display: ['Sora', 'Manrope', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        serif: ['Sora', 'Georgia', 'serif'],
         mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Consolas', 'monospace'],
       },
       boxShadow: {
-        glow: '0 0 0 1px rgba(47,107,255,0.22), 0 8px 28px -16px rgba(47,107,255,0.42)',
         panel: '0 1px 2px rgba(43,26,20,0.05), 0 12px 28px -20px rgba(43,26,20,0.24)',
-      },
-      keyframes: {
-        'pulse-ring': {
-          '0%': { transform: 'scale(0.85)', opacity: '0.6' },
-          '70%': { transform: 'scale(2.1)', opacity: '0' },
-          '100%': { transform: 'scale(2.1)', opacity: '0' },
-        },
-        sweep: {
-          '0%': { opacity: '0.25' },
-          '50%': { opacity: '1' },
-          '100%': { opacity: '0.25' },
-        },
-        'mission-check-in': {
-          '0%': { transform: 'scale(0.7)', opacity: '0.4' },
-          '65%': { transform: 'scale(1.12)', opacity: '1' },
-          '100%': { transform: 'scale(1)', opacity: '1' },
-        },
-        'mission-drawer-in': {
-          '0%': { transform: 'translateX(24px)', opacity: '0.8' },
-          '100%': { transform: 'translateX(0)', opacity: '1' },
-        },
-      },
-      animation: {
-        'pulse-ring': 'pulse-ring 1.8s cubic-bezier(0.24,0,0.38,1) infinite',
-        sweep: 'sweep 1.4s ease-in-out infinite',
-        'mission-check-in': 'mission-check-in 260ms cubic-bezier(0.2,0.8,0.2,1) both',
-        'mission-drawer-in': 'mission-drawer-in 220ms ease-out both',
       },
     },
   },

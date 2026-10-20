@@ -25,7 +25,9 @@ export function SpecsStrip() {
             <thead>
               <tr>
                 <th scope="col">OLT class</th>
-                <th scope="col">Launch range · P<sub>tx</sub></th>
+                <th scope="col">
+                  Launch range · P<sub>tx</sub>
+                </th>
                 <th scope="col">OLT Rx sensitivity</th>
                 <th scope="col">Nominal budget</th>
               </tr>
@@ -34,7 +36,9 @@ export function SpecsStrip() {
               {classes.map(({ label, spec }) => (
                 <tr key={label}>
                   <th scope="row">{label}</th>
-                  <td>{dbm(spec.minTxDbm)} to {dbm(spec.maxTxDbm)}</td>
+                  <td>
+                    {dbm(spec.minTxDbm)} to {dbm(spec.maxTxDbm)}
+                  </td>
                   <td>{dbm(spec.rxSensitivityDbm)}</td>
                   <td>{spec.linkBudgetDb.toFixed(1)} dB</td>
                 </tr>
@@ -46,18 +50,25 @@ export function SpecsStrip() {
         <div className="landing-receiver-limits" role="group" aria-label="ONT receive thresholds">
           <div className="landing-limit-card landing-limit-card--overload">
             <span className="landing-limit-symbol">&gt;</span>
-            <span><small>OVERLOAD</small><strong>{dbm(ONT_THRESHOLDS.overloadDbm)}</strong></span>
+            <span>
+              <small>OVERLOAD</small>
+              <strong>{dbm(ONT_THRESHOLDS.overloadDbm)}</strong>
+            </span>
             <span className="landing-limit-caption">saturation threshold</span>
           </div>
           <div className="landing-limit-card landing-limit-card--los">
             <span className="landing-limit-symbol">&lt;</span>
-            <span><small>LOS FLOOR</small><strong>{dbm(ONT_THRESHOLDS.losFloorDbm)}</strong></span>
+            <span>
+              <small>LOS FLOOR</small>
+              <strong>{dbm(ONT_THRESHOLDS.losFloorDbm)}</strong>
+            </span>
             <span className="landing-limit-caption">below modeled sensitivity</span>
           </div>
         </div>
 
         <p className="landing-specs-caveat">
-          Class values and common GPON wavelength references are informational. Exact guaranteed ranges depend on the installed transceiver and ONT; verify their current datasheets before live-network design.
+          Class values and common GPON wavelength references are informational. Exact guaranteed ranges depend on the
+          installed transceiver and ONT; verify their current datasheets before live-network design.
         </p>
       </div>
     </section>

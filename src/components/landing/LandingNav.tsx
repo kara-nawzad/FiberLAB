@@ -13,13 +13,21 @@ export function LandingNav({ onLaunchStudio, onLoadPreset }: LandingNavProps) {
   return (
     <nav className="landing-nav" aria-label="FiberLAB overview navigation">
       <a id="landing-overview-link" className="landing-brand" href="#top" aria-label="FiberLAB overview">
-        <span className="landing-brand-wordmark"><strong>Fiber</strong><b>LAB</b><small>OPTICAL ENGINEERING</small></span>
+        <span className="landing-brand-wordmark">
+          <strong>Fiber</strong>
+          <b>LAB</b>
+          <small>OPTICAL ENGINEERING</small>
+        </span>
       </a>
 
       <div className="landing-nav-links">
         <a href="#capabilities">Capabilities</a>
         <a href="#reference">Reference</a>
-        <details className="landing-preset-menu" open={presetsOpen} onToggle={(event) => setPresetsOpen(event.currentTarget.open)}>
+        <details
+          className="landing-preset-menu"
+          open={presetsOpen}
+          onToggle={(event) => setPresetsOpen(event.currentTarget.open)}
+        >
           <summary aria-label="Quick-load a topology">
             Topologies <ChevronDown size={13} aria-hidden="true" />
           </summary>
@@ -34,7 +42,8 @@ export function LandingNav({ onLaunchStudio, onLoadPreset }: LandingNavProps) {
                   setPresetsOpen(false);
                 }}
               >
-                <span>{preset.name}</span><small>{preset.description}</small>
+                <span>{preset.name}</span>
+                <small>{preset.description}</small>
               </button>
             ))}
           </div>

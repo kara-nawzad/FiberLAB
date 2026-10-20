@@ -53,7 +53,10 @@ export function BottomPanel({
   const endpoints = useMemo(
     () =>
       nodes
-        .filter((node): node is Extract<PonNode, { type: 'ont' | 'gateway' }> => node.type === 'ont' || node.type === 'gateway')
+        .filter(
+          (node): node is Extract<PonNode, { type: 'ont' | 'gateway' }> =>
+            node.type === 'ont' || node.type === 'gateway',
+        )
         .map((node) => {
           const reading = node.type === 'ont' ? simulation.ontTelemetry[node.id] : simulation.gatewayTelemetry[node.id];
           return { node, reading };
@@ -74,11 +77,28 @@ export function BottomPanel({
     }
     for (const node of nodes) {
       if (node.type !== 'fiber') continue;
-      if (node.data.macroBendActive) list.push({ key: `${node.id}-bend`, tone: 'warn', title: 'Fiber span', detail: 'Macro-bend loss injected on this span' });
-      if (node.data.dirtyConnectorActive) list.push({ key: `${node.id}-dust`, tone: 'warn', title: 'Fiber span', detail: 'Dirty connector ferrule loss injected' });
+      if (node.data.macroBendActive)
+        list.push({
+          key: `${node.id}-bend`,
+          tone: 'warn',
+          title: 'Fiber span',
+          detail: 'Macro-bend loss injected on this span',
+        });
+      if (node.data.dirtyConnectorActive)
+        list.push({
+          key: `${node.id}-dust`,
+          tone: 'warn',
+          title: 'Fiber span',
+          detail: 'Dirty connector ferrule loss injected',
+        });
     }
     if (summary.upstreamDynamicRangeWarning) {
-      list.push({ key: 'dyn', tone: 'warn', title: 'Upstream dynamic range', detail: `Δ ${summary.upstreamDeltaDb.toFixed(1)} dB exceeds the 15 dB limit` });
+      list.push({
+        key: 'dyn',
+        tone: 'warn',
+        title: 'Upstream dynamic range',
+        detail: `Δ ${summary.upstreamDeltaDb.toFixed(1)} dB exceeds the 15 dB limit`,
+      });
     }
     if (list.length === 0 && summary.subscriberCount > 0) {
       list.push({ key: 'ok', tone: 'ok', title: 'All subscribers', detail: 'Within receive thresholds' });
@@ -95,14 +115,33 @@ export function BottomPanel({
   }, [nodes]);
 
   return (
-    <section className={`pu-bottom ${minimized ? 'is-min' : ''}`} data-testid="network-summary-strip" aria-label="Network summary">
+    <section
+      className={`pu-bottom ${minimized ? 'is-min' : ''}`}
+      data-testid="network-summary-strip"
+      aria-label="Network summary"
+    >
       <div className="pu-btabs" role="tablist">
         {TABS.map((item) => (
-          <button key={item.id} type="button" role="tab" aria-selected={tab === item.id} className={tab === item.id ? 'is-active' : ''} onClick={() => { setTab(item.id); setMinimized(false); }}>
+          <button
+            key={item.id}
+            type="button"
+            role="tab"
+            aria-selected={tab === item.id}
+            className={tab === item.id ? 'is-active' : ''}
+            onClick={() => {
+              setTab(item.id);
+              setMinimized(false);
+            }}
+          >
             {item.label}
           </button>
         ))}
-        <button type="button" style={{ marginLeft: 'auto' }} onClick={() => setMinimized((value) => !value)} aria-label={minimized ? 'Expand summary' : 'Minimize summary'}>
+        <button
+          type="button"
+          style={{ marginLeft: 'auto' }}
+          onClick={() => setMinimized((value) => !value)}
+          aria-label={minimized ? 'Expand summary' : 'Minimize summary'}
+        >
           {minimized ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </button>
       </div>
@@ -110,14 +149,54 @@ export function BottomPanel({
       {!minimized && tab === 'overview' ? (
         <div className="pu-bottom-grid">
           <div className="pu-stats" style={{ gridTemplateColumns: 'repeat(2,1fr)' }}>
-            <div className="pu-stat"><i><Ruler size={16} /></i><div><small>Total Distance</small><b>{summary.totalFiberKm.toFixed(1)} km</b><em>fiber plant</em></div></div>
-            <div className="pu-stat"><i><Info size={16} /></i><div><small>Total Loss (max)</small><b>{worstLossDb !== null ? `${worstLossDb.toFixed(1)} dB` : '—'}</b><em>(worst path)</em></div></div>
-            <div className="pu-stat"><i><Users size={16} /></i><div><small>Subscribers</small><b>{summary.subscriberCount}</b><em>(ONUs / gateways)</em></div></div>
             <div className="pu-stat">
-              <i style={{ background: attention === 0 ? 'var(--pu-ok-soft)' : 'var(--pu-warn-soft)', color: attention === 0 ? 'var(--pu-ok)' : 'var(--pu-warn)' }}>
+              <i>
+                <Ruler size={16} />
+              </i>
+              <div>
+                <small>Total Distance</small>
+                <b>{summary.totalFiberKm.toFixed(1)} km</b>
+                <em>fiber plant</em>
+              </div>
+            </div>
+            <div className="pu-stat">
+              <i>
+                <Info size={16} />
+              </i>
+              <div>
+                <small>Total Loss (max)</small>
+                <b>{worstLossDb !== null ? `${worstLossDb.toFixed(1)} dB` : '—'}</b>
+                <em>(worst path)</em>
+              </div>
+            </div>
+            <div className="pu-stat">
+              <i>
+                <Users size={16} />
+              </i>
+              <div>
+                <small>Subscribers</small>
+                <b>{summary.subscriberCount}</b>
+                <em>(ONUs / gateways)</em>
+              </div>
+            </div>
+            <div className="pu-stat">
+              <i
+                style={{
+                  background: attention === 0 ? 'var(--pu-ok-soft)' : 'var(--pu-warn-soft)',
+                  color: attention === 0 ? 'var(--pu-ok)' : 'var(--pu-warn)',
+                }}
+              >
                 {attention === 0 ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />}
               </i>
-              <div><small>Network Status</small><b>{online} / {summary.subscriberCount} OK</b><em style={{ color: attention === 0 ? 'var(--pu-ok)' : '#B36B00' }}>{attention === 0 ? 'all within thresholds' : `${attention} require attention`}</em></div>
+              <div>
+                <small>Network Status</small>
+                <b>
+                  {online} / {summary.subscriberCount} OK
+                </b>
+                <em style={{ color: attention === 0 ? 'var(--pu-ok)' : '#B36B00' }}>
+                  {attention === 0 ? 'all within thresholds' : `${attention} require attention`}
+                </em>
+              </div>
             </div>
           </div>
           <div className="pu-card">
@@ -125,18 +204,29 @@ export function BottomPanel({
             {powerBars.map((bar) => (
               <div className="pu-bar" key={bar.label}>
                 <span>{bar.label}</span>
-                <span className="track"><i style={{ width: `${barWidth(bar.valueDbm)}%` }} /></span>
+                <span className="track">
+                  <i style={{ width: `${barWidth(bar.valueDbm)}%` }} />
+                </span>
                 <span>{bar.valueDbm === null ? '—' : `${bar.valueDbm >= 0 ? '+' : ''}${bar.valueDbm.toFixed(1)}`}</span>
               </div>
             ))}
           </div>
           <div className="pu-card" style={{ maxHeight: 150, overflowY: 'auto' }}>
             <h6>Recent Events</h6>
-            {events.length === 0 ? <div className="pu-mut" style={{ fontSize: 11 }}>Add an OLT and a subscriber to begin.</div> : null}
+            {events.length === 0 ? (
+              <div className="pu-mut" style={{ fontSize: 11 }}>
+                Add an OLT and a subscriber to begin.
+              </div>
+            ) : null}
             {events.map((event) => (
               <div className="pu-event" key={event.key}>
-                <u className={event.tone === 'ok' ? 'ok' : event.tone === 'bad' ? 'bad' : ''}>{event.tone === 'ok' ? <CheckCircle2 size={14} /> : <AlertTriangle size={14} />}</u>
-                <div><b>{event.title}</b><small>{event.detail}</small></div>
+                <u className={event.tone === 'ok' ? 'ok' : event.tone === 'bad' ? 'bad' : ''}>
+                  {event.tone === 'ok' ? <CheckCircle2 size={14} /> : <AlertTriangle size={14} />}
+                </u>
+                <div>
+                  <b>{event.title}</b>
+                  <small>{event.detail}</small>
+                </div>
               </div>
             ))}
           </div>
@@ -147,7 +237,15 @@ export function BottomPanel({
         <div className="pu-bottom-grid" style={{ gridTemplateColumns: '1fr' }}>
           <div className="pu-card" style={{ maxHeight: 170, overflowY: 'auto' }}>
             <table style={{ width: '100%', fontSize: 11 }}>
-              <thead className="pu-mut"><tr style={{ textAlign: 'left' }}><th>Subscriber</th><th>Rx power</th><th>Path loss</th><th>Margin</th><th>Status</th></tr></thead>
+              <thead className="pu-mut">
+                <tr style={{ textAlign: 'left' }}>
+                  <th>Subscriber</th>
+                  <th>Rx power</th>
+                  <th>Path loss</th>
+                  <th>Margin</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
               <tbody>
                 {endpoints.map(({ node, reading }) => (
                   <tr key={node.id} onClick={() => onSelectNode(node.id)} style={{ cursor: 'pointer' }}>
@@ -155,12 +253,16 @@ export function BottomPanel({
                     <td>{formatDbm(reading?.rxPowerDbm ?? null)}</td>
                     <td>{reading ? `${reading.totalLossDb.toFixed(1)} dB` : '—'}</td>
                     <td>{reading?.rxPowerDbm != null ? `${reading.marginDb.toFixed(1)} dB` : '—'}</td>
-                    <td style={{ fontWeight: 700, color: STATUS_STYLES[reading?.status ?? 'DISCONNECTED'].hex }}>{STATUS_STYLES[reading?.status ?? 'DISCONNECTED'].label}</td>
+                    <td style={{ fontWeight: 700, color: STATUS_STYLES[reading?.status ?? 'DISCONNECTED'].hex }}>
+                      {STATUS_STYLES[reading?.status ?? 'DISCONNECTED'].label}
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-            <button type="button" className="pu-btn" style={{ marginTop: 8 }} onClick={onOpenReports}>Open full audit &amp; quotation</button>
+            <button type="button" className="pu-btn" style={{ marginTop: 8 }} onClick={onOpenReports}>
+              Open full audit &amp; quotation
+            </button>
           </div>
         </div>
       ) : null}
@@ -168,17 +270,45 @@ export function BottomPanel({
       {!minimized && tab === 'components' ? (
         <div className="pu-bottom-grid" style={{ gridTemplateColumns: 'repeat(4,1fr)' }}>
           {Object.entries(counts).map(([kind, count]) => (
-            <div className="pu-stat" key={kind}><div><small style={{ textTransform: 'uppercase' }}>{kind}</small><b>{count}</b></div></div>
+            <div className="pu-stat" key={kind}>
+              <div>
+                <small style={{ textTransform: 'uppercase' }}>{kind}</small>
+                <b>{count}</b>
+              </div>
+            </div>
           ))}
         </div>
       ) : null}
 
       {!minimized && tab === 'topology' ? (
         <div className="pu-bottom-grid" style={{ gridTemplateColumns: 'repeat(4,1fr)' }}>
-          <div className="pu-stat"><i><Route size={16} /></i><div><small>Patch cords</small><b>{edgeCount}</b></div></div>
-          <div className="pu-stat"><div><small>Splitters</small><b>{summary.splitterTotal}</b></div></div>
-          <div className="pu-stat"><div><small>Splices</small><b>{summary.totalSplices}</b></div></div>
-          <div className="pu-stat"><div><small>Connectors</small><b>{summary.totalConnectors}</b></div></div>
+          <div className="pu-stat">
+            <i>
+              <Route size={16} />
+            </i>
+            <div>
+              <small>Patch cords</small>
+              <b>{edgeCount}</b>
+            </div>
+          </div>
+          <div className="pu-stat">
+            <div>
+              <small>Splitters</small>
+              <b>{summary.splitterTotal}</b>
+            </div>
+          </div>
+          <div className="pu-stat">
+            <div>
+              <small>Splices</small>
+              <b>{summary.totalSplices}</b>
+            </div>
+          </div>
+          <div className="pu-stat">
+            <div>
+              <small>Connectors</small>
+              <b>{summary.totalConnectors}</b>
+            </div>
+          </div>
         </div>
       ) : null}
     </section>

@@ -1,13 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Download, FileJson, Table2, X } from 'lucide-react';
-import type {
-  DesignSettings,
-  PonEdge,
-  PonNode,
-  SimulationResult,
-  SplitRatio,
-  TopologyExport,
-} from '../types';
+import type { DesignSettings, PonEdge, PonNode, SimulationResult, SplitRatio, TopologyExport } from '../types';
 import { SPLIT_RATIOS, SPLITTER_LOSS_DB, STATUS_STYLES } from '../types';
 import { describeStatus, formatDbm } from '../engine/opticalSimulator';
 import type { NetworkCostBreakdown, UnitCostProfile } from '../data/pricingCatalogue';
@@ -41,7 +34,9 @@ function triggerDownload(filename: string, contents: string, mime: string) {
 }
 
 function connectedSubscriberCount(nodes: PonNode[], simulation: SimulationResult): number {
-  return nodes.filter((node) => (node.type === 'ont' || node.type === 'gateway') && Boolean(simulation.bestPaths[node.id])).length;
+  return nodes.filter(
+    (node) => (node.type === 'ont' || node.type === 'gateway') && Boolean(simulation.bestPaths[node.id]),
+  ).length;
 }
 
 export function buildQuotationExport(
@@ -70,9 +65,8 @@ export function buildQuotationExport(
       unitCosts,
       breakdown: costBreakdown,
       connectedSubscriberCount: connectedCount,
-      costPerConnectedSubscriber: connectedCount === 0
-        ? 0
-        : Math.round((costBreakdown.totalCapex / connectedCount + Number.EPSILON) * 100) / 100,
+      costPerConnectedSubscriber:
+        connectedCount === 0 ? 0 : Math.round((costBreakdown.totalCapex / connectedCount + Number.EPSILON) * 100) / 100,
     },
   };
 }
@@ -122,11 +116,9 @@ export function buildCommercialCsv(
     'endpoint_type',
   ];
   const connectedCount = connectedSubscriberCount(nodes, simulation);
-  const costPerConnected = connectedCount === 0
-    ? 0
-    : Math.round((costBreakdown.totalCapex / connectedCount + Number.EPSILON) * 100) / 100;
-  const serialize = (record: Record<string, unknown>) =>
-    headers.map((header) => csvCell(record[header])).join(',');
+  const costPerConnected =
+    connectedCount === 0 ? 0 : Math.round((costBreakdown.totalCapex / connectedCount + Number.EPSILON) * 100) / 100;
+  const serialize = (record: Record<string, unknown>) => headers.map((header) => csvCell(record[header])).join(',');
 
   const rows = [
     serialize({
@@ -140,21 +132,21 @@ export function buildCommercialCsv(
       cost_per_home_passed_usd: costBreakdown.costPerHomePassed,
       cost_per_connected_subscriber_usd: costPerConnected,
     }),
-    ...costBreakdown.lineItems.map((line) => serialize({
-      record_type: 'quotation_line',
-      category: line.category,
-      item: line.item,
-      quantity: line.quantity,
-      unit: line.unit,
-      unit_price_usd: line.unitPrice,
-      extended_price_usd: line.totalPrice,
-    })),
+    ...costBreakdown.lineItems.map((line) =>
+      serialize({
+        record_type: 'quotation_line',
+        category: line.category,
+        item: line.item,
+        quantity: line.quantity,
+        unit: line.unit,
+        unit_price_usd: line.unitPrice,
+        extended_price_usd: line.totalPrice,
+      }),
+    ),
     ...nodes
       .filter((node) => node.type === 'ont' || node.type === 'gateway')
       .map((node) => {
-        const telemetry = node.type === 'ont'
-          ? simulation.ontTelemetry[node.id]
-          : simulation.gatewayTelemetry[node.id];
+        const telemetry = node.type === 'ont' ? simulation.ontTelemetry[node.id] : simulation.gatewayTelemetry[node.id];
         const gatewayReading = node.type === 'gateway' ? simulation.gatewayTelemetry[node.id] : undefined;
         if (!telemetry) return null;
         return serialize({
@@ -216,16 +208,19 @@ function CommercialQuotationView({
   costBreakdown: NetworkCostBreakdown;
 }) {
   const connectedCount = connectedSubscriberCount(nodes, simulation);
-  const costPerConnected = connectedCount === 0
-    ? 0
-    : Math.round((costBreakdown.totalCapex / connectedCount + Number.EPSILON) * 100) / 100;
+  const costPerConnected =
+    connectedCount === 0 ? 0 : Math.round((costBreakdown.totalCapex / connectedCount + Number.EPSILON) * 100) / 100;
   const homeCount = nodes.filter((node) => node.type === 'ont' || node.type === 'gateway').length;
 
   return (
     <section aria-label="Commercial quotation and CAPEX" data-testid="commercial-quotation">
       <div className="mb-3 grid grid-cols-2 gap-2 md:grid-cols-4">
         <StatCard label="Total Materials Cost" value={formatUsd(costBreakdown.materialsCost)} tone="text-sky-300" />
-        <StatCard label="Total Labor & Splicing Cost" value={formatUsd(costBreakdown.laborCost)} tone="text-amber-300" />
+        <StatCard
+          label="Total Labor & Splicing Cost"
+          value={formatUsd(costBreakdown.laborCost)}
+          tone="text-amber-300"
+        />
         <StatCard label="Total Project CAPEX" value={formatUsd(costBreakdown.totalCapex)} tone="text-emerald-300" />
         <StatCard
           label="CAPEX / Connected Subscriber"
@@ -258,20 +253,30 @@ function CommercialQuotationView({
             <tbody>
               {costBreakdown.lineItems.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-3 py-6 text-center text-noc-500">No priced components on the canvas yet.</td>
+                  <td colSpan={6} className="px-3 py-6 text-center text-noc-500">
+                    No priced components on the canvas yet.
+                  </td>
                 </tr>
-              ) : costBreakdown.lineItems.map((line) => (
-                <tr key={`${line.category}-${line.item}`} className="border-t border-noc-700/40 text-noc-300">
-                  <td className="px-2 py-2 text-noc-500">{line.category}</td>
-                  <td className="px-2 py-2 text-noc-200">{line.item}</td>
-                  <td className="px-2 py-2 text-right">{line.quantity.toLocaleString('en-US', { maximumFractionDigits: 3 })}</td>
-                  <td className="px-2 py-2 text-noc-500">{line.unit}</td>
-                  <td className="px-2 py-2 text-right">{formatUsd(line.unitPrice)}</td>
-                  <td className="px-2 py-2 text-right font-semibold text-emerald-300">{formatUsd(line.totalPrice)}</td>
-                </tr>
-              ))}
+              ) : (
+                costBreakdown.lineItems.map((line) => (
+                  <tr key={`${line.category}-${line.item}`} className="border-t border-noc-700/40 text-noc-300">
+                    <td className="px-2 py-2 text-noc-500">{line.category}</td>
+                    <td className="px-2 py-2 text-noc-200">{line.item}</td>
+                    <td className="px-2 py-2 text-right">
+                      {line.quantity.toLocaleString('en-US', { maximumFractionDigits: 3 })}
+                    </td>
+                    <td className="px-2 py-2 text-noc-500">{line.unit}</td>
+                    <td className="px-2 py-2 text-right">{formatUsd(line.unitPrice)}</td>
+                    <td className="px-2 py-2 text-right font-semibold text-emerald-300">
+                      {formatUsd(line.totalPrice)}
+                    </td>
+                  </tr>
+                ))
+              )}
               <tr className="border-t border-noc-600 bg-noc-800/70 font-semibold text-noc-100">
-                <td colSpan={4} className="px-2 py-2 text-right">Total quoted CAPEX</td>
+                <td colSpan={4} className="px-2 py-2 text-right">
+                  Total quoted CAPEX
+                </td>
                 <td className="px-2 py-2 text-right">—</td>
                 <td className="px-2 py-2 text-right text-emerald-300">{formatUsd(costBreakdown.totalCapex)}</td>
               </tr>
@@ -281,7 +286,8 @@ function CommercialQuotationView({
       </div>
 
       <p className="mt-3 rounded-md border border-amber-800/40 bg-amber-950/20 px-3 py-2 text-[9px] leading-relaxed text-amber-200/80">
-        Educational USD planning rates only—not a supplier quote, installed-price guarantee, tax estimate, or market survey. Edit local reference rates in the Inspector before exporting a quotation.
+        Educational USD planning rates only—not a supplier quote, installed-price guarantee, tax estimate, or market
+        survey. Edit local reference rates in the Inspector before exporting a quotation.
       </p>
     </section>
   );
@@ -306,9 +312,7 @@ export function BOMModal({
         .filter((node) => node.type === 'ont' || node.type === 'gateway')
         .map((node) => ({
           node,
-          telemetry: node.type === 'ont'
-            ? simulation.ontTelemetry[node.id]
-            : simulation.gatewayTelemetry[node.id],
+          telemetry: node.type === 'ont' ? simulation.ontTelemetry[node.id] : simulation.gatewayTelemetry[node.id],
         }))
         .filter((row) => row.telemetry !== undefined)
         .sort((a, b) => (b.telemetry?.rxPowerDbm ?? -999) - (a.telemetry?.rxPowerDbm ?? -999)),
@@ -329,9 +333,7 @@ export function BOMModal({
             </span>
             <div>
               <div className="text-[14px] font-semibold text-noc-200">Bill of Materials</div>
-              <div className="text-[10px] text-noc-500">
-                Optical audit &amp; commercial CAPEX quotation
-              </div>
+              <div className="text-[10px] text-noc-500">Optical audit &amp; commercial CAPEX quotation</div>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -354,7 +356,11 @@ export function BOMModal({
               onClick={() =>
                 triggerDownload(
                   `fiberlab-quotation-${timestamp}.json`,
-                  JSON.stringify(buildQuotationExport(nodes, edges, simulation, settings, unitCosts, costBreakdown), null, 2),
+                  JSON.stringify(
+                    buildQuotationExport(nodes, edges, simulation, settings, unitCosts, costBreakdown),
+                    null,
+                    2,
+                  ),
                   'application/json',
                 )
               }
@@ -373,7 +379,11 @@ export function BOMModal({
           </div>
         </div>
 
-        <div role="tablist" aria-label="Bill of materials views" className="flex shrink-0 gap-1 border-b border-noc-700/60 px-4 pt-2">
+        <div
+          role="tablist"
+          aria-label="Bill of materials views"
+          className="flex shrink-0 gap-1 border-b border-noc-700/60 px-4 pt-2"
+        >
           <button
             type="button"
             role="tab"
@@ -409,221 +419,210 @@ export function BOMModal({
             <CommercialQuotationView nodes={nodes} simulation={simulation} costBreakdown={costBreakdown} />
           ) : (
             <>
-          {/* ------------------------- Headline metrics ------------------------- */}
-          <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
-            <StatCard
-              label="Fiber deployed"
-              value={`${summary.totalFiberKm.toFixed(2)}`}
-              sub="km of plant on canvas"
-              tone="text-sky-300"
-            />
-            <StatCard
-              label={summary.gatewayCount === 0 ? 'ONTs provisioned' : 'Subscriber endpoints'}
-              value={`${summary.subscriberCount}`}
-              sub={`${summary.oltActive}/${summary.oltCount} OLT lasers active`}
-            />
-            <StatCard
-              label="Online"
-              value={`${summary.byStatus.ONLINE + summary.byStatus.WARNING + summary.byStatus.OVERLOAD}`}
-              sub={`${summary.byStatus.ONLINE} optimal · ${summary.byStatus.WARNING} marginal`}
-              tone="text-emerald-300"
-            />
-            <StatCard
-              label="Offline"
-              value={`${summary.byStatus.LOS + summary.byStatus.DISCONNECTED}`}
-              sub={`${summary.byStatus.LOS} LOS · ${summary.byStatus.DISCONNECTED} unwired`}
-              tone={
-                summary.byStatus.LOS + summary.byStatus.DISCONNECTED > 0
-                  ? 'text-red-300'
-                  : 'text-noc-200'
-              }
-            />
-          </div>
-
-          {/* --------------------------- Passive plant -------------------------- */}
-          <div className="mt-3 grid gap-2 md:grid-cols-2">
-            <div className="rounded-lg border border-noc-700/60 bg-noc-950/50 p-3">
-              <div className="eyebrow mb-2">Splitters by ratio</div>
-              {summary.splitterTotal === 0 ? (
-                <p className="text-[11px] text-noc-500">No splitters deployed.</p>
-              ) : (
-                <div className="flex flex-wrap gap-1.5">
-                  {SPLIT_RATIOS.filter((ratio: SplitRatio) => summary.splitterCountByRatio[ratio]).map(
-                    (ratio) => (
-                      <span
-                        key={ratio}
-                        className="rounded border border-purple-500/40 bg-purple-500/15 px-2 py-1 font-mono text-[11px] text-purple-200"
-                      >
-                        1:{ratio} × {summary.splitterCountByRatio[ratio]}
-                        <span className="ml-1.5 text-purple-800">
-                          −{SPLITTER_LOSS_DB[ratio].toFixed(1)} dB each
-                        </span>
-                      </span>
-                    ),
-                  )}
-                </div>
-              )}
-              <div className="mt-2 border-t border-noc-700/50 pt-2 font-mono text-[11px] text-noc-400">
-                Total passive splitters: <span className="text-noc-200">{summary.splitterTotal}</span>
+              {/* ------------------------- Headline metrics ------------------------- */}
+              <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+                <StatCard
+                  label="Fiber deployed"
+                  value={`${summary.totalFiberKm.toFixed(2)}`}
+                  sub="km of plant on canvas"
+                  tone="text-sky-300"
+                />
+                <StatCard
+                  label={summary.gatewayCount === 0 ? 'ONTs provisioned' : 'Subscriber endpoints'}
+                  value={`${summary.subscriberCount}`}
+                  sub={`${summary.oltActive}/${summary.oltCount} OLT lasers active`}
+                />
+                <StatCard
+                  label="Online"
+                  value={`${summary.byStatus.ONLINE + summary.byStatus.WARNING + summary.byStatus.OVERLOAD}`}
+                  sub={`${summary.byStatus.ONLINE} optimal · ${summary.byStatus.WARNING} marginal`}
+                  tone="text-emerald-300"
+                />
+                <StatCard
+                  label="Offline"
+                  value={`${summary.byStatus.LOS + summary.byStatus.DISCONNECTED}`}
+                  sub={`${summary.byStatus.LOS} LOS · ${summary.byStatus.DISCONNECTED} unwired`}
+                  tone={summary.byStatus.LOS + summary.byStatus.DISCONNECTED > 0 ? 'text-red-300' : 'text-noc-200'}
+                />
               </div>
-            </div>
 
-            <div className="rounded-lg border border-noc-700/60 bg-noc-950/50 p-3">
-              <div className="eyebrow mb-2">Termination &amp; splicing</div>
-              <table className="w-full font-mono text-[11px]">
-                <tbody className="text-noc-300">
-                  <tr>
-                    <td className="py-0.5 text-noc-400">Fusion splices</td>
-                    <td className="py-0.5 text-right">{summary.totalSplices}</td>
-                    <td className="py-0.5 pl-3 text-right text-noc-500">
-                      {(summary.totalSplices * 0.1).toFixed(1)} dB worst case
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="py-0.5 text-noc-400">SC/APC connectors</td>
-                    <td className="py-0.5 text-right">{summary.totalConnectors}</td>
-                    <td className="py-0.5 pl-3 text-right text-noc-500">
-                      {(summary.totalConnectors * 0.5).toFixed(1)} dB worst case
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="py-0.5 text-noc-400">Safety margin</td>
-                    <td className="py-0.5 text-right">{settings.safetyMarginDb.toFixed(1)} dB</td>
-                    <td className="py-0.5 pl-3 text-right text-noc-500">per subscriber</td>
-                  </tr>
-                  <tr className="border-t border-noc-700/50">
-                    <td className="py-1 text-noc-400">Mean Rx power</td>
-                    <td className="py-1 text-right text-noc-200" colSpan={2}>
-                      {formatDbm(summary.meanRxDbm)}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="py-0.5 text-noc-400">Worst Rx power</td>
-                    <td className="py-0.5 text-right text-noc-200" colSpan={2}>
-                      {formatDbm(summary.worstRxDbm)}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* ----------------------- Per-subscriber budget ---------------------- */}
-          <div className="mt-4">
-            <div className="eyebrow mb-2">Optical budget per subscriber</div>
-            <div className="overflow-hidden rounded-lg border border-noc-700/60">
-              <table className="w-full font-mono text-[11px]">
-                <thead>
-                  <tr className="bg-noc-800/80 text-[10px] uppercase tracking-wide text-noc-400">
-                    <th className="px-2 py-2 text-left font-medium">Subscriber</th>
-                    <th className="px-2 py-2 text-left font-medium">Status</th>
-                    <th className="px-2 py-2 text-right font-medium">Rx dBm</th>
-                    <th className="px-2 py-2 text-right font-medium">Loss dB</th>
-                    <th className="px-2 py-2 text-right font-medium">Margin</th>
-                    <th className="px-2 py-2 text-right font-medium">Upstream Δ</th>
-                    <th className="px-2 py-2 text-right font-medium">Fiber km</th>
-                    <th className="px-2 py-2 text-right font-medium">Split</th>
-                    <th className="px-2 py-2 text-right font-medium">SPL</th>
-                    <th className="px-2 py-2 text-right font-medium">CON</th>
-                    <th className="px-2 py-2 text-left font-medium">OLT port</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {subscriberRows.length === 0 ? (
-                    <tr>
-                      <td className="px-2 py-3 text-noc-500" colSpan={11}>
-                        No subscriber endpoints on the canvas yet — drag an ONT or gateway in from the toolbox.
-                      </td>
-                    </tr>
+              {/* --------------------------- Passive plant -------------------------- */}
+              <div className="mt-3 grid gap-2 md:grid-cols-2">
+                <div className="rounded-lg border border-noc-700/60 bg-noc-950/50 p-3">
+                  <div className="eyebrow mb-2">Splitters by ratio</div>
+                  {summary.splitterTotal === 0 ? (
+                    <p className="text-[11px] text-noc-500">No splitters deployed.</p>
                   ) : (
-                    subscriberRows.map(({ node, telemetry }) => {
-                      if (!telemetry) return null;
-                      const style = STATUS_STYLES[telemetry.status];
-                      const data = node.data as { serial: string; subscriber: string };
-                      const path = simulation.bestPaths[node.id];
-                      return (
-                        <tr
-                          key={node.id}
-                          className="border-t border-noc-700/50 text-noc-300 hover:bg-noc-800/40"
+                    <div className="flex flex-wrap gap-1.5">
+                      {SPLIT_RATIOS.filter((ratio: SplitRatio) => summary.splitterCountByRatio[ratio]).map((ratio) => (
+                        <span
+                          key={ratio}
+                          className="rounded border border-purple-500/40 bg-purple-500/15 px-2 py-1 font-mono text-[11px] text-purple-200"
                         >
-                          <td className="px-2 py-1.5">
-                            <div className="truncate font-sans text-[11px] text-noc-200">
-                              {data.subscriber}
-                            </div>
-                            <div className="text-[9px] text-noc-500">
-                              {node.type === 'gateway' ? `Wi-Fi gateway · ${data.serial} · ${node.data.ssid}` : `ONT · ${data.serial}`}
-                              {node.type === 'gateway' && simulation.gatewayTelemetry[node.id]?.estimatedDownMbps !== null
-                                ? ` · ${simulation.gatewayTelemetry[node.id]?.estimatedDownMbps?.toFixed(0)} Mbps down`
-                                : ''}
-                            </div>
-                          </td>
-                          <td className="px-2 py-1.5">
-                            <span
-                              className={`inline-flex items-center gap-1 rounded border px-1.5 py-[1px] text-[9px] font-semibold ${style.badge}`}
-                              title={describeStatus(telemetry.status)}
-                            >
-                              <span
-                                className="h-1.5 w-1.5 rounded-full"
-                                style={{ background: style.hex }}
-                              />
-                              {style.label}
-                            </span>
-                          </td>
-                          <td className="px-2 py-1.5 text-right font-semibold" style={{ color: style.hex }}>
-                            {formatDbm(telemetry.rxPowerDbm)}
-                          </td>
-                          <td className="px-2 py-1.5 text-right">
-                            {telemetry.rxPowerDbm === null ? '—' : telemetry.totalLossDb.toFixed(2)}
-                          </td>
-                          <td className="px-2 py-1.5 text-right">
-                            {telemetry.rxPowerDbm === null ? '—' : `${telemetry.marginDb.toFixed(2)}`}
-                          </td>
-                          <td
-                            className={`px-2 py-1.5 text-right ${
-                              telemetry.upstreamDeltaDb !== null && telemetry.upstreamDeltaDb > 15
-                                ? 'font-semibold text-amber-400'
-                                : ''
-                            }`}
-                          >
-                            {telemetry.upstreamDeltaDb === null ? '—' : `${telemetry.upstreamDeltaDb.toFixed(2)} dB`}
-                          </td>
-                          <td className="px-2 py-1.5 text-right">{telemetry.fiberKm.toFixed(2)}</td>
-                          <td className="px-2 py-1.5 text-right">
-                            {telemetry.rxPowerDbm === null ? '—' : `1:${telemetry.cumulativeSplitRatio}`}
-                          </td>
-                          <td className="px-2 py-1.5 text-right">{telemetry.splices}</td>
-                          <td className="px-2 py-1.5 text-right">{telemetry.connectors}</td>
-                          <td className="px-2 py-1.5 text-[10px] text-noc-400">
-                            {path ? `${path.oltPort} @ ${path.txPowerDbm.toFixed(1)} dBm` : '—'}
+                          1:{ratio} × {summary.splitterCountByRatio[ratio]}
+                          <span className="ml-1.5 text-purple-800">−{SPLITTER_LOSS_DB[ratio].toFixed(1)} dB each</span>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <div className="mt-2 border-t border-noc-700/50 pt-2 font-mono text-[11px] text-noc-400">
+                    Total passive splitters: <span className="text-noc-200">{summary.splitterTotal}</span>
+                  </div>
+                </div>
+
+                <div className="rounded-lg border border-noc-700/60 bg-noc-950/50 p-3">
+                  <div className="eyebrow mb-2">Termination &amp; splicing</div>
+                  <table className="w-full font-mono text-[11px]">
+                    <tbody className="text-noc-300">
+                      <tr>
+                        <td className="py-0.5 text-noc-400">Fusion splices</td>
+                        <td className="py-0.5 text-right">{summary.totalSplices}</td>
+                        <td className="py-0.5 pl-3 text-right text-noc-500">
+                          {(summary.totalSplices * 0.1).toFixed(1)} dB worst case
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="py-0.5 text-noc-400">SC/APC connectors</td>
+                        <td className="py-0.5 text-right">{summary.totalConnectors}</td>
+                        <td className="py-0.5 pl-3 text-right text-noc-500">
+                          {(summary.totalConnectors * 0.5).toFixed(1)} dB worst case
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="py-0.5 text-noc-400">Safety margin</td>
+                        <td className="py-0.5 text-right">{settings.safetyMarginDb.toFixed(1)} dB</td>
+                        <td className="py-0.5 pl-3 text-right text-noc-500">per subscriber</td>
+                      </tr>
+                      <tr className="border-t border-noc-700/50">
+                        <td className="py-1 text-noc-400">Mean Rx power</td>
+                        <td className="py-1 text-right text-noc-200" colSpan={2}>
+                          {formatDbm(summary.meanRxDbm)}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="py-0.5 text-noc-400">Worst Rx power</td>
+                        <td className="py-0.5 text-right text-noc-200" colSpan={2}>
+                          {formatDbm(summary.worstRxDbm)}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* ----------------------- Per-subscriber budget ---------------------- */}
+              <div className="mt-4">
+                <div className="eyebrow mb-2">Optical budget per subscriber</div>
+                <div className="overflow-hidden rounded-lg border border-noc-700/60">
+                  <table className="w-full font-mono text-[11px]">
+                    <thead>
+                      <tr className="bg-noc-800/80 text-[10px] uppercase tracking-wide text-noc-400">
+                        <th className="px-2 py-2 text-left font-medium">Subscriber</th>
+                        <th className="px-2 py-2 text-left font-medium">Status</th>
+                        <th className="px-2 py-2 text-right font-medium">Rx dBm</th>
+                        <th className="px-2 py-2 text-right font-medium">Loss dB</th>
+                        <th className="px-2 py-2 text-right font-medium">Margin</th>
+                        <th className="px-2 py-2 text-right font-medium">Upstream Δ</th>
+                        <th className="px-2 py-2 text-right font-medium">Fiber km</th>
+                        <th className="px-2 py-2 text-right font-medium">Split</th>
+                        <th className="px-2 py-2 text-right font-medium">SPL</th>
+                        <th className="px-2 py-2 text-right font-medium">CON</th>
+                        <th className="px-2 py-2 text-left font-medium">OLT port</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {subscriberRows.length === 0 ? (
+                        <tr>
+                          <td className="px-2 py-3 text-noc-500" colSpan={11}>
+                            No subscriber endpoints on the canvas yet — drag an ONT or gateway in from the toolbox.
                           </td>
                         </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* -------------------------- Status legend -------------------------- */}
-          <div className="mt-3 flex flex-wrap gap-2">
-            {(Object.keys(STATUS_STYLES) as Array<keyof typeof STATUS_STYLES>).map((key) => (
-              <div
-                key={key}
-                className="flex items-center gap-1.5 rounded border border-noc-700/60 bg-noc-950/50 px-2 py-1"
-              >
-                <span
-                  className="h-2 w-2 rounded-full"
-                  style={{
-                    background: STATUS_STYLES[key].hex,
-                    boxShadow: `0 0 6px ${STATUS_STYLES[key].hex}`,
-                  }}
-                />
-                <span className="font-mono text-[10px] text-noc-300">{STATUS_STYLES[key].label}</span>
-                <span className="font-mono text-[10px] text-noc-500">{summary.byStatus[key]}</span>
+                      ) : (
+                        subscriberRows.map(({ node, telemetry }) => {
+                          if (!telemetry) return null;
+                          const style = STATUS_STYLES[telemetry.status];
+                          const data = node.data as { serial: string; subscriber: string };
+                          const path = simulation.bestPaths[node.id];
+                          return (
+                            <tr key={node.id} className="border-t border-noc-700/50 text-noc-300 hover:bg-noc-800/40">
+                              <td className="px-2 py-1.5">
+                                <div className="truncate font-sans text-[11px] text-noc-200">{data.subscriber}</div>
+                                <div className="text-[9px] text-noc-500">
+                                  {node.type === 'gateway'
+                                    ? `Wi-Fi gateway · ${data.serial} · ${node.data.ssid}`
+                                    : `ONT · ${data.serial}`}
+                                  {node.type === 'gateway' &&
+                                  simulation.gatewayTelemetry[node.id]?.estimatedDownMbps !== null
+                                    ? ` · ${simulation.gatewayTelemetry[node.id]?.estimatedDownMbps?.toFixed(0)} Mbps down`
+                                    : ''}
+                                </div>
+                              </td>
+                              <td className="px-2 py-1.5">
+                                <span
+                                  className={`inline-flex items-center gap-1 rounded border px-1.5 py-[1px] text-[9px] font-semibold ${style.badge}`}
+                                  title={describeStatus(telemetry.status)}
+                                >
+                                  <span className="h-1.5 w-1.5 rounded-full" style={{ background: style.hex }} />
+                                  {style.label}
+                                </span>
+                              </td>
+                              <td className="px-2 py-1.5 text-right font-semibold" style={{ color: style.hex }}>
+                                {formatDbm(telemetry.rxPowerDbm)}
+                              </td>
+                              <td className="px-2 py-1.5 text-right">
+                                {telemetry.rxPowerDbm === null ? '—' : telemetry.totalLossDb.toFixed(2)}
+                              </td>
+                              <td className="px-2 py-1.5 text-right">
+                                {telemetry.rxPowerDbm === null ? '—' : `${telemetry.marginDb.toFixed(2)}`}
+                              </td>
+                              <td
+                                className={`px-2 py-1.5 text-right ${
+                                  telemetry.upstreamDeltaDb !== null && telemetry.upstreamDeltaDb > 15
+                                    ? 'font-semibold text-amber-400'
+                                    : ''
+                                }`}
+                              >
+                                {telemetry.upstreamDeltaDb === null
+                                  ? '—'
+                                  : `${telemetry.upstreamDeltaDb.toFixed(2)} dB`}
+                              </td>
+                              <td className="px-2 py-1.5 text-right">{telemetry.fiberKm.toFixed(2)}</td>
+                              <td className="px-2 py-1.5 text-right">
+                                {telemetry.rxPowerDbm === null ? '—' : `1:${telemetry.cumulativeSplitRatio}`}
+                              </td>
+                              <td className="px-2 py-1.5 text-right">{telemetry.splices}</td>
+                              <td className="px-2 py-1.5 text-right">{telemetry.connectors}</td>
+                              <td className="px-2 py-1.5 text-[10px] text-noc-400">
+                                {path ? `${path.oltPort} @ ${path.txPowerDbm.toFixed(1)} dBm` : '—'}
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            ))}
-          </div>
+
+              {/* -------------------------- Status legend -------------------------- */}
+              <div className="mt-3 flex flex-wrap gap-2">
+                {(Object.keys(STATUS_STYLES) as Array<keyof typeof STATUS_STYLES>).map((key) => (
+                  <div
+                    key={key}
+                    className="flex items-center gap-1.5 rounded border border-noc-700/60 bg-noc-950/50 px-2 py-1"
+                  >
+                    <span
+                      className="h-2 w-2 rounded-full"
+                      style={{
+                        background: STATUS_STYLES[key].hex,
+                        boxShadow: `0 0 6px ${STATUS_STYLES[key].hex}`,
+                      }}
+                    />
+                    <span className="font-mono text-[10px] text-noc-300">{STATUS_STYLES[key].label}</span>
+                    <span className="font-mono text-[10px] text-noc-500">{summary.byStatus[key]}</span>
+                  </div>
+                ))}
+              </div>
             </>
           )}
         </div>

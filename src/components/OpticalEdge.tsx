@@ -57,11 +57,7 @@ export function OpticalEdge({
           style={{
             transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
             opacity: powerDbm === null ? 0.6 : 0.95,
-            borderColor: isHighlighted
-              ? '#7C3AED'
-              : powerDbm === null
-                ? '#CBD5E1'
-                : `${EDGE_STROKE[state]}44`,
+            borderColor: isHighlighted ? '#7C3AED' : powerDbm === null ? '#CBD5E1' : `${EDGE_STROKE[state]}44`,
           }}
         >
           {faultLabels.length > 0 ? (

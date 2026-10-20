@@ -40,7 +40,7 @@ The current app still does **not** include genuine manufacturer/product photogra
 
 The product goal is to help people learn fiber-network design by doing—not only by reading about it. The workbench models a PON from the OLT and central-office patch field through the outside plant and into a subscriber's optical terminal or home gateway, while showing how distance, passive splits, splices, connectors, wavelength, and transmit power affect the downstream signal.
 
-The product direction is to make the experience feel closer to real equipment and field work. The hybrid now combines a warm splice-to-studio landing, diagrammatic canvas, compact representative hardware, Inspector field cards, four guided missions, and commercial planning. The network includes an ODF panel, FOSC-style dome closure, 1:8 outdoor NAP/FAT, Wi-Fi 6 GPON/XGS-PON gateway, wavelength-dependent OPM/OTDR references, and distinct macro-bend/dust training faults. The authored SVG drawings are **illustrations rather than genuine product photos**; they deliberately avoid claiming an exact vendor or SKU. A broader curriculum, scoring, saved projects, real service provisioning, and licensed photography remain future work.
+The product direction is to make the experience feel closer to real equipment and field work. The hybrid now combines a warm splice-to-studio landing, diagrammatic canvas, compact representative hardware, Inspector field cards, five guided missions, and commercial planning. The network includes an ODF panel, FOSC-style dome closure, 1:8 outdoor NAP/FAT, Wi-Fi 6 GPON/XGS-PON gateway, wavelength-dependent OPM/OTDR references, and distinct macro-bend/dust training faults. The authored SVG drawings are **illustrations rather than genuine product photos**; they deliberately avoid claiming an exact vendor or SKU. A broader curriculum, scoring, saved projects, real service provisioning, and licensed photography remain future work.
 
 Photos alone do not create field experience. A task such as “find why this subscriber has low receive power” is more educational when it asks the learner to inspect a route, identify the splitter and cable losses, make a change, rerun the test, and explain the result.
 
@@ -168,16 +168,16 @@ These are guided practice missions, not a scored course. They do not add graph c
 
 The current toolbox has eight graph kinds. These are network abstractions, not a catalogue of exact manufacturer part numbers.
 
-| Component | Current modeled fields | Typical use in the network |
-|---|---|---|
-| **OLT** | PON port name, class B+/C+, transmit power, laser on/off, wavelength | Launches downstream light into the network. |
-| **Splitter** | 1:N ratio, optional excess loss | Divides a PON path into branches and adds insertion loss. |
-| **Fiber span** | Feeder/distribution/drop type, length, splices, connectors, wavelength, optional attenuation override, optional fault flags | Represents a physical cable segment, its losses, and the separate educational bend/ferrule faults. |
-| **Dome closure** | Two input handles, four branch outputs, 12 active tray channels, configurable 0.05–0.10 dB through-splice allowance | Represents an outside-plant splice enclosure; each modeled branch applies one active through-splice. |
-| **ONT/ONU** | Subscriber label, serial number, informational receiver sensitivity | Simple subscriber optical endpoint with calculated receive telemetry. |
-| **ODF rack panel** | Two matched input/output pairs; default 0.50 dB through allowance | Patches headend OLT ports to feeder fibers. Each pair is isolated, not cross-connected. |
-| **Outdoor NAP/FAT** | One input, eight outputs; fixed 1:8 split and default 10.5 dB loss | Distributes an outside-plant feeder to up to eight modeled drop branches. |
-| **Wi-Fi 6 gateway** | Subscriber/serial, SSID, TEST-NET IPv4 placeholder, informational sensitivity | Integrated GPON/XGS-PON endpoint with optical/status and topology-derived service telemetry. |
+| Component           | Current modeled fields                                                                                                      | Typical use in the network                                                                           |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| **OLT**             | PON port name, class B+/C+, transmit power, laser on/off, wavelength                                                        | Launches downstream light into the network.                                                          |
+| **Splitter**        | 1:N ratio, optional excess loss                                                                                             | Divides a PON path into branches and adds insertion loss.                                            |
+| **Fiber span**      | Feeder/distribution/drop type, length, splices, connectors, wavelength, optional attenuation override, optional fault flags | Represents a physical cable segment, its losses, and the separate educational bend/ferrule faults.   |
+| **Dome closure**    | Two input handles, four branch outputs, 12 active tray channels, configurable 0.05–0.10 dB through-splice allowance         | Represents an outside-plant splice enclosure; each modeled branch applies one active through-splice. |
+| **ONT/ONU**         | Subscriber label, serial number, informational receiver sensitivity                                                         | Simple subscriber optical endpoint with calculated receive telemetry.                                |
+| **ODF rack panel**  | Two matched input/output pairs; default 0.50 dB through allowance                                                           | Patches headend OLT ports to feeder fibers. Each pair is isolated, not cross-connected.              |
+| **Outdoor NAP/FAT** | One input, eight outputs; fixed 1:8 split and default 10.5 dB loss                                                          | Distributes an outside-plant feeder to up to eight modeled drop branches.                            |
+| **Wi-Fi 6 gateway** | Subscriber/serial, SSID, TEST-NET IPv4 placeholder, informational sensitivity                                               | Integrated GPON/XGS-PON endpoint with optical/status and topology-derived service telemetry.         |
 
 Important modeling details:
 
@@ -231,13 +231,13 @@ span total = fiber loss + splice loss + connector loss + active fault penalties
 
 Default attenuation is:
 
-| Wavelength | Default attenuation | Direction represented in the UI |
-|---|---:|---|
-| 1270 nm | 0.35 dB/km | XGS-PON upstream reference (not simulated upstream) |
-| 1310 nm | 0.35 dB/km | GPON upstream / OPM reference |
-| 1490 nm | 0.25 dB/km | GPON downstream reference |
-| 1550 nm | 0.20 dB/km | OPM calibration / diagnostic reference |
-| 1577 nm | 0.22 dB/km | XGS-PON downstream reference |
+| Wavelength | Default attenuation | Direction represented in the UI                     |
+| ---------- | ------------------: | --------------------------------------------------- |
+| 1270 nm    |          0.35 dB/km | XGS-PON upstream reference (not simulated upstream) |
+| 1310 nm    |          0.35 dB/km | GPON upstream / OPM reference                       |
+| 1490 nm    |          0.25 dB/km | GPON downstream reference                           |
+| 1550 nm    |          0.20 dB/km | OPM calibration / diagnostic reference              |
+| 1577 nm    |          0.22 dB/km | XGS-PON downstream reference                        |
 
 For GPON routes, each fiber node uses its own selected wavelength unless the learner supplies a positive attenuation override. XGS-PON routes use the downstream 1577 nm reference through all spans, unless a per-span override is set. Changing a fiber wavelength clears that override. These are simplified educational coefficients, not universal cable constants; preserve the existing 1550 nm value as a diagnostic/OPM reference.
 
@@ -259,10 +259,10 @@ The closure applies one adjustable `spliceLossDb` per active outgoing branch, cl
 
 The OLT Inspector retains GPON as the default and adds a PON-standard selector:
 
-| Standard | Downstream | Upstream | Nominal line rate |
-|---|---|---|---|
-| GPON (ITU-T G.984) | 1490 nm | 1310 nm | 2.488 / 1.244 Gbps |
-| XGS-PON (ITU-T G.9807.1) | 1577 nm | 1270 nm | 9.953 / 9.953 Gbps |
+| Standard                 | Downstream | Upstream | Nominal line rate  |
+| ------------------------ | ---------- | -------- | ------------------ |
+| GPON (ITU-T G.984)       | 1490 nm    | 1310 nm  | 2.488 / 1.244 Gbps |
+| XGS-PON (ITU-T G.9807.1) | 1577 nm    | 1270 nm  | 9.953 / 9.953 Gbps |
 
 The simulator changes fiber attenuation to the XGS-PON downstream reference of 0.22 dB/km when the OLT is set to XGS-PON. The upstream wavelength/rate are shown as nominal capability only; reverse-path physics and XGS-specific optical-class budgets are not modeled. Connected Wi-Fi gateways surface the selected standard, line rates, `XGS-PON 10G ACTIVE` badge, receive power, and an equal-share estimate (nominal line rate ÷ cumulative split ratio). It is not an Internet speed test; protocol overhead, contention, plan limits, LAN and Wi-Fi conditions are not simulated.
 
@@ -271,22 +271,22 @@ The simulator changes fiber attenuation to the XGS-PON downstream reference of 0
 The splitter loss catalogue currently used is:
 
 | Split ratio | Modeled insertion loss |
-|---:|---:|
-| 1:2 | 3.7 dB |
-| 1:4 | 7.2 dB |
-| 1:8 | 10.5 dB |
-| 1:16 | 13.8 dB |
-| 1:32 | 17.5 dB |
-| 1:64 | 20.8 dB |
+| ----------: | ---------------------: |
+|         1:2 |                 3.7 dB |
+|         1:4 |                 7.2 dB |
+|         1:8 |                10.5 dB |
+|        1:16 |                13.8 dB |
+|        1:32 |                17.5 dB |
+|        1:64 |                20.8 dB |
 
 The Inspector's **Excess / uniformity loss** is added to the catalogue value. Actual splitters vary by manufacturer and model, so a future exact-hardware profile should use the selected unit's documented insertion-loss data and identify its source.
 
 ### 5.4 OLT classes and transmit power
 
 | Class | Default launch power | Stored transmit range | Displayed receiver sensitivity | Displayed nominal link budget |
-|---|---:|---:|---:|---:|
-| B+ | +3 dBm | +1.5 to +5 dBm | −28 dBm | 28 dB |
-| C+ | +5 dBm | +3 to +7 dBm | −32 dBm | 32 dB |
+| ----- | -------------------: | --------------------: | -----------------------------: | ----------------------------: |
+| B+    |               +3 dBm |        +1.5 to +5 dBm |                        −28 dBm |                         28 dB |
+| C+    |               +5 dBm |          +3 to +7 dBm |                        −32 dBm |                         32 dB |
 
 Selecting a class sets its default transmit power. The Inspector then permits a wider manual transmit-power range; this is useful for experiments but does not enforce the class-specific minimum/maximum values stored in the catalogue.
 
@@ -296,13 +296,13 @@ The global safety/ageing/repair allowance defaults to 2 dB and is subtracted on 
 
 The current receiver status thresholds are:
 
-| Status | Current rule | Meaning shown in the app |
-|---|---|---|
-| **OVERLOAD** | Receive power greater than −8 dBm | Receiver saturation / potential overload risk. |
-| **ONLINE** | −24 dBm through −8 dBm inclusive | Inside the modeled optimal window. |
-| **WARNING** | −28 dBm through below −24 dBm | Marginal receive level. |
-| **LOS** | Below −28 dBm | Loss of signal. |
-| **DISCONNECTED** | No active path, or no receive reading | No active OLT route reaches the ONT. |
+| Status           | Current rule                          | Meaning shown in the app                       |
+| ---------------- | ------------------------------------- | ---------------------------------------------- |
+| **OVERLOAD**     | Receive power greater than −8 dBm     | Receiver saturation / potential overload risk. |
+| **ONLINE**       | −24 dBm through −8 dBm inclusive      | Inside the modeled optimal window.             |
+| **WARNING**      | −28 dBm through below −24 dBm         | Marginal receive level.                        |
+| **LOS**          | Below −28 dBm                         | Loss of signal.                                |
+| **DISCONNECTED** | No active path, or no receive reading | No active OLT route reaches the ONT.           |
 
 At exactly −28 dBm the current code returns **WARNING**; LOS begins below −28 dBm. ONTs, gateways, and XGS-PON endpoints share these existing GPON-oriented app thresholds; separate receiver-class limits are not modeled. These are learning thresholds, not universal device limits.
 
@@ -324,20 +324,20 @@ The UI's `marginDb` is calculated as the distance above the −28 dBm LOS floor.
 
 The supplied default USD reference rates are editable for the current workspace session in the Inspector's **Local unit pricing** panel:
 
-| Line item | Baseline reference rate |
-| --- | ---: |
-| Feeder / OSP cable | $350 / km |
-| Distribution cable | $250 / km |
-| Drop cable | $150 / km |
-| Fusion-splice labor | $12.50 / counted splice |
-| SC/APC connector termination | $4.00 / connector end |
-| PLC splitter | 1:2 $14 · 1:4 $18 · 1:8 $26 · 1:16 $42 · 1:32 $68 · 1:64 $120 |
-| FOSC-style dome closure | $85 / each |
-| OLT PON port module (C+ reference) | $240 / each |
-| ODF rack panel / 2-pair through panel | $110 / each |
-| Outdoor NAP/FAT with fixed internal 1:8 splitter | $65 / each |
-| ONT | $55 / each |
-| Wi-Fi 6 GPON/XGS-PON gateway | $85 / each |
+| Line item                                        |                                       Baseline reference rate |
+| ------------------------------------------------ | ------------------------------------------------------------: |
+| Feeder / OSP cable                               |                                                     $350 / km |
+| Distribution cable                               |                                                     $250 / km |
+| Drop cable                                       |                                                     $150 / km |
+| Fusion-splice labor                              |                                       $12.50 / counted splice |
+| SC/APC connector termination                     |                                         $4.00 / connector end |
+| PLC splitter                                     | 1:2 $14 · 1:4 $18 · 1:8 $26 · 1:16 $42 · 1:32 $68 · 1:64 $120 |
+| FOSC-style dome closure                          |                                                    $85 / each |
+| OLT PON port module (C+ reference)               |                                                   $240 / each |
+| ODF rack panel / 2-pair through panel            |                                                   $110 / each |
+| Outdoor NAP/FAT with fixed internal 1:8 splitter |                                                    $65 / each |
+| ONT                                              |                                                    $55 / each |
+| Wi-Fi 6 GPON/XGS-PON gateway                     |                                                    $85 / each |
 
 Cable cost is length in km multiplied by the node's feeder/distribution/drop rate. Material and labor are reported separately; fusion splices and SC/APC connector terminations are grouped as labor. Closure splice labor counts active outgoing branches represented by the topology. Subscriber summaries count ONTs and Wi-Fi gateways: CAPEX per home passed uses placed subscriber endpoints, and cost per connected subscriber uses ONTs/gateways reachable in current simulator telemetry. With no connected subscriber, the UI shows an em dash and the numeric export field is zero.
 
@@ -394,41 +394,95 @@ The ODF contributes 0.50 dB through loss; the NAP contributes its fixed 10.5 dB 
 
 ## 7. Architecture and source-code map
 
-The app is a client-side React/TypeScript application. There is no backend service in the current repository.
+The app is a client-side React/TypeScript application. There is no backend service in the current repository. The table is exhaustive for the version-controlled leaf files in this layout; each path appears once, and path prefixes show its folder.
 
-| File or folder | Responsibility |
-|---|---|
-| `src/main.tsx` | Browser entry point. Loads React Flow styles and the app stylesheets, then mounts the React application. |
-| `src/fiberlab-theme.css` | Warm palette, responsive landing/workbench layouts, splice animation, and soft optical-wire glow. |
-| `tailwind.config.js` / `index.html` | Warm theme tokens and Google Font imports for Sora, Manrope, and JetBrains Mono. |
-| `src/App.tsx` | Main workspace. Owns graph/settings state, editing, presets, optical simulation, CAPEX, OPM/OTDR tools, and top-level layout. |
-| `src/types.ts` | Shared graph/simulation types: GPON/XGS-PON standards, five graph wavelengths, fiber faults, ODF/NAP/gateway data, and telemetry. |
-| `src/data/componentCatalogue.ts` | Static, framework-independent hardware profiles and inline SVG illustrations for all modeled elements; ODF/NAP/gateway hero declarations precede thumbnails. |
-| `src/data/pricingCatalogue.ts` | Pure graph-derived CAPEX calculator, default USD reference rates, custom-rate resolution, and quote line items. |
-| `src/engine/opticalSimulator.ts` | Pure graph traversal, ODF/NAP/fiber/closure/fault losses, subscriber selection/status classification, XGS-PON attenuation, and summaries. |
-| `src/engine/opticalProbe.ts` | Runs simulator-backed readings at nodes, ports, and edges for a selected meter wavelength. |
-| `src/engine/otdrSimulator.ts` | Pure, directed-route event and backscatter trace generator; no React or CAPEX dependencies. |
-| `src/engine/factories.ts` | Creates all graph node kinds with stable IDs and reference defaults. |
-| `src/engine/presets.ts` | Builds the standard GPON, failing long-haul, and modern XGS-PON suburb topologies. |
-| `src/engine/edgeDecoration.ts` | Maps telemetry and source-span fault flags to edge labels, colors, and warning metadata. |
-| `src/engine/SimulationContext.ts` | Shares the current simulation result with custom nodes without copying telemetry into node data. |
-| `src/components/Sidebar.tsx` | Toolbox, cable/ratio choices, closure drag payload, and quick-add controls. |
-| `src/components/TopBar.tsx` | Optical health + live CAPEX/cost-per-home telemetry, link/OPM/OTDR tools, selection deletion, presets, safety margin, Auto, test, BOM, and clear actions. |
-| `src/components/Inspector.tsx` | Selected node/edge editing, PON selector, closure tray, ODF/NAP settings, gateway service fields, path breakdowns, and local pricing. |
-| `src/components/PricingSettings.tsx` | Accessible editable/resettable inputs for local CAPEX reference rates. |
-| `src/components/FieldHardwareCard.tsx` | Reusable Inspector card for the selected node's illustration, ports/construction, field tips, and datasheet context. |
-| `src/components/OpmMeterHud.tsx` | Floating LCD-style OPM with wavelength selection, relative reference, and close action. |
-| `src/components/OtdrModal.tsx` | Responsive OTDR controls, SVG backscatter plot/crosshair, animated acquisition, and event table. |
-| `src/components/BOMModal.tsx` | Optical/commercial tabs, endpoint-aware metrics, detailed quotation lines, and JSON/combined CSV exporters with gateway telemetry. |
-| `src/components/OpticalEdge.tsx` | Draws optical wires, power labels, and an accessible fault warning glyph. |
-| `src/components/nodes/ClosureNode.tsx` | FOSC-style closure node with two input handles and four branch outputs. |
-| `src/components/nodes/ODFNode.tsx`, `NAPNode.tsx`, `GatewayNode.tsx` | ODF matched pairs, NAP/FAT splitter/drop ports, and live Wi-Fi gateway telemetry. |
-| `src/components/nodes/` | Custom React Flow renderers for all graph elements, plus shared node styling. |
-| `src/components/landing/SpliceIntroHero.tsx` + `spliceHeroScene.svg` | Hold-to-open introduction and simulator-backed receive-power readout. |
-| `src/fiberlab-theme.css` | Warm studio/landing visuals plus OPM, OTDR plot/modal, closure/tray, and field-fault treatments. |
-| `src/engine/__tests__/` | Unit tests for loss calculations, closure traversal, probes, OTDR traces, missions, and edge decoration. |
-| `src/data/__tests__/` | Node-environment tests for catalogue profiles, CAPEX calculations, and commercial quote exports. |
-| `src/__tests__/app.test.tsx` | Mounted-app tests for landing, OPM/OTDR interactions, closure tray, fault toggles, pricing edits, quotation UI, and missions. |
+| File or folder                                              | Responsibility                                                                       |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `.github/workflows/ci.yml`                                  | Continuous-integration workflow for `main`, pull requests, and manual dispatch.      |
+| `.github/workflows/deploy.yml`                              | GitHub Pages build and deployment workflow.                                          |
+| `.editorconfig`                                             | Shared encoding, line-ending, indentation, and whitespace rules.                     |
+| `.gitignore`                                                | Ignored dependency, build, environment, cache, editor, and OS artifacts.             |
+| `.nvmrc`                                                    | Node.js 22 selector.                                                                 |
+| `.prettierrc.json`                                          | Project Prettier formatting policy.                                                  |
+| `LICENSE`                                                   | MIT licence for FiberLAB.                                                            |
+| `README.md`                                                 | Project overview, quick start, live link, and high-level source map.                 |
+| `THIRD_PARTY_NOTICES.md`                                    | SIL OFL notices for runtime Google Fonts.                                            |
+| `docs/PROJECT_GUIDE.md`                                     | This detailed product, architecture, and operating guide.                            |
+| `docs/design/hardware-ui-mock.html`                         | Archived self-contained hardware UI mock.                                            |
+| `docs/design/hardware-ui-mock.md`                           | Archived design-reference notes for the mock.                                        |
+| `docs/design/workbench-reference.jpg`                       | Archived workbench visual reference.                                                 |
+| `eslint.config.js`                                          | Flat ESLint policy for TypeScript source and Node-side configuration.                |
+| `index.html`                                                | Vite document shell and runtime Google Font imports.                                 |
+| `package.json`                                              | Package metadata, scripts, Node requirement, and dependencies.                       |
+| `package-lock.json`                                         | Exact npm dependency resolution.                                                     |
+| `postcss.config.js`                                         | PostCSS plugin configuration.                                                        |
+| `tailwind.config.js`                                        | Tailwind content scanning and retained theme extensions.                             |
+| `tsconfig.json`                                             | Strict TypeScript compiler configuration.                                            |
+| `vite.config.ts`                                            | Vite and React plugin configuration.                                                 |
+| `vitest.workspace.ts`                                       | Separate app and engine Vitest projects.                                             |
+| `src/App.tsx`                                               | Persistent studio shell, graph state, simulations, CAPEX, and top-level composition. |
+| `src/main.tsx`                                              | Browser entry point and ordered global stylesheet imports.                           |
+| `src/types.ts`                                              | Shared graph, simulation, optical, and UI type definitions.                          |
+| `src/vite-env.d.ts`                                         | Vite ambient type declarations.                                                      |
+| `src/__tests__/app.test.tsx`                                | Mounted application regression tests.                                                |
+| `src/assets/opm-probe-cursor.svg`                           | Bundled cursor image for OPM probe mode.                                             |
+| `src/assets/splice-hero-scene.svg`                          | Raw SVG scene rendered by the splice introduction.                                   |
+| `src/context/SimulationContext.ts`                          | React context that shares the current simulation result with custom nodes.           |
+| `src/data/componentCatalogue.ts`                            | Framework-independent hardware profiles and inline SVG illustration data.            |
+| `src/data/hardwareArtwork.ts`                               | Reusable hardware art data and geometry helpers.                                     |
+| `src/data/pricingCatalogue.ts`                              | Pure graph-derived CAPEX calculator and local-rate defaults.                         |
+| `src/data/__tests__/commercialQuoteExports.test.ts`         | Commercial quotation JSON and CSV export tests.                                      |
+| `src/data/__tests__/componentCatalogue.test.ts`             | Hardware catalogue tests.                                                            |
+| `src/data/__tests__/pricingCatalogue.test.ts`               | CAPEX and local-pricing calculator tests.                                            |
+| `src/engine/edgeDecoration.ts`                              | Maps simulation telemetry and faults to React Flow edge presentation.                |
+| `src/engine/factories.ts`                                   | Creates graph node kinds with stable IDs and reference defaults.                     |
+| `src/engine/missions.ts`                                    | Definitions and objective evaluators for five guided missions.                       |
+| `src/engine/opticalPhysics.ts`                              | Pure waveguide optical-physics helpers used by landing visuals.                      |
+| `src/engine/opticalProbe.ts`                                | Simulator-backed readings for nodes, ports, and edges at a meter wavelength.         |
+| `src/engine/opticalSimulator.ts`                            | Pure PON graph traversal, loss, status, and summary calculation.                     |
+| `src/engine/otdrSimulator.ts`                               | Pure directed-route OTDR event and backscatter trace generator.                      |
+| `src/engine/presets.ts`                                     | Reference GPON, long-haul, and XGS-PON topology builders.                            |
+| `src/engine/__tests__/missions.test.ts`                     | Mission evaluator tests.                                                             |
+| `src/engine/__tests__/opticalPhysics.test.ts`               | Waveguide optical-physics tests.                                                     |
+| `src/engine/__tests__/opticalProbe.test.ts`                 | Optical probe tests.                                                                 |
+| `src/engine/__tests__/opticalSimulator.test.ts`             | Optical graph simulation tests, including the public alias.                          |
+| `src/engine/__tests__/otdrSimulator.test.ts`                | OTDR route and event generation tests.                                               |
+| `src/engine/__tests__/xgsPon.test.ts`                       | XGS-PON standards and equipment tests.                                               |
+| `src/styles/global.css`                                     | Tailwind layers, application-wide styles, and mission keyframes.                     |
+| `src/styles/photo-ui.css`                                   | Photo-inspired studio UI overrides, loaded last.                                     |
+| `src/styles/theme.css`                                      | Warm responsive landing and studio theme, including modal and hardware treatments.   |
+| `src/test/setup.ts`                                         | Vitest setup and Testing Library matcher registration.                               |
+| `src/components/BOMModal.tsx`                               | Optical audit and commercial quotation modal with exporters.                         |
+| `src/components/BottomPanel.tsx`                            | Bottom workbench panel for live topology and simulation summaries.                   |
+| `src/components/CanvasToolbar.tsx`                          | Canvas-level editing, diagnostics, mission, and simulation controls.                 |
+| `src/components/FieldHardwareCard.tsx`                      | Reusable Inspector hardware illustration and field-context card.                     |
+| `src/components/Inspector.tsx`                              | Selected node/edge editor, telemetry, faults, and local pricing controls.            |
+| `src/components/MissionDrawer.tsx`                          | Guided-mission selection, objectives, hints, and completion recap.                   |
+| `src/components/OpmMeterHud.tsx`                            | Floating optical power meter HUD.                                                    |
+| `src/components/OpticalEdge.tsx`                            | Optical wire, power-label, and fault-warning renderer.                               |
+| `src/components/OtdrModal.tsx`                              | OTDR controls, animated acquisition, SVG trace, and event table.                     |
+| `src/components/PricingSettings.tsx`                        | Accessible local CAPEX-rate editor and reset controls.                               |
+| `src/components/Sidebar.tsx`                                | Toolbox, quick-add controls, cable and splitter choices, and reference links.        |
+| `src/components/TopBar.tsx`                                 | Overview, preset, health, CAPEX, zoom, simulation, and report controls.              |
+| `src/components/hardware/HardwareArt.tsx`                   | React component that renders reusable hardware illustrations.                        |
+| `src/components/landing/LandingNav.tsx`                     | Landing-page navigation.                                                             |
+| `src/components/landing/LandingView.tsx`                    | Landing-page composition and studio transition.                                      |
+| `src/components/landing/PhotonicHero.tsx`                   | Physics hero, capability content, and five-scenario CTA.                             |
+| `src/components/landing/PillarsGrid.tsx`                    | Landing capability-card grid.                                                        |
+| `src/components/landing/SpecsStrip.tsx`                     | Landing optical reference specification strip.                                       |
+| `src/components/landing/SpliceIntroHero.tsx`                | Hold-to-open splice interaction and live receive-power readout.                      |
+| `src/components/landing/WaveguideCanvas.tsx`                | Interactive waveguide illustration.                                                  |
+| `src/components/landing/__tests__/SpliceIntroHero.test.tsx` | Splice interaction regression test.                                                  |
+| `src/components/nodes/ClosureNode.tsx`                      | Dome-closure React Flow node.                                                        |
+| `src/components/nodes/FiberNode.tsx`                        | Fiber-span React Flow node.                                                          |
+| `src/components/nodes/GatewayNode.tsx`                      | Wi-Fi PON gateway React Flow node.                                                   |
+| `src/components/nodes/NAPNode.tsx`                          | Outdoor NAP/FAT React Flow node.                                                     |
+| `src/components/nodes/NodePrimitives.tsx`                   | Shared LED, statistic, and badge primitives for node renderers.                      |
+| `src/components/nodes/ODFNode.tsx`                          | ODF React Flow node.                                                                 |
+| `src/components/nodes/OLTNode.tsx`                          | OLT React Flow node.                                                                 |
+| `src/components/nodes/ONTNode.tsx`                          | ONT React Flow node.                                                                 |
+| `src/components/nodes/SplitterNode.tsx`                     | PLC splitter React Flow node.                                                        |
+| `src/components/nodes/index.ts`                             | Live `nodeTypes` registry consumed by `App.tsx`.                                     |
 
 `App.tsx` calculates the optical simulation from the current node graph and separately calculates `NetworkCostBreakdown` from the same nodes/edges plus local rates. Optical telemetry is shared through `SimulationContext`, decorates optical edges, and feeds optical displays; the CAPEX result feeds the TopBar, Inspector, BOM, exports, and mission objectives. The OPM independently invokes the pure probe engine, and the OTDR modal invokes the pure route analyzer at its selected source, branch, wavelength, and pulse width. This keeps all three calculations decoupled from presentation.
 
@@ -463,8 +517,8 @@ On 13 October 2026, after the ODF/NAP/gateway and XGS-PON expansion:
 
 - `npm ci --no-audit`: passed; dependencies installed from the lockfile. No automatic dependency fixes were applied.
 - `npm run typecheck`: passed.
-- `npm test -- --reporter=dot`: **88 tests passed** across 11 files (26 optical-simulator, 5 OPM, 5 OTDR, 5 XGS-PON/equipment, 6 mission, 5 pricing, 3 commercial-export, 7 hardware-catalogue, 2 landing-physics, 23 app, and 1 splice-hero tests). The historical 85-test baseline remains covered, with 3 focused tests added for upstream dynamic range and blind fault troubleshooting.
-- `npm run build`: passed, including strict TypeScript checking and a Vite production build. Vite reports an informational large-chunk advisory for the 608.08 kB minified JavaScript bundle.
+- `npm test -- --reporter=dot`: **89 tests passed** across 11 files (26 optical-simulator, 5 OPM, 5 OTDR, 5 XGS-PON/equipment, 6 mission, 5 pricing, 3 commercial-export, 7 hardware-catalogue, 2 optical-physics, 24 app, and 1 splice-hero tests).
+- `npm run build`: passed, including strict TypeScript checking and a Vite production build. Vite reports an informational large-chunk advisory for the 650.10 kB minified JavaScript bundle.
 - `git diff --check`: passed.
 - A previous audit scan reported **13 dependency findings** (5 moderate, 6 high, 2 critical). Review these before production; no `npm audit fix` was run.
 
@@ -481,7 +535,7 @@ FiberLAB is a useful **learning simulator**, but the current model should not be
 5. **Informational OLT budgets:** class link-budget and OLT receiver-sensitivity values are displayed but are not independently enforced by the path engine.
 6. **Abstract branch ports:** high-ratio splitters have four visible branch handles, not a handle for every physical subscriber port. The closure likewise exposes four modeled branches; only its first four tray channels map to those handles.
 7. **No project persistence:** workspace state is in browser memory. Reloading starts over at the default preset. JSON export exists, but import, autosave, and account/cloud storage do not.
-8. **Limited learning content:** four guided missions provide live objective progress and hints, and two explicit fiber fault switches support introductory troubleshooting; there is no broader curriculum, quiz, points, grading, or general fault library.
+8. **Limited learning content:** five guided missions provide live objective progress and hints, and two explicit fiber fault switches support introductory troubleshooting; there is no broader curriculum, quiz, points, grading, or general fault library.
 9. **No hardware can be damaged by the app:** an OVERLOAD state is a simulation warning. It is not a physical safety interlock.
 10. **Values need domain review:** standards and component specifications evolve and vary by product. Any real equipment profile should cite its source and distinguish typical values from guaranteed limits.
 11. **OTDR is a teaching trace:** event peaks, status thresholds, and the −45 dB floor are illustrative; the graph has no measured event coordinates, connector reflectance, pulse dead-zone calibration, or bidirectional sweep. Splice/connector locations are estimated along a span, so the analyzer is not a calibrated OTDR measurement and does not feed back into ONT telemetry.
@@ -594,14 +648,14 @@ These use the existing Standard 1:32 topology and simulator; the other two missi
 
 ## 13. What has happened so far
 
-- The repository pairs the persistent warm landing/studio shell, splice interaction, simulator-backed waveguide, responsive layout, four guided missions, three presets, and eight functional graph types with a static ten-profile hardware catalogue. SVG diagrams are representative illustrations, not product photos or vendor-specific SKUs.
+- The repository pairs the persistent warm landing/studio shell, splice interaction, simulator-backed waveguide, responsive layout, five guided missions, three presets, and eight functional graph types with a static ten-profile hardware catalogue. SVG diagrams are representative illustrations, not product photos or vendor-specific SKUs.
 - The core node-based graph abstraction is preserved: fiber spans remain nodes, with patch cords represented by edges. ODF pairs and NAP outputs have explicit route constraints; their through/split losses and the gateway endpoint are targeted extensions. Existing GPON fiber-loss equations, OPM calibration behavior, closure/fault mechanics, and CAPEX reconciliation are preserved.
 - The virtual OPM probes live graph ports, node bodies, and edges; its 1310/1490/1550 nm readings come from wavelength-specific simulations of the current topology. Its HUD supports relative reference, Escape/Close exit, and tap/hover probing.
 - The OTDR module independently traces a directed source-to-ONT/gateway route, adds 1270/1310/1490/1550/1577 nm attenuation and ODF/NAP/fault events, plots a sampled Rayleigh curve with Fresnel returns, and reports cumulative loss without changing CAPEX calculations.
 - The dome closure has two input handles, four modeled outputs, a representative static SVG profile, an adjustable 0.05–0.10 dB through-splice allowance, and a 12-color tray whose first four channels map to the modeled branches.
 - Macro-bend and dirty-ferrule toggles contribute separate +3.50 dB and +2.00 dB learner-scenario penalties to fiber loss, path breakdowns, warning badges, and resulting ONT status. These are not universal measured constants.
 - The CAPEX estimator is a separate pure calculation with user-editable reference rates, including $110 ODF, $65 NAP/FAT, and $85 gateway defaults; quotation lines reconcile materials, labor, total CAPEX, home/subscriber costs, and JSON/CSV data.
-- The test suite now contains 85 passing tests, retaining the historical 73-test baseline and adding 12 focused ODF/NAP/gateway, XGS-PON, preset, Inspector, OPM, OTDR, and export checks. Typecheck, production build, and `git diff --check` pass; verification details are in §8.
+- The test suite now contains 89 passing tests. Typecheck, production build, and `git diff --check` pass; verification details are in §8.
 - `npm ci` reported 13 dependency audit findings (5 moderate, 6 high, 2 critical); review them before production release. No automatic dependency fix was applied.
 
 This snapshot records the current product/model boundaries. Revisit physical assumptions and the dependency audit before using the app for engineering work or publishing a production release.

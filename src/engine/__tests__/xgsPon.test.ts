@@ -3,13 +3,7 @@ import { calculateNetworkCost, DEFAULT_UNIT_COSTS } from '../../data/pricingCata
 import { buildPreset } from '../presets';
 import { simulateTopology } from '../opticalSimulator';
 import { createGatewayNode, createNapNode, createOdfNode, createOltNode } from '../factories';
-import {
-  ATTENUATION_DB_PER_KM,
-  DEFAULT_SETTINGS,
-  PON_STANDARD_SPECS,
-  type PonEdge,
-  type PonNode,
-} from '../../types';
+import { ATTENUATION_DB_PER_KM, DEFAULT_SETTINGS, PON_STANDARD_SPECS, type PonEdge, type PonNode } from '../../types';
 
 describe('GPON and XGS-PON equipment extension', () => {
   it('adds the XGS-PON wavelength and symmetric line-rate references without replacing 1550 nm', () => {
@@ -114,11 +108,28 @@ describe('GPON and XGS-PON equipment extension', () => {
     expect(DEFAULT_UNIT_COSTS.odfRackPanel).toBe(110);
     expect(DEFAULT_UNIT_COSTS.napFat).toBe(65);
     expect(DEFAULT_UNIT_COSTS.wifi6Gateway).toBe(85);
-    expect(quote.lineItems).toEqual(expect.arrayContaining([
-      expect.objectContaining({ item: 'ODF rack / 2-pair patch panel (reference)', quantity: 1, unitPrice: 110, totalPrice: 110 }),
-      expect.objectContaining({ item: 'Outdoor NAP/FAT with internal 1:8 splitter (reference)', quantity: 1, unitPrice: 65, totalPrice: 65 }),
-      expect.objectContaining({ item: 'Wi-Fi 6 PON gateway (reference)', quantity: 3, unitPrice: 85, totalPrice: 255 }),
-    ]));
+    expect(quote.lineItems).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          item: 'ODF rack / 2-pair patch panel (reference)',
+          quantity: 1,
+          unitPrice: 110,
+          totalPrice: 110,
+        }),
+        expect.objectContaining({
+          item: 'Outdoor NAP/FAT with internal 1:8 splitter (reference)',
+          quantity: 1,
+          unitPrice: 65,
+          totalPrice: 65,
+        }),
+        expect.objectContaining({
+          item: 'Wi-Fi 6 PON gateway (reference)',
+          quantity: 3,
+          unitPrice: 85,
+          totalPrice: 255,
+        }),
+      ]),
+    );
     expect(quote.costPerHomePassed).toBeCloseTo(quote.totalCapex / 3, 2);
     expect(quote.lineItems.reduce((sum, line) => sum + line.totalPrice, 0)).toBe(quote.totalCapex);
   });
@@ -147,8 +158,22 @@ describe('GPON and XGS-PON equipment extension', () => {
     const nodes: PonNode[] = [olt, odf, fiber, gateway];
     const edges: PonEdge[] = [
       { id: 'pair-in', source: olt.id, sourceHandle: 'out', target: odf.id, targetHandle: 'in-1', type: 'optical' },
-      { id: 'wrong-pair-out', source: odf.id, sourceHandle: 'out-0', target: fiber.id, targetHandle: 'in', type: 'optical' },
-      { id: 'pair-span', source: fiber.id, sourceHandle: 'out', target: gateway.id, targetHandle: 'in', type: 'optical' },
+      {
+        id: 'wrong-pair-out',
+        source: odf.id,
+        sourceHandle: 'out-0',
+        target: fiber.id,
+        targetHandle: 'in',
+        type: 'optical',
+      },
+      {
+        id: 'pair-span',
+        source: fiber.id,
+        sourceHandle: 'out',
+        target: gateway.id,
+        targetHandle: 'in',
+        type: 'optical',
+      },
     ];
 
     expect(simulateTopology(nodes, edges, DEFAULT_SETTINGS).gatewayTelemetry[gateway.id].status).toBe('DISCONNECTED');

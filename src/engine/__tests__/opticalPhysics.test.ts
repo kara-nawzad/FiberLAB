@@ -1,10 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  WAVELENGTH_REFERENCES,
-  fusedSilicaIndex,
-  getWaveguideOptics,
-  splitterBranchPowerDbm,
-} from '../opticalPhysics';
+import { WAVELENGTH_REFERENCES, fusedSilicaIndex, getWaveguideOptics, splitterBranchPowerDbm } from '../opticalPhysics';
 
 describe('landing photonic exhibit physics', () => {
   it('uses the documented wavelength attenuation references and Sellmeier dispersion order', () => {

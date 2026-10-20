@@ -9,10 +9,22 @@ function FormulaGraphic() {
   return (
     <div className="landing-formula-graphic" role="group" aria-label="Receive-power link-budget formula">
       <div className="landing-formula-main">
-        <span>P<sub>rx</sub></span><b>=</b><span>P<sub>tx</sub></span><b>−</b><span>ΣL</span>
+        <span>
+          P<sub>rx</sub>
+        </span>
+        <b>=</b>
+        <span>
+          P<sub>tx</sub>
+        </span>
+        <b>−</b>
+        <span>ΣL</span>
       </div>
       <div className="landing-formula-terms">
-        <span>α · km</span><span>+</span><span>0.10 · splices</span><span>+ 0.50 · connectors</span><span>+ split + margin</span>
+        <span>α · km</span>
+        <span>+</span>
+        <span>0.10 · splices</span>
+        <span>+ 0.50 · connectors</span>
+        <span>+ split + margin</span>
       </div>
     </div>
   );
@@ -21,7 +33,13 @@ function FormulaGraphic() {
 function RouteGraphic() {
   return (
     <svg className="landing-route-graphic" viewBox="0 0 360 100" aria-hidden="true">
-      <path d="M24 48H108M138 48H205M237 48C266 48 269 18 301 18M237 48C266 48 269 78 301 78" fill="none" stroke="#b18c72" strokeWidth="2" strokeDasharray="4 4" />
+      <path
+        d="M24 48H108M138 48H205M237 48C266 48 269 18 301 18M237 48C266 48 269 78 301 78"
+        fill="none"
+        stroke="#b18c72"
+        strokeWidth="2"
+        strokeDasharray="4 4"
+      />
       <circle cx="24" cy="48" r="12" fill="#edf3ff" stroke="#2f6bff" strokeWidth="1.5" />
       <path d="M18 48h12m-6-6v12" stroke="#2f6bff" strokeWidth="1.4" />
       <rect x="108" y="34" width="30" height="28" rx="5" fill="#f4e8d8" stroke="#85695a" />
@@ -30,11 +48,21 @@ function RouteGraphic() {
       <path d="M210 48h7m5-8v16" stroke="#7447b6" strokeWidth="1.3" />
       <circle cx="313" cy="18" r="10" fill="#eaf8f1" stroke="#0f8a5f" strokeWidth="1.5" />
       <circle cx="313" cy="78" r="10" fill="#fff5e2" stroke="#a85a12" strokeWidth="1.5" />
-      <text x="24" y="91" textAnchor="middle" fill="#705443" fontSize="8" fontFamily="ui-monospace,monospace">OLT</text>
-      <text x="123" y="91" textAnchor="middle" fill="#705443" fontSize="8" fontFamily="ui-monospace,monospace">SPAN</text>
-      <text x="221" y="91" textAnchor="middle" fill="#705443" fontSize="8" fontFamily="ui-monospace,monospace">PLC</text>
-      <text x="342" y="21" textAnchor="end" fill="#705443" fontSize="8" fontFamily="ui-monospace,monospace">ONLINE</text>
-      <text x="342" y="81" textAnchor="end" fill="#705443" fontSize="8" fontFamily="ui-monospace,monospace">MARGINAL</text>
+      <text x="24" y="91" textAnchor="middle" fill="#705443" fontSize="8" fontFamily="ui-monospace,monospace">
+        OLT
+      </text>
+      <text x="123" y="91" textAnchor="middle" fill="#705443" fontSize="8" fontFamily="ui-monospace,monospace">
+        SPAN
+      </text>
+      <text x="221" y="91" textAnchor="middle" fill="#705443" fontSize="8" fontFamily="ui-monospace,monospace">
+        PLC
+      </text>
+      <text x="342" y="21" textAnchor="end" fill="#705443" fontSize="8" fontFamily="ui-monospace,monospace">
+        ONLINE
+      </text>
+      <text x="342" y="81" textAnchor="end" fill="#705443" fontSize="8" fontFamily="ui-monospace,monospace">
+        MARGINAL
+      </text>
     </svg>
   );
 }
@@ -42,10 +70,30 @@ function RouteGraphic() {
 function AuditGraphic() {
   return (
     <div className="landing-audit-graphic" role="group" aria-label="Bill of materials preview">
-      <div className="landing-audit-row"><span><Cable size={12} /> Single-mode plant</span><strong>km</strong></div>
-      <div className="landing-audit-row"><span><span className="landing-audit-dot landing-audit-dot--green" /> Fusion splices</span><strong>0.10 dB ea.</strong></div>
-      <div className="landing-audit-row"><span><span className="landing-audit-dot landing-audit-dot--blue" /> SC/APC connector pairs</span><strong>0.50 dB ea.</strong></div>
-      <div className="landing-audit-row"><span><Activity size={12} /> Per-subscriber budget</span><strong>CSV / JSON</strong></div>
+      <div className="landing-audit-row">
+        <span>
+          <Cable size={12} /> Single-mode plant
+        </span>
+        <strong>km</strong>
+      </div>
+      <div className="landing-audit-row">
+        <span>
+          <span className="landing-audit-dot landing-audit-dot--green" /> Fusion splices
+        </span>
+        <strong>0.10 dB ea.</strong>
+      </div>
+      <div className="landing-audit-row">
+        <span>
+          <span className="landing-audit-dot landing-audit-dot--blue" /> SC/APC connector pairs
+        </span>
+        <strong>0.50 dB ea.</strong>
+      </div>
+      <div className="landing-audit-row">
+        <span>
+          <Activity size={12} /> Per-subscriber budget
+        </span>
+        <strong>CSV / JSON</strong>
+      </div>
     </div>
   );
 }
@@ -61,33 +109,47 @@ export function PillarsGrid({ onStartVillaMission, onOpenStudio }: PillarsGridPr
 
       <div className="landing-pillars-grid">
         <article className="landing-pillar landing-pillar--physics">
-          <div className="landing-pillar-topline"><span>01 / BUDGET</span><Activity size={17} aria-hidden="true" /></div>
+          <div className="landing-pillar-topline">
+            <span>01 / BUDGET</span>
+            <Activity size={17} aria-hidden="true" />
+          </div>
           <h3>Deterministic Link Budgets</h3>
           <p>
-            Every modeled dB is accounted for. The engine walks active OLT paths to subscriber ONTs and totals fiber attenuation, fusion splices (0.1 dB), connector counts (0.5 dB), PLC insertion loss, and the system margin.
+            Every modeled dB is accounted for. The engine walks active OLT paths to subscriber ONTs and totals fiber
+            attenuation, fusion splices (0.1 dB), connector counts (0.5 dB), PLC insertion loss, and the system margin.
           </p>
           <FormulaGraphic />
           <span className="landing-pillar-footnote">Explicit terms · fixed assumptions · inspectable path</span>
         </article>
 
         <article className="landing-pillar landing-pillar--missions">
-          <div className="landing-pillar-topline"><span>02 / FIELDWORK</span><ClipboardCheck size={17} aria-hidden="true" /></div>
+          <div className="landing-pillar-topline">
+            <span>02 / FIELDWORK</span>
+            <ClipboardCheck size={17} aria-hidden="true" />
+          </div>
           <h3>Field Troubleshooting Missions</h3>
           <p>
-            Trace a marginal drop, a disabled source, an unpatched subscriber, or a budget-constrained build. Live objectives check optical quality, design margin, and quoted CAPEX against the active network graph.
+            Trace a marginal drop, a disabled source, an unpatched subscriber, or a budget-constrained build. Live
+            objectives check optical quality, design margin, and quoted CAPEX against the active network graph.
           </p>
           <RouteGraphic />
           <button type="button" className="landing-pillar-link" onClick={onStartVillaMission}>
             Launch Mission 1 · The Marginal Villa <ArrowUpRight size={14} aria-hidden="true" />
           </button>
-          <span className="landing-pillar-footnote">Dirty-ferrule training toggle adds an illustrative +2.00 dB scenario penalty.</span>
+          <span className="landing-pillar-footnote">
+            Dirty-ferrule training toggle adds an illustrative +2.00 dB scenario penalty.
+          </span>
         </article>
 
         <article className="landing-pillar landing-pillar--audit">
-          <div className="landing-pillar-topline"><span>03 / INVENTORY</span><FileSpreadsheet size={17} aria-hidden="true" /></div>
+          <div className="landing-pillar-topline">
+            <span>03 / INVENTORY</span>
+            <FileSpreadsheet size={17} aria-hidden="true" />
+          </div>
           <h3>Instant Bill of Materials</h3>
           <p>
-            Audit optical budgets beside materials, splicing labor, total CAPEX, and cost per connected home. Export a commercial quotation with its optical parameters as CSV or JSON.
+            Audit optical budgets beside materials, splicing labor, total CAPEX, and cost per connected home. Export a
+            commercial quotation with its optical parameters as CSV or JSON.
           </p>
           <AuditGraphic />
           <button type="button" className="landing-pillar-link" onClick={onOpenStudio}>

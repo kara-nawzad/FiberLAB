@@ -47,7 +47,7 @@ describe('FiberLAB application shell', () => {
       'false',
     );
 
-    fireEvent.click(screen.getByRole('button', { name: /Explore Guided Missions \(4 Scenarios\)/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Explore Guided Missions \(5 Scenarios\)/i }));
     expect(await screen.findByRole('dialog', { name: 'Field missions' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /The Marginal Villa/ })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Diagnose the Silent ONT/ })).toBeInTheDocument();
@@ -64,7 +64,9 @@ describe('FiberLAB application shell', () => {
     expect(screen.getByRole('button', { name: 'Overview & Physics' })).toHaveFocus();
 
     openMoreTools();
-    expect(screen.getByRole('button', { name: 'Missions, active: Rescue the Unpatched Subscriber' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Missions, active: Rescue the Unpatched Subscriber' }),
+    ).toBeInTheDocument();
   });
 
   it('quick-loads a preset and preserves the mounted studio state across the overview toggle', async () => {
@@ -469,9 +471,7 @@ describe('FiberLAB application shell', () => {
     const lengthInputs = screen.getAllByDisplayValue('6');
     fireEvent.change(lengthInputs[0], { target: { value: '45' } });
 
-    expect(await screen.findByTestId('olt-dynamic-range-warning')).toHaveTextContent(
-      /Dynamic range exceeded/i,
-    );
+    expect(await screen.findByTestId('olt-dynamic-range-warning')).toHaveTextContent(/Dynamic range exceeded/i);
 
     fireEvent.click(screen.getByRole('button', { name: /Bill of Materials/i }));
     expect(await screen.findByText('Upstream Δ')).toBeInTheDocument();

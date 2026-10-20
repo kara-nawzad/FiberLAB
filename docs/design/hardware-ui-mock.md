@@ -38,21 +38,21 @@ FTTH Network Design
 
 ● Network Marginal
 
-*⟷*
+_⟷_
 
 Total Distance**34.5 km**
 
-*ⓘ*
+_ⓘ_
 
 Total Loss (max)**27.8 dB**
 
-*☺*
+_☺_
 
 Subscribers**12**
 
-*⚠*
+_⚠_
 
-Network Status**7 / 12 OK***5 require attention*
+Network Status**7 / 12 OK**_5 require attention_
 
 ###### Optical Power (dBm)
 

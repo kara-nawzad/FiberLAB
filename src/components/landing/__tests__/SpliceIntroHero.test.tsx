@@ -18,11 +18,7 @@ describe('SpliceIntroHero', () => {
     vi.useFakeTimers();
     const onLaunchStudio = vi.fn();
     render(
-      <SpliceIntroHero
-        simulation={standardSimulation()}
-        simulationStale={false}
-        onLaunchStudio={onLaunchStudio}
-      />,
+      <SpliceIntroHero simulation={standardSimulation()} simulationStale={false} onLaunchStudio={onLaunchStudio} />,
     );
 
     expect(screen.getByText('-21.57 dBm')).toBeInTheDocument();
@@ -30,8 +26,7 @@ describe('SpliceIntroHero', () => {
     const originalRaf = window.requestAnimationFrame;
     Object.defineProperty(window, 'requestAnimationFrame', {
       configurable: true,
-      value: (callback: FrameRequestCallback) =>
-        window.setTimeout(() => callback(performance.now() + 2000), 1),
+      value: (callback: FrameRequestCallback) => window.setTimeout(() => callback(performance.now() + 2000), 1),
     });
 
     try {

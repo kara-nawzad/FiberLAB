@@ -15,11 +15,10 @@ export interface UnitCostProfile {
 }
 
 /** Nested, partial overrides are convenient for a local market-rate edit. */
-export type PartialUnitCostProfile =
-  Partial<Omit<UnitCostProfile, 'cablePerKm' | 'splitterByRatio'>> & {
-    cablePerKm?: Partial<Record<CableType, number>>;
-    splitterByRatio?: Partial<Record<string, number>>;
-  };
+export type PartialUnitCostProfile = Partial<Omit<UnitCostProfile, 'cablePerKm' | 'splitterByRatio'>> & {
+  cablePerKm?: Partial<Record<CableType, number>>;
+  splitterByRatio?: Partial<Record<string, number>>;
+};
 
 export const DEFAULT_UNIT_COSTS: UnitCostProfile = {
   cablePerKm: { feeder: 350, distribution: 250, drop: 150 },
@@ -137,13 +136,7 @@ export function calculateNetworkCost(
   const costs = resolveUnitCosts(customCosts);
   const lineItems: NetworkCostLineItem[] = [];
 
-  const addLineItem = (
-    category: CostCategory,
-    item: string,
-    rawQuantity: number,
-    unit: string,
-    unitPrice: number,
-  ) => {
+  const addLineItem = (category: CostCategory, item: string, rawQuantity: number, unit: string, unitPrice: number) => {
     const quantity = sanitizedQuantity(rawQuantity);
     if (quantity <= 0) return;
     lineItems.push({
@@ -157,11 +150,11 @@ export function calculateNetworkCost(
   };
 
   for (const cable of CABLE_COST_ITEMS) {
-    const lengthKm = nodes.reduce((sum, node) => (
-      node.type === 'fiber' && node.data.cableType === cable.type
-        ? sum + sanitizedQuantity(node.data.lengthKm)
-        : sum
-    ), 0);
+    const lengthKm = nodes.reduce(
+      (sum, node) =>
+        node.type === 'fiber' && node.data.cableType === cable.type ? sum + sanitizedQuantity(node.data.lengthKm) : sum,
+      0,
+    );
     addLineItem('Cables', cable.label, lengthKm, 'km', costs.cablePerKm[cable.type]);
   }
 
@@ -189,12 +182,14 @@ export function calculateNetworkCost(
   addLineItem('Active Gear', 'Wi-Fi 6 PON gateway (reference)', gatewayCount, 'each', costs.wifi6Gateway);
   const homeCount = ontCount + gatewayCount;
 
-  const fiberSpliceCount = nodes.reduce((sum, node) => (
-    node.type === 'fiber' ? sum + sanitizedQuantity(node.data.splices) : sum
-  ), 0);
-  const closureSpliceCount = nodes.reduce((sum, node) => (
-    node.type === 'closure' ? sum + connectedActiveClosureSplices(node, edges) : sum
-  ), 0);
+  const fiberSpliceCount = nodes.reduce(
+    (sum, node) => (node.type === 'fiber' ? sum + sanitizedQuantity(node.data.splices) : sum),
+    0,
+  );
+  const closureSpliceCount = nodes.reduce(
+    (sum, node) => (node.type === 'closure' ? sum + connectedActiveClosureSplices(node, edges) : sum),
+    0,
+  );
   addLineItem(
     'Labor & Splicing',
     'Fusion splice labor',
@@ -203,9 +198,10 @@ export function calculateNetworkCost(
     costs.laborPerSplice,
   );
 
-  const connectorCount = nodes.reduce((sum, node) => (
-    node.type === 'fiber' ? sum + sanitizedQuantity(node.data.connectors) : sum
-  ), 0);
+  const connectorCount = nodes.reduce(
+    (sum, node) => (node.type === 'fiber' ? sum + sanitizedQuantity(node.data.connectors) : sum),
+    0,
+  );
   addLineItem(
     'Labor & Splicing',
     'SC/APC connector termination',
@@ -214,12 +210,12 @@ export function calculateNetworkCost(
     costs.connectorPerEnd,
   );
 
-  const materialsCost = money(lineItems
-    .filter((line) => line.category !== 'Labor & Splicing')
-    .reduce((sum, line) => sum + line.totalPrice, 0));
-  const laborCost = money(lineItems
-    .filter((line) => line.category === 'Labor & Splicing')
-    .reduce((sum, line) => sum + line.totalPrice, 0));
+  const materialsCost = money(
+    lineItems.filter((line) => line.category !== 'Labor & Splicing').reduce((sum, line) => sum + line.totalPrice, 0),
+  );
+  const laborCost = money(
+    lineItems.filter((line) => line.category === 'Labor & Splicing').reduce((sum, line) => sum + line.totalPrice, 0),
+  );
   const totalCapex = money(materialsCost + laborCost);
 
   return {

@@ -7,7 +7,7 @@ import {
   getWaveguideOptics,
   splitterBranchPowerDbm,
   type WaveguideWavelength,
-} from './opticalPhysics';
+} from '../../engine/opticalPhysics';
 import { WaveguideCanvas } from './WaveguideCanvas';
 
 interface PhotonicHeroProps {
@@ -86,27 +86,32 @@ export function PhotonicHero({ onLaunchStudio, onExploreMissions, onLoadPreset }
           <em>Watch the photons decay.</em>
         </h2>
         <p className="landing-lede">
-          A real-time, deterministic sandbox for Passive Optical Networks. Trace Class C+ launch power through cascaded PLC splitters and resolve downstream link budgets from explicit fiber, splice, connector, and safety-margin losses.
+          A real-time, deterministic sandbox for Passive Optical Networks. Trace Class C+ launch power through cascaded
+          PLC splitters and resolve downstream link budgets from explicit fiber, splice, connector, and safety-margin
+          losses.
         </p>
         <p className="landing-scope-note">
-          The waveguide angle and 1550 nm attenuation are educational references, not deployed-fiber specifications; the studio's base wavelengths are 1310/1490 nm, and the OPM can recalibrate its simulated path at 1550 nm. Field diagnostics add separate +3.50 dB macro-bend and +2.00 dB dirty-ferrule scenario penalties; these are not universal measurements.
+          The waveguide angle and 1550 nm attenuation are educational references, not deployed-fiber specifications; the
+          studio's base wavelengths are 1310/1490 nm, and the OPM can recalibrate its simulated path at 1550 nm. Field
+          diagnostics add separate +3.50 dB macro-bend and +2.00 dB dirty-ferrule scenario penalties; these are not
+          universal measurements.
         </p>
         <div className="landing-hero-actions">
           <button type="button" className="landing-button landing-button--primary" onClick={onLaunchStudio}>
             Launch Interactive Studio <ArrowRight size={16} aria-hidden="true" />
           </button>
           <button type="button" className="landing-button landing-button--secondary" onClick={onExploreMissions}>
-            Explore Guided Missions (4 Scenarios) <ArrowDownRight size={15} aria-hidden="true" />
+            Explore Guided Missions (5 Scenarios) <ArrowDownRight size={15} aria-hidden="true" />
           </button>
         </div>
-        <button
-          type="button"
-          className="landing-quickload"
-          onClick={() => onLoadPreset('standard-1x32')}
-        >
-          <span className="landing-quickload-mark"><Zap size={14} aria-hidden="true" /></span>
+        <button type="button" className="landing-quickload" onClick={() => onLoadPreset('standard-1x32')}>
+          <span className="landing-quickload-mark">
+            <Zap size={14} aria-hidden="true" />
+          </span>
           <span>Load Standard 1:32 GPON Tree</span>
-          <span className="landing-quickload-arrow" aria-hidden="true">→</span>
+          <span className="landing-quickload-arrow" aria-hidden="true">
+            →
+          </span>
         </button>
         <button type="button" className="landing-alt-quickload" onClick={() => onLoadPreset('failing-long-haul')}>
           Load Failing Link
@@ -116,19 +121,30 @@ export function PhotonicHero({ onLaunchStudio, onExploreMissions, onLoadPreset }
       <div className="landing-exhibit-card" role="group" aria-label="Interactive photonic waveguide exhibit">
         <div className="landing-exhibit-topline">
           <div className="landing-exhibit-label">
-            <span className="landing-exhibit-icon"><Radio size={14} aria-hidden="true" /></span>
+            <span className="landing-exhibit-icon">
+              <Radio size={14} aria-hidden="true" />
+            </span>
             <span>
               <strong>LIVING WAVEGUIDE</strong>
               <small>Interactive optical bench · 1:4 PLC</small>
             </span>
           </div>
-          <span className="landing-live-indicator"><span />LIVE MODEL</span>
+          <span className="landing-live-indicator">
+            <span />
+            LIVE MODEL
+          </span>
         </div>
 
         <div className="landing-control-deck">
           <div className="landing-power-control">
             <label htmlFor="landing-launch-power">
-              <span>Optical Launch Power (<i>P<sub>tx</sub></i>)</span>
+              <span>
+                Optical Launch Power (
+                <i>
+                  P<sub>tx</sub>
+                </i>
+                )
+              </span>
               <strong className="landing-number">{signed(launchPowerDbm)} dBm</strong>
             </label>
             <input
@@ -167,7 +183,10 @@ export function PhotonicHero({ onLaunchStudio, onExploreMissions, onLoadPreset }
                     onClick={() => setWavelengthNm(value)}
                   >
                     <span className="landing-spectrum-dot" aria-hidden="true" />
-                    <span><strong>{value} nm</strong><small>{reference.attenuationDbPerKm.toFixed(2)} dB/km</small></span>
+                    <span>
+                      <strong>{value} nm</strong>
+                      <small>{reference.attenuationDbPerKm.toFixed(2)} dB/km</small>
+                    </span>
                   </button>
                 );
               })}
@@ -184,7 +203,16 @@ export function PhotonicHero({ onLaunchStudio, onExploreMissions, onLoadPreset }
         />
 
         <div className="landing-exhibit-equation" aria-live="polite" aria-atomic="true">
-          <span><i>P<sub>branch</sub></i> = <i>P<sub>tx</sub></i> − {PLC_1X4_INSERTION_LOSS_DB.toFixed(2)} dB</span>
+          <span>
+            <i>
+              P<sub>branch</sub>
+            </i>{' '}
+            ={' '}
+            <i>
+              P<sub>tx</sub>
+            </i>{' '}
+            − {PLC_1X4_INSERTION_LOSS_DB.toFixed(2)} dB
+          </span>
           <strong className="landing-number">{signed(branchPowerDbm, 2)} dBm</strong>
           <small>per output · catalogue 1:4 PLC loss</small>
         </div>

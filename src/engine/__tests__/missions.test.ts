@@ -30,9 +30,7 @@ describe('guided troubleshooting missions', () => {
     if (!mission || !topology) return;
 
     const nodes = topology.nodes.map((node) =>
-      node.type === 'fiber' && node.id === 'fiber-drop-a3'
-        ? { ...node, data: { ...node.data, lengthKm: 4 } }
-        : node,
+      node.type === 'fiber' && node.id === 'fiber-drop-a3' ? { ...node, data: { ...node.data, lengthKm: 4 } } : node,
     );
     const simulation = simulateTopology(nodes, topology.edges, DEFAULT_SETTINGS);
     const progress = evaluateMissionObjectives(mission, simulation, nodes, topology.edges);
@@ -47,8 +45,9 @@ describe('guided troubleshooting missions', () => {
     if (!mission || !preset) return;
 
     const initialSimulation = simulateTopology(preset.nodes, preset.edges, DEFAULT_SETTINGS);
-    expect(evaluateMissionObjectives(mission, initialSimulation, preset.nodes, preset.edges).map((item) => item.isMet))
-      .toEqual([false, false, false]);
+    expect(
+      evaluateMissionObjectives(mission, initialSimulation, preset.nodes, preset.edges).map((item) => item.isMet),
+    ).toEqual([false, false, false]);
 
     const patchEdges: PonEdge[] = [
       {
@@ -70,8 +69,9 @@ describe('guided troubleshooting missions', () => {
     ];
     const connectedEdges = [...preset.edges, ...patchEdges];
     const connectedSimulation = simulateTopology(preset.nodes, connectedEdges, DEFAULT_SETTINGS);
-    expect(evaluateMissionObjectives(mission, connectedSimulation, preset.nodes, connectedEdges).map((item) => item.isMet))
-      .toEqual([true, true, false]);
+    expect(
+      evaluateMissionObjectives(mission, connectedSimulation, preset.nodes, connectedEdges).map((item) => item.isMet),
+    ).toEqual([true, true, false]);
 
     const lowerSplitNodes = preset.nodes.map((node) =>
       node.type === 'splitter' && ['splitter-1x32-b', 'splitter-1x16-b'].includes(node.id)
@@ -79,8 +79,11 @@ describe('guided troubleshooting missions', () => {
         : node,
     );
     const recoveredSimulation = simulateTopology(lowerSplitNodes, connectedEdges, DEFAULT_SETTINGS);
-    expect(evaluateMissionObjectives(mission, recoveredSimulation, lowerSplitNodes, connectedEdges).every((item) => item.isMet))
-      .toBe(true);
+    expect(
+      evaluateMissionObjectives(mission, recoveredSimulation, lowerSplitNodes, connectedEdges).every(
+        (item) => item.isMet,
+      ),
+    ).toBe(true);
   });
 
   it('starts the silent ONT audit with a dark OLT, then advances when the laser is restored', () => {
@@ -92,21 +95,17 @@ describe('guided troubleshooting missions', () => {
 
     const topology = mission.prepareTopology?.(preset) ?? preset;
     const darkSimulation = simulateTopology(topology.nodes, topology.edges, DEFAULT_SETTINGS);
-    expect(evaluateMissionObjectives(mission, darkSimulation, topology.nodes, topology.edges).map((item) => item.isMet)).toEqual([
-      false,
-      false,
-      false,
-    ]);
+    expect(
+      evaluateMissionObjectives(mission, darkSimulation, topology.nodes, topology.edges).map((item) => item.isMet),
+    ).toEqual([false, false, false]);
 
     const litNodes = topology.nodes.map((node) =>
       node.type === 'olt' ? { ...node, data: { ...node.data, laserOn: true } } : node,
     );
     const litSimulation = simulateTopology(litNodes, topology.edges, DEFAULT_SETTINGS);
-    expect(evaluateMissionObjectives(mission, litSimulation, litNodes, topology.edges).map((item) => item.isMet)).toEqual([
-      true,
-      true,
-      false,
-    ]);
+    expect(
+      evaluateMissionObjectives(mission, litSimulation, litNodes, topology.edges).map((item) => item.isMet),
+    ).toEqual([true, true, false]);
   });
 
   it('balances online receive power with the $1,600 CAPEX ceiling in Budget Crunch', () => {
@@ -119,8 +118,11 @@ describe('guided troubleshooting missions', () => {
     const initialSimulation = simulateTopology(topology.nodes, topology.edges, DEFAULT_SETTINGS);
     const initialCost = calculateNetworkCost(topology.nodes, topology.edges);
     expect(initialCost.totalCapex).toBe(3747);
-    expect(evaluateMissionObjectives(mission, initialSimulation, topology.nodes, topology.edges, initialCost).map((item) => item.isMet))
-      .toEqual([false, false, true]);
+    expect(
+      evaluateMissionObjectives(mission, initialSimulation, topology.nodes, topology.edges, initialCost).map(
+        (item) => item.isMet,
+      ),
+    ).toEqual([false, false, true]);
 
     const optimizedNodes = topology.nodes.map((node) => {
       if (node.type !== 'fiber') return node;
@@ -132,14 +134,19 @@ describe('guided troubleshooting missions', () => {
     const optimizedSimulation = simulateTopology(optimizedNodes, topology.edges, DEFAULT_SETTINGS);
     const optimizedCost = calculateNetworkCost(optimizedNodes, topology.edges);
     expect(optimizedCost.totalCapex).toBe(1372);
-    expect(evaluateMissionObjectives(mission, optimizedSimulation, optimizedNodes, topology.edges, optimizedCost).every((item) => item.isMet))
-      .toBe(true);
+    expect(
+      evaluateMissionObjectives(mission, optimizedSimulation, optimizedNodes, topology.edges, optimizedCost).every(
+        (item) => item.isMet,
+      ),
+    ).toBe(true);
 
     const localMarketQuote = calculateNetworkCost(optimizedNodes, topology.edges, {
       cablePerKm: { feeder: 1200 },
     });
-    expect(evaluateMissionObjectives(mission, optimizedSimulation, optimizedNodes, topology.edges, localMarketQuote)[1].isMet)
-      .toBe(false);
+    expect(
+      evaluateMissionObjectives(mission, optimizedSimulation, optimizedNodes, topology.edges, localMarketQuote)[1]
+        .isMet,
+    ).toBe(false);
   });
 
   it('runs the Blind Fault mission with hidden visual fault tags, OTDR break detection, and span replacement', () => {
@@ -156,8 +163,9 @@ describe('guided troubleshooting missions', () => {
 
     // All three neighborhood subscribers start in outage (LOS)
     expect(initialSimulation.summary.byStatus.LOS).toBe(3);
-    expect(evaluateMissionObjectives(mission, initialSimulation, topology.nodes, topology.edges).map((item) => item.isMet))
-      .toEqual([false, false, false]);
+    expect(
+      evaluateMissionObjectives(mission, initialSimulation, topology.nodes, topology.edges).map((item) => item.isMet),
+    ).toEqual([false, false, false]);
 
     // Visual fault tags are hidden on edges in blindFaultMode
     const decorated = decorateEdges(topology.edges, initialSimulation.edgeTelemetry, topology.nodes, {
@@ -207,9 +215,7 @@ describe('guided troubleshooting missions', () => {
     const repairedSimulation = simulateTopology(repairedNodes, repairedEdges, DEFAULT_SETTINGS);
     expect(repairedSimulation.summary.byStatus.ONLINE).toBe(3);
     expect(
-      evaluateMissionObjectives(mission, repairedSimulation, repairedNodes, repairedEdges).every(
-        (item) => item.isMet,
-      ),
+      evaluateMissionObjectives(mission, repairedSimulation, repairedNodes, repairedEdges).every((item) => item.isMet),
     ).toBe(true);
   });
 });

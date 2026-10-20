@@ -246,16 +246,20 @@ describe('Preset B — failing long-distance link', () => {
 describe('field faults and OSP splice closures', () => {
   it('keeps fault penalties explicit and moves a marginal subscriber to WARNING', () => {
     const { nodes, edges } = buildPreset('standard-1x32') as { nodes: PonNode[]; edges: PonEdge[] };
-    const faultNodes = nodes.map((node) => node.type === 'fiber' && node.id === 'fiber-drop-a1'
-      ? { ...node, data: { ...node.data, macroBendActive: true, dirtyConnectorActive: true } }
-      : node) as PonNode[];
+    const faultNodes = nodes.map((node) =>
+      node.type === 'fiber' && node.id === 'fiber-drop-a1'
+        ? { ...node, data: { ...node.data, macroBendActive: true, dirtyConnectorActive: true } }
+        : node,
+    ) as PonNode[];
     const result = simulateTopology(faultNodes, edges, settings, 21);
     const telemetry = result.ontTelemetry['ont-a1'];
 
     expect(telemetry.rxPowerDbm).toBeCloseTo(-27.075, 2);
     expect(telemetry.status).toBe('WARNING');
     expect(telemetry.segments.map((segment) => segment.label)).toContain('Fault Penalty: Macro-Bend (-3.50 dB)');
-    expect(telemetry.segments.map((segment) => segment.label)).toContain('Fault Penalty: Dust Contamination (-2.00 dB)');
+    expect(telemetry.segments.map((segment) => segment.label)).toContain(
+      'Fault Penalty: Dust Contamination (-2.00 dB)',
+    );
 
     const decorated = decorateEdges(edges, result.edgeTelemetry, faultNodes);
     expect(decorated.find((edge) => edge.id === 'e-a6')?.data?.faultLabels).toEqual([
@@ -285,9 +289,30 @@ describe('field faults and OSP splice closures', () => {
     };
     const ont = createOntNode({ id: 'ont-closure' });
     const edges: PonEdge[] = [
-      { id: 'closure-in', source: olt.id, target: closure.id, sourceHandle: 'out', targetHandle: 'in-0', type: 'optical' },
-      { id: 'closure-out-a', source: closure.id, target: fiber.id, sourceHandle: 'out-0', targetHandle: 'in', type: 'optical' },
-      { id: 'closure-to-ont', source: fiber.id, target: ont.id, sourceHandle: 'out', targetHandle: 'in', type: 'optical' },
+      {
+        id: 'closure-in',
+        source: olt.id,
+        target: closure.id,
+        sourceHandle: 'out',
+        targetHandle: 'in-0',
+        type: 'optical',
+      },
+      {
+        id: 'closure-out-a',
+        source: closure.id,
+        target: fiber.id,
+        sourceHandle: 'out-0',
+        targetHandle: 'in',
+        type: 'optical',
+      },
+      {
+        id: 'closure-to-ont',
+        source: fiber.id,
+        target: ont.id,
+        sourceHandle: 'out',
+        targetHandle: 'in',
+        type: 'optical',
+      },
     ];
     const nodes: PonNode[] = [olt, closure, fiber, ont];
     const connected = simulateTopology(nodes, edges, { ...settings, safetyMarginDb: 0 }, 22);
@@ -296,7 +321,9 @@ describe('field faults and OSP splice closures', () => {
     expect(connected.edgeTelemetry['closure-out-a'].powerDbm).toBeCloseTo(2.92, 6);
     expect(connected.ontTelemetry[ont.id].rxPowerDbm).toBeCloseTo(2.92, 6);
     expect(connected.ontTelemetry[ont.id].splices).toBe(1);
-    expect(connected.ontTelemetry[ont.id].segments.some((segment) => segment.label.includes('channel 1 through-splice'))).toBe(true);
+    expect(
+      connected.ontTelemetry[ont.id].segments.some((segment) => segment.label.includes('channel 1 through-splice')),
+    ).toBe(true);
     expect(connected.summary.totalSplices).toBe(4);
 
     const openClosure: PonNode = {
@@ -320,9 +347,7 @@ describe('graph behaviour', () => {
       node.type === 'olt' ? { ...node, data: { ...node.data, laserOn: false } } : node,
     ) as PonNode[];
     const result = simulateTopology(darkNodes, edges, settings, 3);
-    expect(Object.values(result.ontTelemetry).every((entry) => entry.status === 'DISCONNECTED')).toBe(
-      true,
-    );
+    expect(Object.values(result.ontTelemetry).every((entry) => entry.status === 'DISCONNECTED')).toBe(true);
     expect(Object.values(result.edgeTelemetry).every((entry) => entry.edgeState === 'idle')).toBe(true);
     expect(result.summary.oltActive).toBe(0);
   });
@@ -405,10 +430,38 @@ describe('graph behaviour', () => {
       },
     ];
     const edges: PonEdge[] = [
-      { id: 'l1', source: 'olt-loop', target: 'fiber-loop-a', sourceHandle: 'out', targetHandle: 'in', type: 'optical' },
-      { id: 'l2', source: 'fiber-loop-a', target: 'fiber-loop-b', sourceHandle: 'out', targetHandle: 'in', type: 'optical' },
-      { id: 'l3', source: 'fiber-loop-b', target: 'fiber-loop-a', sourceHandle: 'out', targetHandle: 'in', type: 'optical' },
-      { id: 'l4', source: 'fiber-loop-b', target: 'ont-loop', sourceHandle: 'out', targetHandle: 'in', type: 'optical' },
+      {
+        id: 'l1',
+        source: 'olt-loop',
+        target: 'fiber-loop-a',
+        sourceHandle: 'out',
+        targetHandle: 'in',
+        type: 'optical',
+      },
+      {
+        id: 'l2',
+        source: 'fiber-loop-a',
+        target: 'fiber-loop-b',
+        sourceHandle: 'out',
+        targetHandle: 'in',
+        type: 'optical',
+      },
+      {
+        id: 'l3',
+        source: 'fiber-loop-b',
+        target: 'fiber-loop-a',
+        sourceHandle: 'out',
+        targetHandle: 'in',
+        type: 'optical',
+      },
+      {
+        id: 'l4',
+        source: 'fiber-loop-b',
+        target: 'ont-loop',
+        sourceHandle: 'out',
+        targetHandle: 'in',
+        type: 'optical',
+      },
     ];
 
     const result = simulateTopology(nodes, edges, settings, 5);
