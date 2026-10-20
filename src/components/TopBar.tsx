@@ -26,9 +26,6 @@ interface TopBarProps {
   activePresetId: string | null;
 }
 
-/** Initials shown in the avatar bubble. Change to your own. */
-const AVATAR_INITIALS = 'SN';
-
 function deriveHealth(summary: NetworkSummary): Health {
   if (summary.subscriberCount === 0) return 'idle';
   if (summary.byStatus.LOS > 0 || summary.byStatus.DISCONNECTED > 0) return 'red';
@@ -120,9 +117,6 @@ export function TopBar({
           </div>
         ) : null}
       </div>
-      <span className="pu-sep" />
-      <span className="pu-select pu-mut">Project 1</span>
-
       <div className="pu-health-wrap" style={{ display: 'flex', gap: 10, alignItems: 'center', marginLeft: 8 }}>
         <span className={`pu-health ${health === 'green' ? '' : health}`} aria-label={`Network health: ${HEALTH_TEXT[health]}`}>
           ● {HEALTH_TEXT[health]}
@@ -161,11 +155,9 @@ export function TopBar({
         {testing ? <Loader2 size={15} className="animate-spin" /> : <Play size={15} fill="currentColor" />}
         Run Simulation
       </button>
-      <button type="button" className="pu-btn is-active" aria-label="Design" aria-pressed="true">Design</button>
       <button type="button" className="pu-btn" onClick={onOpenBOM} aria-label="Bill of Materials">
         <FileBarChart size={15} /> Reports
       </button>
-      <span className="pu-avatar" aria-hidden="true">{AVATAR_INITIALS}</span>
     </header>
   );
 }

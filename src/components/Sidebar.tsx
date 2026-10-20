@@ -226,7 +226,9 @@ export function Sidebar({
 
         <div className="pu-foot">
           Need help?{' '}
-          <button type="button" onClick={onOpenOverview} style={{ color: 'var(--pu-pri)', fontWeight: 600 }}>Learn</button> · Docs · GitHub
+          <button type="button" onClick={onOpenOverview} style={{ color: 'var(--pu-pri)', fontWeight: 600 }}>Learn</button> ·{' '}
+          <a href="https://github.com/kara-nawzad/FiberLAB/tree/main/docs" target="_blank" rel="noopener noreferrer">Docs</a> ·{' '}
+          <a href="https://github.com/kara-nawzad/FiberLAB" target="_blank" rel="noopener noreferrer">GitHub</a>
         </div>
       </aside>
     </>
