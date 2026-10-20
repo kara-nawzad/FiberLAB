@@ -2,7 +2,7 @@
  * Small, presentation-only optical reference model for the landing exhibit.
  * The production simulator remains the authority for the editable GPON graph.
  */
-import { ATTENUATION_DB_PER_KM, SPLITTER_LOSS_DB } from '../../types';
+import { ATTENUATION_DB_PER_KM, SPLITTER_LOSS_DB } from '../types';
 
 export const WAVEGUIDE_WAVELENGTHS = [1310, 1490, 1550] as const;
 export type WaveguideWavelength = (typeof WAVEGUIDE_WAVELENGTHS)[number];

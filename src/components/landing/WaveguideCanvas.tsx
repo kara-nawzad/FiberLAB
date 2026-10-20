@@ -5,7 +5,7 @@ import {
   CORE_DIAMETER_UM,
   PLC_1X4_INSERTION_LOSS_DB,
   type WaveguideWavelength,
-} from './opticalPhysics';
+} from '../../engine/opticalPhysics';
 
 interface WaveguideCanvasProps {
   wavelengthNm: WaveguideWavelength;

@@ -7,7 +7,7 @@ import {
   getWaveguideOptics,
   splitterBranchPowerDbm,
   type WaveguideWavelength,
-} from './opticalPhysics';
+} from '../../engine/opticalPhysics';
 import { WaveguideCanvas } from './WaveguideCanvas';
 
 interface PhotonicHeroProps {
