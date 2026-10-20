@@ -1123,7 +1123,7 @@
 .fiberlab-studio-main.opm-probe-mode .react-flow__node,
 .fiberlab-studio-main.opm-probe-mode .react-flow__handle,
 .fiberlab-studio-main.opm-probe-mode .react-flow__edge {
-  cursor: url('./components/landing/opm-probe-cursor.svg') 13 13, crosshair !important;
+  cursor: url('../assets/opm-probe-cursor.svg') 13 13, crosshair !important;
 }
 
 .opm-meter-hud {

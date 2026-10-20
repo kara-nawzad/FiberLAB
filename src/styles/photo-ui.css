@@ -1,5 +1,5 @@
 /* FiberLAB — Warm Creamy & Orange "Workbench" visual system (matching the Hero tab).
- * Import LAST in main.tsx:  import './photo-ui.css';  */
+ * Import LAST in main.tsx:  import './styles/photo-ui.css';  */
 :root {
   --pu-bg: #FFF4E6;
   --pu-panel: #FFFAF2;

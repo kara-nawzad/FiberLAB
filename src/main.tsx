@@ -1,9 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import '@xyflow/react/dist/style.css';
-import './index.css';
-import './fiberlab-theme.css';
-import './photo-ui.css';
+import './styles/global.css';
+import './styles/theme.css';
+import './styles/photo-ui.css';
 import App from './App';
 
 const container = document.getElementById('root');

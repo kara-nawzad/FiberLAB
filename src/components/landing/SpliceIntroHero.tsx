@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowRight, Check, CircleHelp, Radio } from 'lucide-react';
 import { formatDbm } from '../../engine/opticalSimulator';
 import type { OntStatus, SimulationResult } from '../../types';
-import spliceHeroScene from './spliceHeroScene.svg?raw';
+import spliceHeroScene from '../../assets/splice-hero-scene.svg?raw';
 
 interface SpliceIntroHeroProps {
   simulation: SimulationResult | null;
