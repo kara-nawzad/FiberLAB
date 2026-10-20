@@ -936,22 +936,10 @@ function StudioWorkspace({ onOpenOverview, onSimulationChange, landingCommand, i
       <TopBar
         summary={summary}
         costBreakdown={costBreakdown}
-        settings={settings}
-        onSettingsChange={handleSettingsChange}
         onPreset={applyPreset}
         onRunTest={runLightTest}
         onOpenBOM={() => setBomOpen(true)}
-        onOpenOtdr={handleOpenOtdr}
-        onOpenMissions={() => setMissionsOpen(true)}
         onOpenOverview={handleOpenOverview}
-        onToggleLink={handleToggleLink}
-        onToggleOpm={handleToggleOpm}
-        onDeleteSelection={handleDeleteSelection}
-        linkMode={linkMode}
-        opmActive={opmActive}
-        selectionCount={selectionCount}
-        activeMissionTitle={activeMissionId ? getMissionById(activeMissionId)?.title ?? null : null}
-        onClear={clearCanvas}
         testing={testing}
         stale={!settings.autoRun && dirty}
         activePresetId={activePresetId}

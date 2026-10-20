@@ -1,15 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { useReactFlow, useStore } from '@xyflow/react';
 import { ChevronDown, FileBarChart, LayoutGrid, Loader2, Play } from 'lucide-react';
-import type { DesignSettings, NetworkSummary } from '../types';
+import type { NetworkSummary } from '../types';
 import type { NetworkCostBreakdown } from '../data/pricingCatalogue';
 import { formatUsd } from '../data/pricingCatalogue';
 import { PRESETS } from '../engine/presets';
 
 /* ========================================================================== *
  * Top bar — logo, topology picker, zoom, Run Simulation, Design / Reports.
- * Props are unchanged so App.tsx wiring keeps working; tool buttons that used
- * to live here (OPM, OTDR, Missions, Margin, Clear…) moved to CanvasToolbar.
+ * Tool buttons that used to live here (OPM, OTDR, Missions, Margin, Clear…)
+ * are in CanvasToolbar.
  * ========================================================================== */
 
 type Health = 'green' | 'amber' | 'red' | 'idle';
@@ -17,22 +17,10 @@ type Health = 'green' | 'amber' | 'red' | 'idle';
 interface TopBarProps {
   summary: NetworkSummary;
   costBreakdown: NetworkCostBreakdown;
-  settings: DesignSettings;
-  onSettingsChange: (patch: Partial<DesignSettings>) => void;
   onPreset: (presetId: string) => void;
   onRunTest: () => void;
   onOpenBOM: () => void;
-  onOpenOtdr: () => void;
-  onOpenMissions: () => void;
   onOpenOverview: () => void;
-  onToggleLink: () => void;
-  onToggleOpm: () => void;
-  onDeleteSelection: () => void;
-  linkMode: boolean;
-  opmActive: boolean;
-  selectionCount: number;
-  activeMissionTitle: string | null;
-  onClear: () => void;
   testing: boolean;
   stale: boolean;
   activePresetId: string | null;
