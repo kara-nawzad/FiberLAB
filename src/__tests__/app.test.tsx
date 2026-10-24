@@ -293,6 +293,9 @@ describe('FiberLAB application shell', () => {
     expect(screen.getByText('Fault Penalty: Dust Contamination (-2.00 dB)')).toBeInTheDocument();
   });
 
+  const statusBar = () => screen.getByTestId('network-status-bar');
+  const statusToggle = () => within(statusBar()).getByRole('button', { name: /^Network status:/ });
+
   it('connects and disconnects node pairs in Link nodes mode and deletes a selected span', async () => {
     render(<App />);
     fireEvent.click(screen.getByRole('button', { name: 'Launch Studio' }));
@@ -300,7 +303,7 @@ describe('FiberLAB application shell', () => {
     fireEvent.click(await screen.findByRole('button', { name: /Standard 1:32 GPON Tree/i }));
     await waitFor(() => expect(screen.getAllByText('Al-Sulaymaniyah — Unit 12').length).toBeGreaterThan(0));
 
-    expect(screen.getByLabelText('Network health: Marginal links detected')).toBeInTheDocument();
+    expect(statusToggle()).toHaveAccessibleName(/Network status: Marginal\./);
 
     const oltNode = getCanvasNodeByText('OLT');
     const feederNode = getCanvasNodeByText(/^5\.0 km$/);
@@ -310,12 +313,16 @@ describe('FiberLAB application shell', () => {
     fireEvent.click(oltNode);
     expect(screen.getByText(/Source: olt-a/)).toBeInTheDocument();
     fireEvent.click(feederNode);
-    await waitFor(() => expect(screen.getByLabelText('Network health: Fault on the network')).toBeInTheDocument());
+    await waitFor(() =>
+      expect(within(statusBar()).getByRole('button', { name: /Network status: Fail\./ })).toBeInTheDocument(),
+    );
 
     fireEvent.click(screen.getByRole('button', { name: 'Link nodes' }));
     fireEvent.click(oltNode);
     fireEvent.click(feederNode);
-    await waitFor(() => expect(screen.getByLabelText('Network health: Marginal links detected')).toBeInTheDocument());
+    await waitFor(() =>
+      expect(within(statusBar()).getByRole('button', { name: /Network status: Marginal\./ })).toBeInTheDocument(),
+    );
 
     fireEvent.click(feederNode);
     const deleteButton = screen.getByRole('button', { name: 'Delete selected elements' });
@@ -338,14 +345,51 @@ describe('FiberLAB application shell', () => {
     expect(within(remote as HTMLElement).getByText(/WARNING/)).toBeInTheDocument();
   });
 
-  it('reports the deployed plant in the top bar health strip and bottom panel', async () => {
+  it('reports the deployed plant in the bottom status bar and the optical budget sheet', async () => {
     await renderStudio();
     await waitFor(() => expect(screen.getAllByText('Al-Sulaymaniyah — Unit 12').length).toBeGreaterThan(0));
 
-    expect(screen.getByLabelText('Network health: Marginal links detected')).toBeInTheDocument();
-    expect(screen.getByText('13.5 km')).toBeInTheDocument();
+    // Four values, no more: status, total loss, total distance, subscribers OK.
+    const bar = statusBar();
+    expect(within(bar).getByText('Marginal')).toBeInTheDocument();
+    expect(within(bar).getByText('Total loss')).toBeInTheDocument();
+    expect(within(bar).getByText('Total distance')).toBeInTheDocument();
+    expect(within(bar).getByText('13.5 km')).toBeInTheDocument();
+    const subscribers = within(bar).getByText('Subscribers OK').closest('.pu-sb-item') as HTMLElement;
+    expect(subscribers).toHaveTextContent(/\d+ \/ 3/);
+    expect(statusToggle()).toHaveAttribute('aria-expanded', 'false');
+
+    // Expanding shows only the optical budget and the events.
+    fireEvent.click(statusToggle());
+    expect(statusToggle()).toHaveAttribute('aria-expanded', 'true');
+    const detail = document.getElementById('status-bar-detail') as HTMLElement;
+    expect(within(detail).getByRole('tablist', { name: 'Network detail views' })).toBeInTheDocument();
+    expect(
+      within(detail)
+        .getAllByRole('tab')
+        .map((tab) => tab.textContent),
+    ).toEqual(['Optical Budget', 'Events1']);
+    expect(within(detail).getByRole('tab', { name: 'Optical Budget' })).toHaveAttribute('aria-selected', 'true');
+    for (const label of ['OLT Launch', 'After Splitter', 'Closest ONT', 'Farthest ONT']) {
+      expect(within(detail).getByText(label)).toBeInTheDocument();
+    }
+    expect(within(detail).getByRole('button', { name: 'Open full audit & quotation' })).toBeInTheDocument();
+
+    // Events describe the faults and pick the affected component on the canvas.
+    fireEvent.click(within(detail).getByRole('tab', { name: /Events/ }));
+    expect(within(detail).getByRole('tab', { name: /Events/ })).toHaveAttribute('aria-selected', 'true');
+    expect(within(detail).getByText(/^WARNING · /)).toBeInTheDocument();
+    fireEvent.click(within(detail).getByRole('button', { name: /Tanaro Village — Remote/ }));
+    await waitFor(() => expect(screen.getByRole('tablist', { name: 'Inspector sections' })).toBeInTheDocument());
+    expect(screen.getByText('Properties')).toBeInTheDocument();
+
+    // CAPEX moved to Reports: the bar no longer carries it.
+    expect(screen.queryByTestId('capex-telemetry')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Close inspector' }));
+    fireEvent.click(screen.getByRole('button', { name: /Bill of Materials/i }));
     expect(screen.getByTestId('capex-telemetry')).toHaveTextContent('CAPEX $3,747');
     expect(screen.getByTestId('capex-telemetry')).toHaveTextContent('$1,249.00 / Home Passed');
+    fireEvent.click(screen.getByRole('button', { name: 'Close bill of materials' }));
   });
 
   it('opens the Bill of Materials with reconciling totals', async () => {
@@ -367,10 +411,9 @@ describe('FiberLAB application shell', () => {
 
   it('edits local USD pricing in the Bill of Materials without changing optical status', async () => {
     await renderStudio();
+    fireEvent.click(screen.getByRole('button', { name: /Bill of Materials/i }));
     const capexBadge = screen.getByTestId('capex-telemetry');
     expect(capexBadge).toHaveTextContent('$3,747');
-
-    fireEvent.click(screen.getByRole('button', { name: /Bill of Materials/i }));
     fireEvent.click(screen.getByRole('tab', { name: 'Commercial Quotation & CAPEX' }));
     fireEvent.click(screen.getByText('Local unit pricing'));
     const feederRate = screen.getByRole('spinbutton', { name: 'Feeder / OSP cable' });
@@ -379,7 +422,8 @@ describe('FiberLAB application shell', () => {
 
     expect(capexBadge).toHaveTextContent('$4,497');
     expect(capexBadge).toHaveTextContent('$1,499.00 / Home Passed');
-    expect(screen.getByLabelText('Network health: Marginal links detected')).toBeInTheDocument();
+    // Pricing is commercial only: the optics are untouched behind the dialog.
+    expect(statusToggle()).toHaveAccessibleName(/Network status: Marginal\./);
 
     fireEvent.click(screen.getByRole('button', { name: 'Restore reference pricing' }));
     expect(capexBadge).toHaveTextContent('$3,747');
@@ -467,7 +511,11 @@ describe('FiberLAB application shell', () => {
 
     expect(await screen.findByText('1/3 complete')).toBeInTheDocument();
     expect(screen.getByText(/Keep the total reference CAPEX below \$1,600\.00/)).toBeInTheDocument();
+    expect(screen.queryByTestId('capex-telemetry')).not.toBeInTheDocument();
+    fireEvent.keyDown(document, { key: 'Escape' });
+    fireEvent.click(screen.getByRole('button', { name: /Bill of Materials/i }));
     expect(screen.getByTestId('capex-telemetry')).toHaveTextContent('$3,747');
+    fireEvent.click(screen.getByRole('button', { name: 'Close bill of materials' }));
   });
 
   it('acquires an interactive OTDR trace from the studio and lists terminal Fresnel events', async () => {
@@ -494,7 +542,7 @@ describe('FiberLAB application shell', () => {
     fireEvent.click(await screen.findByRole('button', { name: /Failing Long-Distance Link/ }));
 
     await waitFor(() => expect(screen.getAllByText('Dukan Ridge — Tower 7').length).toBeGreaterThan(0));
-    expect(screen.getByLabelText('Network health: Fault on the network')).toBeInTheDocument();
+    expect(statusToggle()).toHaveAccessibleName(/Network status: Fail\./);
 
     const ont = getCanvasNodeByText('Dukan Ridge — Tower 7').querySelector('.hw-onu');
     expect(within(ont as HTMLElement).getByText(/LOS/)).toBeInTheDocument();
@@ -573,7 +621,7 @@ describe('FiberLAB application shell', () => {
     expect(screen.queryByText('custom α')).not.toBeInTheDocument();
   });
 
-  it('renders physical telecom hardware faceplates, canvas workbench toolbar, and bottom panel tabs', async () => {
+  it('renders physical telecom hardware faceplates, canvas workbench toolbar, and the status bar', async () => {
     await renderStudio();
 
     // Realistic OLT hardware card
@@ -601,14 +649,19 @@ describe('FiberLAB application shell', () => {
     expect(within(canvasToolbar).queryByRole('button', { name: 'Add Node' })).not.toBeInTheDocument();
     expect(within(canvasToolbar).getByRole('button', { name: 'More tools' })).toBeInTheDocument();
 
-    // Bottom panel with Network Overview, Optical Budget, Components, and Topology tabs
-    const bottomPanel = screen.getByTestId('network-summary-strip');
-    expect(bottomPanel).toHaveTextContent('Total Distance');
-    expect(bottomPanel).toHaveTextContent('13.5 km');
-    expect(within(bottomPanel).getByText('OLT Launch')).toBeInTheDocument();
-    expect(within(bottomPanel).getByText('After Splitter')).toBeInTheDocument();
-    fireEvent.click(within(bottomPanel).getByRole('tab', { name: 'Optical Budget' }));
-    expect(within(bottomPanel).getByText('Open full audit & quotation')).toBeInTheDocument();
+    // A slim status bar replaces the old Components/Topology tabs.
+    const bar = statusBar();
+    expect(within(bar).getByText('Total distance')).toBeInTheDocument();
+    expect(within(bar).getByText('13.5 km')).toBeInTheDocument();
+    expect(screen.queryByRole('tablist', { name: 'Network summary views' })).not.toBeInTheDocument();
+    fireEvent.click(statusToggle());
+    const detail = document.getElementById('status-bar-detail') as HTMLElement;
+    expect(within(detail).getByText('OLT Launch')).toBeInTheDocument();
+    expect(within(detail).getByText('After Splitter')).toBeInTheDocument();
+    expect(within(detail).getByRole('tab', { name: 'Optical Budget' })).toBeInTheDocument();
+    expect(within(detail).getByText('Open full audit & quotation')).toBeInTheDocument();
+    fireEvent.click(within(detail).getByRole('button', { name: 'Hide network details' }));
+    expect(document.getElementById('status-bar-detail')).toBeNull();
 
     // The panel only exists while something is selected.
     expect(screen.queryByRole('tablist', { name: 'Inspector sections' })).not.toBeInTheDocument();

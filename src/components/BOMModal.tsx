@@ -238,6 +238,15 @@ export function BOMModal({
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <span
+              className="pu-capex-banner"
+              role="region"
+              data-testid="capex-telemetry"
+              aria-label={`Network CAPEX ${formatUsd(costBreakdown.totalCapex)}; ${formatUsd(costBreakdown.costPerHomePassed)} per home passed`}
+            >
+              CAPEX <strong>{formatUsd(costBreakdown.totalCapex, true)}</strong>
+              <span className="pu-capex-detail">{formatUsd(costBreakdown.costPerHomePassed)} / Home Passed</span>
+            </span>
             <button
               type="button"
               className="btn-ghost"
@@ -356,6 +365,39 @@ export function BOMModal({
                       : 'text-[var(--pu-ink)]'
                   }
                 />
+              </div>
+
+              {/* Deployed components: the old Components/Topology tabs now live here. */}
+              <div className="mt-3 rounded-lg border border-[var(--pu-line)] bg-white p-3">
+                <div className="eyebrow mb-2">Deployed components</div>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1 font-mono text-label md:grid-cols-4">
+                  {(
+                    [
+                      ['olt', 'OLT'],
+                      ['splitter', 'Splitters'],
+                      ['fiber', 'Fiber spans'],
+                      ['closure', 'Closures'],
+                      ['odf', 'ODF panels'],
+                      ['nap', 'NAP / FAT'],
+                      ['ont', 'ONTs'],
+                      ['gateway', 'Gateways'],
+                    ] as Array<[PonNode['type'], string]>
+                  ).map(([kind, label]) => {
+                    const count = nodes.filter((node) => node.type === kind).length;
+                    return (
+                      <div key={kind} className="flex items-baseline justify-between gap-2">
+                        <span className="text-[var(--pu-mut)]">{label}</span>
+                        <span className={count === 0 ? 'text-[var(--pu-mut)]' : 'font-semibold text-[var(--pu-ink)]'}>
+                          {count}
+                        </span>
+                      </div>
+                    );
+                  })}
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="text-[var(--pu-mut)]">Patch cords</span>
+                    <span className="font-semibold text-[var(--pu-ink)]">{edges.length}</span>
+                  </div>
+                </div>
               </div>
 
               {/* --------------------------- Passive plant -------------------------- */}

@@ -22,7 +22,7 @@ repository's `.nvmrc` selects Node 22.
 npm ci
 npm run dev        # http://localhost:5173
 npm run build      # tsc --noEmit && vite build
-npm run test       # 105 tests: optical engine, upstream dynamic range, OPM, OTDR, equipment, CAPEX, missions, overlays, splitter ports, and app interactions
+npm run test       # 111 tests: optical engine, upstream dynamic range, OPM, OTDR, equipment, CAPEX, missions, overlays, splitter ports, and app interactions
 npm run typecheck  # strict TypeScript, no emit
 npm run lint       # ESLint checks for source and configuration files
 npm run format:check  # verify Prettier formatting
@@ -119,9 +119,9 @@ Open **OTDR Trace** in the TopBar to pulse a selected OLT output or fiber-span s
 ## Layout
 
 - **Landing overview** — warm fiber-splice hero with a hold-to-open interaction and receive-power readout sourced from the active studio simulation; preserved interactive 1310/1490/1550 nm waveguide, adjustable launch power, capability cards, and GPON reference strips. The ray-angle display is an educational Sellmeier-based schematic, not a measured fiber-profile claim. The graph simulator supports 1270/1310/1490/1550/1577 nm; its OPM calibration control remains 1310/1490/1550 nm.
-- **Top bar** — FiberLAB wordmark + live optical health and CAPEX (including cost per home passed), overview, preset picker, zoom controls, `Run Simulation`, and Reports.
+- **Top bar** — FiberLAB wordmark, overview, preset picker, zoom controls, `Run Simulation`, and Reports. CAPEX and cost per home passed now sit on the Reports banner.
 - **Canvas toolbar** — Select, Pan, Connect and Delete plus zoom in/out and fit; `OPM Tool`, `OTDR Trace`, missions, safety margin, Auto and Clear sit in one `⋯` overflow menu. Phones get the same strip as icons along the bottom of the canvas.
-- **Bottom panel** — compact live topology and simulation readouts below the canvas.
+- **Status bar** — one slim always-visible row under the canvas (total loss, total distance, subscribers OK, coloured network status) that expands into just two tabs: Optical Budget and Events. Clicking an event selects and frames the affected component, and deployed counts moved into the Bill of Materials.
 - **Left toolbox** — draggable or double-click quick-add OLT / ODF / splitter (1:2 … 1:64) / cable (feeder, distribution, drop) / FOSC-style dome closure / 1:8 NAP/FAT / ONT / Wi-Fi 6 gateway.
 - **Canvas** — dotted grid, pan/zoom, minimap, compact hardware thumbnails, softly glowing animated optical edges, handle-drag connections, Link nodes mode, and an OPM probe cursor/HUD for port and patch-cord power. Faulted fiber spans mark their outgoing patch cord with a warning glyph.
 - **Right inspector** — appears only while a component is selected, opens on **Properties** with the essentials and one **Advanced** disclosure, and keeps **Optical Power** telemetry and the **Info** Field Hardware Card for all eight component kinds. It carries the GPON/XGS-PON OLT selector, five fiber/OTDR wavelengths, gateway service telemetry with a clearly marked TEST-NET IP placeholder, fiber fault toggles, a 12-color closure splice tray, and a confirm-to-remove action. Phones show it as a half/full-height bottom sheet. The SVGs are representative illustrations, not product photos or exact vendor models.

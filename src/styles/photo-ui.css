@@ -241,21 +241,6 @@
   background: var(--pu-elevated);
   color: var(--pu-mut);
 }
-.pu-capex {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sp-1);
-  padding: var(--sp-1) var(--sp-3);
-  border-radius: var(--r-lg);
-  background: #2b1a14;
-  color: #fff4e6;
-  font-size: var(--fs-2xs);
-  font-variant-numeric: tabular-nums;
-}
-.pu-capex strong {
-  font-size: var(--fs-md);
-  color: #fffaf2;
-}
 .pu-menu {
   position: absolute;
   z-index: 40;
@@ -646,163 +631,33 @@
   background: var(--pu-panel);
   box-shadow: 0 2px 6px rgba(43, 26, 20, 0.08);
 }
-.pu-chip {
-  position: absolute;
-  left: var(--sp-3);
-  bottom: var(--sp-3);
-  z-index: 6;
-  display: flex;
+
+/* Reports banner: CAPEX lives in the Bill of Materials, not the top bar. */
+.pu-capex-banner {
+  display: inline-flex;
+  align-items: baseline;
   gap: var(--sp-2);
-  align-items: center;
-}
-.pu-chip .pu-health {
-  box-shadow: 0 1px 3px rgba(43, 26, 20, 0.08);
+  padding: var(--sp-1) var(--sp-3);
   border: 1px solid var(--pu-line);
-  background: var(--pu-panel);
-  color: var(--pu-ok);
+  border-radius: var(--r-pill);
+  background: var(--pu-pri-soft);
+  color: var(--pu-ink);
+  font-size: var(--type-small);
+  font-weight: var(--fw-semibold);
+  white-space: nowrap;
+}
+.pu-capex-banner strong {
+  color: var(--pu-pri);
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: var(--type-body);
+}
+.pu-capex-banner .pu-capex-detail {
+  color: var(--pu-mut);
+  font-size: var(--type-caption);
+  font-weight: var(--fw-regular);
 }
 
-/* Bottom panel */
-.pu-bottom {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  max-height: var(--bottom-max-h);
-  padding: 0 var(--shell-pad) var(--sp-3);
-  border: 1px solid var(--pu-line);
-  border-radius: var(--r-xl);
-  background: var(--pu-panel);
-  flex-shrink: 0;
-  overflow: hidden;
-}
-.pu-bottom.is-min .pu-bottom-grid {
-  display: none;
-}
-.pu-btabs button {
-  display: inline-flex;
-  align-items: center;
-  height: var(--tab-h);
-  padding: 0;
-  font-size: var(--fs-sm);
-  font-weight: var(--fw-semibold);
-  color: var(--pu-mut);
-  border-bottom: 2px solid transparent;
-}
-.pu-btabs button.is-active {
-  color: var(--pu-pri);
-  border-color: var(--pu-pri);
-}
-/* One fixed header row: the tab strip scrolls sideways, the collapse control
- * stays put on the right so it is always reachable. */
-.pu-bhead {
-  display: flex;
-  flex: 0 0 auto;
-  align-items: center;
-  gap: var(--sp-2);
-  border-bottom: 1px solid var(--pu-line);
-}
-.pu-bhead > .pu-btabs {
-  flex: 1 1 auto;
-  border-bottom: 0;
-}
-.pu-bcollapse {
-  display: inline-flex;
-  flex: 0 0 auto;
-  align-items: center;
-  gap: var(--sp-1);
-  height: var(--control-sm);
-  margin-left: auto;
-  padding: 0 var(--sp-2);
-  border: 1px solid var(--pu-line);
-  border-radius: var(--r-md);
-  background: var(--pu-panel);
-  color: var(--pu-mut);
-  font-size: var(--type-small);
-  font-weight: var(--fw-semibold);
-}
-.pu-bcollapse:hover {
-  background: var(--pu-elevated);
-  color: var(--pu-ink);
-}
-.pu-bcollapse:focus-visible {
-  outline: 2px solid var(--pu-pri);
-  outline-offset: 2px;
-}
-.pu-stat {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--sp-3);
-  min-height: 84px;
-  padding: var(--card-pad);
-  border: 1px solid var(--pu-line);
-  border-radius: var(--r-xl);
-  background: #ffffff;
-}
-.pu-stat i {
-  width: var(--sp-8);
-  height: var(--sp-8);
-  border-radius: 50%;
-  background: var(--pu-pri-soft);
-  color: var(--pu-pri);
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-}
-.pu-stat small {
-  display: block;
-  margin-bottom: var(--sp-1);
-  font-size: var(--fs-2xs);
-  color: var(--pu-mut);
-}
-.pu-stat b {
-  display: block;
-  font-size: var(--type-metric-sm);
-  color: var(--pu-ink);
-  /* weight, line-height and tabular numerals come from the metric role group */
-}
-.pu-stat em {
-  font-style: normal;
-  font-size: var(--type-caption);
-  color: var(--pu-mut);
-}
-.pu-card {
-  border: 1px solid var(--pu-line);
-  border-radius: var(--r-xl);
-  padding: var(--card-pad);
-  min-width: 0;
-  background: #ffffff;
-}
-.pu-card h6 {
-  margin: 0 0 var(--sp-2);
-  font-size: var(--type-card-title);
-  font-weight: var(--fw-semibold);
-  line-height: var(--leading-snug);
-  color: var(--pu-ink);
-}
-.pu-bar {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-2);
-  margin: var(--sp-2) 0;
-  font-size: var(--type-small);
-}
-.pu-bar span:first-child {
-  width: 86px;
-  color: var(--pu-mut);
-}
-.pu-bar .track {
-  flex: 1;
-  height: 6px;
-  border-radius: var(--r-pill);
-  background: var(--pu-pri-soft);
-  overflow: hidden;
-}
-.pu-bar .track i {
-  display: block;
-  height: 100%;
-  border-radius: var(--r-pill);
-  background: var(--pu-pri);
-}
+/* Status bar events: warnings and recent events inside the detail panel. */
 .pu-event {
   display: flex;
   align-items: flex-start;
@@ -838,6 +693,249 @@
   display: block;
   margin-top: var(--sp-1);
   color: var(--pu-mut);
+}
+
+/* ---- Status bar: the whole bottom of the design view -------------------- */
+.pu-statusbar {
+  position: relative;
+  flex: 0 0 auto;
+}
+.pu-sb-main {
+  display: flex;
+  width: 100%;
+  min-height: calc(var(--control-md) + var(--sp-2));
+  align-items: center;
+  gap: var(--sp-3);
+  padding: 0 var(--sp-3);
+  border: 1px solid var(--pu-line);
+  border-radius: var(--r-xl);
+  background: var(--pu-panel);
+  box-shadow: 0 2px 8px rgba(43, 26, 20, 0.06);
+  color: var(--pu-ink);
+  text-align: left;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.pu-sb-main::-webkit-scrollbar {
+  display: none;
+}
+.pu-sb-main:hover {
+  border-color: var(--pu-pri);
+}
+.pu-sb-dot {
+  width: 10px;
+  height: 10px;
+  flex: 0 0 auto;
+  border-radius: var(--r-pill);
+  background: var(--pu-ok);
+  box-shadow: 0 0 0 3px var(--pu-ok-soft);
+}
+.pu-sb-dot.warn {
+  background: #b36b00;
+  box-shadow: 0 0 0 3px var(--pu-warn-soft);
+}
+.pu-sb-dot.bad {
+  background: var(--pu-bad);
+  box-shadow: 0 0 0 3px var(--pu-bad-soft);
+}
+.pu-sb-dot.idle {
+  background: var(--pu-mut);
+  box-shadow: 0 0 0 3px var(--pu-elevated);
+}
+.pu-sb-status {
+  flex: 0 0 auto;
+  font-size: var(--type-body);
+  font-weight: var(--fw-bold);
+}
+.pu-sb-values {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--sp-4);
+}
+.pu-sb-item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--sp-1);
+  white-space: nowrap;
+}
+.pu-sb-item small {
+  color: var(--pu-mut);
+  font-size: var(--type-caption);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+}
+.pu-sb-item b {
+  color: var(--pu-ink);
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: var(--type-body);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--fw-bold);
+}
+.pu-sb-spacer {
+  flex: 1 1 auto;
+}
+.pu-sb-chevron {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  color: var(--pu-mut);
+}
+.pu-statusbar.is-open .pu-sb-chevron {
+  color: var(--pu-pri);
+}
+
+/* Detail panel: rises from the bar, never taller than 40% of the screen. */
+.pu-sb-detail {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + var(--sp-2));
+  left: 0;
+  z-index: 30;
+  display: flex;
+  max-height: 40vh;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--pu-line);
+  border-radius: var(--r-xl);
+  background: var(--pu-panel);
+  box-shadow: 0 -14px 34px rgba(43, 26, 20, 0.18);
+}
+.pu-sb-detail-head {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  row-gap: var(--sp-1);
+  column-gap: var(--sp-2);
+  padding: 0 var(--sp-3);
+  border-bottom: 1px solid var(--pu-line);
+}
+.pu-sb-detail-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.pu-sb-report {
+  min-height: var(--control-sm);
+  padding: 0 var(--sp-2);
+  font-size: var(--type-small);
+}
+.pu-sb-tabs {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--sp-4);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.pu-sb-tabs::-webkit-scrollbar {
+  display: none;
+}
+.pu-sb-tabs button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  height: var(--tab-h);
+  border-bottom: 2px solid transparent;
+  color: var(--pu-mut);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+}
+.pu-sb-tabs button:hover {
+  color: var(--pu-ink);
+}
+.pu-sb-tabs button.is-active {
+  border-color: var(--pu-pri);
+  color: var(--pu-pri);
+}
+.pu-sb-count {
+  display: inline-flex;
+  min-width: 18px;
+  height: 18px;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--r-pill);
+  background: var(--pu-warn-soft);
+  color: #8a5200;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: var(--type-caption);
+  font-weight: var(--fw-bold);
+}
+.pu-sb-body {
+  overflow-y: auto;
+  padding: var(--sp-3);
+}
+.pu-sb-bars {
+  display: grid;
+  gap: var(--sp-2);
+}
+.pu-sb-bar {
+  display: grid;
+  grid-template-columns: 104px minmax(0, 1fr) 78px;
+  align-items: center;
+  gap: var(--sp-3);
+}
+.pu-sb-bar-label {
+  color: var(--pu-mut);
+  font-size: var(--type-small);
+  font-weight: var(--fw-semibold);
+}
+.pu-sb-bar-track {
+  height: var(--sp-3);
+  overflow: hidden;
+  border-radius: var(--r-pill);
+  background: var(--pu-elevated);
+}
+.pu-sb-bar-track i {
+  display: block;
+  height: 100%;
+  border-radius: var(--r-pill);
+}
+.pu-sb-bar-value {
+  color: var(--pu-ink);
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: var(--type-body);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--fw-bold);
+  text-align: right;
+}
+.pu-sb-note {
+  margin: var(--sp-2) 0 var(--sp-3);
+  color: var(--pu-mut);
+  font-size: var(--type-small);
+  line-height: var(--leading-snug);
+}
+.pu-sb-events {
+  display: grid;
+  gap: var(--sp-1);
+}
+/* Events are clickable when they belong to a component on the canvas. */
+.pu-event.is-clickable {
+  width: 100%;
+  margin: 0;
+  padding: var(--sp-2);
+  border: 1px solid var(--pu-line);
+  border-radius: var(--r-md);
+  background: #ffffff;
+  text-align: left;
+}
+.pu-event.is-clickable:hover {
+  border-color: var(--pu-pri);
+  background: var(--pu-pri-soft);
+}
+.pu-event-copy {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.pu-event-go {
+  flex: 0 0 auto;
+  color: var(--pu-mut);
+}
+.pu-event.is-clickable:hover .pu-event-go {
+  color: var(--pu-pri);
 }
 
 /* Inspector (right panel) restyle */
@@ -1372,8 +1470,7 @@
 .pu-tool:focus-visible,
 .pu-rail button:focus-visible,
 .pu-menu button:focus-visible,
-.pu-doc-tab:focus-visible,
-.pu-chip:focus-visible {
+.pu-doc-tab:focus-visible {
   outline: 2px solid var(--pu-pri);
   outline-offset: 2px;
 }
@@ -1386,6 +1483,14 @@
 /* inspector float above the canvas instead of squeezing it out of the row.   */
 /* ------------------------------------------------------------------------- */
 @media (max-width: 900px) {
+  /* The Reports banner keeps its headline figure and drops the per-home rate. */
+  .pu-capex-banner {
+    padding: var(--sp-1) var(--sp-2);
+  }
+  .pu-capex-banner .pu-capex-detail {
+    display: none;
+  }
+
   /* The rail keeps its column; library and inspector become overlay sheets that
    * sit inside the body padding instead of squeezing the canvas column. */
   .pu-body {
@@ -1469,7 +1574,7 @@
 /* ------------------------------------------------------------------------- */
 /* Typography roles — one size / weight / line-height per element class.      */
 /* Same role = same treatment on every surface (library, inspector, canvas,    */
-/* bottom panel, overlays). Sizes come from tokens.css only.                   */
+/* status bar, overlays). Sizes come from tokens.css only.                    */
 /* ------------------------------------------------------------------------- */
 
 /* Section + modal titles (18–22px, bold, tight) */
@@ -1492,26 +1597,22 @@
 
 #bom-description,
 #otdr-modal-description,
-.pu-tool small,
-.pu-card h6 {
+.pu-tool small {
   line-height: var(--leading-snug);
 }
 
-/* Tab labels: identical metrics in the bottom panel and the inspector. The BOM
+/* Tab labels: identical metrics in the status bar detail and the inspector. The BOM
  * modal declares its own tabs in theme.css, next to their borders. */
 .pu-doc-tab,
-.pu-btabs button,
 .pu-itabs button {
   font-size: var(--type-body);
   line-height: var(--leading-snug);
 }
 
-.pu-btabs button,
 .pu-itabs button {
   font-weight: var(--fw-semibold);
 }
 
-.pu-btabs button.is-active,
 .pu-itabs button.is-active,
 .bom-tab.is-active {
   font-weight: var(--fw-bold);
@@ -1520,11 +1621,6 @@
 /* Small labels, captions and badges: 11–12px, semibold, snug */
 .pu-badge,
 .pu-health,
-.pu-capex,
-.pu-foot,
-.pu-bar,
-.pu-stat small,
-.pu-stat em,
 .pu-tool small,
 .hw-kv,
 .hw-label small,
@@ -1546,15 +1642,9 @@
 }
 
 /* Metrics read as one family: tight line-height, bold, tabular numerals */
-.pu-stat b {
-  font-weight: var(--fw-bold);
-  line-height: var(--leading-none);
-  font-variant-numeric: tabular-nums;
-}
 
 /* Uppercase micro labels share one tracking value instead of 0.1–0.14em drift */
-.pu-doc-tab-edited,
-.pu-card h6 + * {
+.pu-doc-tab-edited {
   letter-spacing: var(--tracking-label);
 }
 
@@ -1572,80 +1662,13 @@
   overflow: hidden;
 }
 
-/* Bottom panel: flexible grid that keeps the canvas dominant. */
-.pu-bottom-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr) minmax(0, 1fr);
-  gap: var(--shell-gap);
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
-  padding-top: var(--shell-gap);
-}
-
-.pu-bottom-grid--stack {
-  grid-template-columns: minmax(0, 1fr);
-  grid-auto-flow: row;
-}
-
-.pu-bottom-grid--quarters {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.pu-stats {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--shell-gap);
-  align-content: start;
-}
-
-.pu-stats--pairs {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-/* The tab strip scrolls instead of clipping when four labels do not fit. */
-.pu-btabs {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-4);
-  min-width: 0;
-  overflow-x: auto;
-  scrollbar-width: none;
-  border-bottom: 1px solid var(--pu-line);
-}
-
-.pu-btabs::-webkit-scrollbar {
-  display: none;
-}
-
-.pu-btabs button {
-  flex: 0 0 auto;
-  white-space: nowrap;
-}
-
 /* Inspector body: same gutter as every other panel. */
 .fiberlab-inspector-content {
   padding: var(--sp-3) 0 0;
 }
 
-/* Stacked bottom-panel grids on tablets and phones. */
-@media (max-width: 1024px) {
-  .pu-bottom-grid--quarters {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 640px) {
-  .pu-bottom-grid--quarters {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .pu-btabs {
-    gap: var(--sp-3);
-  }
-}
-
-/* Link-mode banner: anchored above the health chip at the bottom of the canvas,
- * so it can never collide with the (wrapping) toolbar. */
+/* Link-mode banner: anchored above the canvas footer, so it can never collide
+ * with the (wrapping) toolbar. */
 .pu-canvas .react-flow__panel.pu-link-panel {
   bottom: calc(var(--sp-8) + var(--sp-2)) !important;
   margin-bottom: 0 !important;
@@ -1716,53 +1739,12 @@
 }
 
 /* Workbench data tables: one cell rhythm, numeric columns right-aligned. */
-.pu-data-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: var(--fs-xs);
-}
-.pu-data-table th {
-  padding: 0 0 var(--sp-2);
-  border-bottom: 1px solid var(--pu-line);
-  font-size: var(--type-caption);
-  font-weight: var(--fw-semibold);
-  letter-spacing: var(--tracking-label);
-  text-align: left;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-.pu-data-table td {
-  padding: var(--sp-2) 0;
-  vertical-align: middle;
-}
-.pu-data-table th + th,
-.pu-data-table td + td {
-  padding-left: var(--sp-3);
-}
-.pu-data-table .is-num {
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
 
 /* Label / bar / value are three columns, so readouts line up across rows. */
-.pu-bar > span:first-child {
-  flex: 0 0 auto;
-  min-width: 64px;
-  color: var(--pu-mut);
-}
-.pu-bar > span:last-child {
-  flex: 0 0 auto;
-  min-width: 44px;
-  text-align: right;
-  font-weight: var(--fw-semibold);
-  font-variant-numeric: tabular-nums;
-  color: var(--pu-ink);
-}
 
 /* One control height across the top bar so the row reads as a single line. */
 .pu-top .pu-btn,
-.pu-top .pu-health,
-.pu-top .pu-capex {
+.pu-top .pu-health {
   min-height: var(--control-md);
 }
 /* ------------------------------------------------------------------------- */
@@ -1788,35 +1770,8 @@
   min-width: 0;
 }
 
-/* Header pills: one rhythm, no inline styles. */
-.pu-health-wrap {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-2);
-  min-width: 0;
-  margin-left: var(--sp-2);
-}
-
 /* Scrolling regions: the table scrolls inside the card, never the panel. */
-.pu-card--scroll {
-  max-height: 170px;
-  overflow: auto;
-}
 /* Recent events keeps one scrollbar (the panel's) once the cards stack. */
-.pu-card--events {
-  max-height: 150px;
-  overflow-y: auto;
-}
-@media (max-width: 900px) {
-  .pu-card--events {
-    max-height: none;
-    overflow: visible;
-  }
-}
-.pu-data-table th,
-.pu-data-table td {
-  white-space: nowrap;
-}
 
 /* Canvas overlays. */
 .pu-empty-panel {
@@ -1914,16 +1869,9 @@
   .pu-top .pu-select {
     max-width: 220px;
   }
-  .pu-stats {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
 @media (max-width: 900px) {
-  /* Stacked cards size to their content so the bottom panel fits more of them. */
-  .pu-bottom .pu-stat {
-    min-height: 0;
-  }
   /* Overlay mode: the inspector sheet leaves room for the rail on the left. */
   .fiberlab-inspector:not(.is-collapsed) {
     max-width: calc(100% - var(--rail-w) - var(--sp-2) * 2);
@@ -1974,22 +1922,10 @@
     overflow-y: auto;
     border-radius: var(--r-xl);
   }
-  /* The bottom panel stacks its cards instead of squeezing three columns. */
-  .pu-bottom-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  /* CAPEX repeats in the Bill of Materials, so the header drops it here. */
-  .pu-capex {
-    display: none !important;
-  }
 }
 
 @media (max-width: 640px) {
-  /* Health repeats in the canvas chip, so the header sheds its pill and the
-   * buttons print their short captions. */
-  .pu-health-wrap {
-    display: none !important;
-  }
+  /* The buttons print their short captions on small screens. */
   .pu-label-full {
     display: none;
   }
@@ -2029,24 +1965,14 @@
   }
 
   /* The collapse control keeps its icon and drops the word. */
-  .pu-bcollapse {
-    width: var(--control-sm);
-    justify-content: center;
-    padding: 0;
-  }
-  .pu-bcollapse-label {
-    display: none;
-  }
 
   /* Touch-sized targets even in a narrow desktop window. */
-  .pu-btabs button,
   .pu-doc-tab,
   .pu-itabs button,
   .pu-menu button.pu-switch,
   .pu-menu-row input.pu-input-sm {
     min-height: var(--control-tap);
   }
-  .pu-btabs button,
   .pu-doc-tab,
   .pu-itabs button {
     height: var(--control-tap);
@@ -2150,7 +2076,7 @@
 
   /* ---- Phone canvas chrome -------------------------------------------------
    * The tool strip drops to the bottom of the canvas as a compact icon bar that
-   * sits above the status chip, freeing the top of the canvas. React Flow's own
+   * sits above the status bar, freeing the top of the canvas. React Flow's own
    * zoom buttons are redundant next to Zoom in / Zoom out / Fit. */
   .pu-toolbar {
     top: auto;
@@ -2206,6 +2132,45 @@
     left: var(--sp-2);
   }
 
+  /* ---- Status bar: compact row, expanding into a bottom sheet -------------- */
+  .pu-sb-main {
+    min-height: var(--control-tap);
+    gap: var(--sp-2);
+    padding: 0 var(--sp-2);
+  }
+  .pu-sb-values {
+    gap: var(--sp-3);
+  }
+  .pu-sb-chevron {
+    position: sticky;
+    right: 0;
+    padding-left: var(--sp-2);
+    background: var(--pu-panel);
+  }
+  .pu-sb-detail {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 48;
+    max-height: 68vh;
+    border-radius: var(--r-2xl) var(--r-2xl) 0 0;
+    box-shadow: 0 -18px 40px rgba(43, 26, 20, 0.22);
+    animation: pu-sheet-in 180ms ease-out;
+  }
+  .pu-sb-detail-head {
+    padding: var(--sp-1) var(--sp-3);
+  }
+  .pu-sb-tabs button {
+    height: var(--control-tap);
+  }
+  .pu-sb-report {
+    min-height: var(--control-tap);
+    padding: 0 var(--sp-2);
+  }
+  .pu-sb-bar {
+    grid-template-columns: 84px minmax(0, 1fr) 70px;
+    gap: var(--sp-2);
+  }
+
   /* ---- Inspector as a half/full bottom sheet ------------------------------- */
   .fiberlab-inspector,
   .fiberlab-inspector:not(.is-collapsed) {
@@ -2254,7 +2219,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .fiberlab-inspector,
-  .pu-comp {
+  .pu-comp,
+  .pu-sb-detail {
     animation: none;
   }
 }
@@ -2272,7 +2238,6 @@
   .pu-sel,
   .pu-search,
   .pu-menu button,
-  .pu-btabs button,
   .pu-doc-tab,
   .pu-itabs button,
   .pu-menu button.pu-switch,
@@ -2282,8 +2247,7 @@
   .otdr-acquire-button,
   .fiberlab-inspector .btn,
   .fiberlab-inspector .btn-ghost,
-  .pu-empty-action,
-  .pu-bcollapse {
+  .pu-empty-action {
     min-height: var(--control-tap);
   }
   .pu-empty-dismiss {
@@ -2298,7 +2262,6 @@
   .pu-rail button {
     min-height: 52px;
   }
-  .pu-btabs button,
   .pu-doc-tab,
   .pu-itabs button {
     height: var(--control-tap);
