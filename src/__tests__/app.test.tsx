@@ -3,7 +3,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import App from '../App';
 
 async function renderStudio() {
-  render(<App />);
+  const { container } = render(<App />);
   fireEvent.click(await screen.findByRole('button', { name: /Launch Interactive Studio/i }));
   await screen.findByRole('button', { name: 'Bill of Materials' });
   // The workbench opens on an empty canvas, so load the reference tree the
@@ -11,6 +11,7 @@ async function renderStudio() {
   fireEvent.click(screen.getByRole('button', { name: /Preset Topologies/i }));
   fireEvent.click(await screen.findByRole('button', { name: /Standard 1:32 GPON Tree/i }));
   await waitFor(() => expect(screen.getAllByText('Al-Sulaymaniyah — Unit 12').length).toBeGreaterThan(0));
+  return { container };
 }
 
 function openMoreTools() {
@@ -36,7 +37,7 @@ describe('FiberLAB application shell', () => {
     render(<App />);
 
     expect(await screen.findByRole('heading', { name: /Splice the fiber/i })).toBeInTheDocument();
-    expect(await screen.findByText('-21.57 dBm')).toBeInTheDocument();
+    expect(await screen.findByText('-24.30 dBm')).toBeInTheDocument();
 
     // One interactive control, and the reference numbers an engineer will check.
     const launchSlider = screen.getByLabelText(/Laser launch power/i);
@@ -519,7 +520,7 @@ describe('FiberLAB application shell', () => {
     const oltNode = getCanvasNodeByText('OLT').querySelector('.hw-olt');
     expect(oltNode).not.toBeNull();
     expect(oltNode).toHaveTextContent('TX Power');
-    expect(oltNode).toHaveTextContent('RX Power');
+    expect(oltNode).toHaveTextContent('ONU Rx (max)');
     expect(oltNode).toHaveTextContent('PON Status');
 
     // Realistic PLC Splitter hardware card
@@ -620,5 +621,50 @@ describe('FiberLAB application shell', () => {
     fireEvent.click(screen.getByRole('switch', { name: 'Macro-bend fault (<15 mm)' }));
 
     expect(await screen.findByText('Edited')).toBeInTheDocument();
+  });
+
+  it('exposes one patchable branch port per split output and a reachable Ports tab', async () => {
+    await renderStudio();
+
+    const splitter = getCanvasNodeByText('PLC Splitter 1:8');
+    expect(splitter.querySelectorAll('.react-flow__handle[data-handleid^="out-"]')).toHaveLength(8);
+    expect(splitter.querySelector('.react-flow__handle[data-handleid="out-7"]')).not.toBeNull();
+
+    fireEvent.click(splitter);
+    fireEvent.click(screen.getByRole('tab', { name: 'Ports' }));
+    expect(await screen.findByText('Physical Optical Interface Ports')).toBeInTheDocument();
+    expect(screen.getByText(/8 × SC\/APC branch outputs/)).toBeInTheDocument();
+  });
+
+  it('caps large cassettes at sixteen branch ports and says so', async () => {
+    await renderStudio();
+
+    fireEvent.click(screen.getByRole('button', { name: /Preset Topologies/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /Failing Long-Distance Link/ }));
+    await waitFor(() => expect(screen.getAllByText('Dukan Ridge — Tower 7').length).toBeGreaterThan(0));
+
+    const splitter = getCanvasNodeByText('PLC Splitter 1:32');
+    expect(splitter.querySelectorAll('.react-flow__handle[data-handleid^="out-"]')).toHaveLength(16);
+    expect(within(splitter).getByText(/rest trunked/i)).toBeInTheDocument();
+
+    fireEvent.click(splitter);
+    fireEvent.click(screen.getByRole('tab', { name: 'Ports' }));
+    expect(screen.getByText(/remaining fan-out stays a ribbon trunk/i)).toBeInTheDocument();
+  });
+
+  it('treats splitter ratio chips as pickers, not quick-adds', async () => {
+    const { container } = await renderStudio();
+    const before = container.querySelectorAll('.react-flow__node').length;
+
+    const chips = screen.getByRole('group', { name: 'Splitter ratio shortcuts' });
+    const chip = within(chips).getByRole('button', { name: 'Use splitter ratio 1:16' });
+    fireEvent.click(chip);
+
+    expect(chip).toHaveAttribute('aria-pressed', 'true');
+    expect(within(chips).getByRole('button', { name: 'Use splitter ratio 1:8' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
+    expect(container.querySelectorAll('.react-flow__node')).toHaveLength(before);
   });
 });

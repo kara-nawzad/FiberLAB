@@ -861,7 +861,24 @@
 }
 .hw-spl {
   position: relative;
+  display: flex;
+  flex-direction: column;
   width: 104px;
+}
+/* Branch handles fan down the right edge; the fan-out rail makes the extra
+ * height read as ports rather than empty space. */
+.hw-spl::after {
+  content: '';
+  position: absolute;
+  top: 10px;
+  right: -6px;
+  bottom: 10px;
+  width: 1px;
+  background: linear-gradient(180deg, rgba(13, 159, 110, 0.34), rgba(13, 159, 110, 0.1));
+  pointer-events: none;
+}
+.hw-label-note {
+  color: var(--pu-warn);
 }
 .hw-spl .body {
   border-radius: var(--r-lg);

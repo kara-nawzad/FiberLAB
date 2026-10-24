@@ -79,14 +79,28 @@ export const SPLITTER_LOSS_DB: Record<SplitRatio, number> = {
 
 export const SPLIT_RATIOS: SplitRatio[] = [2, 4, 8, 16, 32, 64];
 
+/** The most branch ports a cassette exposes on the canvas. Real 1:32 and 1:64
+ * cassettes are ribbon-pigtailed (one trunk per group of fibres), so they are
+ * not drawn with 32/64 connectors; the model stops at 16 patchable branches. */
+export const MAX_BRANCH_PORTS = 16;
+
+/**
+ * Patchable branch outputs for a split ratio. Every output up to 1:16 is
+ * connectorised, so the node can feed exactly as many drops as it splits; above
+ * that the remaining fan-out is trunked (see MAX_BRANCH_PORTS).
+ */
+export function splitterBranchPortCount(ratio: SplitRatio): number {
+  return Math.min(ratio, MAX_BRANCH_PORTS);
+}
+
 /** Physical output port count exposed on the splitter node. */
 export const SPLITTER_OUTPUT_PORTS: Record<SplitRatio, number> = {
-  2: 2,
-  4: 4,
-  8: 4,
-  16: 4,
-  32: 4,
-  64: 4,
+  2: splitterBranchPortCount(2),
+  4: splitterBranchPortCount(4),
+  8: splitterBranchPortCount(8),
+  16: splitterBranchPortCount(16),
+  32: splitterBranchPortCount(32),
+  64: splitterBranchPortCount(64),
 };
 
 /* -------------------------------------------------------------------------- *

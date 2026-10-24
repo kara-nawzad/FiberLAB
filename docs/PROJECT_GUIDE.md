@@ -99,7 +99,7 @@ The existing interactive waveguide is preserved below the introductory hero. Its
 
 ### 3.1 Starting state
 
-The app opens on the warm landing hero. Holding **Press and hold to splice** opens Studio after the illustrated fusion animation; the shortcut link opens it immediately. The receive-power panel is sourced from the current simulator result and marks the last committed reading when Auto is off and edits are stale. Below the hero, the waveguide starts at +5.0 dBm and 1490 nm; users can adjust the launch slider and choose 1310, 1490, or 1550 nm to inspect the educational ray-angle model and per-branch 1:4 PLC readout. **Launch Interactive Studio** opens the **Standard 1:32 GPON Tree** with three ONTs. The TopBar exposes all three presets, including **MODERN 10G XGS-PON SUBURB**; the landing quick-load buttons retain the standard and failing-link scenarios.
+The app opens on the warm landing hero. **Launch Interactive Studio** is the primary action; holding the optional **HOLD TO FUSE THE SPLICE** pill on the fibre scene plays the fusion animation and opens Studio too. The receive-power panel reports the weakest subscriber (ONT or gateway) in the current simulator result and marks the last committed reading when Auto is off and edits are stale. Below the hero, one slider drives the 1490 nm waveguide demo at +5.0 dBm with the per-branch 1:4 PLC readout, and model caveats sit behind a **Model scope & assumptions** disclosure. Studio opens on an **empty canvas** with a short dismissible mission hint; the TopBar exposes all three presets, including **MODERN 10G XGS-PON SUBURB**, and the landing quick-load buttons load the standard or failing-link scenario directly.
 
 ### 3.2 Place and connect components
 
@@ -221,7 +221,7 @@ Important modeling details:
 - The OSP closure is also a **node**. It passes light through active branch handles with one configured splice allowance per traversed branch; its tray switches identify fiber-channel occupancy. Branches A–D map to channels 1–4; the other eight tray slots are not separately addressable in the graph.
 - ODFs and NAP/FATs are graph nodes, not patch-cord edges. Each ODF input is constrained to its paired output and adds 0.50 dB once per through-path. A NAP accepts one feeder input; each valid output contributes one fixed 10.5 dB 1:8 split and one split stage. These are explicit educational defaults, not calibrated or universal product values.
 - The virtual OPM runs the pure simulator against a copy of the graph retuned to its selected wavelength, then reads the requested handle/edge telemetry. This does not alter the editor's node data.
-- The splitter ratios are 1:2, 1:4, 1:8, 1:16, 1:32, and 1:64. The current canvas displays at most four output handles (two for 1:2, four for the other ratios). These handles represent branch connections in the diagram; they are **not** one physical handle for every output port of a 1:8, 1:16, 1:32, or 1:64 splitter.
+- The splitter ratios are 1:2, 1:4, 1:8, 1:16, 1:32, and 1:64. The canvas exposes one patchable branch handle per connectorised output up to 1:16 (`splitterBranchPortCount` in `src/types.ts`), so a 1:8 splitter can feed eight drops. A 1:32 or 1:64 cassette is ribbon-pigtailed in practice, so those two ratios stop at 16 branch ports and the node, the Ports tab, and the Inspector all say so. Handle count, patch-cord pruning when a ratio is reduced, Link-mode port assignment, and connection validation all read from the same helper.
 - ONT and gateway `sensitivityDbm` are informational fields; the status classifier retains the shared receive thresholds instead of applying per-device sensitivity values.
 - OLT class receive-sensitivity and nominal link-budget values are displayed as reference information. The current traversal does not use those values as a separate pass/fail calculation.
 
@@ -554,7 +554,7 @@ On 13 October 2026, after the ODF/NAP/gateway and XGS-PON expansion:
 
 - `npm ci --no-audit`: passed; dependencies installed from the lockfile. No automatic dependency fixes were applied.
 - `npm run typecheck`: passed.
-- `npm test -- --reporter=dot`: **94 tests passed** across 11 files (26 optical-simulator, 5 OPM, 5 OTDR, 5 XGS-PON/equipment, 6 mission, 5 pricing, 3 commercial-export, 7 hardware-catalogue, 2 optical-physics, 29 app, and 1 splice-hero tests).
+- `npm test -- --reporter=dot`: **105 tests passed** across 12 files (26 optical-simulator, 5 OPM, 5 OTDR, 5 XGS-PON/equipment, 6 mission, 5 pricing, 3 commercial-export, 7 hardware-catalogue, 2 optical-physics, 3 splitter-port, 33 app, and 5 splice-hero tests).
 - `npm run build`: passed, including strict TypeScript checking and a Vite production build. Vite reports an informational large-chunk advisory for the 650.10 kB minified JavaScript bundle.
 - `git diff --check`: passed.
 - A previous audit scan reported **13 dependency findings** (5 moderate, 6 high, 2 critical). Review these before production; no `npm audit fix` was run.
