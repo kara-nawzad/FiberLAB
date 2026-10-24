@@ -95,27 +95,38 @@
 
 @layer components {
   .panel {
-    @apply border border-slate-200 bg-white;
+    @apply border;
+    border-color: var(--pu-line);
+    background: var(--pu-panel);
   }
 
   .panel-header {
-    @apply flex flex-wrap items-center justify-between gap-y-2 border-b border-slate-200;
+    @apply flex flex-wrap items-center justify-between gap-y-2 border-b;
+    border-color: var(--pu-line);
     padding: var(--sp-3) var(--shell-pad);
   }
 
   .eyebrow {
-    @apply text-caption font-semibold uppercase text-slate-600;
+    @apply text-caption font-semibold uppercase;
+    color: var(--pu-mut);
     letter-spacing: var(--tracking-eyebrow);
   }
 
   .btn {
     @apply inline-flex min-h-9 items-center justify-center gap-2 rounded-lg border px-3 py-2 text-body font-semibold
-      transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/35
+      transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#e4673f]/40
       disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .btn-primary {
-    @apply btn border-blue-700 bg-blue-600 text-white shadow-sm hover:border-blue-800 hover:bg-blue-700;
+    @apply btn text-white shadow-sm;
+    border-color: var(--pu-pri);
+    background: var(--pu-pri);
+  }
+
+  .btn-primary:hover {
+    border-color: var(--pu-pri-strong);
+    background: var(--pu-pri-strong);
   }
 
   .btn-ghost {

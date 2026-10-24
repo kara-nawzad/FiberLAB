@@ -2654,9 +2654,9 @@
   margin-bottom: -1px;
   padding: var(--sp-2) var(--sp-3);
   border: 1px solid transparent;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.28);
+  border-bottom: 1px solid var(--pu-line);
   border-radius: var(--r-md) var(--r-md) 0 0;
-  color: #9aabbc;
+  color: var(--pu-mut);
   font-size: var(--type-body);
   font-weight: var(--fw-semibold);
   line-height: var(--leading-snug);
@@ -2667,17 +2667,17 @@
 }
 
 .bom-tab:hover {
-  color: #e5edf4;
-  background: rgba(148, 163, 184, 0.08);
+  color: var(--pu-ink);
+  background: var(--pu-elevated);
 }
 .bom-tab.is-active {
-  border-color: rgba(125, 211, 252, 0.28);
-  border-bottom-color: #0c1926;
-  background: rgba(56, 189, 248, 0.1);
-  color: #bae6fd;
+  border-color: var(--pu-line);
+  border-bottom-color: var(--pu-pri);
+  background: var(--pu-pri-soft);
+  color: var(--pu-pri);
 }
 .bom-tab:focus-visible {
-  outline: 2px solid #38bdf8;
+  outline: 2px solid var(--pu-pri);
   outline-offset: 1px;
 }
 

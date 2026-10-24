@@ -132,29 +132,33 @@ export function BottomPanel({
       data-testid="network-summary-strip"
       aria-label="Network summary"
     >
-      <div className="pu-btabs" role="tablist" aria-label="Network summary views">
-        {TABS.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            role="tab"
-            aria-selected={tab === item.id}
-            className={tab === item.id ? 'is-active' : ''}
-            onClick={() => {
-              setTab(item.id);
-              setMinimized(false);
-            }}
-          >
-            {item.label}
-          </button>
-        ))}
+      <div className="pu-bhead">
+        <div className="pu-btabs" role="tablist" aria-label="Network summary views">
+          {TABS.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              role="tab"
+              aria-selected={tab === item.id}
+              className={tab === item.id ? 'is-active' : ''}
+              onClick={() => {
+                setTab(item.id);
+                setMinimized(false);
+              }}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
         <button
           type="button"
-          style={{ marginLeft: 'auto' }}
+          className="pu-bcollapse"
           onClick={() => setMinimized((value) => !value)}
-          aria-label={minimized ? 'Expand summary' : 'Minimize summary'}
+          aria-label={minimized ? 'Expand summary' : 'Collapse summary'}
+          title={minimized ? 'Expand the network summary' : 'Collapse the network summary'}
         >
           {minimized ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          <span className="pu-bcollapse-label">{minimized ? 'Expand' : 'Collapse'}</span>
         </button>
       </div>
 
@@ -223,7 +227,7 @@ export function BottomPanel({
               </div>
             ))}
           </div>
-          <div className="pu-card" style={{ maxHeight: 150, overflowY: 'auto' }}>
+          <div className="pu-card pu-card--events">
             <h6>Recent Events</h6>
             {events.length === 0 ? (
               <div className="pu-mut" style={{ fontSize: 'var(--fs-xs)' }}>

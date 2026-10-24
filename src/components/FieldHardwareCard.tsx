@@ -16,9 +16,9 @@ export function FieldHardwareCard({ profile, configurationLabel }: FieldHardware
   return (
     <section
       aria-label="Field hardware reference"
-      className="mb-3 overflow-hidden rounded-lg border border-sky-500/25 bg-noc-950/65"
+      className="mb-3 overflow-hidden rounded-lg border border-[var(--pu-line)] bg-noc-950/65"
     >
-      <div className="flex items-center justify-between border-b border-noc-700/60 bg-sky-500/[0.07] px-2 py-2">
+      <div className="flex items-center justify-between border-b border-noc-700/60 bg-[var(--pu-pri-soft)] px-2 py-2">
         <div className="flex items-center gap-2 text-caption font-semibold uppercase tracking-eyebrow text-sky-200">
           <Info size={12} /> Field hardware
         </div>

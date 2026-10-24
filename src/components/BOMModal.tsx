@@ -39,7 +39,7 @@ function StatCard({
   label,
   value,
   sub,
-  tone = 'text-noc-200',
+  tone = 'text-[var(--pu-ink)]',
 }: {
   label: string;
   value: string;
@@ -47,10 +47,10 @@ function StatCard({
   tone?: string;
 }) {
   return (
-    <div className="rounded-lg border border-noc-700/60 bg-noc-950/50 px-3 py-2">
-      <div className="text-caption font-medium uppercase tracking-eyebrow text-noc-400">{label}</div>
+    <div className="rounded-lg border border-[var(--pu-line)] bg-white px-3 py-2">
+      <div className="text-caption font-medium uppercase tracking-eyebrow text-[var(--pu-mut)]">{label}</div>
       <div className={`mt-1 font-mono text-xl font-bold leading-tight ${tone}`}>{value}</div>
-      {sub ? <div className="mt-1 text-caption text-noc-500">{sub}</div> : null}
+      {sub ? <div className="mt-1 text-caption text-[var(--pu-mut)]">{sub}</div> : null}
     </div>
   );
 }
@@ -72,33 +72,39 @@ function CommercialQuotationView({
   return (
     <section aria-label="Commercial quotation and CAPEX" data-testid="commercial-quotation">
       <div className="mb-3 grid grid-cols-2 gap-2 md:grid-cols-4">
-        <StatCard label="Total Materials Cost" value={formatUsd(costBreakdown.materialsCost)} tone="text-sky-300" />
+        <StatCard
+          label="Total Materials Cost"
+          value={formatUsd(costBreakdown.materialsCost)}
+          tone="text-[var(--pu-pri)]"
+        />
         <StatCard
           label="Total Labor & Splicing Cost"
           value={formatUsd(costBreakdown.laborCost)}
-          tone="text-amber-300"
+          tone="text-[var(--pu-warn)]"
         />
-        <StatCard label="Total Project CAPEX" value={formatUsd(costBreakdown.totalCapex)} tone="text-emerald-300" />
+        <StatCard label="Total Project CAPEX" value={formatUsd(costBreakdown.totalCapex)} tone="text-[var(--pu-ok)]" />
         <StatCard
           label="CAPEX / Connected Subscriber"
           value={connectedCount === 0 ? '—' : formatUsd(costPerConnected)}
           sub={`${formatUsd(costBreakdown.costPerHomePassed)} per home passed · ${homeCount} homes / endpoints`}
-          tone="text-orange-300"
+          tone="text-[var(--pu-pri)]"
         />
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-noc-700/60">
-        <div className="flex items-center justify-between gap-2 bg-noc-800/80 px-3 py-2">
+      <div className="overflow-hidden rounded-lg border border-[var(--pu-line)]">
+        <div className="flex items-center justify-between gap-2 bg-[var(--pu-elevated)] px-3 py-2">
           <div>
-            <h3 className="text-label font-semibold text-noc-200">Detailed quotation</h3>
-            <p className="text-body text-noc-500">Deployed quantities · reference USD rates</p>
+            <h3 className="text-label font-semibold text-[var(--pu-ink)]">Detailed quotation</h3>
+            <p className="text-body text-[var(--pu-mut)]">Deployed quantities · reference USD rates</p>
           </div>
-          <span className="font-mono text-caption text-noc-400">{costBreakdown.lineItems.length} line items</span>
+          <span className="font-mono text-caption text-[var(--pu-mut)]">
+            {costBreakdown.lineItems.length} line items
+          </span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[720px] font-mono text-label" data-testid="quotation-line-items">
             <thead>
-              <tr className="border-t border-noc-700/60 bg-noc-950/70 text-caption uppercase tracking-label text-noc-500">
+              <tr className="border-t border-[var(--pu-line)] bg-white text-caption uppercase tracking-label text-[var(--pu-mut)]">
                 <th className="px-2 py-2 text-left font-medium">Category</th>
                 <th className="px-2 py-2 text-left font-medium">Item</th>
                 <th className="px-2 py-2 text-right font-medium">Qty</th>
@@ -110,39 +116,42 @@ function CommercialQuotationView({
             <tbody>
               {costBreakdown.lineItems.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-3 py-6 text-center text-noc-500">
+                  <td colSpan={6} className="px-3 py-6 text-center text-[var(--pu-mut)]">
                     No priced components on the canvas yet.
                   </td>
                 </tr>
               ) : (
                 costBreakdown.lineItems.map((line) => (
-                  <tr key={`${line.category}-${line.item}`} className="border-t border-noc-700/40 text-noc-300">
-                    <td className="px-2 py-2 text-noc-500">{line.category}</td>
-                    <td className="px-2 py-2 text-noc-200">{line.item}</td>
+                  <tr
+                    key={`${line.category}-${line.item}`}
+                    className="border-t border-[var(--pu-line)] text-[var(--pu-ink)]"
+                  >
+                    <td className="px-2 py-2 text-[var(--pu-mut)]">{line.category}</td>
+                    <td className="px-2 py-2 text-[var(--pu-ink)]">{line.item}</td>
                     <td className="px-2 py-2 text-right">
                       {line.quantity.toLocaleString('en-US', { maximumFractionDigits: 3 })}
                     </td>
-                    <td className="px-2 py-2 text-noc-500">{line.unit}</td>
+                    <td className="px-2 py-2 text-[var(--pu-mut)]">{line.unit}</td>
                     <td className="px-2 py-2 text-right">{formatUsd(line.unitPrice)}</td>
-                    <td className="px-2 py-2 text-right font-semibold text-emerald-300">
+                    <td className="px-2 py-2 text-right font-semibold text-[var(--pu-ok)]">
                       {formatUsd(line.totalPrice)}
                     </td>
                   </tr>
                 ))
               )}
-              <tr className="border-t border-noc-600 bg-noc-800/70 font-semibold text-noc-100">
+              <tr className="border-t border-[var(--pu-line)] bg-[var(--pu-elevated)] font-semibold text-[var(--pu-ink)]">
                 <td colSpan={4} className="px-2 py-2 text-right">
                   Total quoted CAPEX
                 </td>
                 <td className="px-2 py-2 text-right">—</td>
-                <td className="px-2 py-2 text-right text-emerald-300">{formatUsd(costBreakdown.totalCapex)}</td>
+                <td className="px-2 py-2 text-right text-[var(--pu-ok)]">{formatUsd(costBreakdown.totalCapex)}</td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
 
-      <p className="mt-3 rounded-md border border-amber-800/40 bg-amber-950/20 px-3 py-2 text-body leading-relaxed text-amber-200/80">
+      <p className="mt-3 rounded-md border border-[var(--pu-line)] bg-[var(--pu-elevated)] px-3 py-2 text-body leading-relaxed text-[var(--pu-mut)]">
         Educational USD planning rates only—not a supplier quote, installed-price guarantee, tax estimate, or market
         survey. Edit local reference rates in the Inspector before exporting a quotation.
       </p>
@@ -199,14 +208,14 @@ export function BOMModal({
       >
         <div className="panel-header">
           <div className="flex items-center gap-2">
-            <span className="flex h-7 w-7 items-center justify-center rounded-md bg-sky-500/15 text-sky-300">
+            <span className="flex h-7 w-7 items-center justify-center rounded-md bg-[var(--pu-pri-soft)] text-[var(--pu-pri)]">
               <Table2 size={16} />
             </span>
             <div>
-              <h2 id="bom-title" className="text-section font-bold leading-tight text-noc-200">
+              <h2 id="bom-title" className="text-section font-bold leading-tight text-[var(--pu-ink)]">
                 Bill of Materials
               </h2>
-              <p id="bom-description" className="text-body text-noc-500">
+              <p id="bom-description" className="text-body text-[var(--pu-mut)]">
                 Optical audit &amp; commercial CAPEX quotation
               </p>
             </div>
@@ -257,7 +266,7 @@ export function BOMModal({
         <div
           role="tablist"
           aria-label="Bill of materials views"
-          className="flex shrink-0 gap-1 overflow-x-auto border-b border-noc-700/60 px-4 pt-2"
+          className="flex shrink-0 gap-1 overflow-x-auto border-b border-[var(--pu-line)] px-4 pt-2"
         >
           <button
             type="button"
@@ -300,7 +309,7 @@ export function BOMModal({
                   label="Fiber deployed"
                   value={`${summary.totalFiberKm.toFixed(2)}`}
                   sub="km of plant on canvas"
-                  tone="text-sky-300"
+                  tone="text-[var(--pu-pri)]"
                 />
                 <StatCard
                   label={summary.gatewayCount === 0 ? 'ONTs provisioned' : 'Subscriber endpoints'}
@@ -311,72 +320,78 @@ export function BOMModal({
                   label="Online"
                   value={`${summary.byStatus.ONLINE + summary.byStatus.WARNING + summary.byStatus.OVERLOAD}`}
                   sub={`${summary.byStatus.ONLINE} optimal · ${summary.byStatus.WARNING} marginal`}
-                  tone="text-emerald-300"
+                  tone="text-[var(--pu-ok)]"
                 />
                 <StatCard
                   label="Offline"
                   value={`${summary.byStatus.LOS + summary.byStatus.DISCONNECTED}`}
                   sub={`${summary.byStatus.LOS} LOS · ${summary.byStatus.DISCONNECTED} unwired`}
-                  tone={summary.byStatus.LOS + summary.byStatus.DISCONNECTED > 0 ? 'text-red-300' : 'text-noc-200'}
+                  tone={
+                    summary.byStatus.LOS + summary.byStatus.DISCONNECTED > 0
+                      ? 'text-[var(--pu-bad)]'
+                      : 'text-[var(--pu-ink)]'
+                  }
                 />
               </div>
 
               {/* --------------------------- Passive plant -------------------------- */}
               <div className="mt-3 grid gap-2 md:grid-cols-2">
-                <div className="rounded-lg border border-noc-700/60 bg-noc-950/50 p-3">
+                <div className="rounded-lg border border-[var(--pu-line)] bg-white p-3">
                   <div className="eyebrow mb-2">Splitters by ratio</div>
                   {summary.splitterTotal === 0 ? (
-                    <p className="text-body text-noc-500">No splitters deployed.</p>
+                    <p className="text-body text-[var(--pu-mut)]">No splitters deployed.</p>
                   ) : (
                     <div className="flex flex-wrap gap-2">
                       {SPLIT_RATIOS.filter((ratio: SplitRatio) => summary.splitterCountByRatio[ratio]).map((ratio) => (
                         <span
                           key={ratio}
-                          className="rounded border border-purple-500/40 bg-purple-500/15 px-2 py-1 font-mono text-label text-purple-200"
+                          className="rounded border border-[var(--pu-line)] bg-[var(--pu-pri-soft)] px-2 py-1 font-mono text-label text-[var(--pu-pri)]"
                         >
                           1:{ratio} × {summary.splitterCountByRatio[ratio]}
-                          <span className="ml-2 text-purple-800">−{SPLITTER_LOSS_DB[ratio].toFixed(1)} dB each</span>
+                          <span className="ml-2 text-[var(--pu-mut)]">
+                            −{SPLITTER_LOSS_DB[ratio].toFixed(1)} dB each
+                          </span>
                         </span>
                       ))}
                     </div>
                   )}
-                  <div className="mt-2 border-t border-noc-700/50 pt-2 font-mono text-label text-noc-400">
-                    Total passive splitters: <span className="text-noc-200">{summary.splitterTotal}</span>
+                  <div className="mt-2 border-t border-[var(--pu-line)] pt-2 font-mono text-label text-[var(--pu-mut)]">
+                    Total passive splitters: <span className="text-[var(--pu-ink)]">{summary.splitterTotal}</span>
                   </div>
                 </div>
 
-                <div className="rounded-lg border border-noc-700/60 bg-noc-950/50 p-3">
+                <div className="rounded-lg border border-[var(--pu-line)] bg-white p-3">
                   <div className="eyebrow mb-2">Termination &amp; splicing</div>
                   <table className="w-full font-mono text-label">
-                    <tbody className="text-noc-300">
+                    <tbody className="text-[var(--pu-ink)]">
                       <tr>
-                        <td className="py-1 text-noc-400">Fusion splices</td>
+                        <td className="py-1 text-[var(--pu-mut)]">Fusion splices</td>
                         <td className="py-1 text-right">{summary.totalSplices}</td>
-                        <td className="py-1 pl-3 text-right text-noc-500">
+                        <td className="py-1 pl-3 text-right text-[var(--pu-mut)]">
                           {(summary.totalSplices * 0.1).toFixed(1)} dB worst case
                         </td>
                       </tr>
                       <tr>
-                        <td className="py-1 text-noc-400">SC/APC connectors</td>
+                        <td className="py-1 text-[var(--pu-mut)]">SC/APC connectors</td>
                         <td className="py-1 text-right">{summary.totalConnectors}</td>
-                        <td className="py-1 pl-3 text-right text-noc-500">
+                        <td className="py-1 pl-3 text-right text-[var(--pu-mut)]">
                           {(summary.totalConnectors * 0.5).toFixed(1)} dB worst case
                         </td>
                       </tr>
                       <tr>
-                        <td className="py-1 text-noc-400">Safety margin</td>
+                        <td className="py-1 text-[var(--pu-mut)]">Safety margin</td>
                         <td className="py-1 text-right">{settings.safetyMarginDb.toFixed(1)} dB</td>
-                        <td className="py-1 pl-3 text-right text-noc-500">per subscriber</td>
+                        <td className="py-1 pl-3 text-right text-[var(--pu-mut)]">per subscriber</td>
                       </tr>
-                      <tr className="border-t border-noc-700/50">
-                        <td className="py-1 text-noc-400">Mean Rx power</td>
-                        <td className="py-1 text-right text-noc-200" colSpan={2}>
+                      <tr className="border-t border-[var(--pu-line)]">
+                        <td className="py-1 text-[var(--pu-mut)]">Mean Rx power</td>
+                        <td className="py-1 text-right text-[var(--pu-ink)]" colSpan={2}>
                           {formatDbm(summary.meanRxDbm)}
                         </td>
                       </tr>
                       <tr>
-                        <td className="py-1 text-noc-400">Worst Rx power</td>
-                        <td className="py-1 text-right text-noc-200" colSpan={2}>
+                        <td className="py-1 text-[var(--pu-mut)]">Worst Rx power</td>
+                        <td className="py-1 text-right text-[var(--pu-ink)]" colSpan={2}>
                           {formatDbm(summary.worstRxDbm)}
                         </td>
                       </tr>
@@ -388,10 +403,10 @@ export function BOMModal({
               {/* ----------------------- Per-subscriber budget ---------------------- */}
               <div className="mt-4">
                 <div className="eyebrow mb-2">Optical budget per subscriber</div>
-                <div className="overflow-hidden rounded-lg border border-noc-700/60">
+                <div className="overflow-hidden rounded-lg border border-[var(--pu-line)]">
                   <table className="w-full font-mono text-label">
                     <thead>
-                      <tr className="bg-noc-800/80 text-caption uppercase tracking-label text-noc-400">
+                      <tr className="bg-[var(--pu-elevated)] text-caption uppercase tracking-label text-[var(--pu-mut)]">
                         <th className="px-2 py-2 text-left font-medium">Subscriber</th>
                         <th className="px-2 py-2 text-left font-medium">Status</th>
                         <th className="px-2 py-2 text-right font-medium">Rx dBm</th>
@@ -408,7 +423,7 @@ export function BOMModal({
                     <tbody>
                       {subscriberRows.length === 0 ? (
                         <tr>
-                          <td className="px-2 py-3 text-noc-500" colSpan={11}>
+                          <td className="px-2 py-3 text-[var(--pu-mut)]" colSpan={11}>
                             No subscriber endpoints on the canvas yet — drag an ONT or gateway in from the toolbox.
                           </td>
                         </tr>
@@ -419,10 +434,15 @@ export function BOMModal({
                           const data = node.data as { serial: string; subscriber: string };
                           const path = simulation.bestPaths[node.id];
                           return (
-                            <tr key={node.id} className="border-t border-noc-700/50 text-noc-300 hover:bg-noc-800/40">
+                            <tr
+                              key={node.id}
+                              className="border-t border-[var(--pu-line)] text-[var(--pu-ink)] hover:bg-[var(--pu-elevated)]"
+                            >
                               <td className="px-2 py-2">
-                                <div className="truncate font-sans text-label text-noc-200">{data.subscriber}</div>
-                                <div className="text-label text-noc-500">
+                                <div className="truncate font-sans text-label text-[var(--pu-ink)]">
+                                  {data.subscriber}
+                                </div>
+                                <div className="text-label text-[var(--pu-mut)]">
                                   {node.type === 'gateway'
                                     ? `Wi-Fi gateway · ${data.serial} · ${node.data.ssid}`
                                     : `ONT · ${data.serial}`}
@@ -453,7 +473,7 @@ export function BOMModal({
                               <td
                                 className={`px-2 py-2 text-right ${
                                   telemetry.upstreamDeltaDb !== null && telemetry.upstreamDeltaDb > 15
-                                    ? 'font-semibold text-amber-400'
+                                    ? 'font-semibold text-[var(--pu-warn)]'
                                     : ''
                                 }`}
                               >
@@ -467,7 +487,7 @@ export function BOMModal({
                               </td>
                               <td className="px-2 py-2 text-right">{telemetry.splices}</td>
                               <td className="px-2 py-2 text-right">{telemetry.connectors}</td>
-                              <td className="px-2 py-2 text-label text-noc-400">
+                              <td className="px-2 py-2 text-label text-[var(--pu-mut)]">
                                 {path ? `${path.oltPort} @ ${path.txPowerDbm.toFixed(1)} dBm` : '—'}
                               </td>
                             </tr>
@@ -484,7 +504,7 @@ export function BOMModal({
                 {(Object.keys(STATUS_STYLES) as Array<keyof typeof STATUS_STYLES>).map((key) => (
                   <div
                     key={key}
-                    className="flex items-center gap-2 rounded border border-noc-700/60 bg-noc-950/50 px-2 py-1"
+                    className="flex items-center gap-2 rounded border border-[var(--pu-line)] bg-white px-2 py-1"
                   >
                     <span
                       className="h-2 w-2 rounded-full"
@@ -493,8 +513,8 @@ export function BOMModal({
                         boxShadow: `0 0 6px ${STATUS_STYLES[key].hex}`,
                       }}
                     />
-                    <span className="font-mono text-label text-noc-300">{STATUS_STYLES[key].label}</span>
-                    <span className="font-mono text-label text-noc-500">{summary.byStatus[key]}</span>
+                    <span className="font-mono text-label text-[var(--pu-ink)]">{STATUS_STYLES[key].label}</span>
+                    <span className="font-mono text-label text-[var(--pu-mut)]">{summary.byStatus[key]}</span>
                   </div>
                 ))}
               </div>

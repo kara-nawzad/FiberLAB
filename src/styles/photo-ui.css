@@ -9,6 +9,7 @@
   --pu-mut: #85695a;
   --pu-line: #eed8bf;
   --pu-pri: #e4673f;
+  --pu-pri-strong: #c8512c;
   --pu-pri-soft: #fff0df;
   --pu-fiber: #e4673f;
   --pu-ok: #0f8a5f;
@@ -297,7 +298,7 @@
   flex-direction: column;
   align-items: center;
   gap: var(--sp-1);
-  overflow-wrap: anywhere;
+  white-space: nowrap;
   text-align: center;
   line-height: var(--leading-tight);
   padding: var(--sp-2) var(--sp-1);
@@ -310,10 +311,15 @@
   background: var(--pu-elevated);
   color: var(--pu-ink);
 }
+.pu-rail-label {
+  font-size: var(--type-caption);
+  line-height: var(--leading-tight);
+  white-space: nowrap;
+}
 .pu-rail button.is-active {
   background: var(--pu-pri-soft);
   color: var(--pu-pri);
-  border: 1px solid #f0d1b1;
+  border: 1px solid var(--pu-line);
 }
 .pu-comp {
   display: flex;
@@ -529,6 +535,42 @@
 .pu-btabs button.is-active {
   color: var(--pu-pri);
   border-color: var(--pu-pri);
+}
+/* One fixed header row: the tab strip scrolls sideways, the collapse control
+ * stays put on the right so it is always reachable. */
+.pu-bhead {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: var(--sp-2);
+  border-bottom: 1px solid var(--pu-line);
+}
+.pu-bhead > .pu-btabs {
+  flex: 1 1 auto;
+  border-bottom: 0;
+}
+.pu-bcollapse {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: var(--sp-1);
+  height: var(--control-sm);
+  margin-left: auto;
+  padding: 0 var(--sp-2);
+  border: 1px solid var(--pu-line);
+  border-radius: var(--r-md);
+  background: var(--pu-panel);
+  color: var(--pu-mut);
+  font-size: var(--type-small);
+  font-weight: var(--fw-semibold);
+}
+.pu-bcollapse:hover {
+  background: var(--pu-elevated);
+  color: var(--pu-ink);
+}
+.pu-bcollapse:focus-visible {
+  outline: 2px solid var(--pu-pri);
+  outline-offset: 2px;
 }
 .pu-stat {
   display: flex;
@@ -1379,6 +1421,17 @@
   max-height: 170px;
   overflow: auto;
 }
+/* Recent events keeps one scrollbar (the panel's) once the cards stack. */
+.pu-card--events {
+  max-height: 150px;
+  overflow-y: auto;
+}
+@media (max-width: 900px) {
+  .pu-card--events {
+    max-height: none;
+    overflow: visible;
+  }
+}
 .pu-data-table th,
 .pu-data-table td {
   white-space: nowrap;
@@ -1386,7 +1439,8 @@
 
 /* Canvas overlays. */
 .pu-empty-panel {
-  margin-top: calc(var(--sp-8) + var(--sp-6)) !important; /* 56 */
+  /* Clears the floating tool strip above the canvas, even at touch sizes. */
+  margin-top: calc(var(--control-tap) + var(--sp-3) + var(--sp-2)) !important; /* 64 */
 }
 /* Empty canvas: a short "start here" card with the mission shortcut. */
 .pu-empty-card {
@@ -1459,6 +1513,10 @@
 }
 
 @media (max-width: 900px) {
+  /* Stacked cards size to their content so the bottom panel fits more of them. */
+  .pu-bottom .pu-stat {
+    min-height: 0;
+  }
   /* Overlay mode: the inspector sheet leaves room for the rail on the left. */
   .fiberlab-inspector:not(.is-collapsed) {
     max-width: calc(100% - var(--rail-w) - var(--sp-2) * 2);
@@ -1563,6 +1621,16 @@
     max-height: 62vh;
   }
 
+  /* The collapse control keeps its icon and drops the word. */
+  .pu-bcollapse {
+    width: var(--control-sm);
+    justify-content: center;
+    padding: 0;
+  }
+  .pu-bcollapse-label {
+    display: none;
+  }
+
   /* Touch-sized targets even in a narrow desktop window. */
   .pu-btabs button,
   .pu-chips button,
@@ -1611,7 +1679,8 @@
   .otdr-acquire-button,
   .fiberlab-inspector .btn,
   .fiberlab-inspector .btn-ghost,
-  .pu-empty-action {
+  .pu-empty-action,
+  .pu-bcollapse {
     min-height: var(--control-tap);
   }
   /* Icon-only buttons are square in the markup; keep them square and large. */
