@@ -80,7 +80,7 @@ export function MissionDrawer({
         aria-labelledby="mission-drawer-title"
         className="mission-drawer relative flex h-full w-full max-w-[440px] flex-col border-l border-slate-200 bg-white shadow-2xl"
       >
-        <header className="flex shrink-0 items-start justify-between border-b border-slate-200 px-5 py-4">
+        <header className="flex shrink-0 items-start justify-between gap-4 border-b border-slate-200 px-4 py-4">
           <div>
             <div className="mb-1 flex items-center gap-2 text-caption font-bold uppercase tracking-[0.16em] text-blue-700">
               <Flag size={13} /> FiberLAB training

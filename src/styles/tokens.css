@@ -108,6 +108,9 @@
   --shell-gap: var(--sp-3); /* 12 — gap between canvas, tabstrip, bottom panel */
   --shell-pad: var(--panel-pad); /* 16 — side padding of every panel */
   --canvas-min-w: 360px;
+  --panel-head-h: 48px; /* title row: library, inspector, document tab strip */
+  --tab-h: 40px; /* every tab button, all three tab bars */
+  --card-pad: var(--sp-3); /* inner padding of every card/stat/tile */
   --bottom-max-h: 44vh; /* bottom panel never eats more than this share */
   --toolbar-gutter: 208px; /* reserved for the minimap next to the toolbar */
 
@@ -163,6 +166,7 @@
     --library-w: 184px;
     --inspector-w: 240px;
     --shell-gap: var(--sp-2);
+    --shell-pad: var(--sp-3); /* compact panels get one narrower gutter everywhere */
     --bottom-max-h: 40vh;
   }
 }

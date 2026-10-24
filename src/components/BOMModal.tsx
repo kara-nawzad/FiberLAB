@@ -197,7 +197,7 @@ export function BOMModal({
         tabIndex={-1}
         className="panel flex max-h-[88vh] w-full max-w-5xl flex-col overflow-hidden rounded-xl shadow-panel outline-none"
       >
-        <div className="panel-header !py-3">
+        <div className="panel-header">
           <div className="flex items-center gap-2">
             <span className="flex h-7 w-7 items-center justify-center rounded-md bg-sky-500/15 text-sky-300">
               <Table2 size={15} />

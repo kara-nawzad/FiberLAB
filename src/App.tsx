@@ -1106,7 +1106,7 @@ function StudioWorkspace({
                 />
 
                 {linkMode ? (
-                  <Panel position="top-left" className="pu-link-panel !m-3 !mt-14">
+                  <Panel position="bottom-center" className="pu-link-panel !m-3">
                     <div
                       className="link-mode-panel panel flex max-w-[min(420px,calc(100vw-28px))] items-center gap-3 rounded-xl px-3 py-2.5 shadow-panel"
                       role="status"

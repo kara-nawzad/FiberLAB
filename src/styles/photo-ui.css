@@ -42,7 +42,8 @@
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
   flex: 1 1 0%;
-  min-width: 0;
+  /* Canvas column floor: below this the tablet overlay step takes over. */
+  min-width: min(var(--canvas-min-w), 100%);
   min-height: 0;
   gap: var(--shell-gap);
   padding: var(--shell-gap);
@@ -52,13 +53,16 @@
 .pu-tabstrip {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--sp-2);
+  min-height: var(--panel-head-h);
 }
 .pu-doc-tab {
-  padding: 7px 14px;
+  display: inline-flex;
+  align-items: center;
+  height: calc(var(--panel-head-h) - var(--sp-1));
+  padding: 0 var(--sp-4);
   border: 1px solid var(--pu-line);
-  border-bottom: 0;
-  border-radius: 10px 10px 0 0;
+  border-radius: var(--r-md);
   background: var(--pu-panel);
   color: var(--pu-pri);
   font-size: var(--type-body);
@@ -69,7 +73,7 @@
   flex: 1;
   min-height: 0;
   border: 1px solid var(--pu-line);
-  border-radius: 14px;
+  border-radius: var(--r-xl);
   background: #ffffff !important;
   overflow: hidden;
   box-shadow: inset 0 1px 3px rgba(43, 26, 20, 0.04);
@@ -143,7 +147,6 @@
   padding: 0 var(--shell-pad);
   background: var(--pu-panel) !important;
   border-bottom: 1px solid var(--pu-line) !important;
-  flex-shrink: 0;
 }
 .pu-logo {
   display: flex;
@@ -319,8 +322,11 @@
   min-height: 0;
 }
 .pu-comp h3 {
+  display: flex;
+  align-items: center;
+  min-height: var(--panel-head-h);
   margin: 0;
-  padding: var(--shell-pad) var(--shell-pad) var(--sp-1);
+  padding: 0 var(--shell-pad);
   font-size: var(--fs-lg);
   font-weight: var(--fw-bold);
   color: var(--pu-ink);
@@ -329,7 +335,7 @@
   display: flex;
   align-items: center;
   gap: var(--sp-2);
-  margin: 0 var(--shell-pad) var(--sp-2);
+  margin: 0 var(--shell-pad) var(--sp-3);
   padding: var(--sp-2) var(--sp-3);
   border: 1px solid var(--pu-line);
   border-radius: var(--r-lg);
@@ -371,9 +377,10 @@
 .pu-tool {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--sp-3);
   width: 100%;
-  padding: 9px;
+  min-height: 64px;
+  padding: var(--sp-2) var(--sp-3);
   margin-bottom: var(--sp-2);
   border: 1px solid var(--pu-line);
   border-radius: var(--r-xl);
@@ -487,22 +494,30 @@
 
 /* Bottom panel */
 .pu-bottom {
-  background: var(--pu-panel);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: var(--bottom-max-h);
+  padding: 0 var(--shell-pad) var(--sp-3);
   border: 1px solid var(--pu-line);
-  border-radius: 14px;
-  padding: 0 14px 12px;
+  border-radius: var(--r-xl);
+  background: var(--pu-panel);
   flex-shrink: 0;
+  overflow: hidden;
 }
 .pu-bottom.is-min .pu-bottom-grid {
   display: none;
 }
 .pu-btabs {
   display: flex;
-  gap: 22px;
+  gap: var(--sp-4);
   border-bottom: 1px solid var(--pu-line);
 }
 .pu-btabs button {
-  padding: 11px 2px;
+  display: inline-flex;
+  align-items: center;
+  height: var(--tab-h);
+  padding: 0;
   font-size: var(--fs-sm);
   font-weight: var(--fw-semibold);
   color: var(--pu-mut);
@@ -525,8 +540,9 @@
 }
 .pu-stat {
   display: flex;
-  gap: 10px;
-  padding: var(--sp-3);
+  gap: var(--sp-3);
+  min-height: 84px;
+  padding: var(--card-pad);
   border: 1px solid var(--pu-line);
   border-radius: var(--r-xl);
   background: #ffffff;
@@ -561,7 +577,7 @@
 .pu-card {
   border: 1px solid var(--pu-line);
   border-radius: var(--r-xl);
-  padding: 10px 12px;
+  padding: var(--card-pad);
   min-width: 0;
   background: #ffffff;
 }
@@ -647,19 +663,20 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--sp-2);
-  padding: var(--shell-pad) var(--shell-pad) var(--sp-1);
+  min-height: var(--panel-head-h);
+  padding: 0 var(--shell-pad);
   font-size: var(--type-panel-title);
   font-weight: var(--fw-bold);
   color: var(--pu-ink);
 }
 .pu-insp-card {
   display: flex;
-  gap: 14px;
+  gap: var(--sp-3);
   align-items: center;
-  margin: var(--sp-1) var(--sp-4) var(--sp-2);
-  padding: 10px;
+  margin: 0 var(--shell-pad) var(--sp-3);
+  padding: var(--card-pad);
   border: 1px solid var(--pu-line);
-  border-radius: 14px;
+  border-radius: var(--r-xl);
   background: #ffffff;
 }
 .pu-insp-card .pic {
@@ -710,12 +727,15 @@
 }
 .pu-itabs {
   display: flex;
-  gap: 22px;
-  padding: 0 18px;
+  gap: var(--sp-4);
+  padding: 0 var(--shell-pad);
   border-bottom: 1px solid var(--pu-line);
 }
 .pu-itabs button {
-  padding: 10px 0;
+  display: inline-flex;
+  align-items: center;
+  height: var(--tab-h);
+  padding: 0;
   font-size: var(--fs-sm);
   font-weight: var(--fw-semibold);
   color: var(--pu-mut);
@@ -927,15 +947,6 @@
     width: 44px;
     height: 36px;
   }
-  .pu-comp h3 {
-    padding: var(--sp-3) var(--shell-pad) var(--sp-1);
-  }
-  .pu-search {
-    margin: 0 var(--sp-3) var(--sp-2);
-  }
-  .pu-comp-scroll {
-    padding: 0 var(--sp-3) var(--sp-3);
-  }
 }
 
 /* Per-edge power pills are replaced by the inline fiber-span pills. */
@@ -1041,10 +1052,6 @@
   }
   .pu-canvas .react-flow__minimap {
     display: none;
-  }
-  /* The toolbar wraps onto more rows here, so the link banner sits lower. */
-  .pu-canvas .react-flow__panel.pu-link-panel {
-    margin-top: 6.75rem !important;
   }
   .fiberlab-inspector .btn,
   .fiberlab-inspector .btn-ghost {
@@ -1195,16 +1202,12 @@
   overflow: hidden;
 }
 
-.pu-center {
-  /* Canvas column floor: below this the tablet overlay step takes over. */
-  min-width: min(var(--canvas-min-w), 100%);
-}
-
 /* Bottom panel: flexible grid that keeps the canvas dominant. */
 .pu-bottom-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr) minmax(0, 1fr);
   gap: var(--shell-gap);
+  flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
   padding-top: var(--shell-gap);
@@ -1277,4 +1280,12 @@
   .pu-btabs {
     gap: var(--sp-3);
   }
+}
+
+/* Link-mode banner: anchored above the health chip at the bottom of the canvas,
+ * so it can never collide with the (wrapping) toolbar. */
+.pu-canvas .react-flow__panel.pu-link-panel {
+  bottom: calc(var(--sp-8) + 8px) !important;
+  margin-bottom: 0 !important;
+  max-width: min(420px, calc(100% - var(--sp-4)));
 }

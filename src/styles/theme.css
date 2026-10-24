@@ -2654,8 +2654,11 @@
 
 .bom-tab {
   position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tab-h);
   margin-bottom: -1px;
-  padding: 9px 12px 10px;
+  padding: var(--sp-2) var(--sp-3);
   border: 1px solid transparent;
   border-bottom: 1px solid rgba(148, 163, 184, 0.28);
   border-radius: var(--r-md) var(--r-md) 0 0;
@@ -2789,7 +2792,7 @@
 .otdr-modal-scroll {
   min-height: 0;
   overflow: auto;
-  padding: 14px 18px 16px;
+  padding: var(--sp-4);
 }
 .otdr-instrument-panel {
   display: grid;
@@ -3306,7 +3309,7 @@
 
 @media (max-width: 1050px) {
   .otdr-modal-scroll {
-    padding: 11px;
+    padding: var(--sp-3);
   }
   .otdr-instrument-panel {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -3332,7 +3335,7 @@
     font-size: var(--type-section-title);
   }
   .otdr-modal-scroll {
-    padding: 9px;
+    padding: var(--sp-2);
   }
   .otdr-instrument-panel {
     grid-template-columns: minmax(0, 1fr);
