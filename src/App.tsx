@@ -25,7 +25,7 @@ import {
   type OnSelectionChangeParams,
   type ReactFlowInstance,
 } from '@xyflow/react';
-import { Flag, Link2, MousePointer2, X } from 'lucide-react';
+import { Flag, Link2, MousePointer2, Plus, X } from 'lucide-react';
 import type {
   AnyNodeData,
   DesignSettings,
@@ -1051,7 +1051,6 @@ function StudioWorkspace({
           onRunSimulation={runLightTest}
           onOpenReports={openBom}
           onOpenSettings={() => setToolsOpen(true)}
-          onOpenOverview={handleOpenOverview}
           collapsed={sidebarCollapsed}
           onToggleCollapse={() => setSidebarCollapsed((prev) => !prev)}
         />
@@ -1100,6 +1099,18 @@ function StudioWorkspace({
               onOpenMissions={openMissions}
               onClear={clearCanvas}
             />
+            {/* Phones have no room for a permanent library column, so the
+                component sheet is summoned from here. */}
+            {sidebarCollapsed ? (
+              <button
+                type="button"
+                className="pu-fab-components"
+                onClick={() => setSidebarCollapsed(false)}
+                aria-label="Open component library"
+              >
+                <Plus size={16} aria-hidden="true" /> Components
+              </button>
+            ) : null}
             <SimulationContext.Provider value={simulation}>
               <ReactFlow<PonNode, PonEdge>
                 nodes={nodes}

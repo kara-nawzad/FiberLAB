@@ -84,7 +84,7 @@ Interactive components follow one spec, so a button, a select and a tab never di
 
 Icon sizes carry meaning: 12 inside a badge or caption row, 14 inline with 13 px text (buttons, selects, chevrons), 16 in a panel or modal header and in icon-only 36 px buttons, 20 in the rail/sidebar. Touch devices (`pointer: coarse`) lift every control to the 44 px `--control-tap` target.
 
-**Responsive behaviour.** Five widths are checked — 1920, 1440, 1024, 768 and 390 px. Above 1024 px the shell keeps all four columns and nothing stretches: the shell has a fixed rail, a fixed library and inspector, and the canvas takes the rest. At ≤1024 px the header drops the zoom menu and the stat grid falls to two columns; at ≤900 px the component library and the inspector become overlay sheets inside the body gutter (both start collapsed, and the inspector re-opens when a node is selected), the bottom panel stacks its cards into one scrolling column, and the header scrolls as a last resort while its menus are rendered as fixed panels so a scroll container cannot clip them. At ≤640 px the health pill gives way to the canvas status chip and buttons print their short captions; at ≤560 px every tab, chip, menu row and icon button reaches the 44 px `--control-tap`, the preset and document names truncate with an ellipsis, and the page itself may not scroll sideways (`overflow-x: clip` on `body`, one row of overflow on the header only). Wide tables — OTDR events (850 px), BOM quotation (720 px) and the landing spec sheet (580 px) — scroll inside their own wrapper; `.pu-card--scroll` caps the budget card at 170 px; and the empty-canvas hint is offset so it clears the floating tool strip.
+**Responsive behaviour.** Five widths are checked — 1920, 1440, 1024, 768 and 390 px. Above 1024 px the shell keeps all four columns and nothing stretches: the shell has a fixed rail, a fixed library and inspector, and the canvas takes the rest. At ≤1024 px the header drops the zoom menu and the stat grid falls to two columns; at ≤900 px the component library and the inspector become overlay sheets inside the body gutter (both start collapsed, and the inspector re-opens when a node is selected), the bottom panel stacks its cards into one scrolling column, and the header scrolls as a last resort while its menus are rendered as fixed panels so a scroll container cannot clip them. At ≤767 px the library leaves the column flow entirely and becomes a bottom sheet opened by the **+ Components** button (handle drag to expand or dismiss, tap-to-place, 44 px controls); at ≤640 px the health pill gives way to the canvas status chip and buttons print their short captions; at ≤560 px every tab, chip, menu row and icon button reaches the 44 px `--control-tap`, the preset and document names truncate with an ellipsis, and the page itself may not scroll sideways (`overflow-x: clip` on `body`, one row of overflow on the header only). Wide tables — OTDR events (850 px), BOM quotation (720 px) and the landing spec sheet (580 px) — scroll inside their own wrapper; `.pu-card--scroll` caps the budget card at 170 px; and the empty-canvas hint is offset so it clears the floating tool strip.
 
 The theme tokens are used by both the landing and the existing React Flow workbench. Status colors remain semantically distinct; telemetry values and statuses are still calculated by the simulator, not the stylesheet or prototype artwork.
 
@@ -103,18 +103,22 @@ The app opens on the warm landing hero. **Launch Interactive Studio** is the pri
 
 ### 3.2 Place and connect components
 
-The left-hand **Component Toolbox** has eight modeled element categories:
+The left-hand **Component Library** keeps all eight modeled element kinds in a five-category accordion (plus a **Tools** group). No component was removed to make room:
 
-1. **OLT Transceiver** — the network's optical source.
-2. **PLC Splitter** — choose a ratio from 1:2 through 1:64.
-3. **Fiber Plant** — choose feeder, distribution, or drop cable.
-4. **Dome Splice Closure** — a representative FOSC-style OSP joint enclosure.
-5. **ODF Rack Panel** — two isolated matched input/output adapter through-pairs at the headend.
-6. **Outdoor NAP/FAT** — one feeder input, eight subscriber drop outputs, and a fixed internal 1:8 split.
-7. **ONT/ONU** — a simple subscriber optical endpoint.
-8. **Wi-Fi 6 PON Gateway** — integrated GPON/XGS-PON termination and home service telemetry.
+| Category               | Contents                                                                                                                                                             |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **OLT / Headend**      | OLT transceiver — the network's optical source; ODF rack panel — two isolated matched input/output adapter through-pairs at the headend.                             |
+| **Fiber Cables**       | One card driven by a **Cable type** selector: feeder, distribution or drop.                                                                                          |
+| **Splitters**          | One card driven by a **Splitter ratio** selector (1:2 … 1:64) that prints the selected ratio's insertion loss.                                                       |
+| **Splices & Closures** | Dome splice closure (representative FOSC-style OSP joint enclosure) and Outdoor NAP/FAT (one feeder input, eight subscriber drop outputs, fixed internal 1:8 split). |
+| **Customer / ONT**     | ONT/ONU subscriber optical endpoint; Wi-Fi 6 PON gateway (integrated GPON/XGS-PON termination plus home service telemetry).                                          |
+| **Tools**              | Optical power meter and OTDR trace launchers.                                                                                                                        |
 
-A component can be dragged to the canvas. Toolbox cards also support quick placement by double-click, and the ratio/cable shortcut buttons can add their selected item with a click. Components connect by dragging from a source handle to a target handle or by using **Link nodes**: click a source node, then a destination; selecting an existing source/destination pair removes its patch cord. Press Escape or Cancel to leave link mode. The app uses a directed graph, and the simulation follows connections outward from an active OLT.
+Only one category is open at a time and every header carries a count badge; up to four recently used parts sit as one-click shortcuts under the search box. Search spans every category at once and labels each hit with its category name. The library header has a collapse toggle, and the "Need help?" links that used to sit in its footer moved into the canvas **More tools** menu.
+
+A component can be dragged to the canvas, or clicked to place it at the visible canvas centre. On phones the library is a bottom sheet summoned by the **+ Components** button: drag its handle up to expand, down to shrink or dismiss, and tap a part to drop it on the canvas and close the sheet — no drag-and-drop required on touch. Components connect by dragging from a source handle to a target handle or by using **Link nodes**: click a source node, then a destination; selecting an existing source/destination pair removes its patch cord. Press Escape or Cancel to leave link mode. The app uses a directed graph, and the simulation follows connections outward from an active OLT.
+
+Splice trays are a property of the closure's Inspector panel, and patch cords/connectors are the graph's edges rather than placeable nodes, so neither appears as a library card; the closure category says so in a footnote.
 
 Every canvas node now shows a compact SVG hardware thumbnail while retaining its existing label, metrics, and connection handles. The visual handles are:
 
@@ -432,94 +436,94 @@ The ODF contributes 0.50 dB through loss; the NAP contributes its fixed 10.5 dB 
 
 The app is a client-side React/TypeScript application. There is no backend service in the current repository. The table is exhaustive for the version-controlled leaf files in this layout; each path appears once, and path prefixes show its folder.
 
-| File or folder                                              | Responsibility                                                                       |
-| ----------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| `.github/workflows/ci.yml`                                  | Continuous-integration workflow for `main`, pull requests, and manual dispatch.      |
-| `.github/workflows/deploy.yml`                              | GitHub Pages build and deployment workflow.                                          |
-| `.editorconfig`                                             | Shared encoding, line-ending, indentation, and whitespace rules.                     |
-| `.gitignore`                                                | Ignored dependency, build, environment, cache, editor, and OS artifacts.             |
-| `.nvmrc`                                                    | Node.js 22 selector.                                                                 |
-| `.prettierrc.json`                                          | Project Prettier formatting policy.                                                  |
-| `LICENSE`                                                   | MIT licence for FiberLAB.                                                            |
-| `README.md`                                                 | Project overview, quick start, live link, and high-level source map.                 |
-| `THIRD_PARTY_NOTICES.md`                                    | SIL OFL notices for runtime Google Fonts.                                            |
-| `docs/PROJECT_GUIDE.md`                                     | This detailed product, architecture, and operating guide.                            |
-| `docs/design/hardware-ui-mock.html`                         | Archived self-contained hardware UI mock.                                            |
-| `docs/design/hardware-ui-mock.md`                           | Archived design-reference notes for the mock.                                        |
-| `docs/design/workbench-reference.jpg`                       | Archived workbench visual reference.                                                 |
-| `eslint.config.js`                                          | Flat ESLint policy for TypeScript source and Node-side configuration.                |
-| `index.html`                                                | Vite document shell and runtime Google Font imports.                                 |
-| `package.json`                                              | Package metadata, scripts, Node requirement, and dependencies.                       |
-| `package-lock.json`                                         | Exact npm dependency resolution.                                                     |
-| `postcss.config.js`                                         | PostCSS plugin configuration.                                                        |
-| `tailwind.config.js`                                        | Tailwind content scanning and retained theme extensions.                             |
-| `tsconfig.json`                                             | Strict TypeScript compiler configuration.                                            |
-| `vite.config.ts`                                            | Vite and React plugin configuration.                                                 |
-| `vitest.workspace.ts`                                       | Separate app and engine Vitest projects.                                             |
-| `src/App.tsx`                                               | Persistent studio shell, graph state, simulations, CAPEX, and top-level composition. |
-| `src/main.tsx`                                              | Browser entry point and ordered global stylesheet imports.                           |
-| `src/types.ts`                                              | Shared graph, simulation, optical, and UI type definitions.                          |
-| `src/vite-env.d.ts`                                         | Vite ambient type declarations.                                                      |
-| `src/__tests__/app.test.tsx`                                | Mounted application regression tests.                                                |
-| `src/assets/opm-probe-cursor.svg`                           | Bundled cursor image for OPM probe mode.                                             |
-| `src/assets/splice-hero-scene.svg`                          | Raw SVG scene rendered by the splice introduction.                                   |
-| `src/context/SimulationContext.ts`                          | React context that shares the current simulation result with custom nodes.           |
-| `src/data/componentCatalogue.ts`                            | Framework-independent hardware profiles and inline SVG illustration data.            |
-| `src/data/hardwareArtwork.ts`                               | Reusable hardware art data and geometry helpers.                                     |
-| `src/data/pricingCatalogue.ts`                              | Pure graph-derived CAPEX calculator and local-rate defaults.                         |
-| `src/data/__tests__/commercialQuoteExports.test.ts`         | Commercial quotation JSON and CSV export tests.                                      |
-| `src/data/__tests__/componentCatalogue.test.ts`             | Hardware catalogue tests.                                                            |
-| `src/data/__tests__/pricingCatalogue.test.ts`               | CAPEX and local-pricing calculator tests.                                            |
-| `src/engine/edgeDecoration.ts`                              | Maps simulation telemetry and faults to React Flow edge presentation.                |
-| `src/engine/factories.ts`                                   | Creates graph node kinds with stable IDs and reference defaults.                     |
-| `src/engine/missions.ts`                                    | Definitions and objective evaluators for five guided missions.                       |
-| `src/engine/opticalPhysics.ts`                              | Pure waveguide optical-physics helpers used by landing visuals.                      |
-| `src/engine/opticalProbe.ts`                                | Simulator-backed readings for nodes, ports, and edges at a meter wavelength.         |
-| `src/engine/opticalSimulator.ts`                            | Pure PON graph traversal, loss, status, and summary calculation.                     |
-| `src/engine/otdrSimulator.ts`                               | Pure directed-route OTDR event and backscatter trace generator.                      |
-| `src/engine/presets.ts`                                     | Reference GPON, long-haul, and XGS-PON topology builders.                            |
-| `src/engine/__tests__/missions.test.ts`                     | Mission evaluator tests.                                                             |
-| `src/engine/__tests__/opticalPhysics.test.ts`               | Waveguide optical-physics tests.                                                     |
-| `src/engine/__tests__/opticalProbe.test.ts`                 | Optical probe tests.                                                                 |
-| `src/engine/__tests__/opticalSimulator.test.ts`             | Optical graph simulation tests, including the public alias.                          |
-| `src/engine/__tests__/otdrSimulator.test.ts`                | OTDR route and event generation tests.                                               |
-| `src/engine/__tests__/xgsPon.test.ts`                       | XGS-PON standards and equipment tests.                                               |
-| `src/styles/tokens.css`                                     | Design tokens: type scale, 4px spacing scale, radii, panel padding, control heights. |
-| `src/styles/global.css`                                     | Tailwind layers, application-wide styles, and mission keyframes.                     |
-| `src/styles/photo-ui.css`                                   | Photo-inspired studio UI overrides, loaded last.                                     |
-| `src/styles/theme.css`                                      | Warm responsive landing and studio theme, including modal and hardware treatments.   |
-| `src/test/setup.ts`                                         | Vitest setup and Testing Library matcher registration.                               |
-| `src/components/BOMModal.tsx`                               | Optical audit and commercial quotation modal with exporters.                         |
-| `src/components/BottomPanel.tsx`                            | Bottom workbench panel for live topology and simulation summaries.                   |
-| `src/components/CanvasToolbar.tsx`                          | Canvas-level editing, diagnostics, mission, and simulation controls.                 |
-| `src/components/FieldHardwareCard.tsx`                      | Reusable Inspector hardware illustration and field-context card.                     |
-| `src/components/Inspector.tsx`                              | Selected node/edge editor, telemetry, faults, and local pricing controls.            |
-| `src/components/MissionDrawer.tsx`                          | Guided-mission selection, objectives, hints, and completion recap.                   |
-| `src/components/OpmMeterHud.tsx`                            | Floating optical power meter HUD.                                                    |
-| `src/components/OpticalEdge.tsx`                            | Optical wire, power-label, and fault-warning renderer.                               |
-| `src/components/OtdrModal.tsx`                              | OTDR controls, animated acquisition, SVG trace, and event table.                     |
-| `src/components/PricingSettings.tsx`                        | Accessible local CAPEX-rate editor and reset controls.                               |
-| `src/components/Sidebar.tsx`                                | Toolbox, quick-add controls, cable and splitter choices, and reference links.        |
-| `src/components/TopBar.tsx`                                 | Overview, preset, health, CAPEX, zoom, simulation, and report controls.              |
-| `src/components/hardware/HardwareArt.tsx`                   | React component that renders reusable hardware illustrations.                        |
-| `src/components/landing/LandingNav.tsx`                     | Landing-page navigation.                                                             |
-| `src/components/landing/LandingView.tsx`                    | Landing-page composition and studio transition.                                      |
-| `src/components/landing/PhotonicHero.tsx`                   | Physics hero, capability content, and five-scenario CTA.                             |
-| `src/components/landing/PillarsGrid.tsx`                    | Landing capability-card grid.                                                        |
-| `src/components/landing/SpecsStrip.tsx`                     | Landing optical reference specification strip.                                       |
-| `src/components/landing/SpliceIntroHero.tsx`                | Hold-to-open splice interaction and live receive-power readout.                      |
-| `src/components/landing/WaveguideCanvas.tsx`                | Interactive waveguide illustration.                                                  |
-| `src/components/landing/__tests__/SpliceIntroHero.test.tsx` | Splice interaction regression test.                                                  |
-| `src/components/nodes/ClosureNode.tsx`                      | Dome-closure React Flow node.                                                        |
-| `src/components/nodes/FiberNode.tsx`                        | Fiber-span React Flow node.                                                          |
-| `src/components/nodes/GatewayNode.tsx`                      | Wi-Fi PON gateway React Flow node.                                                   |
-| `src/components/nodes/NAPNode.tsx`                          | Outdoor NAP/FAT React Flow node.                                                     |
-| `src/components/nodes/NodePrimitives.tsx`                   | Shared LED, statistic, and badge primitives for node renderers.                      |
-| `src/components/nodes/ODFNode.tsx`                          | ODF React Flow node.                                                                 |
-| `src/components/nodes/OLTNode.tsx`                          | OLT React Flow node.                                                                 |
-| `src/components/nodes/ONTNode.tsx`                          | ONT React Flow node.                                                                 |
-| `src/components/nodes/SplitterNode.tsx`                     | PLC splitter React Flow node.                                                        |
-| `src/components/nodes/index.ts`                             | Live `nodeTypes` registry consumed by `App.tsx`.                                     |
+| File or folder                                              | Responsibility                                                                                              |
+| ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `.github/workflows/ci.yml`                                  | Continuous-integration workflow for `main`, pull requests, and manual dispatch.                             |
+| `.github/workflows/deploy.yml`                              | GitHub Pages build and deployment workflow.                                                                 |
+| `.editorconfig`                                             | Shared encoding, line-ending, indentation, and whitespace rules.                                            |
+| `.gitignore`                                                | Ignored dependency, build, environment, cache, editor, and OS artifacts.                                    |
+| `.nvmrc`                                                    | Node.js 22 selector.                                                                                        |
+| `.prettierrc.json`                                          | Project Prettier formatting policy.                                                                         |
+| `LICENSE`                                                   | MIT licence for FiberLAB.                                                                                   |
+| `README.md`                                                 | Project overview, quick start, live link, and high-level source map.                                        |
+| `THIRD_PARTY_NOTICES.md`                                    | SIL OFL notices for runtime Google Fonts.                                                                   |
+| `docs/PROJECT_GUIDE.md`                                     | This detailed product, architecture, and operating guide.                                                   |
+| `docs/design/hardware-ui-mock.html`                         | Archived self-contained hardware UI mock.                                                                   |
+| `docs/design/hardware-ui-mock.md`                           | Archived design-reference notes for the mock.                                                               |
+| `docs/design/workbench-reference.jpg`                       | Archived workbench visual reference.                                                                        |
+| `eslint.config.js`                                          | Flat ESLint policy for TypeScript source and Node-side configuration.                                       |
+| `index.html`                                                | Vite document shell and runtime Google Font imports.                                                        |
+| `package.json`                                              | Package metadata, scripts, Node requirement, and dependencies.                                              |
+| `package-lock.json`                                         | Exact npm dependency resolution.                                                                            |
+| `postcss.config.js`                                         | PostCSS plugin configuration.                                                                               |
+| `tailwind.config.js`                                        | Tailwind content scanning and retained theme extensions.                                                    |
+| `tsconfig.json`                                             | Strict TypeScript compiler configuration.                                                                   |
+| `vite.config.ts`                                            | Vite and React plugin configuration.                                                                        |
+| `vitest.workspace.ts`                                       | Separate app and engine Vitest projects.                                                                    |
+| `src/App.tsx`                                               | Persistent studio shell, graph state, simulations, CAPEX, and top-level composition.                        |
+| `src/main.tsx`                                              | Browser entry point and ordered global stylesheet imports.                                                  |
+| `src/types.ts`                                              | Shared graph, simulation, optical, and UI type definitions.                                                 |
+| `src/vite-env.d.ts`                                         | Vite ambient type declarations.                                                                             |
+| `src/__tests__/app.test.tsx`                                | Mounted application regression tests.                                                                       |
+| `src/assets/opm-probe-cursor.svg`                           | Bundled cursor image for OPM probe mode.                                                                    |
+| `src/assets/splice-hero-scene.svg`                          | Raw SVG scene rendered by the splice introduction.                                                          |
+| `src/context/SimulationContext.ts`                          | React context that shares the current simulation result with custom nodes.                                  |
+| `src/data/componentCatalogue.ts`                            | Framework-independent hardware profiles and inline SVG illustration data.                                   |
+| `src/data/hardwareArtwork.ts`                               | Reusable hardware art data and geometry helpers.                                                            |
+| `src/data/pricingCatalogue.ts`                              | Pure graph-derived CAPEX calculator and local-rate defaults.                                                |
+| `src/data/__tests__/commercialQuoteExports.test.ts`         | Commercial quotation JSON and CSV export tests.                                                             |
+| `src/data/__tests__/componentCatalogue.test.ts`             | Hardware catalogue tests.                                                                                   |
+| `src/data/__tests__/pricingCatalogue.test.ts`               | CAPEX and local-pricing calculator tests.                                                                   |
+| `src/engine/edgeDecoration.ts`                              | Maps simulation telemetry and faults to React Flow edge presentation.                                       |
+| `src/engine/factories.ts`                                   | Creates graph node kinds with stable IDs and reference defaults.                                            |
+| `src/engine/missions.ts`                                    | Definitions and objective evaluators for five guided missions.                                              |
+| `src/engine/opticalPhysics.ts`                              | Pure waveguide optical-physics helpers used by landing visuals.                                             |
+| `src/engine/opticalProbe.ts`                                | Simulator-backed readings for nodes, ports, and edges at a meter wavelength.                                |
+| `src/engine/opticalSimulator.ts`                            | Pure PON graph traversal, loss, status, and summary calculation.                                            |
+| `src/engine/otdrSimulator.ts`                               | Pure directed-route OTDR event and backscatter trace generator.                                             |
+| `src/engine/presets.ts`                                     | Reference GPON, long-haul, and XGS-PON topology builders.                                                   |
+| `src/engine/__tests__/missions.test.ts`                     | Mission evaluator tests.                                                                                    |
+| `src/engine/__tests__/opticalPhysics.test.ts`               | Waveguide optical-physics tests.                                                                            |
+| `src/engine/__tests__/opticalProbe.test.ts`                 | Optical probe tests.                                                                                        |
+| `src/engine/__tests__/opticalSimulator.test.ts`             | Optical graph simulation tests, including the public alias.                                                 |
+| `src/engine/__tests__/otdrSimulator.test.ts`                | OTDR route and event generation tests.                                                                      |
+| `src/engine/__tests__/xgsPon.test.ts`                       | XGS-PON standards and equipment tests.                                                                      |
+| `src/styles/tokens.css`                                     | Design tokens: type scale, 4px spacing scale, radii, panel padding, control heights.                        |
+| `src/styles/global.css`                                     | Tailwind layers, application-wide styles, and mission keyframes.                                            |
+| `src/styles/photo-ui.css`                                   | Photo-inspired studio UI overrides, loaded last.                                                            |
+| `src/styles/theme.css`                                      | Warm responsive landing and studio theme, including modal and hardware treatments.                          |
+| `src/test/setup.ts`                                         | Vitest setup and Testing Library matcher registration.                                                      |
+| `src/components/BOMModal.tsx`                               | Optical audit and commercial quotation modal with exporters.                                                |
+| `src/components/BottomPanel.tsx`                            | Bottom workbench panel for live topology and simulation summaries.                                          |
+| `src/components/CanvasToolbar.tsx`                          | Canvas-level editing, diagnostics, mission, and simulation controls.                                        |
+| `src/components/FieldHardwareCard.tsx`                      | Reusable Inspector hardware illustration and field-context card.                                            |
+| `src/components/Inspector.tsx`                              | Selected node/edge editor, telemetry, faults, and local pricing controls.                                   |
+| `src/components/MissionDrawer.tsx`                          | Guided-mission selection, objectives, hints, and completion recap.                                          |
+| `src/components/OpmMeterHud.tsx`                            | Floating optical power meter HUD.                                                                           |
+| `src/components/OpticalEdge.tsx`                            | Optical wire, power-label, and fault-warning renderer.                                                      |
+| `src/components/OtdrModal.tsx`                              | OTDR controls, animated acquisition, SVG trace, and event table.                                            |
+| `src/components/PricingSettings.tsx`                        | Accessible local CAPEX-rate editor and reset controls.                                                      |
+| `src/components/Sidebar.tsx`                                | Accordion component library, search, recently-used shortcuts, cable/splitter selectors, phone bottom sheet. |
+| `src/components/TopBar.tsx`                                 | Overview, preset, health, CAPEX, zoom, simulation, and report controls.                                     |
+| `src/components/hardware/HardwareArt.tsx`                   | React component that renders reusable hardware illustrations.                                               |
+| `src/components/landing/LandingNav.tsx`                     | Landing-page navigation.                                                                                    |
+| `src/components/landing/LandingView.tsx`                    | Landing-page composition and studio transition.                                                             |
+| `src/components/landing/PhotonicHero.tsx`                   | Physics hero, capability content, and five-scenario CTA.                                                    |
+| `src/components/landing/PillarsGrid.tsx`                    | Landing capability-card grid.                                                                               |
+| `src/components/landing/SpecsStrip.tsx`                     | Landing optical reference specification strip.                                                              |
+| `src/components/landing/SpliceIntroHero.tsx`                | Hold-to-open splice interaction and live receive-power readout.                                             |
+| `src/components/landing/WaveguideCanvas.tsx`                | Interactive waveguide illustration.                                                                         |
+| `src/components/landing/__tests__/SpliceIntroHero.test.tsx` | Splice interaction regression test.                                                                         |
+| `src/components/nodes/ClosureNode.tsx`                      | Dome-closure React Flow node.                                                                               |
+| `src/components/nodes/FiberNode.tsx`                        | Fiber-span React Flow node.                                                                                 |
+| `src/components/nodes/GatewayNode.tsx`                      | Wi-Fi PON gateway React Flow node.                                                                          |
+| `src/components/nodes/NAPNode.tsx`                          | Outdoor NAP/FAT React Flow node.                                                                            |
+| `src/components/nodes/NodePrimitives.tsx`                   | Shared LED, statistic, and badge primitives for node renderers.                                             |
+| `src/components/nodes/ODFNode.tsx`                          | ODF React Flow node.                                                                                        |
+| `src/components/nodes/OLTNode.tsx`                          | OLT React Flow node.                                                                                        |
+| `src/components/nodes/ONTNode.tsx`                          | ONT React Flow node.                                                                                        |
+| `src/components/nodes/SplitterNode.tsx`                     | PLC splitter React Flow node.                                                                               |
+| `src/components/nodes/index.ts`                             | Live `nodeTypes` registry consumed by `App.tsx`.                                                            |
 
 `App.tsx` calculates the optical simulation from the current node graph and separately calculates `NetworkCostBreakdown` from the same nodes/edges plus local rates. Optical telemetry is shared through `SimulationContext`, decorates optical edges, and feeds optical displays; the CAPEX result feeds the TopBar, Inspector, BOM, exports, and mission objectives. The OPM independently invokes the pure probe engine, and the OTDR modal invokes the pure route analyzer at its selected source, branch, wavelength, and pulse width. This keeps all three calculations decoupled from presentation.
 
@@ -593,7 +597,7 @@ Connectors, fusion splicers, and test tools remain outside the topology graph. T
 
 ### 10.2 Keep the interface smooth
 
-- **Toolbox:** each draggable item uses a compact, recognizable 40 × 40 hardware illustration while keeping its label and quick interaction easy to scan.
+- **Component library:** each draggable item uses a compact, recognizable 40 × 40 hardware illustration while keeping its label and quick interaction easy to scan; categories collapse so only one parts list is on screen.
 - **Canvas:** each node now uses a small SVG hardware thumbnail beside its existing label and live status; the drawing does not cover ports or telemetry.
 - **Inspector:** selected nodes now show a larger SVG field illustration, component explanation, physical interfaces/construction, field tips, and collapsible standards/operating-context notes.
 - **Loading:** thumbnails and hero drawings are local encoded SVG data URIs; the hero is only mounted for a selected node and uses lazy decoding.
