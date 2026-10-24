@@ -151,7 +151,7 @@ export function CanvasToolbar(props: CanvasToolbarProps) {
         {toolsOpen ? (
           <div id="canvas-more-tools" className="pu-menu" style={{ top: 'calc(100% + 8px)', left: 0, width: 280 }}>
             <button type="button" onClick={close(onOpenOverview)} aria-label="Overview & Physics">
-              <ArrowLeft size={13} style={{ display: 'inline', marginRight: 8 }} /> Overview &amp; Physics
+              <ArrowLeft size={14} className="pu-menu-ico" /> Overview &amp; Physics
             </button>
             <button
               type="button"
@@ -159,33 +159,21 @@ export function CanvasToolbar(props: CanvasToolbarProps) {
               aria-pressed={opmActive}
               aria-label={opmActive ? 'Close OPM' : 'OPM Tool'}
             >
-              <Crosshair size={13} style={{ display: 'inline', marginRight: 8 }} />{' '}
-              {opmActive ? 'Close OPM' : 'OPM Tool'} — probe a port
+              <Crosshair size={14} className="pu-menu-ico" /> {opmActive ? 'Close OPM' : 'OPM Tool'} — probe a port
             </button>
             <button type="button" onClick={close(onOpenOtdr)} aria-label="OTDR Trace">
-              <ScanLine size={13} style={{ display: 'inline', marginRight: 8 }} /> OTDR Trace
+              <ScanLine size={14} className="pu-menu-ico" /> OTDR Trace
             </button>
             <button
               type="button"
               onClick={close(onOpenMissions)}
               aria-label={activeMissionTitle ? `Missions, active: ${activeMissionTitle}` : 'Missions'}
             >
-              <ClipboardList size={13} style={{ display: 'inline', marginRight: 8 }} /> Missions
+              <ClipboardList size={14} className="pu-menu-ico" /> Missions
               {activeMissionTitle ? ` · ${activeMissionTitle}` : ''}
             </button>
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                padding: '10px 14px',
-                borderBottom: '1px solid var(--pu-line)',
-                fontSize: 'var(--fs-sm)',
-              }}
-            >
-              <label htmlFor="safety-margin" style={{ fontWeight: 'var(--fw-semibold)' }}>
-                Safety margin
-              </label>
+            <div className="pu-menu-row">
+              <label htmlFor="safety-margin">Safety margin</label>
               <input
                 id="safety-margin"
                 type="number"
@@ -194,13 +182,7 @@ export function CanvasToolbar(props: CanvasToolbarProps) {
                 step={0.5}
                 value={settings.safetyMarginDb}
                 onChange={(event) => onSettingsChange({ safetyMarginDb: Math.max(0, Number(event.target.value) || 0) })}
-                style={{
-                  width: 54,
-                  padding: '4px 6px',
-                  border: '1px solid var(--pu-line)',
-                  borderRadius: 7,
-                  textAlign: 'center',
-                }}
+                className="pu-input-sm"
               />
               <span className="pu-mut">dB</span>
               <button
@@ -209,15 +191,7 @@ export function CanvasToolbar(props: CanvasToolbarProps) {
                 aria-checked={settings.autoRun}
                 onClick={() => onSettingsChange({ autoRun: !settings.autoRun })}
                 title="Recalculate the optical budget on every edit"
-                style={{
-                  marginLeft: 'auto',
-                  width: 'auto',
-                  padding: '4px 10px',
-                  borderRadius: 99,
-                  border: '1px solid var(--pu-line)',
-                  fontWeight: 'var(--fw-bold)',
-                  color: settings.autoRun ? 'var(--pu-ok)' : 'var(--pu-mut)',
-                }}
+                className={`pu-switch ${settings.autoRun ? 'is-on' : ''}`}
               >
                 Auto {settings.autoRun ? 'on' : 'off'}
               </button>
@@ -227,9 +201,9 @@ export function CanvasToolbar(props: CanvasToolbarProps) {
               onClick={close(onClear)}
               aria-label="Clear Canvas"
               title="Remove every element"
-              style={{ color: 'var(--pu-bad)' }}
+              className="is-danger"
             >
-              <Trash2 size={13} style={{ display: 'inline', marginRight: 8 }} /> Clear canvas
+              <Trash2 size={14} className="pu-menu-ico" /> Clear canvas
             </button>
           </div>
         ) : null}

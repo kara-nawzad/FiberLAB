@@ -68,6 +68,22 @@ Photos alone do not create field experience. A task such as “find why this sub
 
 Spacing follows the same rule: every `padding`, `margin` and `gap` resolves to `--sp-1` (4) / `--sp-2` (8) / `--sp-3` (12) / `--sp-4` (16) / `--sp-6` (24) / `--sp-8` (32). Cards, tables and rows use one of three rhythms — 4 px between a label and its value, 8 px between rows, 12 px inside a card, 16 px from a panel edge (`--shell-pad`) — and the same element type always has the same padding (for example `--card-pad` for every stat, card and tile). Tailwind utilities in the components use only the matching steps (`gap-1` … `gap-8`), never the half steps. Controls share `--control-sm/md/lg` (32 / 36 / 40) so a select, a button and a pill on the same row line up. Numeric readouts and numeric table columns use `font-variant-numeric: tabular-nums` and a right edge of their own, which keeps digits from jumping as values update.
 
+Interactive components follow one spec, so a button, a select and a tab never disagree:
+
+| Component               | Height              | Padding                   | Radius                        | Type             |
+| ----------------------- | ------------------- | ------------------------- | ----------------------------- | ---------------- |
+| Button / select (`md`)  | `--control-md` (36) | `--inset-control` (8/12)  | `--r-md` (8)                  | 13 / 600         |
+| Compact button, chip    | `--control-sm` (32) | 8/0 – 8/8                 | `--r-md`                      | 11–12 mono       |
+| CTA (`.landing-button`) | `--control-lg` (40) | 0/16                      | `--r-pill`                    | 13 / 700         |
+| Input / select          | 36                  | 8/12                      | `--r-md`                      | 13 mono          |
+| Tab                     | `--tab-h` (40)      | 0 (text), 0/16 (doc chip) | `--r-md` when contained       | 13 / 600→700     |
+| Table header            | —                   | 0 0 8                     | —                             | 11 uppercase/600 |
+| Table cell              | 8 vertical          | 8 / 12                    | —                             | 12               |
+| Badge / pill            | 4 vertical          | 4/8                       | `--r-sm` (6), pill for status | 11 / 700         |
+| Icon                    | 12 · 14 · 16 · 20   | —                         | —                             | —                |
+
+Icon sizes carry meaning: 12 inside a badge or caption row, 14 inline with 13 px text (buttons, selects, chevrons), 16 in a panel or modal header and in icon-only 36 px buttons, 20 in the rail/sidebar. Touch devices (`pointer: coarse`) lift every control to the 44 px `--control-tap` target.
+
 The theme tokens are used by both the landing and the existing React Flow workbench. Status colors remain semantically distinct; telemetry values and statuses are still calculated by the simulator, not the stylesheet or prototype artwork.
 
 ### 2.2 Warm photonic landing and splice interaction

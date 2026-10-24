@@ -47,7 +47,7 @@ interface BadgeProps {
 export function Badge({ children, className = 'bg-noc-700/70 text-noc-300 border-noc-600' }: BadgeProps) {
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded border px-2 py-0 font-mono text-caption font-semibold uppercase tracking-wide ${className}`}
+      className={`inline-flex items-center gap-1 rounded-md border px-2 py-1 font-mono text-caption font-semibold uppercase tracking-wide ${className}`}
     >
       {children}
     </span>

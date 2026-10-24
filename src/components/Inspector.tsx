@@ -153,7 +153,7 @@ function FaultToggle({
 }) {
   return (
     <div className={`fiber-fault-control ${active ? 'is-active' : ''}`}>
-      <AlertTriangle size={15} className={active ? 'text-orange-700' : 'text-stone-400'} aria-hidden="true" />
+      <AlertTriangle size={16} className={active ? 'text-orange-700' : 'text-stone-400'} aria-hidden="true" />
       <span className="fiber-fault-control-copy">
         <strong>{label}</strong>
         <small>
@@ -1230,7 +1230,7 @@ export function Inspector({
                 Delete it to break the optical path.
               </p>
               <button type="button" className="btn-danger mt-3 w-full" onClick={() => onDeleteEdge(edge.id)}>
-                <Trash2 size={13} /> Delete patch cord
+                <Trash2 size={14} /> Delete patch cord
               </button>
             </>
           ) : null}
@@ -1243,7 +1243,7 @@ export function Inspector({
         {node ? (
           <div className="border-t border-slate-200 p-2">
             <button type="button" className="btn-danger w-full" onClick={() => onDeleteNode(node.id)}>
-              <Trash2 size={13} /> Remove component
+              <Trash2 size={14} /> Remove component
             </button>
           </div>
         ) : null}

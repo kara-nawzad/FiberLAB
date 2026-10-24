@@ -528,7 +528,7 @@ export function OtdrModal({ open, onClose, nodes, edges }: OtdrModalProps) {
         <header className="otdr-modal-header">
           <div className="otdr-title-group">
             <span className="otdr-title-icon">
-              <Activity size={17} aria-hidden="true" />
+              <Activity size={16} aria-hidden="true" />
             </span>
             <div>
               <div className="otdr-eyebrow">FIBERLAB · FIELD DIAGNOSTICS</div>
@@ -566,7 +566,7 @@ export function OtdrModal({ open, onClose, nodes, edges }: OtdrModalProps) {
                     </option>
                   ))}
                 </select>
-                <ChevronDown size={13} aria-hidden="true" />
+                <ChevronDown size={14} aria-hidden="true" />
               </span>
             </label>
 
@@ -586,7 +586,7 @@ export function OtdrModal({ open, onClose, nodes, edges }: OtdrModalProps) {
                     </option>
                   ))}
                 </select>
-                <ChevronDown size={13} aria-hidden="true" />
+                <ChevronDown size={14} aria-hidden="true" />
               </span>
             </label>
 

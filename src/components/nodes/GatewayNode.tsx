@@ -100,7 +100,7 @@ export function GatewayNode({ id, data, selected }: NodeProps<GatewayFlowNode>) 
           </div>
         ) : (
           <div className="mt-2 flex items-center gap-1 text-label text-slate-500">
-            <Wifi size={10} /> Dual-band gateway; connect its PON input to simulate service.
+            <Wifi size={12} /> Dual-band gateway; connect its PON input to simulate service.
           </div>
         )}
 

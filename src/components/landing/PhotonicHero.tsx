@@ -101,7 +101,7 @@ export function PhotonicHero({ onLaunchStudio, onExploreMissions, onLoadPreset }
             Launch Interactive Studio <ArrowRight size={16} aria-hidden="true" />
           </button>
           <button type="button" className="landing-button landing-button--secondary" onClick={onExploreMissions}>
-            Explore Guided Missions (5 Scenarios) <ArrowDownRight size={15} aria-hidden="true" />
+            Explore Guided Missions (5 Scenarios) <ArrowDownRight size={16} aria-hidden="true" />
           </button>
         </div>
         <button type="button" className="landing-quickload" onClick={() => onLoadPreset('standard-1x32')}>

@@ -23,7 +23,7 @@ export function FiberNode({ data, selected }: NodeProps<FiberFlowNode>) {
     >
       {faulted ? (
         <AlertTriangle
-          size={11}
+          size={12}
           className="fiber-fault-badge"
           style={{ display: 'inline', marginRight: 4, color: '#B36B00' }}
         />

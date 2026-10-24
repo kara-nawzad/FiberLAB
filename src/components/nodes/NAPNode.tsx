@@ -77,7 +77,7 @@ export function NAPNode({ id, data, selected }: NodeProps<NapFlowNode>) {
             {Array.from({ length: 8 }, (_, idx) => (
               <div
                 key={idx}
-                className="flex items-center justify-center rounded border border-emerald-300 bg-emerald-50 py-1 font-mono text-caption font-bold text-emerald-800"
+                className="flex items-center justify-center rounded-md border border-emerald-300 bg-emerald-50 py-1 font-mono text-caption font-bold text-emerald-800"
               >
                 D{idx + 1}
               </div>

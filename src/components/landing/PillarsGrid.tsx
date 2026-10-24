@@ -111,7 +111,7 @@ export function PillarsGrid({ onStartVillaMission, onOpenStudio }: PillarsGridPr
         <article className="landing-pillar landing-pillar--physics">
           <div className="landing-pillar-topline">
             <span>01 / BUDGET</span>
-            <Activity size={17} aria-hidden="true" />
+            <Activity size={16} aria-hidden="true" />
           </div>
           <h3>Deterministic Link Budgets</h3>
           <p>
@@ -125,7 +125,7 @@ export function PillarsGrid({ onStartVillaMission, onOpenStudio }: PillarsGridPr
         <article className="landing-pillar landing-pillar--missions">
           <div className="landing-pillar-topline">
             <span>02 / FIELDWORK</span>
-            <ClipboardCheck size={17} aria-hidden="true" />
+            <ClipboardCheck size={16} aria-hidden="true" />
           </div>
           <h3>Field Troubleshooting Missions</h3>
           <p>
@@ -144,7 +144,7 @@ export function PillarsGrid({ onStartVillaMission, onOpenStudio }: PillarsGridPr
         <article className="landing-pillar landing-pillar--audit">
           <div className="landing-pillar-topline">
             <span>03 / INVENTORY</span>
-            <FileSpreadsheet size={17} aria-hidden="true" />
+            <FileSpreadsheet size={16} aria-hidden="true" />
           </div>
           <h3>Instant Bill of Materials</h3>
           <p>

@@ -62,7 +62,7 @@ export function OpticalEdge({
         >
           {faultLabels.length > 0 ? (
             <AlertTriangle
-              size={10}
+              size={12}
               className="optical-edge-warning shrink-0 text-amber-600"
               aria-label={faultLabels.join(', ')}
             />

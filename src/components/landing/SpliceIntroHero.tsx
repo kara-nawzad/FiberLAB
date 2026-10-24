@@ -159,13 +159,13 @@ export function SpliceIntroHero({ simulation, simulationStale, onLaunchStudio }:
         >
           <span className="splice-hold-progress" style={{ transform: `scaleX(${progress})` }} />
           <span className="splice-hold-content">
-            {fused ? <Check size={17} aria-hidden="true" /> : <Radio size={17} aria-hidden="true" />}
+            {fused ? <Check size={16} aria-hidden="true" /> : <Radio size={16} aria-hidden="true" />}
             {fused ? 'FIBER FUSED' : progress > 0 ? 'KEEP HOLDING TO FUSE' : 'PRESS AND HOLD TO SPLICE'}
-            <ArrowRight size={15} aria-hidden="true" />
+            <ArrowRight size={16} aria-hidden="true" />
           </span>
         </button>
         <p id="splice-hold-hint" className="splice-hold-hint">
-          <CircleHelp size={13} aria-hidden="true" /> Hold for a moment · or{' '}
+          <CircleHelp size={14} aria-hidden="true" /> Hold for a moment · or{' '}
           <button type="button" onClick={onLaunchStudio}>
             open the studio now
           </button>
@@ -177,7 +177,7 @@ export function SpliceIntroHero({ simulation, simulationStale, onLaunchStudio }:
         <div className="splice-live-readout" aria-label="Current studio simulation readout">
           <div className="splice-live-readout-label">
             <span className="splice-live-icon">
-              <Radio size={15} aria-hidden="true" />
+              <Radio size={16} aria-hidden="true" />
             </span>
             <span>
               <small>{simulationStale ? 'LAST COMMITTED RUN' : 'LIVE STUDIO SIMULATION'}</small>

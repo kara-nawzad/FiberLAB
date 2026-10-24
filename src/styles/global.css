@@ -96,7 +96,7 @@
   }
 
   .btn {
-    @apply inline-flex min-h-9 items-center justify-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold
+    @apply inline-flex min-h-9 items-center justify-center gap-2 rounded-lg border px-3 py-2 text-body font-semibold
       transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/35
       disabled:cursor-not-allowed disabled:opacity-50;
   }
@@ -118,8 +118,9 @@
   }
 
   .input {
-    @apply w-full min-h-9 rounded-md border border-slate-300 bg-white px-3 py-2 font-mono text-xs text-slate-900
+    @apply w-full min-h-9 border border-slate-300 bg-white px-3 py-2 font-mono text-body text-slate-900
       outline-none transition-colors placeholder:text-slate-500 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/15;
+    border-radius: var(--r-md);
   }
 
   .select {
@@ -136,7 +137,8 @@
   }
 
   .metric {
-    @apply rounded-md border border-slate-200 bg-slate-50 px-3 py-2;
+    @apply border border-slate-200 bg-slate-50 px-3 py-2;
+    border-radius: var(--r-md);
   }
 
   /* caption sits 4px above its value, in every metric box */

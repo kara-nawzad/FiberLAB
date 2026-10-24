@@ -70,7 +70,7 @@ export function ODFNode({ id, data, selected }: NodeProps<OdfFlowNode>) {
               return (
                 <div
                   key={portNum}
-                  className={`flex flex-col items-center rounded border py-1 font-mono text-caption ${
+                  className={`flex flex-col items-center rounded-md border py-1 font-mono text-caption ${
                     isMatchedPair
                       ? 'border-emerald-500/80 bg-emerald-950 text-emerald-200'
                       : 'border-slate-700 bg-slate-800 text-slate-400'

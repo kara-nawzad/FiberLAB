@@ -54,7 +54,7 @@ export function LandingView({
           and device datasheets.
         </p>
         <button type="button" className="landing-footer-link" onClick={onLaunchStudio}>
-          Open the engineering canvas <ArrowUpRight size={13} aria-hidden="true" />
+          Open the engineering canvas <ArrowUpRight size={14} aria-hidden="true" />
         </button>
       </footer>
     </div>

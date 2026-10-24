@@ -81,7 +81,7 @@ export function MissionDrawer({
         <header className="flex shrink-0 items-start justify-between gap-4 border-b border-slate-200 px-4 py-4">
           <div>
             <div className="mb-1 flex items-center gap-2 text-caption font-bold uppercase tracking-[0.16em] text-blue-700">
-              <Flag size={13} /> FiberLAB training
+              <Flag size={14} /> FiberLAB training
             </div>
             <h2
               id="mission-drawer-title"
@@ -273,7 +273,7 @@ export function MissionDrawer({
           <details className="mt-4 overflow-hidden rounded-xl border border-amber-200 bg-amber-50/70">
             <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 text-label font-semibold text-amber-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600">
               <CircleHelp size={14} className="text-amber-700" /> Field hints
-              <ChevronDown size={13} className="ml-auto transition-transform details-chevron" />
+              <ChevronDown size={14} className="ml-auto transition-transform details-chevron" />
             </summary>
             <ol className="grid gap-2 border-t border-amber-200 px-3 py-3">
               {mission.fieldHints.map((hint, index) => (

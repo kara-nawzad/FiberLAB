@@ -22,7 +22,7 @@ export function FieldHardwareCard({ profile, configurationLabel }: FieldHardware
         <div className="flex items-center gap-2 text-caption font-semibold uppercase tracking-[0.12em] text-sky-200">
           <Info size={12} /> Field hardware
         </div>
-        <span className="rounded border border-noc-600/80 bg-noc-900/70 px-2 py-1 font-mono text-caption uppercase tracking-wide text-noc-400">
+        <span className="rounded-md border border-noc-600/80 bg-noc-900/70 px-2 py-1 font-mono text-caption uppercase tracking-wide text-noc-400">
           Reference illustration
         </span>
       </div>
@@ -48,7 +48,7 @@ export function FieldHardwareCard({ profile, configurationLabel }: FieldHardware
           ) : null}
           <div className="mt-1 text-body leading-relaxed text-noc-400">{profile.description}</div>
           <div className="mt-2 flex items-start gap-1 text-label leading-snug text-amber-900">
-            <Info size={10} className="mt-px shrink-0" />
+            <Info size={12} className="mt-px shrink-0" />
             <span>Illustrative hardware reference—not a product photograph or exact vendor model.</span>
           </div>
         </figcaption>
@@ -57,7 +57,7 @@ export function FieldHardwareCard({ profile, configurationLabel }: FieldHardware
       <div className="space-y-2 p-2">
         <section aria-label={constructionLabel}>
           <h3 className="mb-2 flex items-center gap-2 text-caption font-semibold uppercase tracking-[0.12em] text-noc-300">
-            <Cable size={11} className="text-sky-300" /> {constructionLabel}
+            <Cable size={12} className="text-sky-300" /> {constructionLabel}
           </h3>
           <ul className="space-y-1">
             {profile.physicalPorts.map((port) => (
@@ -71,7 +71,7 @@ export function FieldHardwareCard({ profile, configurationLabel }: FieldHardware
 
         <section aria-label="Field tips" className="border-t border-noc-700/50 pt-2">
           <h3 className="mb-2 flex items-center gap-2 text-caption font-semibold uppercase tracking-[0.12em] text-noc-300">
-            <Lightbulb size={11} className="text-amber-300" /> Field tips
+            <Lightbulb size={12} className="text-amber-300" /> Field tips
           </h3>
           <ul className="space-y-2">
             {profile.fieldNotes.map((note, index) => (
@@ -87,18 +87,18 @@ export function FieldHardwareCard({ profile, configurationLabel }: FieldHardware
 
         <details className="border-t border-noc-700/50 pt-2">
           <summary className="flex cursor-pointer list-none items-center gap-2 text-caption font-semibold uppercase tracking-[0.12em] text-noc-300 marker:hidden">
-            <ShieldCheck size={11} className="text-emerald-300" /> Datasheet context
+            <ShieldCheck size={12} className="text-emerald-300" /> Datasheet context
           </summary>
           <dl className="mt-2 space-y-2">
             <div className="flex gap-2 text-body leading-relaxed">
               <dt className="flex w-[76px] shrink-0 items-start gap-1 text-noc-500">
-                <Thermometer size={10} className="mt-1" /> Temperature
+                <Thermometer size={12} className="mt-1" /> Temperature
               </dt>
               <dd className="text-noc-400">{profile.datasheetSnippet.operatingTemp}</dd>
             </div>
             <div className="flex gap-2 text-body leading-relaxed">
               <dt className="flex w-[76px] shrink-0 items-start gap-1 text-noc-500">
-                <Waves size={10} className="mt-1" /> Wavelengths
+                <Waves size={12} className="mt-1" /> Wavelengths
               </dt>
               <dd className="text-noc-400">{profile.datasheetSnippet.wavelengths}</dd>
             </div>

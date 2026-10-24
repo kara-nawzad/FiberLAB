@@ -29,7 +29,7 @@ export function LandingNav({ onLaunchStudio, onLoadPreset }: LandingNavProps) {
           onToggle={(event) => setPresetsOpen(event.currentTarget.open)}
         >
           <summary aria-label="Quick-load a topology">
-            Topologies <ChevronDown size={13} aria-hidden="true" />
+            Topologies <ChevronDown size={14} aria-hidden="true" />
           </summary>
           <div className="landing-preset-popover">
             <p>LOAD A NETWORK</p>

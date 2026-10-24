@@ -88,7 +88,7 @@ export function ClosureNode({ id, data, selected }: NodeProps<ClosureFlowNode>) 
               return (
                 <div
                   key={branch}
-                  className={`flex items-center justify-between rounded border px-2 py-1 font-mono text-caption ${
+                  className={`flex items-center justify-between rounded-md border px-2 py-1 font-mono text-caption ${
                     active
                       ? 'border-slate-600 bg-slate-800 text-white'
                       : 'border-red-900/70 bg-red-950/60 text-red-300 line-through'

@@ -286,7 +286,7 @@ export function Sidebar({
           <Section title="Tools">
             {onToggleOpm ? (
               <ToolItem
-                icon={<Gauge size={22} />}
+                icon={<Gauge size={20} />}
                 title="Power Meter"
                 subtitle="Probe a port or patch cord"
                 onClick={onToggleOpm}
@@ -294,7 +294,7 @@ export function Sidebar({
             ) : null}
             {onOpenOtdr ? (
               <ToolItem
-                icon={<Activity size={22} />}
+                icon={<Activity size={20} />}
                 title="OTDR Trace"
                 subtitle="Find events and breaks"
                 onClick={onOpenOtdr}

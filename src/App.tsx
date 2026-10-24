@@ -1120,7 +1120,7 @@ function StudioWorkspace({
                         <small>{linkMessage}</small>
                       </span>
                       <button type="button" className="btn-ghost !min-h-8 !px-2" onClick={handleToggleLink}>
-                        <X size={13} aria-hidden="true" /> Cancel
+                        <X size={14} aria-hidden="true" /> Cancel
                       </button>
                     </div>
                   </Panel>

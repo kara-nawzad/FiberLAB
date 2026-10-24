@@ -200,7 +200,7 @@ export function BOMModal({
         <div className="panel-header">
           <div className="flex items-center gap-2">
             <span className="flex h-7 w-7 items-center justify-center rounded-md bg-sky-500/15 text-sky-300">
-              <Table2 size={15} />
+              <Table2 size={16} />
             </span>
             <div>
               <h2 id="bom-title" className="text-section font-bold leading-tight text-noc-200">
@@ -223,7 +223,7 @@ export function BOMModal({
                 )
               }
             >
-              <Download size={13} /> Quote CSV
+              <Download size={14} /> Quote CSV
             </button>
             <button
               type="button"
@@ -240,7 +240,7 @@ export function BOMModal({
                 )
               }
             >
-              <FileJson size={13} /> Quote JSON
+              <FileJson size={14} /> Quote JSON
             </button>
             <button
               type="button"
@@ -434,7 +434,7 @@ export function BOMModal({
                               </td>
                               <td className="px-2 py-2">
                                 <span
-                                  className={`inline-flex items-center gap-1 rounded border px-2 py-0 text-caption font-semibold ${style.badge}`}
+                                  className={`inline-flex items-center gap-1 rounded-md border px-2 py-1 text-caption font-semibold ${style.badge}`}
                                   title={describeStatus(telemetry.status)}
                                 >
                                   <span className="h-1.5 w-1.5 rounded-full" style={{ background: style.hex }} />

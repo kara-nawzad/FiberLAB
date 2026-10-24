@@ -122,7 +122,7 @@ export function TopBar({
           aria-controls="preset-menu"
           aria-label="Preset Topologies"
         >
-          <LayoutGrid size={15} className="pu-mut" />
+          <LayoutGrid size={14} className="pu-mut" />
           {activePreset ? activePreset.name : 'FTTH Network'}
           <ChevronDown size={14} className="pu-mut" />
         </button>
@@ -215,11 +215,11 @@ export function TopBar({
       </div>
 
       <button type="button" className="pu-btn pri" onClick={onRunTest} disabled={testing} aria-label="Run Simulation">
-        {testing ? <Loader2 size={15} className="animate-spin" /> : <Play size={15} fill="currentColor" />}
+        {testing ? <Loader2 size={14} className="animate-spin" /> : <Play size={14} fill="currentColor" />}
         Run Simulation
       </button>
       <button type="button" className="pu-btn" onClick={onOpenBOM} aria-label="Bill of Materials">
-        <FileBarChart size={15} /> Reports
+        <FileBarChart size={14} /> Reports
       </button>
     </header>
   );

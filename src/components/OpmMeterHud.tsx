@@ -66,7 +66,7 @@ export const OpmMeterHud = forwardRef<HTMLElement, OpmMeterHudProps>(function Op
           <Crosshair size={14} aria-hidden="true" /> FIELD OPM
         </span>
         <span className="opm-meter-battery" aria-hidden="true">
-          <BatteryFull size={17} aria-hidden="true" />
+          <BatteryFull size={16} aria-hidden="true" />
         </span>
         <button type="button" className="opm-meter-close" aria-label="Close OPM" onClick={onClose}>
           <X size={14} aria-hidden="true" />
