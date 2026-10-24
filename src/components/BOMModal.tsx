@@ -91,14 +91,14 @@ function CommercialQuotationView({
         <div className="flex items-center justify-between gap-2 bg-noc-800/80 px-3 py-2">
           <div>
             <h3 className="text-label font-semibold text-noc-200">Detailed quotation</h3>
-            <p className="text-[9px] text-noc-500">Deployed quantities · reference USD rates</p>
+            <p className="text-body text-noc-500">Deployed quantities · reference USD rates</p>
           </div>
           <span className="font-mono text-caption text-noc-400">{costBreakdown.lineItems.length} line items</span>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[720px] font-mono text-caption" data-testid="quotation-line-items">
+          <table className="w-full min-w-[720px] font-mono text-label" data-testid="quotation-line-items">
             <thead>
-              <tr className="border-t border-noc-700/60 bg-noc-950/70 text-[9px] uppercase tracking-wide text-noc-500">
+              <tr className="border-t border-noc-700/60 bg-noc-950/70 text-caption uppercase tracking-wide text-noc-500">
                 <th className="px-2 py-2 text-left font-medium">Category</th>
                 <th className="px-2 py-2 text-left font-medium">Item</th>
                 <th className="px-2 py-2 text-right font-medium">Qty</th>
@@ -142,7 +142,7 @@ function CommercialQuotationView({
         </div>
       </div>
 
-      <p className="mt-3 rounded-md border border-amber-800/40 bg-amber-950/20 px-3 py-2 text-[9px] leading-relaxed text-amber-200/80">
+      <p className="mt-3 rounded-md border border-amber-800/40 bg-amber-950/20 px-3 py-2 text-body leading-relaxed text-amber-200/80">
         Educational USD planning rates only—not a supplier quote, installed-price guarantee, tax estimate, or market
         survey. Edit local reference rates in the Inspector before exporting a quotation.
       </p>
@@ -203,10 +203,10 @@ export function BOMModal({
               <Table2 size={15} />
             </span>
             <div>
-              <h2 id="bom-title" className="text-lead font-semibold text-noc-200">
+              <h2 id="bom-title" className="text-section font-bold leading-tight text-noc-200">
                 Bill of Materials
               </h2>
-              <p id="bom-description" className="text-caption text-noc-500">
+              <p id="bom-description" className="text-body text-noc-500">
                 Optical audit &amp; commercial CAPEX quotation
               </p>
             </div>
@@ -326,7 +326,7 @@ export function BOMModal({
                 <div className="rounded-lg border border-noc-700/60 bg-noc-950/50 p-3">
                   <div className="eyebrow mb-2">Splitters by ratio</div>
                   {summary.splitterTotal === 0 ? (
-                    <p className="text-label text-noc-500">No splitters deployed.</p>
+                    <p className="text-body text-noc-500">No splitters deployed.</p>
                   ) : (
                     <div className="flex flex-wrap gap-1.5">
                       {SPLIT_RATIOS.filter((ratio: SplitRatio) => summary.splitterCountByRatio[ratio]).map((ratio) => (
@@ -422,7 +422,7 @@ export function BOMModal({
                             <tr key={node.id} className="border-t border-noc-700/50 text-noc-300 hover:bg-noc-800/40">
                               <td className="px-2 py-1.5">
                                 <div className="truncate font-sans text-label text-noc-200">{data.subscriber}</div>
-                                <div className="text-[9px] text-noc-500">
+                                <div className="text-label text-noc-500">
                                   {node.type === 'gateway'
                                     ? `Wi-Fi gateway · ${data.serial} · ${node.data.ssid}`
                                     : `ONT · ${data.serial}`}
@@ -434,7 +434,7 @@ export function BOMModal({
                               </td>
                               <td className="px-2 py-1.5">
                                 <span
-                                  className={`inline-flex items-center gap-1 rounded border px-1.5 py-[1px] text-[9px] font-semibold ${style.badge}`}
+                                  className={`inline-flex items-center gap-1 rounded border px-1.5 py-[1px] text-caption font-semibold ${style.badge}`}
                                   title={describeStatus(telemetry.status)}
                                 >
                                   <span className="h-1.5 w-1.5 rounded-full" style={{ background: style.hex }} />
@@ -467,7 +467,7 @@ export function BOMModal({
                               </td>
                               <td className="px-2 py-1.5 text-right">{telemetry.splices}</td>
                               <td className="px-2 py-1.5 text-right">{telemetry.connectors}</td>
-                              <td className="px-2 py-1.5 text-caption text-noc-400">
+                              <td className="px-2 py-1.5 text-label text-noc-400">
                                 {path ? `${path.oltPort} @ ${path.txPowerDbm.toFixed(1)} dBm` : '—'}
                               </td>
                             </tr>
@@ -493,8 +493,8 @@ export function BOMModal({
                         boxShadow: `0 0 6px ${STATUS_STYLES[key].hex}`,
                       }}
                     />
-                    <span className="font-mono text-caption text-noc-300">{STATUS_STYLES[key].label}</span>
-                    <span className="font-mono text-caption text-noc-500">{summary.byStatus[key]}</span>
+                    <span className="font-mono text-label text-noc-300">{STATUS_STYLES[key].label}</span>
+                    <span className="font-mono text-label text-noc-500">{summary.byStatus[key]}</span>
                   </div>
                 ))}
               </div>

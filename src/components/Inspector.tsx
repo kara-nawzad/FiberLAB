@@ -221,7 +221,7 @@ function SpliceTrayView({ channels, onChange }: { channels: boolean[]; onChange:
 function SegmentTable({ telemetry }: { telemetry: SubscriberOpticalTelemetry }) {
   return (
     <div className="overflow-hidden rounded-md border border-slate-200">
-      <table className="w-full font-mono text-caption">
+      <table className="w-full font-mono text-label">
         <thead>
           <tr className="bg-slate-100 text-slate-600">
             <th className="px-2 py-1 text-left font-medium">Element</th>
@@ -411,7 +411,7 @@ export function Inspector({
             <PanelRightOpen size={15} />
           </button>
           <span
-            className="font-mono text-[9px] font-bold uppercase tracking-widest text-slate-400"
+            className="font-mono text-caption font-bold uppercase tracking-widest text-slate-400"
             style={{ writingMode: 'vertical-rl' }}
           >
             Inspector
@@ -470,7 +470,11 @@ export function Inspector({
                 {node?.id ?? edge?.id ?? 'Workbench Guide'}
               </div>
             )}
-            {telemetry ? <div style={{ fontSize: 13, fontWeight: 600 }}>{formatDbm(telemetry.rxPowerDbm)}</div> : null}
+            {telemetry ? (
+              <div style={{ fontSize: 'var(--fs-sm)', fontWeight: 'var(--fw-semibold)' }}>
+                {formatDbm(telemetry.rxPowerDbm)}
+              </div>
+            ) : null}
           </div>
         </div>
 
@@ -497,7 +501,7 @@ export function Inspector({
 
         <div className="fiberlab-inspector-content flex-1 overflow-y-auto px-3 py-2.5">
           {beginnerSummary ? (
-            <div className="mb-2.5 rounded-lg border border-[#F0D1B1] bg-[#FFF0DF]/80 px-2.5 py-1.5 text-[10.5px] leading-snug text-[#2B1A14]">
+            <div className="mb-2.5 rounded-lg border border-[#F0D1B1] bg-[#FFF0DF]/80 px-2.5 py-1.5 text-label leading-snug text-[#2B1A14]">
               {beginnerSummary}
             </div>
           ) : null}
@@ -546,11 +550,11 @@ export function Inspector({
                 <CircleSlash size={16} className="text-[#E4673F] shrink-0" />
                 <span className="text-body font-bold text-[#231712]">Nothing selected</span>
               </div>
-              <p className="text-label leading-relaxed text-[#6E5649] mb-2.5">
+              <p className="text-body leading-relaxed text-[#6E5649] mb-2.5">
                 Click any hardware unit or fiber cable on the canvas to configure its optical ports, loss parameters,
                 and link budget.
               </p>
-              <div className="space-y-1.5 text-[10.5px] text-[#6E5649] border-t border-[#EED8BF] pt-2">
+              <div className="space-y-1.5 text-label text-[#6E5649] border-t border-[#EED8BF] pt-2">
                 <div>
                   <strong className="text-[#231712]">1. Add Hardware:</strong> Drag from the left Component Toolbox or
                   double-click an item.
@@ -635,14 +639,14 @@ export function Inspector({
                     <option value={1490}>{WAVELENGTH_LABEL[1490]}</option>
                   </select>
                 ) : (
-                  <div className="rounded-md border border-sky-300 bg-sky-50 px-2 py-2 font-mono text-caption text-sky-900">
+                  <div className="rounded-md border border-sky-300 bg-sky-50 px-2 py-2 font-mono text-label text-sky-900">
                     Downstream 1577 nm · {ATTENUATION_DB_PER_KM[1577].toFixed(2)} dB/km
                     <br />
                     Upstream 1270 nm · {ATTENUATION_DB_PER_KM[1270].toFixed(2)} dB/km (not simulated)
                   </div>
                 )}
               </Row>
-              <div className="mb-3 rounded-md border border-slate-200 bg-slate-50 px-2 py-2 text-[9px] leading-relaxed text-slate-600">
+              <div className="mb-3 rounded-md border border-slate-200 bg-slate-50 px-2 py-2 text-body leading-relaxed text-slate-600">
                 Nominal PON line rate: {PON_STANDARD_SPECS[node.data.ponStandard ?? 'GPON'].downstreamGbps.toFixed(3)}{' '}
                 Gbps downstream / {PON_STANDARD_SPECS[node.data.ponStandard ?? 'GPON'].upstreamGbps.toFixed(3)} Gbps
                 upstream. These are shared line rates, not guaranteed subscriber throughput.
@@ -653,7 +657,7 @@ export function Inspector({
               <div className="mb-3 flex items-center justify-between rounded-md border border-slate-200 bg-slate-50 px-2 py-2">
                 <div>
                   <div className="text-label font-medium text-slate-800">Laser transmitter</div>
-                  <div className="font-mono text-caption text-slate-500">
+                  <div className="font-mono text-label text-slate-500">
                     {node.data.laserOn ? 'Emitting — downstream live' : 'Disabled — all ONTs go dark'}
                   </div>
                 </div>
@@ -675,11 +679,11 @@ export function Inspector({
               </div>
               <div className="grid grid-cols-2 gap-1.5">
                 <div className="metric">
-                  <div className="text-[9px] uppercase tracking-wide text-slate-500">Class budget</div>
+                  <div className="text-caption uppercase tracking-wide text-slate-500">Class budget</div>
                   <div className="metric-value">{OLT_CLASS_SPECS[node.data.oltClass].linkBudgetDb.toFixed(0)} dB</div>
                 </div>
                 <div className="metric">
-                  <div className="text-[9px] uppercase tracking-wide text-slate-500">Rx sensitivity</div>
+                  <div className="text-caption uppercase tracking-wide text-slate-500">Rx sensitivity</div>
                   <div className="metric-value">
                     {OLT_CLASS_SPECS[node.data.oltClass].rxSensitivityDbm.toFixed(0)} dBm
                   </div>
@@ -705,7 +709,7 @@ export function Inspector({
                 </select>
               </Row>
               <div className="mb-3 overflow-hidden rounded-md border border-slate-200">
-                <table className="w-full font-mono text-caption">
+                <table className="w-full font-mono text-label">
                   <thead>
                     <tr className="bg-slate-100 text-slate-600">
                       <th className="px-2 py-1 text-left font-medium">Ratio</th>
@@ -737,7 +741,7 @@ export function Inspector({
                 onChange={(value) => onPatchNode(node.id, { excessLossDb: value })}
               />
               <div className="metric">
-                <div className="text-[9px] uppercase tracking-wide text-slate-500">Total insertion loss</div>
+                <div className="text-caption uppercase tracking-wide text-slate-500">Total insertion loss</div>
                 <div className="metric-value text-violet-700">{computeSplitterLoss(node.data).toFixed(2)} dB</div>
               </div>
             </>
@@ -746,7 +750,7 @@ export function Inspector({
           {/* --------------------------------------------------------------- ODF */}
           {node && isOdfNode(node) && (showProperties || showOptical) ? (
             <>
-              <div className="mb-3 rounded-md border border-teal-300 bg-teal-50 px-2.5 py-2 text-caption leading-relaxed text-teal-900">
+              <div className="mb-3 rounded-md border border-teal-300 bg-teal-50 px-2.5 py-2 text-body leading-relaxed text-teal-900">
                 Two matched independent through-pairs: input 1 → output 1, input 2 → output 2. Patch cords remain graph
                 edges.
               </div>
@@ -761,15 +765,15 @@ export function Inspector({
               />
               <div className="grid grid-cols-2 gap-1.5">
                 <div className="metric">
-                  <div className="text-[9px] uppercase tracking-wide text-slate-500">Optical inputs</div>
+                  <div className="text-caption uppercase tracking-wide text-slate-500">Optical inputs</div>
                   <div className="metric-value">{ODF_INPUT_PORTS}</div>
                 </div>
                 <div className="metric">
-                  <div className="text-[9px] uppercase tracking-wide text-slate-500">Matched outputs</div>
+                  <div className="text-caption uppercase tracking-wide text-slate-500">Matched outputs</div>
                   <div className="metric-value">{ODF_OUTPUT_PORTS}</div>
                 </div>
               </div>
-              <p className="mt-2 text-[9px] leading-relaxed text-slate-500">
+              <p className="mt-2 text-body leading-relaxed text-slate-500">
                 Default {DEFAULT_ODF_THROUGH_PORT_LOSS_DB.toFixed(2)} dB is an educational adapter/through allowance,
                 not a measured loss or vendor guarantee.
               </p>
@@ -779,28 +783,28 @@ export function Inspector({
           {/* --------------------------------------------------------------- NAP */}
           {node && isNapNode(node) && (showProperties || showOptical) ? (
             <>
-              <div className="mb-3 rounded-md border border-orange-300 bg-orange-50 px-2.5 py-2 text-caption leading-relaxed text-orange-900">
+              <div className="mb-3 rounded-md border border-orange-300 bg-orange-50 px-2.5 py-2 text-body leading-relaxed text-orange-900">
                 Outdoor NAP/FAT model: one feeder input, eight drop outputs, and an internal fixed 1:8 split.
               </div>
               <div className="grid grid-cols-2 gap-1.5">
                 <div className="metric">
-                  <div className="text-[9px] uppercase tracking-wide text-slate-500">Split ratio</div>
+                  <div className="text-caption uppercase tracking-wide text-slate-500">Split ratio</div>
                   <div className="metric-value text-orange-800">1:{NAP_SPLIT_RATIO}</div>
                 </div>
                 <div className="metric">
-                  <div className="text-[9px] uppercase tracking-wide text-slate-500">Branch insertion loss</div>
+                  <div className="text-caption uppercase tracking-wide text-slate-500">Branch insertion loss</div>
                   <div className="metric-value text-orange-800">{node.data.splitLossDb.toFixed(2)} dB</div>
                 </div>
                 <div className="metric">
-                  <div className="text-[9px] uppercase tracking-wide text-slate-500">Optical inputs</div>
+                  <div className="text-caption uppercase tracking-wide text-slate-500">Optical inputs</div>
                   <div className="metric-value">1</div>
                 </div>
                 <div className="metric">
-                  <div className="text-[9px] uppercase tracking-wide text-slate-500">Drop outputs</div>
+                  <div className="text-caption uppercase tracking-wide text-slate-500">Drop outputs</div>
                   <div className="metric-value">{NAP_OUTPUT_PORTS}</div>
                 </div>
               </div>
-              <p className="mt-2 text-[9px] leading-relaxed text-slate-500">
+              <p className="mt-2 text-body leading-relaxed text-slate-500">
                 The {NAP_SPLIT_LOSS_DB.toFixed(1)} dB default is a fixed learning reference; real insertion loss and
                 weather rating depend on the exact product and installation.
               </p>
@@ -819,7 +823,7 @@ export function Inspector({
                 unit="dB per active branch"
                 onChange={(spliceLossDb) => onPatchNode(node.id, { spliceLossDb })}
               />
-              <div className="mb-3 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-2 text-[9px] leading-relaxed text-slate-700">
+              <div className="mb-3 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-2 text-body leading-relaxed text-slate-700">
                 The closure passes one modeled fiber per active branch and adds one adjustable fusion-splice allowance.
                 Tray occupancy is strand-level reference data, not a measured splice-loss value.
               </div>
@@ -958,18 +962,18 @@ export function Inspector({
                   active={Boolean(node.data.dirtyConnectorActive)}
                   onChange={(dirtyConnectorActive) => onPatchNode(node.id, { dirtyConnectorActive })}
                 />
-                <p className="mt-1.5 text-[9px] leading-relaxed text-noc-500">
+                <p className="mt-1.5 text-body leading-relaxed text-noc-500">
                   The +3.50 dB bend and +2.00 dB contamination penalties are simplified training values, not universal
                   field measurements.
                 </p>
               </div>
               <div className="grid grid-cols-2 gap-1.5">
                 <div className="metric">
-                  <div className="text-[9px] uppercase tracking-wide text-noc-400">Cable loss</div>
+                  <div className="text-caption uppercase tracking-wide text-noc-400">Cable loss</div>
                   <div className="metric-value">{computeFiberLoss(node.data).cableDb.toFixed(2)} dB</div>
                 </div>
                 <div className="metric">
-                  <div className="text-[9px] uppercase tracking-wide text-noc-400">Span total</div>
+                  <div className="text-caption uppercase tracking-wide text-noc-400">Span total</div>
                   <div className="metric-value text-emerald-300">
                     {computeFiberLoss(node.data).totalDb.toFixed(2)} dB
                   </div>
@@ -1020,30 +1024,30 @@ export function Inspector({
                       >
                         {STATUS_STYLES[telemetry.status].label}
                       </div>
-                      <div className="truncate text-caption text-noc-400">{describeStatus(telemetry.status)}</div>
+                      <div className="truncate text-label text-noc-400">{describeStatus(telemetry.status)}</div>
                     </div>
                   </div>
                   <div className="mb-3 grid grid-cols-2 gap-1.5">
                     <div className="metric">
-                      <div className="text-[9px] uppercase tracking-wide text-noc-400">Rx power</div>
+                      <div className="text-caption uppercase tracking-wide text-noc-400">Rx power</div>
                       <div className="metric-value" style={{ color: STATUS_STYLES[telemetry.status].hex }}>
                         {formatDbm(telemetry.rxPowerDbm)}
                       </div>
                     </div>
                     <div className="metric">
-                      <div className="text-[9px] uppercase tracking-wide text-noc-400">Link margin</div>
+                      <div className="text-caption uppercase tracking-wide text-noc-400">Link margin</div>
                       <div className="metric-value">
                         {telemetry.rxPowerDbm === null ? '—' : `${telemetry.marginDb.toFixed(2)} dB`}
                       </div>
                     </div>
                     <div className="metric">
-                      <div className="text-[9px] uppercase tracking-wide text-noc-400">Feeder route</div>
+                      <div className="text-caption uppercase tracking-wide text-noc-400">Feeder route</div>
                       <div className="metric-value">
                         {telemetry.rxPowerDbm === null ? '—' : `${telemetry.fiberKm.toFixed(2)} km`}
                       </div>
                     </div>
                     <div className="metric">
-                      <div className="text-[9px] uppercase tracking-wide text-noc-400">Split ratio</div>
+                      <div className="text-caption uppercase tracking-wide text-noc-400">Split ratio</div>
                       <div className="metric-value">
                         {telemetry.rxPowerDbm === null ? '—' : `1:${telemetry.cumulativeSplitRatio}`}
                       </div>
@@ -1051,7 +1055,7 @@ export function Inspector({
                   </div>
                   <div className="eyebrow mb-1.5">Link budget breakdown</div>
                   <SegmentTable telemetry={telemetry} />
-                  <div className="mt-2 rounded-md border border-noc-700/60 bg-noc-950/50 p-2 font-mono text-caption leading-relaxed text-noc-400">
+                  <div className="mt-2 rounded-md border border-noc-700/60 bg-noc-950/50 p-2 font-mono text-label leading-relaxed text-noc-400">
                     <div className="mb-1 text-noc-300">P_rx = P_tx − ΣL − margin</div>
                     <div>
                       P_rx ={' '}
@@ -1064,7 +1068,7 @@ export function Inspector({
                     </div>
                   </div>
                   {telemetry.candidatePaths.length > 1 ? (
-                    <div className="mt-2 rounded-md border border-noc-700/60 bg-noc-950/50 p-2 font-mono text-caption text-noc-400">
+                    <div className="mt-2 rounded-md border border-noc-700/60 bg-noc-950/50 p-2 font-mono text-label text-noc-400">
                       {telemetry.candidatePaths.length} OLT paths reach this ONT — showing the best (
                       {formatDbm(telemetry.rxPowerDbm)}).
                     </div>
@@ -1132,31 +1136,31 @@ export function Inspector({
                   </div>
                   <div className="mb-3 grid grid-cols-2 gap-1.5">
                     <div className="metric">
-                      <div className="text-[9px] uppercase tracking-wide text-noc-400">Optical Rx</div>
+                      <div className="text-caption uppercase tracking-wide text-noc-400">Optical Rx</div>
                       <div className="metric-value" style={{ color: STATUS_STYLES[telemetry.status].hex }}>
                         {formatDbm(telemetry.rxPowerDbm)}
                       </div>
                     </div>
                     <div className="metric">
-                      <div className="text-[9px] uppercase tracking-wide text-noc-400">Link margin</div>
+                      <div className="text-caption uppercase tracking-wide text-noc-400">Link margin</div>
                       <div className="metric-value">
                         {telemetry.rxPowerDbm === null ? '—' : `${telemetry.marginDb.toFixed(2)} dB`}
                       </div>
                     </div>
                     <div className="metric">
-                      <div className="text-[9px] uppercase tracking-wide text-slate-500">PON standard</div>
+                      <div className="text-caption uppercase tracking-wide text-slate-500">PON standard</div>
                       <div className="metric-value text-blue-700">
                         {gatewayTelemetry.ponStandard ?? 'No active link'}
                       </div>
                     </div>
                     <div className="metric">
-                      <div className="text-[9px] uppercase tracking-wide text-slate-500">Split ratio</div>
+                      <div className="text-caption uppercase tracking-wide text-slate-500">Split ratio</div>
                       <div className="metric-value">
                         {telemetry.rxPowerDbm === null ? '—' : `1:${telemetry.cumulativeSplitRatio}`}
                       </div>
                     </div>
                     <div className="metric">
-                      <div className="text-[9px] uppercase tracking-wide text-slate-500">Down / up line rate</div>
+                      <div className="text-caption uppercase tracking-wide text-slate-500">Down / up line rate</div>
                       <div className="metric-value">
                         {gatewayTelemetry.downstreamLineRateGbps === null
                           ? '—'
@@ -1164,7 +1168,7 @@ export function Inspector({
                       </div>
                     </div>
                     <div className="metric">
-                      <div className="text-[9px] uppercase tracking-wide text-slate-500">Estimated down / up</div>
+                      <div className="text-caption uppercase tracking-wide text-slate-500">Estimated down / up</div>
                       <div className="metric-value text-emerald-700">
                         {gatewayTelemetry.estimatedDownMbps === null
                           ? '—'
@@ -1172,30 +1176,30 @@ export function Inspector({
                       </div>
                     </div>
                     <div className="metric">
-                      <div className="text-[9px] uppercase tracking-wide text-slate-500">Internet IP (simulated)</div>
+                      <div className="text-caption uppercase tracking-wide text-slate-500">Internet IP (simulated)</div>
                       <div className="metric-value">
                         {telemetry.status === 'ONLINE' ? gatewayTelemetry.serviceIpAddress : 'Not assigned'}
                       </div>
                     </div>
                   </div>
-                  <p className="mb-3 text-[9px] text-slate-500">
+                  <p className="mb-3 text-body text-slate-500">
                     TEST-NET placeholder only; DHCP, routing, and live Internet reachability are not modeled.
                   </p>
                   <div className="eyebrow mb-1.5">Optical path &amp; service audit</div>
                   <SegmentTable telemetry={telemetry} />
-                  <div className="mt-2 rounded-md border border-amber-300 bg-amber-50 p-2 text-[9px] leading-relaxed text-amber-900">
+                  <div className="mt-2 rounded-md border border-amber-300 bg-amber-50 p-2 text-body leading-relaxed text-amber-900">
                     Speed estimate divides the nominal shared PON line rate by the modeled cumulative split ratio. It
                     does not model contention, protocol overhead, Wi-Fi conditions, a service plan, or a measured speed
                     test.
                   </div>
                 </>
               ) : (
-                <div className="rounded-md border border-slate-200 bg-slate-50 p-2 text-caption leading-relaxed text-slate-600">
+                <div className="rounded-md border border-slate-200 bg-slate-50 p-2 text-body leading-relaxed text-slate-600">
                   Gateway supports GPON and XGS-PON in this reference model. Connect its optical input to a live OLT
                   path to populate optical and service telemetry.
                 </div>
               )}
-              <div className="mt-2 rounded-md border border-slate-200 bg-slate-50 p-2 text-[9px] leading-relaxed text-slate-500">
+              <div className="mt-2 rounded-md border border-slate-200 bg-slate-50 p-2 text-body leading-relaxed text-slate-500">
                 Representative interfaces: dual-band Wi-Fi 6, four Gigabit Ethernet LAN ports, and one FXS voice port.
                 Exact radio streams, Ethernet options, and voice features vary by SKU.
               </div>
@@ -1205,7 +1209,7 @@ export function Inspector({
           {/* ------------------------------------------------------------ Edge */}
           {!node && edge ? (
             <>
-              <div className="mb-3 rounded-md border border-slate-200 bg-slate-50 p-2 font-mono text-caption text-slate-600">
+              <div className="mb-3 rounded-md border border-slate-200 bg-slate-50 p-2 font-mono text-label text-slate-600">
                 <div className="mb-1 text-slate-800 font-semibold">Patch cord</div>
                 <div className="break-all">
                   {edge.source} → {edge.target}
@@ -1213,15 +1217,15 @@ export function Inspector({
               </div>
               <div className="grid grid-cols-2 gap-1.5">
                 <div className="metric">
-                  <div className="text-[9px] uppercase tracking-wide text-slate-500">Power at far end</div>
+                  <div className="text-caption uppercase tracking-wide text-slate-500">Power at far end</div>
                   <div className="metric-value">{formatDbm(simulation.edgeTelemetry[edge.id]?.powerDbm ?? null)}</div>
                 </div>
                 <div className="metric">
-                  <div className="text-[9px] uppercase tracking-wide text-slate-500">State</div>
+                  <div className="text-caption uppercase tracking-wide text-slate-500">State</div>
                   <div className="metric-value uppercase">{simulation.edgeTelemetry[edge.id]?.edgeState ?? 'idle'}</div>
                 </div>
               </div>
-              <p className="mt-2 text-label leading-relaxed text-slate-500">
+              <p className="mt-2 text-body leading-relaxed text-slate-500">
                 A patch cord adds no loss of its own — its attenuation belongs to the fiber span it terminates on.
                 Delete it to break the optical path.
               </p>

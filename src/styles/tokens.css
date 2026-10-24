@@ -16,32 +16,49 @@
 
 :root {
   /* ---------------------------------------------------------------- type ---
-   * Raw scale. Seven steps replace the 24 freestanding sizes the audit found.
-   * Half-pixel sizes (8.5, 9.5, 10.5, 11.5, 12.5) are intentionally absent —
-   * they are migrated onto the nearest step in the normalisation pass. */
-  --fs-2xs: 10px; /* caption, uppercase eyebrow, chip */
-  --fs-xs: 11px; /* small label, tab, secondary metadata */
-  --fs-sm: 12px; /* body — the default reading size in panels */
-  --fs-md: 14px; /* lead paragraph, card value, modal title (small) */
-  --fs-lg: 16px; /* panel title */
-  --fs-xl: 20px; /* section title, card headline metric */
-  --fs-2xl: 24px; /* instrument readout */
+   * One scale, 7 steps. Body is 13px — nothing that sets running copy may go
+   * below it. Micro text (11px) is reserved for uppercase chips, unit suffixes
+   * and canvas node art, never for sentences. */
+  --fs-2xs: 11px; /* micro: uppercase chip, unit suffix, node art */
+  --fs-xs: 12px; /* label: tab, badge, table cell, dense metadata */
+  --fs-sm: 13px; /* body: default reading size — never smaller */
+  --fs-md: 15px; /* lead: card title, lede, emphasised value */
+  --fs-lg: 18px; /* panel title */
+  --fs-xl: 22px; /* section + modal title, small metric */
+  --fs-2xl: 28px; /* display heading, large metric */
 
-  /* Semantic roles — what each step is for. */
-  --type-page-title: clamp(30px, 3.2vw, 44px); /* page/app title (h1) */
-  --type-section-title: var(--fs-xl); /* "Components", "Bill of Materials" */
-  --type-panel-title: var(--fs-lg); /* panel + card headings */
-  --type-subtitle: var(--fs-md); /* sub-heading, lead paragraph */
+  /* Semantic roles — pick the role, not the number. */
+  --type-display: clamp(45px, 5.25vw, 76px); /* landing hero h1 */
+  --type-display-sm: clamp(33px, 3.7vw, 52px); /* landing secondary title */
+  --type-page-title: clamp(30px, 3.2vw, 44px); /* app page title */
+  --type-section-title: var(--fs-xl); /* modal title, major section heading */
+  --type-section-title-lg: var(--fs-2xl); /* landing section heading */
+  --type-panel-title: var(--fs-lg); /* panel / drawer / card heading */
+  --type-card-title: var(--fs-md); /* title inside a small card */
+  --type-subtitle: var(--fs-md); /* sub-heading, lede paragraph */
   --type-body: var(--fs-sm); /* default body copy */
-  --type-small: var(--fs-xs); /* labels, tabs, helper text */
-  --type-caption: var(--fs-2xs); /* uppercase caption, unit suffix */
-  --type-metric: var(--fs-2xl); /* large numbers / instrument values */
-  --type-metric-sm: var(--fs-xl); /* stat-card numbers */
+  --type-small: var(--fs-xs); /* labels, tabs, dense tables */
+  --type-caption: var(--fs-2xs); /* uppercase caption, units, node art */
+  --type-metric: var(--fs-2xl); /* instrument readout, headline number */
+  --type-metric-sm: var(--fs-xl); /* stat-card value */
+  --type-brand: var(--fs-xl); /* wordmark */
+
+  /* Display roles scale once per breakpoint (see the media rules at the end). */
+  --type-display: clamp(45px, 5.25vw, 76px);
+
+  /* Weights — five steps, used by role. */
+  --fw-regular: 400; /* body copy */
+  --fw-medium: 500; /* emphasised body, data values */
+  --fw-semibold: 600; /* labels, tabs, panel titles */
+  --fw-bold: 700; /* headings, metrics, active state */
+  --fw-black: 800; /* wordmark only */
 
   /* Line heights, paired with the roles above. */
-  --leading-tight: 1.15;
-  --leading-snug: 1.35;
-  --leading-normal: 1.5;
+  --leading-none: 1;
+  --leading-tight: 1.2; /* display + section titles */
+  --leading-snug: 1.35; /* panel titles, labels, dense rows */
+  --leading-normal: 1.5; /* body */
+  --leading-relaxed: 1.6; /* long-form lede text */
 
   /* ------------------------------------------------------------- spacing ---
    * 4px base. Nothing in component CSS should use 5/6/7/9/10/11/13… px. */
@@ -88,4 +105,20 @@
   --border-hairline: 1px;
   --focus-ring-width: 2px;
   --focus-ring-offset: 2px;
+}
+
+/* Display type is the only thing that changes size between breakpoints; the
+ * component rules always reference the token, never a local clamp. */
+@media (max-width: 900px) {
+  :root {
+    --type-display: clamp(48px, 7vw, 68px);
+  }
+}
+
+@media (max-width: 640px) {
+  :root {
+    --type-display: clamp(41px, 11.5vw, 60px);
+    --type-display-sm: clamp(30px, 9vw, 42px);
+    --type-section-title-lg: var(--fs-xl);
+  }
 }

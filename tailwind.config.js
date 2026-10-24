@@ -115,13 +115,31 @@ export default {
         },
       },
       // Mirrors src/styles/tokens.css — use these instead of text-[Npx] literals.
+      // Values live in src/styles/tokens.css — never hard-code a px size here.
       fontSize: {
-        caption: '10px', // --fs-2xs
-        label: '11px', // --fs-xs
-        body: '12px', // --fs-sm
-        lead: '14px', // --fs-md
-        title: '16px', // --fs-lg
-        metric: '20px', // --fs-xl
+        caption: 'var(--fs-2xs)',
+        label: 'var(--fs-xs)',
+        body: 'var(--fs-sm)',
+        lead: 'var(--fs-md)',
+        title: 'var(--fs-lg)',
+        metric: 'var(--fs-xl)',
+        panel: 'var(--type-panel-title)',
+        section: 'var(--type-section-title)',
+        display: 'var(--fs-2xl)',
+      },
+      fontWeight: {
+        regular: 'var(--fw-regular)',
+        medium: 'var(--fw-medium)',
+        semibold: 'var(--fw-semibold)',
+        bold: 'var(--fw-bold)',
+        black: 'var(--fw-black)',
+      },
+      lineHeight: {
+        none: 'var(--leading-none)',
+        tight: 'var(--leading-tight)',
+        snug: 'var(--leading-snug)',
+        normal: 'var(--leading-normal)',
+        relaxed: 'var(--leading-relaxed)',
       },
       fontFamily: {
         sans: ['Manrope', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],

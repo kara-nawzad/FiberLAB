@@ -52,7 +52,7 @@ export function OpticalEdge({
       />
       <EdgeLabelRenderer>
         <div
-          className="optical-edge-pill pointer-events-none absolute inline-flex items-center gap-1 rounded-full border border-slate-200/90 bg-white/95 px-1.5 py-0.5 font-mono text-[8.5px] font-semibold text-slate-700 shadow-xs"
+          className="optical-edge-pill pointer-events-none absolute inline-flex items-center gap-1 rounded-full border border-slate-200/90 bg-white/95 px-1.5 py-0.5 font-mono text-caption font-semibold text-slate-700 shadow-xs"
           title={faultLabels.length > 0 ? faultLabels.join(' · ') : undefined}
           style={{
             transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,

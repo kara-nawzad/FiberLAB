@@ -52,6 +52,20 @@ Photos alone do not create field experience. A task such as “find why this sub
 - Telecom cues remain explicit: cable yellow `#FACC15`, SC/APC green, and SC/UPC cobalt. Text labels accompany these colors; connector polish is illustrative only—the graph does not model or enforce connector compatibility, so confirm installed interfaces and never mate APC with UPC.
 - Display typography uses the exact Google Font families **Sora**, **Manrope**, and **JetBrains Mono**, with system fallbacks. The HTML imports them from Google Fonts.
 
+`src/styles/tokens.css` holds one type scale (11 / 12 / 13 / 15 / 18 / 22 / 28 px) with semantic roles, one 4 px spacing scale (4 / 8 / 12 / 16 / 24 / 32), six radii and one control-height set. Body copy is never smaller than 13 px; the 11 px step is reserved for uppercase chips, unit suffixes and canvas node art. Sizing roles:
+
+| Role                    | Token                                | Size                    | Weight  |
+| ----------------------- | ------------------------------------ | ----------------------- | ------- |
+| Landing hero            | `--type-display`                     | `clamp(45, 5.25vw, 76)` | 700     |
+| Landing section heading | `--type-section-title-lg`            | 28 (22 ≤640)            | 700     |
+| Section / modal title   | `--type-section-title`               | 22                      | 700     |
+| Panel title             | `--type-panel-title`                 | 18                      | 700     |
+| Card title              | `--type-card-title`                  | 15                      | 600     |
+| Body                    | `--type-body`                        | 13                      | 400–500 |
+| Label / tab / table     | `--type-small`                       | 12                      | 600     |
+| Caption / unit          | `--type-caption`                     | 11                      | 600–700 |
+| Metric                  | `--type-metric` / `--type-metric-sm` | 28 / 22                 | 700     |
+
 The theme tokens are used by both the landing and the existing React Flow workbench. Status colors remain semantically distinct; telemetry values and statuses are still calculated by the simulator, not the stylesheet or prototype artwork.
 
 ### 2.2 Warm photonic landing and splice interaction

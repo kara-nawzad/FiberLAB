@@ -249,11 +249,16 @@ export function BottomPanel({
               <tbody>
                 {endpoints.map(({ node, reading }) => (
                   <tr key={node.id} onClick={() => onSelectNode(node.id)} style={{ cursor: 'pointer' }}>
-                    <td style={{ padding: '4px 0', fontWeight: 600 }}>{node.data.subscriber}</td>
+                    <td style={{ padding: '4px 0', fontWeight: 'var(--fw-semibold)' }}>{node.data.subscriber}</td>
                     <td>{formatDbm(reading?.rxPowerDbm ?? null)}</td>
                     <td>{reading ? `${reading.totalLossDb.toFixed(1)} dB` : '—'}</td>
                     <td>{reading?.rxPowerDbm != null ? `${reading.marginDb.toFixed(1)} dB` : '—'}</td>
-                    <td style={{ fontWeight: 700, color: STATUS_STYLES[reading?.status ?? 'DISCONNECTED'].hex }}>
+                    <td
+                      style={{
+                        fontWeight: 'var(--fw-bold)',
+                        color: STATUS_STYLES[reading?.status ?? 'DISCONNECTED'].hex,
+                      }}
+                    >
                       {STATUS_STYLES[reading?.status ?? 'DISCONNECTED'].label}
                     </td>
                   </tr>

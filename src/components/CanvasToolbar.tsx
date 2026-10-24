@@ -183,7 +183,7 @@ export function CanvasToolbar(props: CanvasToolbarProps) {
                 fontSize: 'var(--fs-sm)',
               }}
             >
-              <label htmlFor="safety-margin" style={{ fontWeight: 600 }}>
+              <label htmlFor="safety-margin" style={{ fontWeight: 'var(--fw-semibold)' }}>
                 Safety margin
               </label>
               <input
@@ -215,7 +215,7 @@ export function CanvasToolbar(props: CanvasToolbarProps) {
                   padding: '4px 10px',
                   borderRadius: 99,
                   border: '1px solid var(--pu-line)',
-                  fontWeight: 700,
+                  fontWeight: 'var(--fw-bold)',
                   color: settings.autoRun ? 'var(--pu-ok)' : 'var(--pu-mut)',
                 }}
               >

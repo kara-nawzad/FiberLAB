@@ -89,11 +89,11 @@ export function MissionDrawer({
               id="mission-drawer-title"
               ref={titleRef}
               tabIndex={-1}
-              className="text-lg font-bold tracking-tight text-slate-900 outline-none"
+              className="text-section font-bold leading-tight tracking-tight text-slate-900 outline-none"
             >
               Field missions
             </h2>
-            <p className="mt-0.5 text-xs text-slate-600">Practice network build and fault-finding.</p>
+            <p className="mt-0.5 text-body text-slate-600">Practice network build and fault-finding.</p>
           </div>
           <button
             type="button"
@@ -135,12 +135,12 @@ export function MissionDrawer({
                     <span className="text-body font-semibold text-slate-900">{candidate.title}</span>
                     <span className="flex items-center gap-1.5">
                       {currentlyRunning ? (
-                        <span className="font-mono text-[9px] font-bold uppercase text-emerald-700">Active</span>
+                        <span className="font-mono text-caption font-bold uppercase text-emerald-700">Active</span>
                       ) : null}
                       <DifficultyPill difficulty={candidate.difficulty} />
                     </span>
                   </div>
-                  <p className="line-clamp-2 text-caption leading-relaxed text-slate-600">{candidate.scenarioBrief}</p>
+                  <p className="line-clamp-2 text-body leading-relaxed text-slate-600">{candidate.scenarioBrief}</p>
                 </button>
               );
             })}
@@ -149,12 +149,12 @@ export function MissionDrawer({
           <section className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3.5">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-blue-700">Scenario brief</p>
+                <p className="text-caption font-bold uppercase tracking-[0.14em] text-blue-700">Scenario brief</p>
                 <h3 className="mt-1 text-sm font-bold text-slate-900">{mission.title}</h3>
               </div>
               <DifficultyPill difficulty={mission.difficulty} />
             </div>
-            <p className="mt-2 text-label leading-relaxed text-slate-700">{mission.scenarioBrief}</p>
+            <p className="mt-2 text-body leading-relaxed text-slate-700">{mission.scenarioBrief}</p>
             <button
               type="button"
               onClick={() => onStartMission(mission)}
@@ -194,7 +194,7 @@ export function MissionDrawer({
                 />
               </div>
             ) : (
-              <p className="mb-2 rounded-md border border-blue-100 bg-blue-50 px-2.5 py-2 text-caption leading-relaxed text-blue-900">
+              <p className="mb-2 rounded-md border border-blue-100 bg-blue-50 px-2.5 py-2 text-body leading-relaxed text-blue-900">
                 Start this mission to load its scenario and turn on live objective tracking.
               </p>
             )}
@@ -221,7 +221,7 @@ export function MissionDrawer({
                       {met ? <Check size={12} strokeWidth={3} /> : index + 1}
                     </span>
                     <span
-                      className={`text-label leading-relaxed ${met ? 'font-medium text-emerald-900' : 'text-slate-700'}`}
+                      className={`text-body leading-relaxed ${met ? 'font-medium text-emerald-900' : 'text-slate-700'}`}
                     >
                       {objective.description}
                     </span>
@@ -242,30 +242,30 @@ export function MissionDrawer({
                 </span>
                 Mission complete
               </div>
-              <p className="mt-1 text-caption leading-relaxed text-emerald-800">
+              <p className="mt-1 text-body leading-relaxed text-emerald-800">
                 Excellent field work. Your current network meets every mission objective.
               </p>
               <div className="mt-3 grid grid-cols-3 gap-1.5">
                 <div className="rounded-md border border-emerald-200/80 bg-white/80 p-2">
-                  <div className="text-[8px] font-semibold uppercase tracking-wide text-slate-500">Mean Rx</div>
+                  <div className="text-caption font-semibold uppercase tracking-wide text-slate-500">Mean Rx</div>
                   <div className="mt-0.5 font-mono text-label font-bold text-slate-900">
                     {formatDbm(simulation.summary.meanRxDbm)}
                   </div>
                 </div>
                 <div className="rounded-md border border-emerald-200/80 bg-white/80 p-2">
-                  <div className="text-[8px] font-semibold uppercase tracking-wide text-slate-500">Worst Rx</div>
+                  <div className="text-caption font-semibold uppercase tracking-wide text-slate-500">Worst Rx</div>
                   <div className="mt-0.5 font-mono text-label font-bold text-slate-900">
                     {formatDbm(simulation.summary.worstRxDbm)}
                   </div>
                 </div>
                 <div className="rounded-md border border-emerald-200/80 bg-white/80 p-2">
-                  <div className="text-[8px] font-semibold uppercase tracking-wide text-slate-500">Margin</div>
+                  <div className="text-caption font-semibold uppercase tracking-wide text-slate-500">Margin</div>
                   <div className="mt-0.5 font-mono text-label font-bold text-slate-900">
                     {simulation.safetyMarginDb.toFixed(1)} dB
                   </div>
                 </div>
               </div>
-              <p className="mt-2 text-[9px] text-emerald-800">
+              <p className="mt-2 text-body text-emerald-800">
                 {simulation.summary.byStatus.ONLINE} online · {connectedCount} connected ·{' '}
                 {simulation.summary.totalFiberKm.toFixed(2)} km of plant
               </p>
@@ -279,7 +279,7 @@ export function MissionDrawer({
             </summary>
             <ol className="grid gap-2 border-t border-amber-200 px-3 py-3">
               {mission.fieldHints.map((hint, index) => (
-                <li key={hint} className="flex gap-2 text-caption leading-relaxed text-amber-950">
+                <li key={hint} className="flex gap-2 text-body leading-relaxed text-amber-950">
                   <span className="font-mono font-bold text-amber-800">{String(index + 1).padStart(2, '0')}</span>
                   <span>{hint}</span>
                 </li>
@@ -288,7 +288,7 @@ export function MissionDrawer({
           </details>
         </div>
 
-        <footer className="shrink-0 border-t border-slate-200 bg-white px-5 py-3 text-[9px] leading-relaxed text-slate-500">
+        <footer className="shrink-0 border-t border-slate-200 bg-white px-5 py-3 text-body leading-relaxed text-slate-500">
           Learning simulation only. Confirm live-network decisions against current standards, product datasheets, and
           qualified field procedures.
         </footer>

@@ -305,7 +305,11 @@ export function Sidebar({
 
         <div className="pu-foot">
           Need help?{' '}
-          <button type="button" onClick={onOpenOverview} style={{ color: 'var(--pu-pri)', fontWeight: 600 }}>
+          <button
+            type="button"
+            onClick={onOpenOverview}
+            style={{ color: 'var(--pu-pri)', fontWeight: 'var(--fw-semibold)' }}
+          >
             Learn
           </button>{' '}
           ·{' '}

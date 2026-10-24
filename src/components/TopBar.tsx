@@ -137,13 +137,20 @@ export function TopBar({
                   setPresetOpen(false);
                 }}
               >
-                <strong style={{ fontSize: 12.5 }}>{preset.name}</strong>
+                <strong style={{ fontSize: 'var(--fs-sm)' }}>{preset.name}</strong>
                 {activePresetId === preset.id ? (
-                  <span style={{ float: 'right', color: 'var(--pu-pri)', fontSize: 'var(--fs-2xs)', fontWeight: 700 }}>
+                  <span
+                    style={{
+                      float: 'right',
+                      color: 'var(--pu-pri)',
+                      fontSize: 'var(--fs-2xs)',
+                      fontWeight: 'var(--fw-bold)',
+                    }}
+                  >
                     {presetEdited ? 'LOADED · EDITED' : 'LOADED'}
                   </span>
                 ) : null}
-                <div className="pu-mut" style={{ fontSize: 10.5, marginTop: 3 }}>
+                <div className="pu-mut" style={{ fontSize: 'var(--fs-2xs)', marginTop: 3 }}>
                   {preset.description}
                 </div>
               </button>

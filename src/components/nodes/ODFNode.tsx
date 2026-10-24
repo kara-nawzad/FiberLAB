@@ -51,12 +51,12 @@ export function ODFNode({ id, data, selected }: NodeProps<OdfFlowNode>) {
         {/* Top 1U Patch Panel Silkscreen Bar */}
         <div className="flex items-center justify-between border-b border-slate-700 pb-1.5">
           <div>
-            <div className="font-mono text-[8.5px] font-bold uppercase tracking-wider text-teal-300">
+            <div className="font-mono text-caption font-bold uppercase tracking-wider text-teal-300">
               1U RACK PATCH FIELD · SC/APC
             </div>
-            <div className="font-sans text-[13px] font-bold leading-tight text-white">ODF rack panel</div>
+            <div className="font-sans text-body font-bold leading-tight text-white">ODF rack panel</div>
           </div>
-          <span className="rounded border border-teal-500/40 bg-teal-950/80 px-1.5 py-0.5 font-mono text-[9px] font-semibold text-teal-200">
+          <span className="rounded border border-teal-500/40 bg-teal-950/80 px-1.5 py-0.5 font-mono text-label font-semibold text-teal-200">
             −{lossDb.toFixed(2)} dB / pair
           </span>
         </div>
@@ -70,7 +70,7 @@ export function ODFNode({ id, data, selected }: NodeProps<OdfFlowNode>) {
               return (
                 <div
                   key={portNum}
-                  className={`flex flex-col items-center rounded border py-0.5 font-mono text-[7.5px] ${
+                  className={`flex flex-col items-center rounded border py-0.5 font-mono text-caption ${
                     isMatchedPair
                       ? 'border-emerald-500/80 bg-emerald-950 text-emerald-200'
                       : 'border-slate-700 bg-slate-800 text-slate-400'
@@ -87,7 +87,7 @@ export function ODFNode({ id, data, selected }: NodeProps<OdfFlowNode>) {
         </div>
 
         {/* Matched Through-Pair Status Footer */}
-        <div className="flex items-center justify-between font-mono text-[9.5px] text-slate-300">
+        <div className="flex items-center justify-between font-mono text-label text-slate-300">
           <span>2 × matched pair</span>
           <span>
             {inputCount}/2 in · {outputCount}/2 out patched

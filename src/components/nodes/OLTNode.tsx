@@ -26,14 +26,14 @@ export function OLTNode({ id, data, selected }: NodeProps<OltFlowNode>) {
         </small>
         <div className="hw-kv">
           <span>TX Power</span>
-          <b style={{ fontSize: 10.5 }}>
+          <b style={{ fontSize: 'var(--fs-2xs)' }}>
             {data.txPowerDbm >= 0 ? '+' : ''}
             {data.txPowerDbm.toFixed(1)} dBm
           </b>
         </div>
         <div className="hw-kv">
           <span>RX Power</span>
-          <b style={{ fontSize: 10.5 }}>
+          <b style={{ fontSize: 'var(--fs-2xs)' }}>
             {rx !== null ? `${rx.toFixed(1)} dBm` : `${spec.rxSensitivityDbm.toFixed(0)} dBm sens`}
           </b>
         </div>
@@ -52,8 +52,8 @@ export function OLTNode({ id, data, selected }: NodeProps<OltFlowNode>) {
               borderRadius: 6,
               background: 'var(--pu-warn-soft)',
               color: '#B36B00',
-              fontSize: 9.5,
-              fontWeight: 600,
+              fontSize: 'var(--fs-xs)',
+              fontWeight: 'var(--fw-semibold)',
             }}
           >
             ⚠ Dynamic range exceeded (Δ {telemetry.upstreamDeltaDb.toFixed(1)} dB &gt; 15 dB)

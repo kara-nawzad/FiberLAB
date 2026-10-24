@@ -54,12 +54,10 @@ export function GatewayNode({ id, data, selected }: NodeProps<GatewayFlowNode>) 
         {/* Top Gateway Header */}
         <div className="flex items-start justify-between gap-2 border-b border-slate-100 pb-2">
           <div className="min-w-0">
-            <div className="font-mono text-[8.5px] font-bold uppercase tracking-wider text-slate-400">
+            <div className="font-mono text-caption font-bold uppercase tracking-wider text-slate-400">
               OPTICAL WI-FI 6 GATEWAY
             </div>
-            <div className="truncate font-sans text-[13px] font-bold leading-snug text-slate-900">
-              {data.subscriber}
-            </div>
+            <div className="truncate font-sans text-body font-bold leading-snug text-slate-900">{data.subscriber}</div>
           </div>
           <div className="flex items-center gap-1 shrink-0">
             <Led color={style.hex} pulse={status === 'ONLINE' || status === 'LOS'} size={9} />
@@ -73,10 +71,10 @@ export function GatewayNode({ id, data, selected }: NodeProps<GatewayFlowNode>) 
           {standard === 'XGS-PON' ? (
             <Badge className="border-sky-200 bg-sky-50 text-sky-900">XGS-PON 10G ACTIVE</Badge>
           ) : null}
-          <span className="ml-auto font-mono text-[13px] font-bold" style={{ color: style.hex }}>
+          <span className="ml-auto font-mono text-body font-bold" style={{ color: style.hex }}>
             {rx === null ? '—' : rx.toFixed(2)}
           </span>
-          <span className="font-mono text-[9.5px] text-slate-500">dBm</span>
+          <span className="font-mono text-label text-slate-500">dBm</span>
         </div>
 
         {/* Service Telemetry Grid */}
@@ -96,22 +94,22 @@ export function GatewayNode({ id, data, selected }: NodeProps<GatewayFlowNode>) 
         </div>
 
         {telemetry ? (
-          <div className="mt-1.5 text-[9px] leading-snug text-slate-500">
+          <div className="mt-1.5 text-label leading-snug text-slate-500">
             {describeStatus(telemetry.status, telemetry.ponStandard ?? undefined)} · shared line-rate estimate, not a
             measured speed test.
           </div>
         ) : (
-          <div className="mt-1.5 flex items-center gap-1 text-[9px] text-slate-500">
+          <div className="mt-1.5 flex items-center gap-1 text-label text-slate-500">
             <Wifi size={10} /> Dual-band gateway; connect its PON input to simulate service.
           </div>
         )}
 
         {/* Footer */}
         <div className="mt-2 flex items-center justify-between gap-2 border-t border-slate-100 pt-1.5">
-          <span className="truncate font-mono text-[9px] text-slate-500" title={data.ssid}>
+          <span className="truncate font-mono text-label text-slate-500" title={data.ssid}>
             SSID · {data.ssid}
           </span>
-          <span className="shrink-0 font-mono text-[9px] font-semibold text-slate-600">{standard ?? 'GPON / XGS'}</span>
+          <span className="shrink-0 font-mono text-label font-semibold text-slate-600">{standard ?? 'GPON / XGS'}</span>
         </div>
       </div>
 

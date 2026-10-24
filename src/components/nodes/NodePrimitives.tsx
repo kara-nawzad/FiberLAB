@@ -33,7 +33,7 @@ interface StatProps {
 export function Stat({ label, value, tone = 'text-noc-200' }: StatProps) {
   return (
     <div className="metric flex flex-col gap-0.5">
-      <span className="text-[9px] font-medium uppercase tracking-[0.1em] text-noc-400">{label}</span>
+      <span className="text-caption font-medium uppercase tracking-[0.1em] text-noc-400">{label}</span>
       <span className={`font-mono text-body font-semibold leading-tight ${tone}`}>{value}</span>
     </div>
   );
