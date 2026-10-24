@@ -19,7 +19,7 @@ export function FieldHardwareCard({ profile, configurationLabel }: FieldHardware
       className="mb-3 overflow-hidden rounded-lg border border-[var(--pu-line)] bg-noc-950/65"
     >
       <div className="flex items-center justify-between border-b border-noc-700/60 bg-[var(--pu-pri-soft)] px-2 py-2">
-        <div className="flex items-center gap-2 text-caption font-semibold uppercase tracking-eyebrow text-sky-200">
+        <div className="flex items-center gap-2 text-caption font-semibold uppercase tracking-eyebrow text-[var(--pu-pri)]">
           <Info size={12} /> Field hardware
         </div>
         <span className="rounded-md border border-noc-600/80 bg-noc-900/70 px-2 py-1 font-mono text-caption uppercase tracking-label text-noc-400">
@@ -42,7 +42,7 @@ export function FieldHardwareCard({ profile, configurationLabel }: FieldHardware
           <div className="text-label font-semibold leading-snug text-noc-100">{profile.modelName}</div>
           <div className="mt-1 text-caption uppercase tracking-eyebrow text-noc-500">{profile.vendorCategory}</div>
           {configurationLabel ? (
-            <div className="mt-1 truncate font-mono text-label text-sky-300" title={configurationLabel}>
+            <div className="mt-1 truncate font-mono text-label text-[var(--pu-pri)]" title={configurationLabel}>
               {configurationLabel}
             </div>
           ) : null}
@@ -57,12 +57,12 @@ export function FieldHardwareCard({ profile, configurationLabel }: FieldHardware
       <div className="space-y-2 p-2">
         <section aria-label={constructionLabel}>
           <h3 className="mb-2 flex items-center gap-2 text-caption font-semibold uppercase tracking-eyebrow text-noc-300">
-            <Cable size={12} className="text-sky-300" /> {constructionLabel}
+            <Cable size={12} className="text-[var(--pu-pri)]" /> {constructionLabel}
           </h3>
           <ul className="space-y-1">
             {profile.physicalPorts.map((port) => (
               <li key={port} className="flex gap-2 text-body leading-relaxed text-noc-400">
-                <span className="mt-1 h-1 w-1 shrink-0 rounded-full bg-sky-400" />
+                <span className="mt-1 h-1 w-1 shrink-0 rounded-full bg-[var(--pu-pri)]" />
                 <span>{port}</span>
               </li>
             ))}

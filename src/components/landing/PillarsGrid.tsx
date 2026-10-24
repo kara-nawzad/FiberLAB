@@ -40,12 +40,12 @@ function RouteGraphic() {
         strokeWidth="2"
         strokeDasharray="4 4"
       />
-      <circle cx="24" cy="48" r="12" fill="#edf3ff" stroke="#2f6bff" strokeWidth="1.5" />
-      <path d="M18 48h12m-6-6v12" stroke="#2f6bff" strokeWidth="1.4" />
+      <circle cx="24" cy="48" r="12" fill="#fff0df" stroke="#e4673f" strokeWidth="1.5" />
+      <path d="M18 48h12m-6-6v12" stroke="#e4673f" strokeWidth="1.4" />
       <rect x="108" y="34" width="30" height="28" rx="5" fill="#f4e8d8" stroke="#85695a" />
       <path d="M113 48h8m5-8v16" stroke="#705443" strokeWidth="1.3" />
-      <rect x="205" y="34" width="32" height="28" rx="5" fill="#f3eefa" stroke="#7447b6" />
-      <path d="M210 48h7m5-8v16" stroke="#7447b6" strokeWidth="1.3" />
+      <rect x="205" y="34" width="32" height="28" rx="5" fill="#f5e8d7" stroke="#b4502c" />
+      <path d="M210 48h7m5-8v16" stroke="#b4502c" strokeWidth="1.3" />
       <circle cx="313" cy="18" r="10" fill="#eaf8f1" stroke="#0f8a5f" strokeWidth="1.5" />
       <circle cx="313" cy="78" r="10" fill="#fff5e2" stroke="#a85a12" strokeWidth="1.5" />
       <text x="24" y="91" textAnchor="middle" fill="#705443" fontSize="8" fontFamily="ui-monospace,monospace">
@@ -84,7 +84,7 @@ function AuditGraphic() {
       </div>
       <div className="landing-audit-row">
         <span>
-          <span className="landing-audit-dot landing-audit-dot--blue" /> SC/APC connector pairs
+          <span className="landing-audit-dot landing-audit-dot--accent" /> SC/APC connector pairs
         </span>
         <strong>0.50 dB ea.</strong>
       </div>

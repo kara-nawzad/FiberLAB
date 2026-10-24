@@ -37,15 +37,12 @@ export function LandingView({
             simulationStale={simulationStale}
             simulationIsReference={simulationIsReference}
             onLaunchStudio={onLaunchStudio}
+            onExploreMissions={onExploreMissions}
           />
         </div>
 
         <div className="landing-content">
-          <PhotonicHero
-            onLaunchStudio={onLaunchStudio}
-            onExploreMissions={onExploreMissions}
-            onLoadPreset={onLoadPreset}
-          />
+          <PhotonicHero onLoadPreset={onLoadPreset} />
           <PillarsGrid onStartVillaMission={onStartVillaMission} onOpenStudio={onLaunchStudio} />
           <SpecsStrip />
         </div>

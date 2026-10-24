@@ -23,7 +23,7 @@ function DifficultyPill({ difficulty }: { difficulty: Mission['difficulty'] }) {
       ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
       : difficulty === 'Intermediate'
         ? 'border-amber-200 bg-amber-50 text-amber-800'
-        : 'border-violet-200 bg-violet-50 text-violet-800';
+        : 'border-[var(--pu-line)] bg-[var(--pu-pri-soft)] text-[var(--pu-pri)]';
 
   return (
     <span className={`inline-flex rounded-full border px-2 py-1 text-caption font-semibold ${tone}`}>{difficulty}</span>
@@ -80,7 +80,7 @@ export function MissionDrawer({
       >
         <header className="flex shrink-0 items-start justify-between gap-4 border-b border-slate-200 px-4 py-4">
           <div>
-            <div className="mb-1 flex items-center gap-2 text-caption font-bold uppercase tracking-eyebrow text-blue-700">
+            <div className="mb-1 flex items-center gap-2 text-caption font-bold uppercase tracking-eyebrow text-[var(--pu-pri)]">
               <Flag size={14} /> FiberLAB training
             </div>
             <h2
@@ -96,7 +96,7 @@ export function MissionDrawer({
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 text-slate-600 transition hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--pu-pri)]"
             aria-label="Close missions drawer"
           >
             <X size={16} />
@@ -123,9 +123,9 @@ export function MissionDrawer({
                   type="button"
                   aria-pressed={active}
                   onClick={() => setSelectedMissionId(candidate.id)}
-                  className={`w-full rounded-xl border p-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 ${
+                  className={`w-full rounded-xl border p-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--pu-pri)] ${
                     active
-                      ? 'border-blue-300 bg-blue-50/70 shadow-sm'
+                      ? 'border-[var(--pu-line)] bg-[var(--pu-pri-soft)] shadow-sm'
                       : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
                   }`}
                 >
@@ -147,7 +147,7 @@ export function MissionDrawer({
           <section className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-caption font-bold uppercase tracking-eyebrow text-blue-700">Scenario brief</p>
+                <p className="text-caption font-bold uppercase tracking-eyebrow text-[var(--pu-pri)]">Scenario brief</p>
                 <h3 className="mt-1 text-sm font-bold text-slate-900">{mission.title}</h3>
               </div>
               <DifficultyPill difficulty={mission.difficulty} />
@@ -156,7 +156,7 @@ export function MissionDrawer({
             <button
               type="button"
               onClick={() => onStartMission(mission)}
-              className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+              className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[var(--pu-pri)] px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-[var(--pu-pri-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--pu-pri)] focus-visible:ring-offset-2"
             >
               {isActive ? <RotateCcw size={14} /> : <Play size={14} />}
               {isActive ? 'Restart mission' : 'Start mission'}
@@ -192,7 +192,7 @@ export function MissionDrawer({
                 />
               </div>
             ) : (
-              <p className="mb-2 rounded-md border border-blue-100 bg-blue-50 px-2 py-2 text-body leading-relaxed text-blue-900">
+              <p className="mb-2 rounded-md border border-[var(--pu-line)] bg-[var(--pu-pri-soft)] px-2 py-2 text-body leading-relaxed text-[var(--pu-ink)]">
                 Start this mission to load its scenario and turn on live objective tracking.
               </p>
             )}
@@ -271,13 +271,13 @@ export function MissionDrawer({
           ) : null}
 
           <details className="mt-4 overflow-hidden rounded-xl border border-amber-200 bg-amber-50/70">
-            <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 text-label font-semibold text-amber-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600">
+            <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 text-label font-semibold text-[var(--pu-ink)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--pu-pri)]">
               <CircleHelp size={14} className="text-amber-700" /> Field hints
               <ChevronDown size={14} className="ml-auto transition-transform details-chevron" />
             </summary>
             <ol className="grid gap-2 border-t border-amber-200 px-3 py-3">
               {mission.fieldHints.map((hint, index) => (
-                <li key={hint} className="flex gap-2 text-body leading-relaxed text-amber-950">
+                <li key={hint} className="flex gap-2 text-body leading-relaxed text-[var(--pu-ink)]">
                   <span className="font-mono font-bold text-amber-800">{String(index + 1).padStart(2, '0')}</span>
                   <span>{hint}</span>
                 </li>

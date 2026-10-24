@@ -35,22 +35,17 @@ describe('FiberLAB application shell', () => {
   it('presents the living waveguide and routes the guided-mission CTA into the studio', async () => {
     render(<App />);
 
-    expect(await screen.findByRole('heading', { name: /Shoot the laser\. Split the spectrum/i })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /Splice the fiber/i })).toBeInTheDocument();
     expect(await screen.findByText('-21.57 dBm')).toBeInTheDocument();
-    const launchSlider = screen.getByLabelText(/Optical Launch Power/i);
+
+    // One interactive control, and the reference numbers an engineer will check.
+    const launchSlider = screen.getByLabelText(/Laser launch power/i);
     expect(launchSlider).toHaveValue('5');
     fireEvent.change(launchSlider, { target: { value: '6.4' } });
     expect(launchSlider).toHaveValue('6.4');
-
-    const upstreamChip = screen.getByRole('button', {
-      name: /1310 nm \(Upstream - 0\.35 dB\/km\)/i,
-    });
-    fireEvent.click(upstreamChip);
-    expect(upstreamChip).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByRole('button', { name: /1490 nm \(Downstream - 0\.25 dB\/km\)/i })).toHaveAttribute(
-      'aria-pressed',
-      'false',
-    );
+    expect(screen.getByText('0.25 dB/km')).toBeInTheDocument();
+    expect(screen.getByText('Splitter 1:4')).toBeInTheDocument();
+    expect(screen.getAllByText('−7.20 dB').length).toBeGreaterThan(0);
 
     fireEvent.click(screen.getByRole('button', { name: /Explore Guided Missions \(5 Scenarios\)/i }));
     expect(await screen.findByRole('dialog', { name: 'Field missions' })).toBeInTheDocument();
@@ -85,7 +80,7 @@ describe('FiberLAB application shell', () => {
     expect(await screen.findByRole('region', { name: 'Field hardware reference' })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Overview & Physics' }));
-    expect(await screen.findByRole('heading', { name: /Shoot the laser\. Split the spectrum/i })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /Splice the fiber/i })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Launch Interactive Studio/i }));
     await waitFor(() => expect(screen.getAllByText('Dukan Ridge — Tower 7').length).toBeGreaterThan(0));
     expect(screen.getByRole('region', { name: 'Field hardware reference' })).toBeInTheDocument();

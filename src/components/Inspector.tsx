@@ -122,7 +122,7 @@ function SliderRow({
     <div className="mb-3">
       <div className="mb-1 flex items-baseline justify-between">
         <label className="text-label font-medium text-noc-300">{label}</label>
-        <span className="font-mono text-label font-semibold text-sky-300">
+        <span className="font-mono text-label font-semibold text-[var(--pu-pri)]">
           {value.toFixed(step < 1 ? 2 : 0)} {unit}
         </span>
       </div>
@@ -639,7 +639,7 @@ export function Inspector({
                     <option value={1490}>{WAVELENGTH_LABEL[1490]}</option>
                   </select>
                 ) : (
-                  <div className="rounded-md border border-sky-300 bg-sky-50 px-2 py-2 font-mono text-label text-sky-900">
+                  <div className="rounded-md border border-[var(--pu-line)] bg-[var(--pu-pri-soft)] px-2 py-2 font-mono text-label text-[var(--pu-ink)]">
                     Downstream 1577 nm · {ATTENUATION_DB_PER_KM[1577].toFixed(2)} dB/km
                     <br />
                     Upstream 1270 nm · {ATTENUATION_DB_PER_KM[1270].toFixed(2)} dB/km (not simulated)
@@ -721,7 +721,9 @@ export function Inspector({
                       <tr
                         key={ratio}
                         className={`border-t border-slate-200/80 ${
-                          ratio === node.data.ratio ? 'bg-violet-50 font-semibold text-violet-800' : 'text-slate-700'
+                          ratio === node.data.ratio
+                            ? 'bg-[var(--pu-pri-soft)] font-semibold text-[var(--pu-pri)]'
+                            : 'text-slate-700'
                         }`}
                       >
                         <td className="px-2 py-1">1:{ratio}</td>
@@ -742,7 +744,7 @@ export function Inspector({
               />
               <div className="metric">
                 <div className="text-caption uppercase tracking-label text-slate-500">Total insertion loss</div>
-                <div className="metric-value text-violet-700">{computeSplitterLoss(node.data).toFixed(2)} dB</div>
+                <div className="metric-value text-[var(--pu-pri)]">{computeSplitterLoss(node.data).toFixed(2)} dB</div>
               </div>
             </>
           ) : null}
@@ -750,7 +752,7 @@ export function Inspector({
           {/* --------------------------------------------------------------- ODF */}
           {node && isOdfNode(node) && (showProperties || showOptical) ? (
             <>
-              <div className="mb-3 rounded-md border border-teal-300 bg-teal-50 px-2 py-2 text-body leading-relaxed text-teal-900">
+              <div className="mb-3 rounded-md border border-[var(--pu-line)] bg-[var(--pu-pri-soft)] px-2 py-2 text-body leading-relaxed text-[var(--pu-ink)]">
                 Two matched independent through-pairs: input 1 → output 1, input 2 → output 2. Patch cords remain graph
                 edges.
               </div>
@@ -1149,7 +1151,7 @@ export function Inspector({
                     </div>
                     <div className="metric">
                       <div className="text-caption uppercase tracking-label text-slate-500">PON standard</div>
-                      <div className="metric-value text-blue-700">
+                      <div className="metric-value text-[var(--pu-pri)]">
                         {gatewayTelemetry.ponStandard ?? 'No active link'}
                       </div>
                     </div>

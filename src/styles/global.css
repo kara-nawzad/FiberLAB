@@ -200,8 +200,8 @@
 }
 
 .react-flow__handle:hover {
-  border-color: #2f6bff;
-  box-shadow: 0 0 0 4px rgba(47, 107, 255, 0.14);
+  border-color: #e4673f;
+  box-shadow: 0 0 0 4px rgba(228, 103, 63, 0.14);
   transform: scale(1.12);
 }
 
@@ -246,9 +246,9 @@
 }
 
 .react-flow__node.selected .node-shell {
-  border-color: #2f6bff !important;
+  border-color: #e4673f !important;
   box-shadow:
-    0 0 0 2px rgba(47, 107, 255, 0.16),
+    0 0 0 2px rgba(228, 103, 63, 0.16),
     0 4px 14px rgba(15, 23, 42, 0.1) !important;
 }
 
@@ -299,7 +299,7 @@
 
 .react-flow__minimap-mask {
   fill: rgba(248, 250, 252, 0.68);
-  stroke: #2f6bff;
+  stroke: #e4673f;
   stroke-width: 1;
 }
 
@@ -320,9 +320,9 @@ input[type='range']::-webkit-slider-thumb {
   border: 2px solid #fffaf2;
   border-radius: 50%;
   appearance: none;
-  background: #2f6bff;
+  background: #e4673f;
   box-shadow:
-    0 0 0 1px #2f6bff,
+    0 0 0 1px #e4673f,
     0 1px 3px rgba(15, 23, 42, 0.22);
   cursor: pointer;
 }
@@ -332,9 +332,9 @@ input[type='range']::-moz-range-thumb {
   height: 12px;
   border: 2px solid #fffaf2;
   border-radius: 50%;
-  background: #2f6bff;
+  background: #e4673f;
   box-shadow:
-    0 0 0 1px #2f6bff,
+    0 0 0 1px #e4673f,
     0 1px 3px rgba(15, 23, 42, 0.22);
   cursor: pointer;
 }
