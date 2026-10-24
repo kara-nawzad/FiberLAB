@@ -48,7 +48,9 @@ export const OpmMeterHud = forwardRef<HTMLElement, OpmMeterHudProps>(function Op
     setRelativeMode(true);
   };
 
-  const backlight = inRange && readingDbm !== null && readingDbm < -28 ? 'amber' : 'green';
+  /* No light, or a reading outside the meter's usable window, must not look
+   * like a healthy green measurement. */
+  const backlight = !inRange || readingDbm === null ? 'off' : readingDbm < -28 || readingDbm > -8 ? 'amber' : 'green';
 
   return (
     <section

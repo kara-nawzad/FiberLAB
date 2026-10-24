@@ -50,14 +50,15 @@ export function SpliceIntroHero({
   const startedAtRef = useRef<number | null>(null);
   const launchTimerRef = useRef<number | null>(null);
 
+  /* "Weakest home" means the lowest receive power across every subscriber —
+   * ONTs and Wi-Fi gateways alike — so a gateway-only network still reports. */
   const reading = useMemo(() => {
     if (!simulation) return null;
-    const values = Object.values(simulation.ontTelemetry);
-    return (
-      values.find((value) => value.status === 'ONLINE' && value.rxPowerDbm !== null) ??
-      values.find((value) => value.rxPowerDbm !== null) ??
-      values[0] ??
-      null
+    const subscribers = [...Object.values(simulation.ontTelemetry), ...Object.values(simulation.gatewayTelemetry)];
+    const measured = subscribers.filter((value) => value.rxPowerDbm !== null);
+    if (measured.length === 0) return subscribers[0] ?? null;
+    return measured.reduce((weakest, value) =>
+      (value.rxPowerDbm as number) < (weakest.rxPowerDbm as number) ? value : weakest,
     );
   }, [simulation]);
 

@@ -41,7 +41,9 @@ export interface NodePlacement {
 
 export const NODE_SIZES: Record<string, { width: number; height: number }> = {
   olt: { width: 248, height: 136 },
-  splitter: { width: 188, height: 132 },
+  // A 1:32/1:64 cassette renders 16 branch handles and grows to ~245 px, so the
+  // placement box matches the tall case rather than the 4-port artboard.
+  splitter: { width: 188, height: 248 },
   fiber: { width: 168, height: 108 },
   closure: { width: 208, height: 144 },
   ont: { width: 208, height: 138 },

@@ -33,8 +33,9 @@ describe('SpliceIntroHero', () => {
     const { onLaunchStudio, onExploreMissions } = renderHero();
 
     expect(screen.getByRole('heading', { name: /Splice the fiber/i })).toBeInTheDocument();
-    expect(screen.getByText('-21.57 dBm')).toBeInTheDocument();
-    expect(screen.getByText('ONLINE')).toBeInTheDocument();
+    // The weakest home, not the first ONLINE entry: -24.30 dBm / MARGINAL.
+    expect(screen.getByText('-24.30 dBm')).toBeInTheDocument();
+    expect(screen.getByText('MARGINAL')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /Launch Interactive Studio/i }));
     expect(onLaunchStudio).toHaveBeenCalledOnce();
@@ -88,6 +89,18 @@ describe('SpliceIntroHero', () => {
 
     expect(onLaunchStudio).not.toHaveBeenCalled();
     expect(screen.getByText('HOLD TO FUSE THE SPLICE')).toBeInTheDocument();
+  });
+
+  it('reads gateway-only networks instead of falling back to an empty state', () => {
+    const topology = buildPreset('modern-10g-xgs-pon-suburb');
+    if (!topology) throw new Error('The XGS-PON reference topology is missing.');
+    const simulation = simulateTopology(topology.nodes, topology.edges, DEFAULT_SETTINGS);
+
+    renderHero({ simulation });
+
+    expect(screen.getByText('-12.45 dBm')).toBeInTheDocument();
+    expect(screen.getByText('ONLINE')).toBeInTheDocument();
+    expect(screen.queryByText('NO SIMULATED PATH')).not.toBeInTheDocument();
   });
 
   it('labels a reference-tree reading as a sample', () => {

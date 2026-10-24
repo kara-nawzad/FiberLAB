@@ -2157,6 +2157,15 @@
   background: linear-gradient(150deg, #ffefbd, #e9c56f);
   color: #3b2b0d;
 }
+/* Backlight off: no light on the probe, or no usable reading. */
+.opm-meter-hud--off .opm-meter-reading-wrap {
+  background: linear-gradient(150deg, #d9dad4, #b9bab2);
+  color: #3a3a34;
+}
+.opm-meter-hud--off .opm-meter-led {
+  background: #6b6b62;
+  box-shadow: none;
+}
 .opm-meter-target {
   overflow: hidden;
   color: rgba(28, 42, 26, 0.7);
