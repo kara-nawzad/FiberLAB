@@ -26,7 +26,7 @@ function DifficultyPill({ difficulty }: { difficulty: Mission['difficulty'] }) {
         : 'border-violet-200 bg-violet-50 text-violet-800';
 
   return (
-    <span className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold ${tone}`}>
+    <span className={`inline-flex rounded-full border px-2 py-0.5 text-caption font-semibold ${tone}`}>
       {difficulty}
     </span>
   );
@@ -82,7 +82,7 @@ export function MissionDrawer({
       >
         <header className="flex shrink-0 items-start justify-between border-b border-slate-200 px-5 py-4">
           <div>
-            <div className="mb-1 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.16em] text-blue-700">
+            <div className="mb-1 flex items-center gap-2 text-caption font-bold uppercase tracking-[0.16em] text-blue-700">
               <Flag size={13} /> FiberLAB training
             </div>
             <h2
@@ -107,9 +107,9 @@ export function MissionDrawer({
 
         <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
           <div className="mb-2 flex items-center justify-between">
-            <h3 className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">Choose a mission</h3>
+            <h3 className="text-label font-bold uppercase tracking-[0.12em] text-slate-500">Choose a mission</h3>
             {activeMissionId ? (
-              <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-emerald-700">
+              <span className="inline-flex items-center gap-1.5 text-caption font-semibold text-emerald-700">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" /> Mission active
               </span>
             ) : null}
@@ -132,7 +132,7 @@ export function MissionDrawer({
                   }`}
                 >
                   <div className="mb-1.5 flex items-center justify-between gap-2">
-                    <span className="text-[12px] font-semibold text-slate-900">{candidate.title}</span>
+                    <span className="text-body font-semibold text-slate-900">{candidate.title}</span>
                     <span className="flex items-center gap-1.5">
                       {currentlyRunning ? (
                         <span className="font-mono text-[9px] font-bold uppercase text-emerald-700">Active</span>
@@ -140,7 +140,7 @@ export function MissionDrawer({
                       <DifficultyPill difficulty={candidate.difficulty} />
                     </span>
                   </div>
-                  <p className="line-clamp-2 text-[10px] leading-relaxed text-slate-600">{candidate.scenarioBrief}</p>
+                  <p className="line-clamp-2 text-caption leading-relaxed text-slate-600">{candidate.scenarioBrief}</p>
                 </button>
               );
             })}
@@ -154,7 +154,7 @@ export function MissionDrawer({
               </div>
               <DifficultyPill difficulty={mission.difficulty} />
             </div>
-            <p className="mt-2 text-[11px] leading-relaxed text-slate-700">{mission.scenarioBrief}</p>
+            <p className="mt-2 text-label leading-relaxed text-slate-700">{mission.scenarioBrief}</p>
             <button
               type="button"
               onClick={() => onStartMission(mission)}
@@ -169,12 +169,12 @@ export function MissionDrawer({
             <div className="mb-2 flex items-center justify-between">
               <h3
                 id="mission-objectives-title"
-                className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-700"
+                className="text-label font-bold uppercase tracking-[0.12em] text-slate-700"
               >
                 Objectives
               </h3>
               {isActive ? (
-                <span className="font-mono text-[10px] font-semibold text-slate-600">
+                <span className="font-mono text-caption font-semibold text-slate-600">
                   {completedCount}/{mission.objectives.length} complete
                 </span>
               ) : null}
@@ -194,7 +194,7 @@ export function MissionDrawer({
                 />
               </div>
             ) : (
-              <p className="mb-2 rounded-md border border-blue-100 bg-blue-50 px-2.5 py-2 text-[10px] leading-relaxed text-blue-900">
+              <p className="mb-2 rounded-md border border-blue-100 bg-blue-50 px-2.5 py-2 text-caption leading-relaxed text-blue-900">
                 Start this mission to load its scenario and turn on live objective tracking.
               </p>
             )}
@@ -210,7 +210,7 @@ export function MissionDrawer({
                     }`}
                   >
                     <span
-                      className={`mission-check mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[10px] font-bold transition-all duration-300 ${
+                      className={`mission-check mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-caption font-bold transition-all duration-300 ${
                         met
                           ? 'mission-check-complete border-emerald-600 bg-emerald-600 text-white'
                           : 'border-slate-300 bg-white text-slate-500'
@@ -221,7 +221,7 @@ export function MissionDrawer({
                       {met ? <Check size={12} strokeWidth={3} /> : index + 1}
                     </span>
                     <span
-                      className={`text-[11px] leading-relaxed ${met ? 'font-medium text-emerald-900' : 'text-slate-700'}`}
+                      className={`text-label leading-relaxed ${met ? 'font-medium text-emerald-900' : 'text-slate-700'}`}
                     >
                       {objective.description}
                     </span>
@@ -242,25 +242,25 @@ export function MissionDrawer({
                 </span>
                 Mission complete
               </div>
-              <p className="mt-1 text-[10px] leading-relaxed text-emerald-800">
+              <p className="mt-1 text-caption leading-relaxed text-emerald-800">
                 Excellent field work. Your current network meets every mission objective.
               </p>
               <div className="mt-3 grid grid-cols-3 gap-1.5">
                 <div className="rounded-md border border-emerald-200/80 bg-white/80 p-2">
                   <div className="text-[8px] font-semibold uppercase tracking-wide text-slate-500">Mean Rx</div>
-                  <div className="mt-0.5 font-mono text-[11px] font-bold text-slate-900">
+                  <div className="mt-0.5 font-mono text-label font-bold text-slate-900">
                     {formatDbm(simulation.summary.meanRxDbm)}
                   </div>
                 </div>
                 <div className="rounded-md border border-emerald-200/80 bg-white/80 p-2">
                   <div className="text-[8px] font-semibold uppercase tracking-wide text-slate-500">Worst Rx</div>
-                  <div className="mt-0.5 font-mono text-[11px] font-bold text-slate-900">
+                  <div className="mt-0.5 font-mono text-label font-bold text-slate-900">
                     {formatDbm(simulation.summary.worstRxDbm)}
                   </div>
                 </div>
                 <div className="rounded-md border border-emerald-200/80 bg-white/80 p-2">
                   <div className="text-[8px] font-semibold uppercase tracking-wide text-slate-500">Margin</div>
-                  <div className="mt-0.5 font-mono text-[11px] font-bold text-slate-900">
+                  <div className="mt-0.5 font-mono text-label font-bold text-slate-900">
                     {simulation.safetyMarginDb.toFixed(1)} dB
                   </div>
                 </div>
@@ -273,13 +273,13 @@ export function MissionDrawer({
           ) : null}
 
           <details className="mt-4 overflow-hidden rounded-xl border border-amber-200 bg-amber-50/70">
-            <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2.5 text-[11px] font-semibold text-amber-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600">
+            <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2.5 text-label font-semibold text-amber-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600">
               <CircleHelp size={14} className="text-amber-700" /> Field hints
               <ChevronDown size={13} className="ml-auto transition-transform details-chevron" />
             </summary>
             <ol className="grid gap-2 border-t border-amber-200 px-3 py-3">
               {mission.fieldHints.map((hint, index) => (
-                <li key={hint} className="flex gap-2 text-[10px] leading-relaxed text-amber-950">
+                <li key={hint} className="flex gap-2 text-caption leading-relaxed text-amber-950">
                   <span className="font-mono font-bold text-amber-800">{String(index + 1).padStart(2, '0')}</span>
                   <span>{hint}</span>
                 </li>

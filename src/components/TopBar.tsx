@@ -139,7 +139,7 @@ export function TopBar({
               >
                 <strong style={{ fontSize: 12.5 }}>{preset.name}</strong>
                 {activePresetId === preset.id ? (
-                  <span style={{ float: 'right', color: 'var(--pu-pri)', fontSize: 10, fontWeight: 700 }}>
+                  <span style={{ float: 'right', color: 'var(--pu-pri)', fontSize: 'var(--fs-2xs)', fontWeight: 700 }}>
                     {presetEdited ? 'LOADED · EDITED' : 'LOADED'}
                   </span>
                 ) : null}

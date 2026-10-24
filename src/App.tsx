@@ -1157,8 +1157,8 @@ function StudioWorkspace({
                     <div className="panel flex items-center gap-2.5 rounded-lg px-4 py-3 shadow-panel">
                       <MousePointer2 size={16} className="text-[#E4673F]" />
                       <div>
-                        <div className="text-[12px] font-semibold text-slate-900">The canvas is empty</div>
-                        <div className="text-[11px] text-slate-500">
+                        <div className="text-body font-semibold text-slate-900">The canvas is empty</div>
+                        <div className="text-label text-slate-500">
                           Drag an OLT from the Component Library to start designing your PON.
                         </div>
                       </div>

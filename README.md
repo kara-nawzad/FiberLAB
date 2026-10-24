@@ -171,7 +171,7 @@ fixed allowances, not universal measured values.
 │   ├── context/SimulationContext.ts
 │   ├── data/                      Catalogues, hardwareArtwork, pricing, and data tests
 │   ├── engine/                    Pure simulation, opticalPhysics, presets, missions, and engine tests
-│   ├── styles/                    global.css, theme.css, and photo-ui.css
+│   ├── styles/                    tokens.css (design tokens), global.css, theme.css, photo-ui.css
 │   ├── test/setup.ts              Vitest / Testing Library setup
 │   ├── __tests__/app.test.tsx     Mounted application tests
 │   ├── App.tsx                    Persistent studio shell and orchestration

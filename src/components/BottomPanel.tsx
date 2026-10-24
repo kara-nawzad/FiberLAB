@@ -214,7 +214,7 @@ export function BottomPanel({
           <div className="pu-card" style={{ maxHeight: 150, overflowY: 'auto' }}>
             <h6>Recent Events</h6>
             {events.length === 0 ? (
-              <div className="pu-mut" style={{ fontSize: 11 }}>
+              <div className="pu-mut" style={{ fontSize: 'var(--fs-xs)' }}>
                 Add an OLT and a subscriber to begin.
               </div>
             ) : null}
@@ -236,7 +236,7 @@ export function BottomPanel({
       {!minimized && tab === 'budget' ? (
         <div className="pu-bottom-grid" style={{ gridTemplateColumns: '1fr' }}>
           <div className="pu-card" style={{ maxHeight: 170, overflowY: 'auto' }}>
-            <table style={{ width: '100%', fontSize: 11 }}>
+            <table style={{ width: '100%', fontSize: 'var(--fs-xs)' }}>
               <thead className="pu-mut">
                 <tr style={{ textAlign: 'left' }}>
                   <th>Subscriber</th>

@@ -180,7 +180,7 @@ export function CanvasToolbar(props: CanvasToolbarProps) {
                 gap: 8,
                 padding: '10px 14px',
                 borderBottom: '1px solid var(--pu-line)',
-                fontSize: 12,
+                fontSize: 'var(--fs-sm)',
               }}
             >
               <label htmlFor="safety-margin" style={{ fontWeight: 600 }}>

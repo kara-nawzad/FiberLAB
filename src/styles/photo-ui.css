@@ -81,14 +81,14 @@
 }
 .pu-canvas .react-flow__controls {
   border: 1px solid var(--pu-line);
-  border-radius: 10px;
+  border-radius: var(--r-lg);
   background: var(--pu-panel);
   box-shadow: 0 2px 8px rgba(43, 26, 20, 0.08);
   overflow: hidden;
 }
 .pu-canvas .react-flow__minimap {
   border: 1px solid var(--pu-line);
-  border-radius: 12px;
+  border-radius: var(--r-xl);
   background: var(--pu-panel);
   box-shadow: 0 2px 8px rgba(43, 26, 20, 0.08);
 }
@@ -103,7 +103,7 @@
   height: 14px;
   border: 2.5px solid #0d9f6e !important;
   background: #34d399 !important;
-  border-radius: 9999px;
+  border-radius: var(--r-pill);
   box-shadow:
     0 0 0 2.5px #ffffff,
     0 2px 6px rgba(15, 23, 42, 0.38);
@@ -166,7 +166,7 @@
 .pu-select {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--sp-2);
   padding: 7px 10px;
   border-radius: 9px;
   background: transparent;
@@ -186,7 +186,7 @@
   gap: 7px;
   padding: 9px 14px;
   border: 1px solid var(--pu-line);
-  border-radius: 10px;
+  border-radius: var(--r-lg);
   background: var(--pu-panel);
   color: var(--pu-ink);
   font-size: 12.5px;
@@ -216,8 +216,8 @@
   align-items: center;
   gap: 7px;
   padding: 6px 11px;
-  border-radius: 99px;
-  font-size: 11px;
+  border-radius: var(--r-pill);
+  font-size: var(--fs-xs);
   font-weight: 700;
   background: var(--pu-ok-soft);
   color: var(--pu-ok);
@@ -239,13 +239,13 @@
   align-items: baseline;
   gap: 6px;
   padding: 6px 11px;
-  border-radius: 10px;
+  border-radius: var(--r-lg);
   background: #2b1a14;
   color: #fff4e6;
-  font-size: 10px;
+  font-size: var(--fs-2xs);
 }
 .pu-capex strong {
-  font-size: 14px;
+  font-size: var(--fs-md);
   color: #fffaf2;
 }
 .pu-menu {
@@ -254,7 +254,7 @@
   min-width: 250px;
   background: var(--pu-panel);
   border: 1px solid var(--pu-line);
-  border-radius: 12px;
+  border-radius: var(--r-xl);
   box-shadow: 0 14px 34px rgba(43, 26, 20, 0.16);
   overflow: hidden;
 }
@@ -263,7 +263,7 @@
   width: 100%;
   text-align: left;
   padding: 10px 14px;
-  font-size: 12px;
+  font-size: var(--fs-sm);
   border-bottom: 1px solid var(--pu-line);
   color: var(--pu-ink);
 }
@@ -280,7 +280,7 @@
   flex-direction: column;
   gap: 6px;
   width: 72px;
-  padding: 12px 8px;
+  padding: var(--sp-3) var(--sp-2);
   background: var(--pu-panel);
   border-right: 1px solid var(--pu-line);
   flex-shrink: 0;
@@ -289,9 +289,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: var(--sp-1);
   padding: 10px 2px;
-  border-radius: 12px;
+  border-radius: var(--r-xl);
   color: var(--pu-mut);
   font-size: 10.5px;
   font-weight: 600;
@@ -317,18 +317,18 @@
 .pu-comp h3 {
   margin: 0;
   padding: 16px 16px 10px;
-  font-size: 16px;
+  font-size: var(--fs-lg);
   font-weight: 700;
   color: var(--pu-ink);
 }
 .pu-search {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--sp-2);
   margin: 0 14px 8px;
   padding: 8px 10px;
   border: 1px solid var(--pu-line);
-  border-radius: 10px;
+  border-radius: var(--r-lg);
   background: #ffffff;
   color: var(--pu-mut);
 }
@@ -337,7 +337,7 @@
   border: 0;
   outline: 0;
   background: transparent;
-  font-size: 12px;
+  font-size: var(--fs-sm);
   color: var(--pu-ink);
   min-width: 0;
 }
@@ -351,7 +351,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 10px 2px 6px;
-  font-size: 12px;
+  font-size: var(--fs-sm);
   font-weight: 700;
   color: var(--pu-ink);
   cursor: pointer;
@@ -369,9 +369,9 @@
   gap: 10px;
   width: 100%;
   padding: 9px;
-  margin-bottom: 8px;
+  margin-bottom: var(--sp-2);
   border: 1px solid var(--pu-line);
-  border-radius: 12px;
+  border-radius: var(--r-xl);
   background: #ffffff;
   text-align: left;
   cursor: grab;
@@ -385,7 +385,7 @@
 .pu-tool .th {
   width: 56px;
   height: 44px;
-  border-radius: 8px;
+  border-radius: var(--r-md);
   background: var(--pu-bg);
   display: grid;
   place-items: center;
@@ -413,12 +413,12 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 5px;
-  margin-bottom: 8px;
+  margin-bottom: var(--sp-2);
 }
 .pu-chips button {
   padding: 6px 0;
   border: 1px solid var(--pu-line);
-  border-radius: 8px;
+  border-radius: var(--r-md);
   background: #ffffff;
   color: var(--pu-ink);
   font:
@@ -433,7 +433,7 @@
 .pu-sel {
   width: 100%;
   padding: 7px 8px;
-  margin-bottom: 8px;
+  margin-bottom: var(--sp-2);
   border: 1px solid var(--pu-line);
   border-radius: 9px;
   font-size: 11.5px;
@@ -456,7 +456,7 @@
   z-index: 6;
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--sp-2);
   max-width: calc(100% - 210px);
 }
 .pu-toolbar .pu-btn {
@@ -470,7 +470,7 @@
   bottom: 14px;
   z-index: 6;
   display: flex;
-  gap: 8px;
+  gap: var(--sp-2);
   align-items: center;
 }
 .pu-chip .pu-health {
@@ -498,7 +498,7 @@
 }
 .pu-btabs button {
   padding: 11px 2px;
-  font-size: 12px;
+  font-size: var(--fs-sm);
   font-weight: 600;
   color: var(--pu-mut);
   border-bottom: 2px solid transparent;
@@ -510,8 +510,8 @@
 .pu-bottom-grid {
   display: grid;
   grid-template-columns: 1.35fr 1fr 1fr;
-  gap: 12px;
-  padding-top: 12px;
+  gap: var(--sp-3);
+  padding-top: var(--sp-3);
 }
 .pu-stats {
   display: grid;
@@ -521,9 +521,9 @@
 .pu-stat {
   display: flex;
   gap: 10px;
-  padding: 12px;
+  padding: var(--sp-3);
   border: 1px solid var(--pu-line);
-  border-radius: 12px;
+  border-radius: var(--r-xl);
   background: #ffffff;
 }
 .pu-stat i {
@@ -538,7 +538,7 @@
 }
 .pu-stat small {
   display: block;
-  font-size: 10px;
+  font-size: var(--fs-2xs);
   color: var(--pu-mut);
 }
 .pu-stat b {
@@ -555,21 +555,21 @@
 }
 .pu-card {
   border: 1px solid var(--pu-line);
-  border-radius: 12px;
+  border-radius: var(--r-xl);
   padding: 10px 12px;
   min-width: 0;
   background: #ffffff;
 }
 .pu-card h6 {
-  margin: 0 0 8px;
-  font-size: 12px;
+  margin: 0 0 var(--sp-2);
+  font-size: var(--fs-sm);
   font-weight: 700;
   color: var(--pu-ink);
 }
 .pu-bar {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--sp-2);
   margin: 7px 0;
   font-size: 10.5px;
 }
@@ -593,13 +593,13 @@
 .pu-event {
   display: flex;
   gap: 9px;
-  margin: 8px 0;
-  font-size: 11px;
+  margin: var(--sp-2) 0;
+  font-size: var(--fs-xs);
 }
 .pu-event u {
   width: 26px;
   height: 26px;
-  border-radius: 8px;
+  border-radius: var(--r-md);
   text-decoration: none;
   display: grid;
   place-items: center;
@@ -647,7 +647,7 @@
   display: flex;
   gap: 14px;
   align-items: center;
-  margin: 4px 16px 8px;
+  margin: var(--sp-1) var(--sp-4) var(--sp-2);
   padding: 10px;
   border: 1px solid var(--pu-line);
   border-radius: 14px;
@@ -656,7 +656,7 @@
 .pu-insp-card .pic {
   width: 92px;
   height: 70px;
-  border-radius: 10px;
+  border-radius: var(--r-lg);
   background: var(--pu-bg);
   display: grid;
   place-items: center;
@@ -685,7 +685,7 @@
   font-weight: 700;
   background: var(--pu-ok-soft);
   color: var(--pu-ok);
-  margin: 4px 0;
+  margin: var(--sp-1) 0;
 }
 .pu-badge.warn {
   background: var(--pu-warn-soft);
@@ -707,7 +707,7 @@
 }
 .pu-itabs button {
   padding: 10px 0;
-  font-size: 12px;
+  font-size: var(--fs-sm);
   font-weight: 600;
   color: var(--pu-mut);
   border-bottom: 2px solid transparent;
@@ -726,7 +726,7 @@
   background: var(--pu-bad-soft);
   border-color: #f6c9cb;
   color: var(--pu-bad);
-  border-radius: 10px;
+  border-radius: var(--r-lg);
 }
 
 /* Hardware nodes */
@@ -736,7 +736,7 @@
 }
 .hw-olt .chassis {
   height: 62px;
-  border-radius: 6px;
+  border-radius: var(--r-sm);
   background: linear-gradient(#4a5266, #1c2233);
   box-shadow: 0 8px 18px rgba(20, 26, 46, 0.35);
   display: flex;
@@ -765,21 +765,21 @@
   place-items: center;
 }
 .hw-card {
-  margin-top: 8px;
+  margin-top: var(--sp-2);
   width: 216px;
   padding: 9px 11px;
   border: 1px solid var(--pu-line);
-  border-radius: 12px;
+  border-radius: var(--r-xl);
   background: var(--pu-panel);
   box-shadow: 0 4px 12px rgba(30, 36, 64, 0.08);
 }
 .hw-card b {
-  font-size: 14px;
+  font-size: var(--fs-md);
 }
 .hw-card small {
   display: block;
   color: var(--pu-mut);
-  font-size: 11px;
+  font-size: var(--fs-xs);
   margin-bottom: 6px;
 }
 .hw-kv {
@@ -803,7 +803,7 @@
 }
 .hw-spl .body b {
   display: block;
-  font-size: 11px;
+  font-size: var(--fs-xs);
 }
 .hw-spl .body small {
   font-size: 8px;
@@ -815,7 +815,7 @@
 }
 .hw-label b {
   display: block;
-  font-size: 12px;
+  font-size: var(--fs-sm);
 }
 .hw-label small {
   color: var(--pu-mut);
@@ -837,7 +837,7 @@
   display: flex;
   justify-content: center;
   align-items: flex-end;
-  gap: 4px;
+  gap: var(--sp-1);
   padding-bottom: 7px;
 }
 .hw-onu .dev i {
@@ -852,16 +852,16 @@
 }
 .hw-onu .tag {
   min-width: 86px;
-  padding: 4px 8px;
+  padding: var(--sp-1) var(--sp-2);
   border: 1px solid var(--pu-line);
-  border-radius: 8px;
+  border-radius: var(--r-md);
   background: var(--pu-panel);
-  font-size: 10px;
+  font-size: var(--fs-2xs);
   line-height: 1.4;
 }
 .hw-onu .tag b {
   display: block;
-  font-size: 11px;
+  font-size: var(--fs-xs);
 }
 .hw-onu .tag em {
   font-style: normal;
@@ -877,23 +877,23 @@
 .hw-fiber {
   position: relative;
   padding: 6px 14px;
-  border-radius: 99px;
+  border-radius: var(--r-pill);
   background: var(--pu-panel);
   border: 1px solid var(--pu-line);
   text-align: center;
-  font-size: 11px;
+  font-size: var(--fs-xs);
   font-weight: 600;
   box-shadow: 0 1px 3px rgba(30, 36, 64, 0.08);
 }
 .hw-fiber span {
   display: block;
   color: var(--pu-fiber);
-  font-size: 10px;
+  font-size: var(--fs-2xs);
 }
 @media (max-width: 1200px) {
   .pu-top {
-    gap: 8px;
-    padding: 0 12px;
+    gap: var(--sp-2);
+    padding: 0 var(--sp-3);
     overflow-x: auto;
     scrollbar-width: none;
   }
@@ -931,7 +931,7 @@
   }
   .pu-comp h3 {
     padding: 12px 10px 6px;
-    font-size: 14px;
+    font-size: var(--fs-md);
   }
   .pu-search {
     margin: 0 8px 6px;
@@ -977,9 +977,9 @@
 /* ------------------------------------------------------------------------- */
 
 .pu-doc-tab-edited {
-  margin-left: 8px;
+  margin-left: var(--sp-2);
   padding: 1px 6px;
-  border-radius: 9999px;
+  border-radius: var(--r-pill);
   background: var(--pu-warn-soft);
   color: #b36b00;
   font-size: 9px;
@@ -1079,7 +1079,7 @@
    * sheet below always has a predictable anchor. */
   .pu-top {
     height: 54px;
-    padding: 0 12px;
+    padding: 0 var(--sp-3);
   }
   .pu-toolbar {
     right: 12px;
@@ -1099,13 +1099,13 @@
   }
   .pu-toolbar .pu-btn {
     padding: 6px 8px;
-    font-size: 11px;
+    font-size: var(--fs-xs);
   }
   .pu-toolbar .pu-btn svg {
     width: 13px;
     height: 13px;
   }
   .pu-center {
-    padding: 8px;
+    padding: var(--sp-2);
   }
 }

@@ -448,6 +448,7 @@ The app is a client-side React/TypeScript application. There is no backend servi
 | `src/engine/__tests__/opticalSimulator.test.ts`             | Optical graph simulation tests, including the public alias.                          |
 | `src/engine/__tests__/otdrSimulator.test.ts`                | OTDR route and event generation tests.                                               |
 | `src/engine/__tests__/xgsPon.test.ts`                       | XGS-PON standards and equipment tests.                                               |
+| `src/styles/tokens.css`                                     | Design tokens: type scale, 4px spacing scale, radii, panel padding, control heights. |
 | `src/styles/global.css`                                     | Tailwind layers, application-wide styles, and mission keyframes.                     |
 | `src/styles/photo-ui.css`                                   | Photo-inspired studio UI overrides, loaded last.                                     |
 | `src/styles/theme.css`                                      | Warm responsive landing and studio theme, including modal and hardware treatments.   |

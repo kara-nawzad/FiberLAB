@@ -1,0 +1,91 @@
+/* ==========================================================================
+ * FiberLAB design tokens — the single source of truth for type, space,
+ * radius and panel padding.
+ *
+ * Loaded FIRST in src/main.tsx, before global.css / theme.css / photo-ui.css,
+ * so every later rule can reference these variables.
+ *
+ * Rules for using this file:
+ *   • Sizing values in component CSS come from here, not from ad-hoc px.
+ *   • Two layers: a raw numeric scale (--fs-*, --sp-*, --r-*) and semantic
+ *     roles (--type-*, --panel-*, --control-*). Prefer the semantic role in
+ *     component CSS; the numeric scale is for one-off exceptions.
+ *   • One spacing scale: 4 / 8 / 12 / 16 / 24 / 32.
+ *   • One type scale: 10 / 11 / 12 / 14 / 16 / 20 / 24 (+ display clamp).
+ * ========================================================================== */
+
+:root {
+  /* ---------------------------------------------------------------- type ---
+   * Raw scale. Seven steps replace the 24 freestanding sizes the audit found.
+   * Half-pixel sizes (8.5, 9.5, 10.5, 11.5, 12.5) are intentionally absent —
+   * they are migrated onto the nearest step in the normalisation pass. */
+  --fs-2xs: 10px; /* caption, uppercase eyebrow, chip */
+  --fs-xs: 11px; /* small label, tab, secondary metadata */
+  --fs-sm: 12px; /* body — the default reading size in panels */
+  --fs-md: 14px; /* lead paragraph, card value, modal title (small) */
+  --fs-lg: 16px; /* panel title */
+  --fs-xl: 20px; /* section title, card headline metric */
+  --fs-2xl: 24px; /* instrument readout */
+
+  /* Semantic roles — what each step is for. */
+  --type-page-title: clamp(30px, 3.2vw, 44px); /* page/app title (h1) */
+  --type-section-title: var(--fs-xl); /* "Components", "Bill of Materials" */
+  --type-panel-title: var(--fs-lg); /* panel + card headings */
+  --type-subtitle: var(--fs-md); /* sub-heading, lead paragraph */
+  --type-body: var(--fs-sm); /* default body copy */
+  --type-small: var(--fs-xs); /* labels, tabs, helper text */
+  --type-caption: var(--fs-2xs); /* uppercase caption, unit suffix */
+  --type-metric: var(--fs-2xl); /* large numbers / instrument values */
+  --type-metric-sm: var(--fs-xl); /* stat-card numbers */
+
+  /* Line heights, paired with the roles above. */
+  --leading-tight: 1.15;
+  --leading-snug: 1.35;
+  --leading-normal: 1.5;
+
+  /* ------------------------------------------------------------- spacing ---
+   * 4px base. Nothing in component CSS should use 5/6/7/9/10/11/13… px. */
+  --sp-0: 0;
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+
+  /* Semantic spacing roles. */
+  --gap-row: var(--sp-2); /* between sibling rows in a panel */
+  --gap-group: var(--sp-3); /* between groups of rows */
+  --gap-section: var(--sp-4); /* between sections */
+  --inset-control: var(--sp-2) var(--sp-3); /* padding inside a button/input */
+
+  /* -------------------------------------------------------------- radius ---
+   * Six steps cover every surface in the app. */
+  --r-sm: 6px; /* chip, badge, small inner box */
+  --r-md: 8px; /* button, input, tab */
+  --r-lg: 10px; /* card, menu item, meter well */
+  --r-xl: 12px; /* panel, card, popover */
+  --r-2xl: 16px; /* modal, hero card */
+  --r-pill: 999px; /* status pill, avatar, toggle */
+
+  /* -------------------------------------------------------------- panels ---
+   * Panel padding / gutters. Applied as a single value per surface so the
+   * library, canvas and inspector share one gutter. */
+  --panel-pad-sm: var(--sp-3); /* 12 */
+  --panel-pad: var(--sp-4); /* 16 */
+  --panel-pad-lg: var(--sp-6); /* 24 */
+  --panel-gap: var(--sp-3); /* space between stacked panels */
+  --panel-header-pad: var(--sp-3) var(--sp-4); /* header bar: 12 / 16 */
+
+  /* ------------------------------------------------------------ controls ---
+   * Control heights. --control-tap is the phone minimum (44px). */
+  --control-sm: 32px;
+  --control-md: 36px;
+  --control-lg: 40px;
+  --control-tap: 44px;
+
+  /* ------------------------------------------------------------- borders --- */
+  --border-hairline: 1px;
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+}

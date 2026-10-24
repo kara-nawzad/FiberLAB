@@ -19,7 +19,7 @@ export function FieldHardwareCard({ profile, configurationLabel }: FieldHardware
       className="mb-3 overflow-hidden rounded-lg border border-sky-500/25 bg-noc-950/65"
     >
       <div className="flex items-center justify-between border-b border-noc-700/60 bg-sky-500/[0.07] px-2.5 py-2">
-        <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-sky-200">
+        <div className="flex items-center gap-1.5 text-caption font-semibold uppercase tracking-[0.12em] text-sky-200">
           <Info size={12} /> Field hardware
         </div>
         <span className="rounded border border-noc-600/80 bg-noc-900/70 px-1.5 py-0.5 font-mono text-[8px] uppercase tracking-wide text-noc-400">
@@ -39,14 +39,14 @@ export function FieldHardwareCard({ profile, configurationLabel }: FieldHardware
           />
         </div>
         <figcaption className="px-2.5 pb-2 pt-1.5">
-          <div className="text-[11px] font-semibold leading-snug text-noc-100">{profile.modelName}</div>
+          <div className="text-label font-semibold leading-snug text-noc-100">{profile.modelName}</div>
           <div className="mt-0.5 text-[8px] uppercase tracking-[0.1em] text-noc-500">{profile.vendorCategory}</div>
           {configurationLabel ? (
             <div className="mt-0.5 truncate font-mono text-[9px] text-sky-300" title={configurationLabel}>
               {configurationLabel}
             </div>
           ) : null}
-          <div className="mt-1 text-[10px] leading-relaxed text-noc-400">{profile.description}</div>
+          <div className="mt-1 text-caption leading-relaxed text-noc-400">{profile.description}</div>
           <div className="mt-1.5 flex items-start gap-1 text-[9px] leading-snug text-amber-900">
             <Info size={10} className="mt-px shrink-0" />
             <span>Illustrative hardware reference—not a product photograph or exact vendor model.</span>

@@ -114,6 +114,15 @@ export default {
           900: '#392558',
         },
       },
+      // Mirrors src/styles/tokens.css — use these instead of text-[Npx] literals.
+      fontSize: {
+        caption: '10px', // --fs-2xs
+        label: '11px', // --fs-xs
+        body: '12px', // --fs-sm
+        lead: '14px', // --fs-md
+        title: '16px', // --fs-lg
+        metric: '20px', // --fs-xl
+      },
       fontFamily: {
         sans: ['Manrope', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
         mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Consolas', 'monospace'],

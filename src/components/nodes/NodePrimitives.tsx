@@ -34,7 +34,7 @@ export function Stat({ label, value, tone = 'text-noc-200' }: StatProps) {
   return (
     <div className="metric flex flex-col gap-0.5">
       <span className="text-[9px] font-medium uppercase tracking-[0.1em] text-noc-400">{label}</span>
-      <span className={`font-mono text-[12px] font-semibold leading-tight ${tone}`}>{value}</span>
+      <span className={`font-mono text-body font-semibold leading-tight ${tone}`}>{value}</span>
     </div>
   );
 }
@@ -47,7 +47,7 @@ interface BadgeProps {
 export function Badge({ children, className = 'bg-noc-700/70 text-noc-300 border-noc-600' }: BadgeProps) {
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded border px-1.5 py-[1px] font-mono text-[10px] font-semibold uppercase tracking-wide ${className}`}
+      className={`inline-flex items-center gap-1 rounded border px-1.5 py-[1px] font-mono text-caption font-semibold uppercase tracking-wide ${className}`}
     >
       {children}
     </span>
