@@ -94,6 +94,27 @@
   --panel-gap: var(--sp-3); /* space between stacked panels */
   --panel-header-pad: var(--sp-3) var(--sp-4); /* header bar: 12 / 16 */
 
+  /* -------------------------------------------------------------- layout ---
+   * The workbench is a four-column row: rail | component library | canvas |
+   * inspector. Column widths are fixed per breakpoint, the canvas takes the
+   * remaining space (minmax(0, 1fr)), and one gutter value separates every
+   * panel. Every letter-spaced edge (top bar, library title, inspector title,
+   * bottom-panel tabs) starts on --shell-pad. */
+  --topbar-h: 56px;
+  --rail-w: 72px;
+  --library-w: clamp(200px, 17vw, 240px);
+  --inspector-w: clamp(256px, 21vw, 300px);
+  --inspector-w-collapsed: 44px;
+  --shell-gap: var(--sp-3); /* 12 — gap between canvas, tabstrip, bottom panel */
+  --shell-pad: var(--panel-pad); /* 16 — side padding of every panel */
+  --canvas-min-w: 360px;
+  --bottom-max-h: 44vh; /* bottom panel never eats more than this share */
+  --toolbar-gutter: 208px; /* reserved for the minimap next to the toolbar */
+
+  /* Landing / overview page container */
+  --page-max: 1390px;
+  --page-gutter: clamp(16px, 4vw, 72px);
+
   /* ------------------------------------------------------------ controls ---
    * Control heights. --control-tap is the phone minimum (44px). */
   --control-sm: 32px;
@@ -120,5 +141,45 @@
     --type-display: clamp(41px, 11.5vw, 60px);
     --type-display-sm: clamp(30px, 9vw, 42px);
     --type-section-title-lg: var(--fs-xl);
+  }
+}
+
+/* --------------------------------------------------------------------------
+ * Breakpoint steps for the shell. Three sizes only: 1280 (compact desktop),
+ * 1024 (small laptop / tablet landscape) and 900 (canvas-first overlay mode).
+ * -------------------------------------------------------------------------- */
+@media (max-width: 1280px) {
+  :root {
+    --topbar-h: 52px;
+    --rail-w: 64px;
+    --library-w: 208px;
+    --inspector-w: 264px;
+  }
+}
+
+@media (max-width: 1024px) {
+  :root {
+    --rail-w: 56px;
+    --library-w: 184px;
+    --inspector-w: 240px;
+    --shell-gap: var(--sp-2);
+    --bottom-max-h: 40vh;
+  }
+}
+
+@media (max-width: 900px) {
+  :root {
+    --library-w: min(280px, calc(100vw - var(--rail-w) - var(--sp-3) * 2));
+    --inspector-w: min(320px, calc(100vw - var(--rail-w) - var(--sp-3) * 2));
+    --canvas-min-w: 0;
+    --bottom-max-h: 38vh;
+  }
+}
+
+@media (max-width: 560px) {
+  :root {
+    --topbar-h: 52px;
+    --shell-gap: var(--sp-2);
+    --bottom-max-h: 34vh;
   }
 }

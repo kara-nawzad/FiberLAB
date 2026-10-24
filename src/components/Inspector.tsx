@@ -396,7 +396,7 @@ export function Inspector({
   return (
     <aside
       className={`fiberlab-inspector flex h-full shrink-0 flex-col border-l border-slate-200 bg-white transition-[width] duration-200 ${
-        collapsed ? 'is-collapsed w-[40px]' : 'w-[300px]'
+        collapsed ? 'is-collapsed' : ''
       }`}
     >
       {collapsed ? (

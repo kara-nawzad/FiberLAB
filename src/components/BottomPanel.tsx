@@ -148,7 +148,7 @@ export function BottomPanel({
 
       {!minimized && tab === 'overview' ? (
         <div className="pu-bottom-grid">
-          <div className="pu-stats" style={{ gridTemplateColumns: 'repeat(2,1fr)' }}>
+          <div className="pu-stats pu-stats--pairs">
             <div className="pu-stat">
               <i>
                 <Ruler size={16} />
@@ -234,7 +234,7 @@ export function BottomPanel({
       ) : null}
 
       {!minimized && tab === 'budget' ? (
-        <div className="pu-bottom-grid" style={{ gridTemplateColumns: '1fr' }}>
+        <div className="pu-bottom-grid pu-bottom-grid--stack">
           <div className="pu-card" style={{ maxHeight: 170, overflowY: 'auto' }}>
             <table style={{ width: '100%', fontSize: 'var(--fs-xs)' }}>
               <thead className="pu-mut">
@@ -273,7 +273,7 @@ export function BottomPanel({
       ) : null}
 
       {!minimized && tab === 'components' ? (
-        <div className="pu-bottom-grid" style={{ gridTemplateColumns: 'repeat(4,1fr)' }}>
+        <div className="pu-bottom-grid pu-bottom-grid--quarters">
           {Object.entries(counts).map(([kind, count]) => (
             <div className="pu-stat" key={kind}>
               <div>
@@ -286,7 +286,7 @@ export function BottomPanel({
       ) : null}
 
       {!minimized && tab === 'topology' ? (
-        <div className="pu-bottom-grid" style={{ gridTemplateColumns: 'repeat(4,1fr)' }}>
+        <div className="pu-bottom-grid pu-bottom-grid--quarters">
           <div className="pu-stat">
             <i>
               <Route size={16} />

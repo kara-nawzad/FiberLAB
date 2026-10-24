@@ -483,12 +483,12 @@
   top: 22px;
   right: 0;
   left: 0;
-  padding: 0 var(--sp-8);
+  padding: 0 var(--page-gutter);
 }
 
 .landing-nav {
   display: flex;
-  width: min(100%, 1370px);
+  width: min(100%, var(--page-max));
   min-height: 66px;
   align-items: center;
   justify-content: space-between;
@@ -682,7 +682,7 @@
 
 .splice-hero-content {
   display: flex;
-  width: min(calc(100% - 112px), 1370px);
+  width: min(calc(100% - var(--page-gutter) * 2), var(--page-max));
   height: 100%;
   min-height: 680px;
   flex-direction: column;
@@ -948,7 +948,7 @@
 
 .splice-hero-footnote {
   display: flex;
-  width: min(100%, 1370px);
+  width: min(100%, var(--page-max));
   align-items: center;
   justify-content: space-between;
   margin-top: auto;
@@ -962,7 +962,7 @@
 
 /* ------------------------ Preserved live waveguide exhibit */
 .landing-content {
-  width: min(calc(100% - 72px), 1390px);
+  width: min(calc(100% - var(--page-gutter) * 2), var(--page-max));
   margin: 0 auto;
   padding: 58px 0 0;
 }
@@ -1708,7 +1708,7 @@
 
 .landing-footer {
   display: grid;
-  width: min(calc(100% - 72px), 1390px);
+  width: min(calc(100% - var(--page-gutter) * 2), var(--page-max));
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 22px;
@@ -1759,12 +1759,6 @@
 
 /* ----------------------- Compact workbench breakpoints */
 @media (max-width: 1100px) {
-  .landing-content {
-    width: min(calc(100% - 48px), 1390px);
-  }
-  .landing-footer {
-    width: min(calc(100% - 48px), 1390px);
-  }
   .landing-hero {
     gap: 28px;
     padding: 30px;
@@ -1782,10 +1776,6 @@
     min-height: 660px;
     height: min(790px, 100dvh);
   }
-  .splice-hero-content {
-    width: min(calc(100% - 76px), 1370px);
-    min-height: 660px;
-  }
   .splice-hero-content h1 {
     max-width: 620px;
     font-size: var(--type-display);
@@ -1802,10 +1792,6 @@
       rgba(255, 244, 230, 0.28) 78%,
       rgba(43, 26, 20, 0.05) 100%
     );
-  }
-  .landing-content {
-    width: min(calc(100% - 42px), 1390px);
-    padding-top: 42px;
   }
   .landing-hero {
     grid-template-columns: 1fr;
@@ -1832,7 +1818,7 @@
     max-width: 720px;
   }
   .landing-footer {
-    width: min(calc(100% - 42px), 1390px);
+    width: min(calc(100% - var(--page-gutter) * 2), var(--page-max));
     grid-template-columns: auto 1fr;
   }
   .landing-footer-link {
@@ -1909,11 +1895,6 @@
     padding: 0 11px;
     font-size: var(--type-small);
   }
-  .splice-hero-content {
-    width: calc(100% - 38px);
-    min-height: 730px;
-    padding: 105px 0 24px;
-  }
   .splice-hero-eyebrow {
     max-width: 290px;
     margin-bottom: 15px;
@@ -1969,10 +1950,6 @@
     font-size: var(--type-caption);
   }
 
-  .landing-content {
-    width: calc(100% - 24px);
-    padding-top: 25px;
-  }
   .landing-hero {
     gap: 21px;
     padding: 18px 13px;
@@ -2072,7 +2049,6 @@
     min-height: 64px;
   }
   .landing-footer {
-    width: calc(100% - 24px);
     grid-template-columns: 1fr;
     gap: 10px;
     margin-top: 42px;
@@ -2084,12 +2060,13 @@
 
 @media (max-width: 380px) {
   .fiberlab-topbar {
-    padding: 7px;
+    padding: var(--sp-2);
   }
   .fiberlab-topbar > div:first-child {
     min-width: 0;
   }
-  .fiberlab-topbar > div:first-child > div:last-child > div:last-child {
+  /* Phone width: keep the CAPEX figure, drop its secondary per-home note. */
+  .pu-capex-detail {
     display: none;
   }
   .splice-hero-frame {

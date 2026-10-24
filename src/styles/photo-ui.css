@@ -39,13 +39,13 @@
   background: var(--pu-bg) !important;
 }
 .pu-center {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
   flex: 1 1 0%;
-  min-width: 260px;
+  min-width: 0;
   min-height: 0;
-  padding: 10px 12px 12px;
-  gap: 10px;
+  gap: var(--shell-gap);
+  padding: var(--shell-gap);
   overflow: hidden;
   background: var(--pu-bg);
 }
@@ -137,9 +137,10 @@
 .pu-top {
   display: flex;
   align-items: center;
-  gap: 14px;
-  height: 60px;
-  padding: 0 18px;
+  gap: var(--shell-pad);
+  height: var(--topbar-h);
+  flex-shrink: 0;
+  padding: 0 var(--shell-pad);
   background: var(--pu-panel) !important;
   border-bottom: 1px solid var(--pu-line) !important;
   flex-shrink: 0;
@@ -278,9 +279,9 @@
 .pu-rail {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  width: 72px;
-  padding: var(--sp-3) var(--sp-2);
+  gap: var(--sp-1);
+  width: var(--rail-w);
+  padding: var(--sp-2) var(--sp-1);
   background: var(--pu-panel);
   border-right: 1px solid var(--pu-line);
   flex-shrink: 0;
@@ -311,7 +312,7 @@
 .pu-comp {
   display: flex;
   flex-direction: column;
-  width: 236px;
+  width: var(--library-w);
   background: var(--pu-panel) !important;
   border-right: 1px solid var(--pu-line) !important;
   flex-shrink: 0;
@@ -319,7 +320,7 @@
 }
 .pu-comp h3 {
   margin: 0;
-  padding: 16px 16px 10px;
+  padding: var(--shell-pad) var(--shell-pad) var(--sp-1);
   font-size: var(--fs-lg);
   font-weight: var(--fw-bold);
   color: var(--pu-ink);
@@ -328,8 +329,8 @@
   display: flex;
   align-items: center;
   gap: var(--sp-2);
-  margin: 0 14px 8px;
-  padding: 8px 10px;
+  margin: 0 var(--shell-pad) var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
   border: 1px solid var(--pu-line);
   border-radius: var(--r-lg);
   background: #ffffff;
@@ -346,8 +347,9 @@
 }
 .pu-comp-scroll {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
-  padding: 0 14px 12px;
+  padding: 0 var(--shell-pad) var(--sp-3);
 }
 .pu-sec > summary {
   display: flex;
@@ -460,7 +462,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--sp-2);
-  max-width: calc(100% - 210px);
+  max-width: calc(100% - var(--toolbar-gutter));
 }
 .pu-toolbar .pu-btn {
   padding: 8px 13px;
@@ -632,17 +634,20 @@
 .fiberlab-inspector {
   background: var(--pu-panel) !important;
   border-left: 1px solid var(--pu-line) !important;
-  width: 300px;
+  width: var(--inspector-w);
   flex-shrink: 0;
+  min-height: 0;
+  overflow: hidden;
 }
 .fiberlab-inspector.is-collapsed {
-  width: 40px !important;
+  width: var(--inspector-w-collapsed) !important;
 }
 .pu-insp-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 18px 8px;
+  gap: var(--sp-2);
+  padding: var(--shell-pad) var(--shell-pad) var(--sp-1);
   font-size: var(--type-panel-title);
   font-weight: var(--fw-bold);
   color: var(--pu-ink);
@@ -894,71 +899,42 @@
   color: var(--pu-fiber);
   font-size: var(--fs-2xs);
 }
+
 @media (max-width: 1200px) {
   .pu-top {
-    gap: var(--sp-2);
-    padding: 0 var(--sp-3);
     overflow-x: auto;
     scrollbar-width: none;
   }
   .pu-top::-webkit-scrollbar {
     display: none;
   }
-  .pu-rail {
-    width: 56px;
-    padding: 10px 4px;
-  }
-  .pu-comp {
-    width: 196px;
-  }
-  .fiberlab-inspector:not(.is-collapsed) {
-    width: 240px;
-  }
   .pu-stats {
     grid-template-columns: repeat(2, 1fr);
   }
   .pu-bottom-grid {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr) minmax(0, 1fr);
   }
 }
-@media (max-width: 920px) {
-  .pu-rail {
-    width: 48px;
-    padding: 8px 3px;
-  }
-  .pu-rail button {
-    font-size: var(--type-caption);
-    padding: 8px 2px;
-  }
-  .pu-comp {
-    width: 172px;
-  }
-  .pu-comp h3 {
-    padding: 12px 10px 6px;
-    font-size: var(--fs-md);
-  }
-  .pu-search {
-    margin: 0 8px 6px;
-    padding: 6px 8px;
-  }
-  .pu-comp-scroll {
-    padding: 0 8px 10px;
-  }
-  .pu-tool {
-    padding: 7px;
-    gap: 7px;
-  }
-  .pu-tool .th {
-    width: 42px;
-    height: 34px;
-  }
-  .fiberlab-inspector:not(.is-collapsed) {
-    width: 210px;
+
+@media (max-width: 1024px) {
+  .pu-stats {
+    grid-template-columns: repeat(2, 1fr);
   }
   .pu-bottom-grid {
-    grid-template-columns: 1fr;
-    max-height: 165px;
-    overflow-y: auto;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pu-tool .th {
+    width: 44px;
+    height: 36px;
+  }
+  .pu-comp h3 {
+    padding: var(--sp-3) var(--shell-pad) var(--sp-1);
+  }
+  .pu-search {
+    margin: 0 var(--sp-3) var(--sp-2);
+  }
+  .pu-comp-scroll {
+    padding: 0 var(--sp-3) var(--sp-3);
   }
 }
 
@@ -1025,6 +1001,8 @@
 /* inspector float above the canvas instead of squeezing it out of the row.   */
 /* ------------------------------------------------------------------------- */
 @media (max-width: 900px) {
+  /* The rail keeps its column; library and inspector become overlay sheets that
+   * sit inside the body padding instead of squeezing the canvas column. */
   .pu-body {
     position: relative;
   }
@@ -1033,40 +1011,36 @@
   }
   .pu-comp {
     position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 48px;
+    top: var(--shell-gap);
+    bottom: var(--shell-gap);
+    left: calc(var(--rail-w) + var(--shell-gap));
     z-index: 20;
-    width: min(272px, calc(100% - 48px));
-    box-shadow:
-      0 0 0 1px var(--pu-line),
-      14px 0 32px rgba(43, 26, 20, 0.16);
+    width: var(--library-w);
+    border: 1px solid var(--pu-line) !important;
+    border-radius: var(--r-xl);
+    box-shadow: 14px 0 32px rgba(43, 26, 20, 0.16);
   }
   .fiberlab-inspector:not(.is-collapsed) {
     position: absolute;
-    top: 0;
+    top: var(--shell-gap);
     right: 0;
-    bottom: 0;
+    bottom: var(--shell-gap);
     z-index: 20;
-    width: min(320px, calc(100% - 56px));
-    box-shadow:
-      0 0 0 1px var(--pu-line),
-      -14px 0 32px rgba(43, 26, 20, 0.16);
+    width: var(--inspector-w);
+    border-left: 1px solid var(--pu-line) !important;
+    border-radius: var(--r-xl) 0 0 var(--r-xl);
+    box-shadow: -14px 0 32px rgba(43, 26, 20, 0.16);
   }
   .pu-toolbar {
-    max-width: calc(100% - 24px);
-    gap: 6px;
+    max-width: calc(100% - var(--sp-4));
+    gap: var(--sp-1);
   }
   .pu-toolbar .pu-btn {
-    padding: 7px 10px;
+    padding: var(--sp-1) var(--sp-2);
     font-size: var(--type-body);
   }
   .pu-canvas .react-flow__minimap {
     display: none;
-  }
-  .pu-top {
-    height: 54px;
-    gap: 10px;
   }
   /* The toolbar wraps onto more rows here, so the link banner sits lower. */
   .pu-canvas .react-flow__panel.pu-link-panel {
@@ -1079,38 +1053,35 @@
 }
 
 @media (max-width: 560px) {
-  /* Keep the top bar a single 54 px row (it scrolls sideways) so the popover
-   * sheet below always has a predictable anchor. */
+  /* Keep the top bar a single row (it scrolls sideways) so the popover sheet
+   * below always has a predictable anchor. */
   .pu-top {
-    height: 54px;
-    padding: 0 var(--sp-3);
+    padding: 0 var(--shell-gap);
   }
   .pu-toolbar {
-    right: 12px;
+    top: var(--sp-2);
+    left: var(--sp-2);
+    right: var(--sp-2);
   }
   /* Menus become a full-width sheet; anchored popovers would run off a phone. */
   .pu-top .pu-menu,
   .pu-toolbar .pu-menu {
     position: fixed !important;
-    top: 62px !important;
-    left: 8px !important;
-    right: 8px !important;
+    top: calc(var(--topbar-h) + var(--sp-2)) !important;
+    left: var(--sp-2) !important;
+    right: var(--sp-2) !important;
     width: auto !important;
     min-width: 0 !important;
     max-height: 62vh;
     overflow-y: auto;
-    border-radius: 14px;
+    border-radius: var(--r-xl);
   }
   .pu-toolbar .pu-btn {
-    padding: 6px 8px;
-    font-size: var(--fs-xs);
+    padding: var(--sp-1) var(--sp-2);
   }
   .pu-toolbar .pu-btn svg {
     width: 13px;
     height: 13px;
-  }
-  .pu-center {
-    padding: var(--sp-2);
   }
 }
 
@@ -1208,4 +1179,102 @@
 .pu-doc-tab-edited,
 .pu-card h6 + * {
   letter-spacing: 0.08em;
+}
+
+/* ------------------------------------------------------------------------- */
+/* Grid proportions between panels. The canvas is the only flexible column;   */
+/* everything else has a fixed width per breakpoint (see tokens.css).         */
+/* ------------------------------------------------------------------------- */
+
+.pu-body {
+  display: flex;
+  flex-direction: row;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.pu-center {
+  /* Canvas column floor: below this the tablet overlay step takes over. */
+  min-width: min(var(--canvas-min-w), 100%);
+}
+
+/* Bottom panel: flexible grid that keeps the canvas dominant. */
+.pu-bottom-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--shell-gap);
+  min-height: 0;
+  overflow-y: auto;
+  padding-top: var(--shell-gap);
+}
+
+.pu-bottom-grid--stack {
+  grid-template-columns: minmax(0, 1fr);
+  grid-auto-flow: row;
+}
+
+.pu-bottom-grid--quarters {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.pu-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--shell-gap);
+  align-content: start;
+}
+
+.pu-stats--pairs {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* The tab strip scrolls instead of clipping when four labels do not fit. */
+.pu-btabs {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.pu-btabs::-webkit-scrollbar {
+  display: none;
+}
+
+.pu-btabs button {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+/* Inspector body: same gutter as every other panel. */
+.fiberlab-inspector-content {
+  padding: var(--sp-2) var(--shell-pad) var(--sp-4);
+}
+
+.fiberlab-inspector .pu-insp-card {
+  margin: var(--sp-2) var(--shell-pad) var(--sp-2);
+}
+
+/* Stacked bottom-panel grids on tablets and phones. */
+@media (max-width: 1024px) {
+  .pu-bottom-grid--quarters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .pu-bottom-grid,
+  .pu-bottom-grid--quarters,
+  .pu-stats {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pu-stats--pairs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .pu-btabs {
+    gap: var(--sp-3);
+  }
 }

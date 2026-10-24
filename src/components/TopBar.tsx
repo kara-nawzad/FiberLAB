@@ -173,7 +173,9 @@ export function TopBar({
           aria-label={`Network CAPEX ${formatUsd(costBreakdown.totalCapex)}; ${formatUsd(costBreakdown.costPerHomePassed)} per home passed`}
         >
           CAPEX <strong>{formatUsd(costBreakdown.totalCapex, true)}</strong>
-          <span style={{ opacity: 0.7 }}>{formatUsd(costBreakdown.costPerHomePassed)} / Home Passed</span>
+          <span className="pu-capex-detail" style={{ opacity: 0.7 }}>
+            {formatUsd(costBreakdown.costPerHomePassed)} / Home Passed
+          </span>
         </span>
       </div>
 
