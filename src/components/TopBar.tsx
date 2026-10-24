@@ -1,65 +1,44 @@
 import { useEffect, useRef, useState } from 'react';
 import { useReactFlow, useStore } from '@xyflow/react';
-import { ChevronDown, FileBarChart, LayoutGrid, Loader2, Play } from 'lucide-react';
-import { PRESETS } from '../engine/presets';
+import { Activity, ChevronDown, Loader2, Play } from 'lucide-react';
 
 /* ========================================================================== *
- * Top bar — logo, topology picker, zoom, Run Simulation, Reports.
- * Health, CAPEX and every tool button moved out: the network status now lives
- * in the bottom status bar and the money lives in the Reports screen.
+ * Top bar — four things only: the logo, the project (with an edited marker),
+ * the zoom percentage and the primary Run Simulation action. Presets belong to
+ * the Design screen, Reports has its own section, and health/CAPEX live in the
+ * status bar and the Reports screen.
  * ========================================================================== */
 
 interface TopBarProps {
-  onPreset: (presetId: string) => void;
-  onRunTest: () => void;
-  onOpenBOM: () => void;
-  onOpenOverview: () => void;
-  testing: boolean;
-  stale: boolean;
-  activePresetId: string | null;
+  /** Current topology name shown as the project. */
+  projectName: string;
   /** True once the canvas has been edited away from the loaded preset. */
   presetEdited?: boolean;
+  /** True when Auto is off and the budget is older than the last edit. */
+  stale: boolean;
+  testing: boolean;
+  onRunTest: () => void;
+  onOpenOverview: () => void;
 }
 
-export function TopBar({
-  onPreset,
-  onRunTest,
-  onOpenBOM,
-  onOpenOverview,
-  testing,
-  stale,
-  activePresetId,
-  presetEdited = false,
-}: TopBarProps) {
-  const [presetOpen, setPresetOpen] = useState(false);
+export function TopBar({ projectName, presetEdited = false, stale, testing, onRunTest, onOpenOverview }: TopBarProps) {
   const [zoomOpen, setZoomOpen] = useState(false);
-  const presetRef = useRef<HTMLDivElement | null>(null);
   const zoomRef = useRef<HTMLDivElement | null>(null);
-  const presetButtonRef = useRef<HTMLButtonElement | null>(null);
   const zoomButtonRef = useRef<HTMLButtonElement | null>(null);
   const { zoomIn, zoomOut, fitView, zoomTo } = useReactFlow();
   const zoom = useStore((state) => state.transform[2]);
-  const activePreset = PRESETS.find((preset) => preset.id === activePresetId);
 
   useEffect(() => {
-    if (!presetOpen && !zoomOpen) return;
+    if (!zoomOpen) return;
     const onDown = (event: MouseEvent) => {
       const target = event.target as globalThis.Node;
-      if (presetRef.current && !presetRef.current.contains(target)) setPresetOpen(false);
       if (zoomRef.current && !zoomRef.current.contains(target)) setZoomOpen(false);
     };
-    // Escape dismisses a popover and returns focus to the button that opened it,
-    // matching how the workspace overlays behave.
+    // Escape dismisses the popover and returns focus to the button that opened it.
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
-      if (presetOpen) {
-        setPresetOpen(false);
-        presetButtonRef.current?.focus({ preventScroll: true });
-      }
-      if (zoomOpen) {
-        setZoomOpen(false);
-        zoomButtonRef.current?.focus({ preventScroll: true });
-      }
+      setZoomOpen(false);
+      zoomButtonRef.current?.focus({ preventScroll: true });
     };
     document.addEventListener('mousedown', onDown);
     document.addEventListener('keydown', onKeyDown);
@@ -67,7 +46,7 @@ export function TopBar({
       document.removeEventListener('mousedown', onDown);
       document.removeEventListener('keydown', onKeyDown);
     };
-  }, [presetOpen, zoomOpen]);
+  }, [zoomOpen]);
 
   return (
     <header className="fiberlab-topbar pu-top">
@@ -78,64 +57,24 @@ export function TopBar({
         onClick={onOpenOverview}
         aria-label="Overview & Physics"
         title="Return to Overview & Physics"
-        style={{ background: 'transparent', border: 0, cursor: 'pointer', color: 'var(--pu-ink)', padding: 0 }}
       >
-        <span>
+        <span className="pu-logo-full">
           Fiber<b>LAB</b>
         </span>
+        <span className="pu-logo-mark" aria-hidden="true">
+          <Activity size={18} />
+        </span>
       </button>
-      <span className="pu-sep" />
+      <span className="pu-sep" aria-hidden="true" />
 
-      <div className="relative" ref={presetRef}>
-        <button
-          ref={presetButtonRef}
-          type="button"
-          className="pu-select"
-          onClick={() => setPresetOpen((open) => !open)}
-          aria-expanded={presetOpen}
-          aria-haspopup="true"
-          aria-controls="preset-menu"
-          aria-label="Preset Topologies"
-        >
-          <LayoutGrid size={14} className="pu-mut" />
-          <span className="pu-preset-name">{activePreset ? activePreset.name : 'FTTH Network'}</span>
-          <ChevronDown size={14} className="pu-mut" />
-        </button>
-        {presetOpen ? (
-          <div id="preset-menu" className="pu-menu" style={{ top: 'calc(100% + 8px)', left: 0, width: 340 }}>
-            {PRESETS.map((preset) => (
-              <button
-                key={preset.id}
-                type="button"
-                onClick={() => {
-                  onPreset(preset.id);
-                  setPresetOpen(false);
-                }}
-              >
-                <strong style={{ fontSize: 'var(--fs-sm)' }}>{preset.name}</strong>
-                {activePresetId === preset.id ? (
-                  <span
-                    style={{
-                      float: 'right',
-                      color: 'var(--pu-pri)',
-                      fontSize: 'var(--fs-2xs)',
-                      fontWeight: 'var(--fw-bold)',
-                    }}
-                  >
-                    {presetEdited ? 'LOADED · EDITED' : 'LOADED'}
-                  </span>
-                ) : null}
-                <div className="pu-mut" style={{ fontSize: 'var(--fs-2xs)', marginTop: 4 }}>
-                  {preset.description}
-                </div>
-              </button>
-            ))}
-          </div>
-        ) : null}
-      </div>
+      <span className="pu-project">
+        <span className="pu-project-name" title={projectName}>
+          {projectName}
+        </span>
+        {presetEdited ? <span className="pu-doc-tab-edited">Edited</span> : null}
+      </span>
+
       <div style={{ flex: 1 }} />
-
-      {stale ? <span className="pu-health amber">UNSAVED BUDGET — RUN SIMULATION</span> : null}
 
       <div className="relative pu-zoom" ref={zoomRef}>
         <button
@@ -148,7 +87,7 @@ export function TopBar({
           aria-haspopup="true"
           aria-controls="zoom-menu"
         >
-          {Math.round(zoom * 100)}% <ChevronDown size={14} className="pu-mut" />
+          {Math.round(zoom * 100)}% <ChevronDown size={14} className="pu-mut" aria-hidden="true" />
         </button>
         {zoomOpen ? (
           <div id="zoom-menu" className="pu-menu" style={{ top: 'calc(100% + 8px)', right: 0, minWidth: 160 }}>
@@ -168,13 +107,21 @@ export function TopBar({
         ) : null}
       </div>
 
-      <button type="button" className="pu-btn pri" onClick={onRunTest} disabled={testing} aria-label="Run Simulation">
-        {testing ? <Loader2 size={14} className="animate-spin" /> : <Play size={14} fill="currentColor" />}
+      <button
+        type="button"
+        className={`pu-btn pri${stale ? ' is-stale' : ''}`}
+        onClick={onRunTest}
+        disabled={testing}
+        aria-label="Run Simulation"
+        title={stale ? 'The budget changed since the last run — run it again' : 'Run the optical simulation'}
+      >
+        {testing ? (
+          <Loader2 size={14} className="animate-spin" aria-hidden="true" />
+        ) : (
+          <Play size={14} fill="currentColor" aria-hidden="true" />
+        )}
         <span className="pu-label-full">Run Simulation</span>
         <span className="pu-label-short">Run</span>
-      </button>
-      <button type="button" className="pu-btn" onClick={onOpenBOM} aria-label="Bill of Materials">
-        <FileBarChart size={14} /> <span className="pu-label-full">Reports</span>
       </button>
     </header>
   );

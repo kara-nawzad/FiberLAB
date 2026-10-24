@@ -1,16 +1,5 @@
 import { useCallback, useMemo, useRef, useState, type DragEvent, type PointerEvent, type ReactNode } from 'react';
-import {
-  Activity,
-  ChevronRight,
-  Clock,
-  FileText,
-  Gauge,
-  LayoutDashboard,
-  PanelLeftClose,
-  PlayCircle,
-  Search,
-  Settings2,
-} from 'lucide-react';
+import { Activity, ChevronRight, Clock, Gauge, PanelLeftClose, Search } from 'lucide-react';
 import type { CableType, SplitRatio } from '../types';
 import { CABLE_SPECS, SPLIT_RATIOS, SPLITTER_LOSS_DB } from '../types';
 import { getHardwareProfileForNode } from '../data/componentCatalogue';
@@ -35,9 +24,6 @@ interface SidebarProps {
   onQuickAdd: (payload: ToolboxPayload) => void;
   onToggleOpm?: () => void;
   onOpenOtdr?: () => void;
-  onRunSimulation?: () => void;
-  onOpenReports?: () => void;
-  onOpenSettings?: () => void;
   collapsed?: boolean;
   onToggleCollapse?: () => void;
 }
@@ -111,16 +97,7 @@ function ToolItem({
   );
 }
 
-export function Sidebar({
-  onQuickAdd,
-  onToggleOpm,
-  onOpenOtdr,
-  onRunSimulation,
-  onOpenReports,
-  onOpenSettings,
-  collapsed = false,
-  onToggleCollapse,
-}: SidebarProps) {
+export function Sidebar({ onQuickAdd, onToggleOpm, onOpenOtdr, collapsed = false, onToggleCollapse }: SidebarProps) {
   const [ratioDraft, setRatioDraft] = useState<SplitRatio>(8);
   const [cableDraft, setCableDraft] = useState<CableType>('distribution');
   const [searchQuery, setSearchQuery] = useState('');
@@ -337,192 +314,160 @@ export function Sidebar({
   );
 
   return (
-    <>
-      <nav className="pu-rail" aria-label="Workbench sections">
-        <button
-          type="button"
-          className={collapsed ? '' : 'is-active'}
-          onClick={onToggleCollapse}
-          aria-label="Design"
-          title="Show or hide the component library"
-        >
-          <LayoutDashboard size={20} />
-          <span className="pu-rail-label">Design</span>
-        </button>
-        <button type="button" onClick={onRunSimulation} aria-label="Simulation" title="Run the optical simulation">
-          <PlayCircle size={20} />
-          <span className="pu-rail-label">Simulation</span>
-        </button>
-        <button
-          type="button"
-          onClick={onOpenReports}
-          aria-label="Reports"
-          title="Bill of materials & optical budget audit"
-        >
-          <FileText size={20} />
-          <span className="pu-rail-label">Reports</span>
-        </button>
-        <button type="button" onClick={onOpenSettings} aria-label="Settings" title="Safety margin, OPM, OTDR and more">
-          <Settings2 size={20} />
-          <span className="pu-rail-label">Settings</span>
-        </button>
-      </nav>
-
-      <aside
-        className={`fiberlab-sidebar pu-comp${sheetFull ? ' is-sheet-full' : ''}`}
-        style={{
-          display: collapsed ? 'none' : undefined,
-          ...(sheetDrag ? { transform: `translateY(${Math.max(-24, sheetDrag)}px)` } : null),
-        }}
-        aria-label="Component library"
+    <aside
+      className={`fiberlab-sidebar pu-comp${sheetFull ? ' is-sheet-full' : ''}`}
+      style={{
+        display: collapsed ? 'none' : undefined,
+        ...(sheetDrag ? { transform: `translateY(${Math.max(-24, sheetDrag)}px)` } : null),
+      }}
+      aria-label="Component library"
+    >
+      <div
+        className="pu-sheet-handle"
+        onPointerDown={onHandlePointerDown}
+        onPointerMove={onHandlePointerMove}
+        onPointerUp={onHandlePointerEnd}
+        onPointerCancel={onHandlePointerEnd}
+        aria-hidden="true"
       >
-        <div
-          className="pu-sheet-handle"
-          onPointerDown={onHandlePointerDown}
-          onPointerMove={onHandlePointerMove}
-          onPointerUp={onHandlePointerEnd}
-          onPointerCancel={onHandlePointerEnd}
-          aria-hidden="true"
+        <span className="pu-sheet-grip" />
+      </div>
+
+      <header className="pu-comp-head">
+        <h3>Components</h3>
+        <button
+          type="button"
+          className="pu-comp-collapse"
+          onClick={onToggleCollapse}
+          aria-label="Hide component library"
+          title="Hide the component library"
         >
-          <span className="pu-sheet-grip" />
-        </div>
+          <PanelLeftClose size={16} aria-hidden="true" />
+        </button>
+      </header>
 
-        <header className="pu-comp-head">
-          <h3>Components</h3>
-          <button
-            type="button"
-            className="pu-comp-collapse"
-            onClick={onToggleCollapse}
-            aria-label="Hide component library"
-            title="Hide the component library"
-          >
-            <PanelLeftClose size={16} aria-hidden="true" />
-          </button>
-        </header>
+      <label className="pu-search">
+        <Search size={14} aria-hidden="true" />
+        <input
+          type="search"
+          value={searchQuery}
+          onChange={(event) => setSearchQuery(event.target.value)}
+          placeholder="Search components…"
+          aria-label="Search components"
+        />
+      </label>
 
-        <label className="pu-search">
-          <Search size={14} aria-hidden="true" />
-          <input
-            type="search"
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
-            placeholder="Search components…"
-            aria-label="Search components"
-          />
-        </label>
-
-        {recentItems.length > 0 && !query ? (
-          <div className="pu-recent" role="group" aria-label="Recently used components">
-            <span className="pu-recent-label">
-              <Clock size={12} aria-hidden="true" /> Recent
-            </span>
-            <div className="pu-recent-row">
-              {recentItems.map((item) => (
-                <button
-                  key={`recent-${item.id}`}
-                  type="button"
-                  className="pu-recent-chip"
-                  onClick={() => activate(item)}
-                  aria-label={`Recently used: ${item.title}`}
-                  title={item.title}
-                >
-                  {item.thumbnail ? (
-                    <img src={item.thumbnail.src} alt="" draggable={false} />
-                  ) : (
-                    (item.icon ?? <Activity size={14} />)
-                  )}
-                </button>
-              ))}
-            </div>
+      {recentItems.length > 0 && !query ? (
+        <div className="pu-recent" role="group" aria-label="Recently used components">
+          <span className="pu-recent-label">
+            <Clock size={12} aria-hidden="true" /> Recent
+          </span>
+          <div className="pu-recent-row">
+            {recentItems.map((item) => (
+              <button
+                key={`recent-${item.id}`}
+                type="button"
+                className="pu-recent-chip"
+                onClick={() => activate(item)}
+                aria-label={`Recently used: ${item.title}`}
+                title={item.title}
+              >
+                {item.thumbnail ? (
+                  <img src={item.thumbnail.src} alt="" draggable={false} />
+                ) : (
+                  (item.icon ?? <Activity size={14} />)
+                )}
+              </button>
+            ))}
           </div>
-        ) : null}
-
-        <div className="pu-comp-scroll">
-          {query ? (
-            <div className="pu-lib-results" role="group" aria-label="Search results">
-              {results.length === 0 ? (
-                <p className="pu-lib-empty">No components match “{searchQuery.trim()}”.</p>
-              ) : (
-                results.map(({ item, section }) => (
-                  <div key={`result-${item.id}`} className="pu-lib-result">
-                    <span className="pu-lib-cat">{section.label}</span>
-                    {renderCard(item)}
-                  </div>
-                ))
-              )}
-            </div>
-          ) : (
-            <div className="pu-acc" role="group" aria-label="Component categories">
-              {sections.map((section) => {
-                const isOpen = openSection === section.id;
-                const isVariantSection = section.id === 'splitters' || section.id === 'fiber';
-                const activeVariant = section.id === 'splitters' ? `splitter-${ratioDraft}` : `fiber-${cableDraft}`;
-                const activeItem = section.items.find((item) => item.id === activeVariant) ?? section.items[0] ?? null;
-
-                return (
-                  <div key={section.id} className={`pu-acc-section${isOpen ? ' is-open' : ''}`}>
-                    <button
-                      type="button"
-                      className="pu-acc-head"
-                      aria-expanded={isOpen}
-                      aria-controls={`lib-section-${section.id}`}
-                      onClick={() => toggleSection(section.id)}
-                    >
-                      <ChevronRight size={14} className="pu-acc-chevron" aria-hidden="true" />
-                      <span className="pu-acc-label">{section.label}</span>
-                      <span className="pu-lib-count" aria-hidden="true">
-                        {section.items.length}
-                      </span>
-                      <span className="sr-only">{section.items.length} components</span>
-                    </button>
-
-                    <div id={`lib-section-${section.id}`} className="pu-acc-body" hidden={!isOpen}>
-                      {isOpen && isVariantSection ? (
-                        <>
-                          <div
-                            className="pu-seg"
-                            role="group"
-                            aria-label={section.id === 'splitters' ? 'Splitter ratio' : 'Cable type'}
-                          >
-                            {section.items.map((item) => {
-                              const selected = item.id === activeVariant;
-                              return (
-                                <button
-                                  key={`seg-${item.id}`}
-                                  type="button"
-                                  className={selected ? 'is-active' : ''}
-                                  aria-pressed={selected}
-                                  aria-label={
-                                    section.id === 'splitters'
-                                      ? `Splitter ratio ${item.variantLabel}`
-                                      : `Cable type ${item.subtitle.split(' · ')[0]}`
-                                  }
-                                  title={item.subtitle}
-                                  onClick={() => {
-                                    if (section.id === 'splitters')
-                                      setRatioDraft(Number(item.payload?.ratio) as SplitRatio);
-                                    else setCableDraft(item.payload?.cableType as CableType);
-                                  }}
-                                >
-                                  {item.variantLabel}
-                                </button>
-                              );
-                            })}
-                          </div>
-                          {activeItem ? renderCard(activeItem) : null}
-                        </>
-                      ) : null}
-                      {isOpen && !isVariantSection ? section.items.map((item) => renderCard(item)) : null}
-                      {isOpen && section.note ? <p className="pu-acc-note">{section.note}</p> : null}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
         </div>
-      </aside>
-    </>
+      ) : null}
+
+      <div className="pu-comp-scroll">
+        {query ? (
+          <div className="pu-lib-results" role="group" aria-label="Search results">
+            {results.length === 0 ? (
+              <p className="pu-lib-empty">No components match “{searchQuery.trim()}”.</p>
+            ) : (
+              results.map(({ item, section }) => (
+                <div key={`result-${item.id}`} className="pu-lib-result">
+                  <span className="pu-lib-cat">{section.label}</span>
+                  {renderCard(item)}
+                </div>
+              ))
+            )}
+          </div>
+        ) : (
+          <div className="pu-acc" role="group" aria-label="Component categories">
+            {sections.map((section) => {
+              const isOpen = openSection === section.id;
+              const isVariantSection = section.id === 'splitters' || section.id === 'fiber';
+              const activeVariant = section.id === 'splitters' ? `splitter-${ratioDraft}` : `fiber-${cableDraft}`;
+              const activeItem = section.items.find((item) => item.id === activeVariant) ?? section.items[0] ?? null;
+
+              return (
+                <div key={section.id} className={`pu-acc-section${isOpen ? ' is-open' : ''}`}>
+                  <button
+                    type="button"
+                    className="pu-acc-head"
+                    aria-expanded={isOpen}
+                    aria-controls={`lib-section-${section.id}`}
+                    onClick={() => toggleSection(section.id)}
+                  >
+                    <ChevronRight size={14} className="pu-acc-chevron" aria-hidden="true" />
+                    <span className="pu-acc-label">{section.label}</span>
+                    <span className="pu-lib-count" aria-hidden="true">
+                      {section.items.length}
+                    </span>
+                    <span className="sr-only">{section.items.length} components</span>
+                  </button>
+
+                  <div id={`lib-section-${section.id}`} className="pu-acc-body" hidden={!isOpen}>
+                    {isOpen && isVariantSection ? (
+                      <>
+                        <div
+                          className="pu-seg"
+                          role="group"
+                          aria-label={section.id === 'splitters' ? 'Splitter ratio' : 'Cable type'}
+                        >
+                          {section.items.map((item) => {
+                            const selected = item.id === activeVariant;
+                            return (
+                              <button
+                                key={`seg-${item.id}`}
+                                type="button"
+                                className={selected ? 'is-active' : ''}
+                                aria-pressed={selected}
+                                aria-label={
+                                  section.id === 'splitters'
+                                    ? `Splitter ratio ${item.variantLabel}`
+                                    : `Cable type ${item.subtitle.split(' · ')[0]}`
+                                }
+                                title={item.subtitle}
+                                onClick={() => {
+                                  if (section.id === 'splitters')
+                                    setRatioDraft(Number(item.payload?.ratio) as SplitRatio);
+                                  else setCableDraft(item.payload?.cableType as CableType);
+                                }}
+                              >
+                                {item.variantLabel}
+                              </button>
+                            );
+                          })}
+                        </div>
+                        {activeItem ? renderCard(activeItem) : null}
+                      </>
+                    ) : null}
+                    {isOpen && !isVariantSection ? section.items.map((item) => renderCard(item)) : null}
+                    {isOpen && section.note ? <p className="pu-acc-note">{section.note}</p> : null}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </aside>
   );
 }
 

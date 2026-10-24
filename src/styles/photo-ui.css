@@ -163,6 +163,13 @@
   color: var(--pu-pri);
   font-weight: var(--fw-black);
 }
+/* The wordmark is also the way back to Overview & Physics. */
+button.pu-logo {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
 .pu-sep {
   width: 1px;
   height: 28px;
@@ -1748,6 +1755,441 @@
   min-height: var(--control-md);
 }
 /* ------------------------------------------------------------------------- */
+/* Sections: Design · Simulation · Reports · Settings.                        */
+/* One screen mounts at a time; each one only holds its own step.             */
+/* ------------------------------------------------------------------------- */
+
+.pu-tabbar {
+  display: none;
+}
+
+/* ---- The shared screen shell (Simulation, Reports, Settings) -------------- */
+.pu-screen {
+  display: flex;
+  flex: 1 1 0%;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  gap: var(--sp-3);
+  overflow-y: auto;
+  padding: var(--sp-4) var(--shell-pad) var(--sp-6);
+  background: var(--pu-bg);
+}
+.pu-screen-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+.pu-screen-head-copy h1 {
+  color: var(--pu-ink);
+  font-size: var(--type-section-title);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--leading-tight);
+}
+.pu-screen-head-copy p {
+  max-width: 72ch;
+  margin-top: var(--sp-1);
+  color: var(--pu-mut);
+  font-size: var(--type-body);
+  line-height: var(--leading-normal);
+}
+.pu-screen-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.pu-run-badge {
+  display: inline-flex;
+  align-items: center;
+  height: var(--control-md);
+  padding: 0 var(--sp-3);
+  border: 1px solid var(--pu-line);
+  border-radius: var(--r-pill);
+  background: var(--pu-elevated);
+  color: var(--pu-mut);
+  font-size: var(--type-small);
+  font-weight: var(--fw-semibold);
+  white-space: nowrap;
+}
+.pu-run-badge.is-live {
+  border-color: #c9e6d3;
+  background: var(--pu-ok-soft);
+  color: var(--pu-ok);
+}
+.pu-screen-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  min-width: 0;
+}
+.pu-screen-cards {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--sp-3);
+  align-items: start;
+}
+@media (min-width: 1024px) {
+  .pu-screen-cards {
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  }
+}
+.pu-screen-card {
+  min-width: 0;
+  padding: var(--sp-3);
+  border: 1px solid var(--pu-line);
+  border-radius: var(--r-xl);
+  background: var(--pu-panel);
+  box-shadow: 0 2px 8px rgba(43, 26, 20, 0.05);
+}
+.pu-screen-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-2);
+}
+.pu-screen-card-head h2 {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  color: var(--pu-ink);
+  font-size: var(--type-panel-title);
+  font-weight: var(--fw-bold);
+  line-height: var(--leading-snug);
+}
+.pu-screen-card-note {
+  color: var(--pu-mut);
+  font-size: var(--type-small);
+}
+.pu-screen-empty,
+.pu-screen-warn {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  margin-top: var(--sp-2);
+  color: var(--pu-mut);
+  font-size: var(--type-body);
+  line-height: var(--leading-snug);
+}
+.pu-screen-warn {
+  color: #8a5200;
+}
+
+/* Stat row shared by the Simulation screen. */
+.pu-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+  gap: var(--sp-2);
+}
+.pu-stat-card {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--pu-line);
+  border-radius: var(--r-lg);
+  background: var(--pu-panel);
+}
+.pu-stat-card-label {
+  color: var(--pu-mut);
+  font-size: var(--type-caption);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+}
+.pu-stat-card-value {
+  color: var(--pu-ink);
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: var(--type-metric-sm);
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--fw-bold);
+  line-height: var(--leading-tight);
+}
+.pu-stat-card-value.is-ok {
+  color: var(--pu-ok);
+}
+.pu-stat-card-value.is-warn {
+  color: #8a5200;
+}
+.pu-stat-card-value.is-bad {
+  color: var(--pu-bad);
+}
+.pu-stat-card-sub {
+  color: var(--pu-mut);
+  font-size: var(--type-small);
+}
+
+/* Subscriber table on the Simulation screen. */
+.pu-sim-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--pu-line);
+  border-radius: var(--r-lg);
+}
+.pu-sim-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--type-small);
+}
+.pu-sim-table th {
+  padding: var(--sp-2);
+  border-bottom: 1px solid var(--pu-line);
+  background: var(--pu-elevated);
+  color: var(--pu-mut);
+  font-size: var(--type-caption);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--tracking-label);
+  text-align: left;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.pu-sim-table td {
+  padding: var(--sp-2);
+  border-bottom: 1px solid var(--pu-line);
+  color: var(--pu-ink);
+  vertical-align: middle;
+}
+.pu-sim-table tr:last-child td {
+  border-bottom: 0;
+}
+.pu-sim-name {
+  font-weight: var(--fw-semibold);
+  white-space: nowrap;
+}
+.pu-sim-type {
+  color: var(--pu-mut);
+  white-space: nowrap;
+}
+.pu-sim-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: var(--type-caption);
+  font-weight: var(--fw-bold);
+  white-space: nowrap;
+}
+.pu-sim-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--r-pill);
+}
+.pu-sim-num {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.pu-sim-action {
+  text-align: right;
+}
+.pu-sim-action .pu-btn {
+  min-height: var(--control-sm);
+  padding: 0 var(--sp-2);
+  font-size: var(--type-small);
+  white-space: nowrap;
+}
+
+/* ---- Settings screen ------------------------------------------------------ */
+.pu-set-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  padding: var(--sp-2) 0;
+  border-top: 1px solid var(--pu-line);
+}
+.pu-set-row:first-of-type {
+  border-top: 0;
+}
+.pu-set-label {
+  color: var(--pu-ink);
+  font-size: var(--type-body);
+  font-weight: var(--fw-semibold);
+}
+.pu-set-control {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  color: var(--pu-mut);
+  font-size: var(--type-small);
+}
+.pu-set-note {
+  margin: -2px 0 var(--sp-2);
+  color: var(--pu-mut);
+  font-size: var(--type-small);
+  line-height: var(--leading-snug);
+}
+.pu-set-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+.pu-set-actions .pu-btn {
+  gap: var(--sp-2);
+  min-height: var(--control-md);
+  padding: 0 var(--sp-3);
+}
+.pu-set-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-top: var(--sp-3);
+  color: var(--pu-mut);
+  font-size: var(--type-small);
+}
+.pu-set-links span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+}
+.pu-set-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  color: var(--pu-pri);
+  font-weight: var(--fw-semibold);
+}
+
+/* The Reports screen is the Bill of Materials laid out as a page. */
+.pu-screen.pu-reports-screen {
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+}
+.pu-reports-screen .panel-header {
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--shell-pad);
+  border-bottom: 1px solid var(--pu-line);
+  background: var(--pu-panel);
+}
+.pu-reports-screen > div:last-child,
+.pu-reports-screen .pu-reports-scroll {
+  overflow-y: auto;
+}
+
+/* ---- Design bar + first-run hint ----------------------------------------- */
+.pu-design-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: var(--panel-head-h);
+}
+.pu-preset-wrap {
+  position: relative;
+  min-width: 0;
+}
+.pu-preset-menu {
+  top: calc(100% + var(--sp-2));
+  left: 0;
+  width: min(340px, calc(100vw - var(--sp-6)));
+}
+.pu-menu-strong {
+  display: inline-block;
+  font-size: var(--fs-sm);
+}
+.pu-menu-desc {
+  margin-top: var(--sp-1);
+  color: var(--pu-mut);
+  font-size: var(--fs-2xs);
+}
+.pu-preset-loaded {
+  float: right;
+  color: var(--pu-pri);
+  font-size: var(--fs-2xs);
+  font-weight: var(--fw-bold);
+}
+.pu-firstrun {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 260px;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-1) var(--sp-2);
+  border: 1px solid var(--pu-line);
+  border-radius: var(--r-lg);
+  background: var(--pu-pri-soft);
+  color: var(--pu-ink);
+}
+.pu-firstrun-steps {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-1) var(--sp-3);
+  font-size: var(--type-small);
+}
+.pu-firstrun-steps li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  white-space: nowrap;
+}
+.pu-firstrun-steps span {
+  display: inline-flex;
+  width: 16px;
+  height: 16px;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--r-pill);
+  background: var(--pu-pri);
+  color: #fff;
+  font-size: var(--fs-2xs);
+  font-weight: var(--fw-bold);
+}
+.pu-firstrun-close {
+  display: inline-flex;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  border-radius: var(--r-sm);
+  color: var(--pu-mut);
+}
+.pu-firstrun-close:hover {
+  background: #fff;
+  color: var(--pu-pri);
+}
+
+/* ---- Top bar: four items only -------------------------------------------- */
+.pu-logo-mark {
+  display: none;
+}
+.pu-project {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--sp-2);
+}
+.pu-project-name {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--pu-ink);
+  font-size: var(--type-body);
+  font-weight: var(--fw-bold);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pu-btn.is-stale::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: var(--r-pill);
+  background: #f4c46a;
+}
+
+/* ------------------------------------------------------------------------- */
 /* Responsive pass — 1920 / 1440 / 1024 / 768 / 390.                          */
 /* Nothing widens the page: the shell clips, cards scroll their own tables,   */
 /* long labels truncate, and every touch target reaches --control-tap.        */
@@ -2226,6 +2668,101 @@
 }
 
 /* Touch sizing sits last so it wins over the narrow-width overrides above. */
+/* Phone: the rail becomes a bottom tab bar and every sheet sits above it. */
+@media (max-width: 767px) {
+  .pu-rail {
+    display: none;
+  }
+  .pu-tabbar {
+    display: flex;
+    flex: 0 0 auto;
+    gap: 2px;
+    padding: var(--sp-1) var(--sp-2) calc(var(--sp-1) + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid var(--pu-line);
+    background: var(--pu-panel);
+  }
+  .pu-tabbar-btn {
+    display: flex;
+    flex: 1 1 0;
+    min-height: var(--control-tap);
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    border-radius: var(--r-md);
+    color: var(--pu-mut);
+    font-size: var(--fs-2xs);
+    font-weight: var(--fw-semibold);
+  }
+  .pu-tabbar-btn.is-active {
+    background: var(--pu-pri-soft);
+    color: var(--pu-pri);
+  }
+  /* Sheets open above the tab bar so navigation never gets buried. */
+  .pu-comp,
+  .fiberlab-inspector,
+  .pu-sb-detail {
+    bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* Top bar: logo mark, truncated project, icon + label run button. */
+  .pu-logo-full {
+    display: none;
+  }
+  .pu-logo-mark {
+    display: inline-flex;
+    width: var(--control-md);
+    height: var(--control-md);
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--r-md);
+    background: var(--pu-pri-soft);
+    color: var(--pu-pri);
+  }
+  .pu-zoom {
+    display: none;
+  }
+  .pu-project-name {
+    max-width: 44vw;
+  }
+  .pu-label-full {
+    display: none;
+  }
+  .pu-label-short {
+    display: inline;
+  }
+
+  /* Screens breathe with the narrower gutter and stack their cards. */
+  .pu-screen {
+    padding: var(--sp-3) var(--shell-pad) var(--sp-4);
+  }
+  .pu-screen-head-copy h1 {
+    font-size: var(--type-panel-title);
+  }
+  .pu-stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .pu-stat-card-value {
+    font-size: var(--fs-lg);
+  }
+  .pu-sim-table .pu-sim-type {
+    display: none;
+  }
+  .pu-sim-action .pu-btn {
+    min-height: var(--control-tap);
+  }
+  .pu-set-actions .pu-btn,
+  .pu-firstrun-close {
+    min-height: var(--control-tap);
+  }
+  .pu-firstrun {
+    flex: 1 1 100%;
+  }
+  .pu-firstrun-steps {
+    font-size: var(--fs-2xs);
+  }
+}
+
 @media (pointer: coarse) {
   .btn,
   .btn-ghost,
