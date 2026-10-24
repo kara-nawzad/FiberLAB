@@ -1,22 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { useReactFlow, useStore } from '@xyflow/react';
 import { ChevronDown, FileBarChart, LayoutGrid, Loader2, Play } from 'lucide-react';
-import type { NetworkSummary } from '../types';
-import type { NetworkCostBreakdown } from '../data/pricingCatalogue';
-import { formatUsd } from '../data/pricingCatalogue';
 import { PRESETS } from '../engine/presets';
 
 /* ========================================================================== *
- * Top bar — logo, topology picker, zoom, Run Simulation, Design / Reports.
- * Tool buttons that used to live here (OPM, OTDR, Missions, Margin, Clear…)
- * are in CanvasToolbar.
+ * Top bar — logo, topology picker, zoom, Run Simulation, Reports.
+ * Health, CAPEX and every tool button moved out: the network status now lives
+ * in the bottom status bar and the money lives in the Reports screen.
  * ========================================================================== */
 
-type Health = 'green' | 'amber' | 'red' | 'idle';
-
 interface TopBarProps {
-  summary: NetworkSummary;
-  costBreakdown: NetworkCostBreakdown;
   onPreset: (presetId: string) => void;
   onRunTest: () => void;
   onOpenBOM: () => void;
@@ -28,24 +21,7 @@ interface TopBarProps {
   presetEdited?: boolean;
 }
 
-function deriveHealth(summary: NetworkSummary): Health {
-  if (summary.subscriberCount === 0) return 'idle';
-  if (summary.byStatus.LOS > 0 || summary.byStatus.DISCONNECTED > 0) return 'red';
-  if (summary.byStatus.WARNING > 0 || summary.byStatus.OVERLOAD > 0 || summary.upstreamDynamicRangeWarning)
-    return 'amber';
-  return 'green';
-}
-
-const HEALTH_TEXT: Record<Health, string> = {
-  green: 'All subscribers optimal',
-  amber: 'Marginal links detected',
-  red: 'Fault on the network',
-  idle: 'No subscribers provisioned',
-};
-
 export function TopBar({
-  summary,
-  costBreakdown,
   onPreset,
   onRunTest,
   onOpenBOM,
@@ -63,7 +39,6 @@ export function TopBar({
   const zoomButtonRef = useRef<HTMLButtonElement | null>(null);
   const { zoomIn, zoomOut, fitView, zoomTo } = useReactFlow();
   const zoom = useStore((state) => state.transform[2]);
-  const health = deriveHealth(summary);
   const activePreset = PRESETS.find((preset) => preset.id === activePresetId);
 
   useEffect(() => {
@@ -158,27 +133,6 @@ export function TopBar({
           </div>
         ) : null}
       </div>
-      <div className="pu-health-wrap">
-        <span
-          className={`pu-health ${health === 'green' ? '' : health}`}
-          aria-label={`Network health: ${HEALTH_TEXT[health]}`}
-        >
-          ● {HEALTH_TEXT[health]}
-        </span>
-        <span
-          className="pu-capex"
-          role="region"
-          aria-live="polite"
-          data-testid="capex-telemetry"
-          aria-label={`Network CAPEX ${formatUsd(costBreakdown.totalCapex)}; ${formatUsd(costBreakdown.costPerHomePassed)} per home passed`}
-        >
-          CAPEX <strong>{formatUsd(costBreakdown.totalCapex, true)}</strong>
-          <span className="pu-capex-detail" style={{ opacity: 0.7 }}>
-            {formatUsd(costBreakdown.costPerHomePassed)} / Home Passed
-          </span>
-        </span>
-      </div>
-
       <div style={{ flex: 1 }} />
 
       {stale ? <span className="pu-health amber">UNSAVED BUDGET — RUN SIMULATION</span> : null}

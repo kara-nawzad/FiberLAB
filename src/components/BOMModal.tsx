@@ -7,6 +7,7 @@ import type { NetworkCostBreakdown, UnitCostProfile } from '../data/pricingCatal
 import { formatUsd } from '../data/pricingCatalogue';
 import { useDialogA11y } from '../hooks/useDialogA11y';
 import { buildCommercialCsv, buildQuotationExport, connectedSubscriberCount } from '../data/commercialQuoteExports';
+import { PricingSettings } from './PricingSettings';
 
 /* ========================================================================== *
  * Bill of Materials — deployment statistics + per-subscriber optical budget.
@@ -20,6 +21,8 @@ interface BOMModalProps {
   simulation: SimulationResult;
   settings: DesignSettings;
   unitCosts: UnitCostProfile;
+  onUnitCostsChange: (unitCosts: UnitCostProfile) => void;
+  onResetUnitCosts: () => void;
   costBreakdown: NetworkCostBreakdown;
 }
 
@@ -59,10 +62,16 @@ function CommercialQuotationView({
   nodes,
   simulation,
   costBreakdown,
+  unitCosts,
+  onUnitCostsChange,
+  onResetUnitCosts,
 }: {
   nodes: PonNode[];
   simulation: SimulationResult;
   costBreakdown: NetworkCostBreakdown;
+  unitCosts: UnitCostProfile;
+  onUnitCostsChange: (unitCosts: UnitCostProfile) => void;
+  onResetUnitCosts: () => void;
 }) {
   const connectedCount = connectedSubscriberCount(nodes, simulation);
   const costPerConnected =
@@ -153,8 +162,14 @@ function CommercialQuotationView({
 
       <p className="mt-3 rounded-md border border-[var(--pu-line)] bg-[var(--pu-elevated)] px-3 py-2 text-body leading-relaxed text-[var(--pu-mut)]">
         Educational USD planning rates only—not a supplier quote, installed-price guarantee, tax estimate, or market
-        survey. Edit local reference rates in the Inspector before exporting a quotation.
+        survey. Edit the local reference rates below before exporting a quotation.
       </p>
+
+      {/* Unit pricing moved here from the Inspector: it is a quotation-wide
+          setting, not a property of whichever component happens to be selected. */}
+      <div className="mt-3">
+        <PricingSettings unitCosts={unitCosts} onChange={onUnitCostsChange} onReset={onResetUnitCosts} />
+      </div>
     </section>
   );
 }
@@ -167,6 +182,8 @@ export function BOMModal({
   simulation,
   settings,
   unitCosts,
+  onUnitCostsChange,
+  onResetUnitCosts,
   costBreakdown,
 }: BOMModalProps) {
   const [activeTab, setActiveTab] = useState<'optical' | 'commercial'>('optical');
@@ -221,6 +238,15 @@ export function BOMModal({
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <span
+              className="pu-capex-banner"
+              role="region"
+              data-testid="capex-telemetry"
+              aria-label={`Network CAPEX ${formatUsd(costBreakdown.totalCapex)}; ${formatUsd(costBreakdown.costPerHomePassed)} per home passed`}
+            >
+              CAPEX <strong>{formatUsd(costBreakdown.totalCapex, true)}</strong>
+              <span className="pu-capex-detail">{formatUsd(costBreakdown.costPerHomePassed)} / Home Passed</span>
+            </span>
             <button
               type="button"
               className="btn-ghost"
@@ -300,7 +326,14 @@ export function BOMModal({
           className="min-w-0 flex-1 overflow-y-auto px-4 py-4"
         >
           {activeTab === 'commercial' ? (
-            <CommercialQuotationView nodes={nodes} simulation={simulation} costBreakdown={costBreakdown} />
+            <CommercialQuotationView
+              nodes={nodes}
+              simulation={simulation}
+              costBreakdown={costBreakdown}
+              unitCosts={unitCosts}
+              onUnitCostsChange={onUnitCostsChange}
+              onResetUnitCosts={onResetUnitCosts}
+            />
           ) : (
             <>
               {/* ------------------------- Headline metrics ------------------------- */}
@@ -332,6 +365,39 @@ export function BOMModal({
                       : 'text-[var(--pu-ink)]'
                   }
                 />
+              </div>
+
+              {/* Deployed components: the old Components/Topology tabs now live here. */}
+              <div className="mt-3 rounded-lg border border-[var(--pu-line)] bg-white p-3">
+                <div className="eyebrow mb-2">Deployed components</div>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1 font-mono text-label md:grid-cols-4">
+                  {(
+                    [
+                      ['olt', 'OLT'],
+                      ['splitter', 'Splitters'],
+                      ['fiber', 'Fiber spans'],
+                      ['closure', 'Closures'],
+                      ['odf', 'ODF panels'],
+                      ['nap', 'NAP / FAT'],
+                      ['ont', 'ONTs'],
+                      ['gateway', 'Gateways'],
+                    ] as Array<[PonNode['type'], string]>
+                  ).map(([kind, label]) => {
+                    const count = nodes.filter((node) => node.type === kind).length;
+                    return (
+                      <div key={kind} className="flex items-baseline justify-between gap-2">
+                        <span className="text-[var(--pu-mut)]">{label}</span>
+                        <span className={count === 0 ? 'text-[var(--pu-mut)]' : 'font-semibold text-[var(--pu-ink)]'}>
+                          {count}
+                        </span>
+                      </div>
+                    );
+                  })}
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="text-[var(--pu-mut)]">Patch cords</span>
+                    <span className="font-semibold text-[var(--pu-ink)]">{edges.length}</span>
+                  </div>
+                </div>
               </div>
 
               {/* --------------------------- Passive plant -------------------------- */}

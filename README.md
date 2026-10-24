@@ -22,7 +22,7 @@ repository's `.nvmrc` selects Node 22.
 npm ci
 npm run dev        # http://localhost:5173
 npm run build      # tsc --noEmit && vite build
-npm run test       # 105 tests: optical engine, upstream dynamic range, OPM, OTDR, equipment, CAPEX, missions, overlays, splitter ports, and app interactions
+npm run test       # 111 tests: optical engine, upstream dynamic range, OPM, OTDR, equipment, CAPEX, missions, overlays, splitter ports, and app interactions
 npm run typecheck  # strict TypeScript, no emit
 npm run lint       # ESLint checks for source and configuration files
 npm run format:check  # verify Prettier formatting
@@ -104,7 +104,7 @@ CAPEX is a parallel, graph-derived estimate; it is not folded into or allowed to
 | Customer ONT terminal                                  |                                                    $55 / each |
 | Wi-Fi 6 GPON/XGS-PON gateway (reference)               |                                                    $85 / each |
 
-The estimator separates materials from labor, reports CAPEX per home passed and per connected subscriber (ONT or gateway), and derives quantities from placed nodes, including ODF panels, NAP/FATs, gateways, and active closure branches. Edit/reset the local rates in the Inspector's **Local unit pricing** panel. The BOM has an **Optical Budget Audit** tab and a **Commercial Quotation & CAPEX** tab; its version-2 JSON and combined quotation/optical CSV exports include the rates, deployed quantities, unit prices, extensions, totals, and subscriber budgets.
+The estimator separates materials from labor, reports CAPEX per home passed and per connected subscriber (ONT or gateway), and derives quantities from placed nodes, including ODF panels, NAP/FATs, gateways, and active closure branches. Edit/reset the local rates in the **Local unit pricing** panel at the foot of that tab. The BOM has an **Optical Budget Audit** tab and a **Commercial Quotation & CAPEX** tab; its version-2 JSON and combined quotation/optical CSV exports include the rates, deployed quantities, unit prices, extensions, totals, and subscriber budgets.
 
 These are illustrative baseline rates for learning, not a current market survey, installed-price guarantee, tax estimate, or supplier quotation. Local labor, logistics, taxes, currency, procurement, and contingency are not modeled.
 
@@ -119,12 +119,12 @@ Open **OTDR Trace** in the TopBar to pulse a selected OLT output or fiber-span s
 ## Layout
 
 - **Landing overview** — warm fiber-splice hero with a hold-to-open interaction and receive-power readout sourced from the active studio simulation; preserved interactive 1310/1490/1550 nm waveguide, adjustable launch power, capability cards, and GPON reference strips. The ray-angle display is an educational Sellmeier-based schematic, not a measured fiber-profile claim. The graph simulator supports 1270/1310/1490/1550/1577 nm; its OPM calibration control remains 1310/1490/1550 nm.
-- **Top bar** — FiberLAB wordmark + live optical health and CAPEX (including cost per home passed), overview, preset picker, zoom controls, `Run Simulation`, and Reports.
-- **Canvas toolbar** — `Link nodes`, `OPM Tool`, `OTDR Trace`, `Delete`, missions, safety margin, Auto, and Clear controls beside the workbench.
-- **Bottom panel** — compact live topology and simulation readouts below the canvas.
+- **Top bar** — FiberLAB wordmark, overview, preset picker, zoom controls, `Run Simulation`, and Reports. CAPEX and cost per home passed now sit on the Reports banner.
+- **Canvas toolbar** — Select, Pan, Connect and Delete plus zoom in/out and fit; `OPM Tool`, `OTDR Trace`, missions, safety margin, Auto and Clear sit in one `⋯` overflow menu. Phones get the same strip as icons along the bottom of the canvas.
+- **Status bar** — one slim always-visible row under the canvas (total loss, total distance, subscribers OK, coloured network status) that expands into just two tabs: Optical Budget and Events. Clicking an event selects and frames the affected component, and deployed counts moved into the Bill of Materials.
 - **Left toolbox** — draggable or double-click quick-add OLT / ODF / splitter (1:2 … 1:64) / cable (feeder, distribution, drop) / FOSC-style dome closure / 1:8 NAP/FAT / ONT / Wi-Fi 6 gateway.
 - **Canvas** — dotted grid, pan/zoom, minimap, compact hardware thumbnails, softly glowing animated optical edges, handle-drag connections, Link nodes mode, and an OPM probe cursor/HUD for port and patch-cord power. Faulted fiber spans mark their outgoing patch cord with a warning glyph.
-- **Right inspector** — Field Hardware Cards for all eight component kinds; a GPON/XGS-PON OLT selector; five fiber/OTDR wavelengths; gateway optical/service telemetry, Wi-Fi SSID and a clearly marked TEST-NET IP placeholder; fiber fault toggles; a 12-color closure splice tray; and editable local USD reference rates. Price edits recalculate CAPEX without changing optical results. The SVGs are representative illustrations, not product photos or exact vendor models.
+- **Right inspector** — appears only while a component is selected, opens on **Properties** with the essentials and one **Advanced** disclosure, and keeps **Optical Power** telemetry and the **Info** Field Hardware Card for all eight component kinds. It carries the GPON/XGS-PON OLT selector, five fiber/OTDR wavelengths, gateway service telemetry with a clearly marked TEST-NET IP placeholder, fiber fault toggles, a 12-color closure splice tray, and a confirm-to-remove action. Phones show it as a half/full-height bottom sheet. The SVGs are representative illustrations, not product photos or exact vendor models.
 - **BOM modal** — an Optical Budget Audit (including per-subscriber `Upstream Δ` differentials) and Commercial Quotation & CAPEX view, with material/labor/project/subscriber metrics, detailed quote lines, gateway SSID/IP/PON-rate fields, and JSON / combined CSV export.
 - **Mission drawer** — five scenarios: “The Marginal Villa,” “Diagnose the Silent ONT,” “Rescue the Unpatched Subscriber,” “The Budget Crunch: Cost vs. Performance,” and “Blind Fault: The Cut in the Trunk,” each with live objectives, hints, and completion recap. Budget Crunch requires three ONLINE homes, CAPEX below $1,600, and at least 2 dB global safety margin; Blind Fault hides visual fault badges on the canvas so learners diagnose a distribution break with the OPM and OTDR.
 

@@ -84,7 +84,7 @@ import { Inspector } from './components/Inspector';
 import { BOMModal } from './components/BOMModal';
 import { TopBar } from './components/TopBar';
 import { CanvasToolbar } from './components/CanvasToolbar';
-import { BottomPanel } from './components/BottomPanel';
+import { StatusBar } from './components/StatusBar';
 import { MissionDrawer } from './components/MissionDrawer';
 import { LandingView } from './components/landing/LandingView';
 import { getMissionById, type Mission } from './engine/missions';
@@ -207,9 +207,13 @@ function StudioWorkspace({
   const [toolsOpen, setToolsOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [inspectorCollapsed, setInspectorCollapsed] = useState(false);
+  const [statusExpanded, setStatusExpanded] = useState(false);
   const [emptyHintDismissed, setEmptyHintDismissed] = useState(false);
 
-  const { screenToFlowPosition, deleteElements, fitView, getNodes, getEdges } = useReactFlow<PonNode, PonEdge>();
+  const { screenToFlowPosition, deleteElements, fitView, getNodes, getEdges, zoomIn, zoomOut } = useReactFlow<
+    PonNode,
+    PonEdge
+  >();
 
   /* --------------------------- Simulation core --------------------------- */
 
@@ -586,6 +590,8 @@ function StudioWorkspace({
     setSelectedEdgeId(nextEdgeId);
     if (nextNodeId || nextEdgeId) {
       setInspectorCollapsed(false);
+      // One sheet at a time on phones: opening the properties sheet closes the status sheet.
+      if (isNarrowViewport()) setStatusExpanded(false);
     }
     setSelection({
       nodeIds: params.nodes.map((node) => node.id),
@@ -594,6 +600,29 @@ function StudioWorkspace({
   }, []);
 
   const selectionCount = selection.nodeIds.length + selection.edgeIds.length;
+
+  /* The status bar is the third phone sheet, so opening it folds the others. */
+  const handleStatusExpandedChange = useCallback((open: boolean) => {
+    setStatusExpanded(open);
+    if (open && isNarrowViewport()) {
+      setSidebarCollapsed(true);
+      setInspectorCollapsed(true);
+    }
+  }, []);
+
+  /* A warning in the Events list jumps to the component it belongs to. */
+  const handleFocusNode = useCallback(
+    (nodeId: string) => {
+      setSelectedNodeId(nodeId);
+      setSelectedEdgeId(null);
+      setInspectorCollapsed(false);
+      setSelection({ nodeIds: [nodeId], edgeIds: [] });
+      setNodes((current) => current.map((node) => ({ ...node, selected: node.id === nodeId })));
+      if (isNarrowViewport()) setStatusExpanded(false);
+      void fitView({ nodes: [{ id: nodeId }], duration: 320, padding: 2.4, maxZoom: 1.15 });
+    },
+    [fitView, setNodes],
+  );
 
   const handleDeleteSelection = useCallback(() => {
     if (selectionCount === 0) return;
@@ -1031,8 +1060,6 @@ function StudioWorkspace({
   return (
     <div className={`fiberlab-studio pu-shell ${testing ? 'is-simulating-pulse' : ''}`}>
       <TopBar
-        summary={summary}
-        costBreakdown={costBreakdown}
         onPreset={applyPreset}
         onRunTest={runLightTest}
         onOpenBOM={openBom}
@@ -1052,7 +1079,11 @@ function StudioWorkspace({
           onOpenReports={openBom}
           onOpenSettings={() => setToolsOpen(true)}
           collapsed={sidebarCollapsed}
-          onToggleCollapse={() => setSidebarCollapsed((prev) => !prev)}
+          onToggleCollapse={() => {
+            const next = !sidebarCollapsed;
+            setSidebarCollapsed(next);
+            if (next && isNarrowViewport()) setStatusExpanded(false);
+          }}
         />
 
         <div className="pu-center">
@@ -1090,9 +1121,10 @@ function StudioWorkspace({
                 if (linkMode) handleToggleLink();
               }}
               onToggleLink={handleToggleLink}
-              onAddNode={() => handleQuickAdd({ component: 'ont' })}
               onDelete={handleDeleteSelection}
               onFit={() => void fitView({ padding: 0.16, duration: 350 })}
+              onZoomIn={() => void zoomIn({ duration: 180 })}
+              onZoomOut={() => void zoomOut({ duration: 180 })}
               onOpenOverview={handleOpenOverview}
               onToggleOpm={handleToggleOpm}
               onOpenOtdr={handleOpenOtdr}
@@ -1105,7 +1137,10 @@ function StudioWorkspace({
               <button
                 type="button"
                 className="pu-fab-components"
-                onClick={() => setSidebarCollapsed(false)}
+                onClick={() => {
+                  setSidebarCollapsed(false);
+                  if (isNarrowViewport()) setStatusExpanded(false);
+                }}
                 aria-label="Open component library"
               >
                 <Plus size={16} aria-hidden="true" /> Components
@@ -1120,7 +1155,12 @@ function StudioWorkspace({
                 onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
                 onConnect={handleConnect}
-                onNodeClick={handleNodeClick}
+                onNodeClick={(event, clickedNode) => {
+                  // Clicking a part always brings the panel back, even if it was closed.
+                  setInspectorCollapsed(false);
+                  handleNodeClick(event, clickedNode);
+                }}
+                onEdgeClick={() => setInspectorCollapsed(false)}
                 onSelectionChange={handleSelectionChange}
                 onDelete={handleCanvasDelete}
                 onInit={handleInit}
@@ -1171,32 +1211,6 @@ function StudioWorkspace({
                   </Panel>
                 ) : null}
 
-                <Panel position="bottom-left" className="!m-3">
-                  <span
-                    className="pu-chip"
-                    style={{ position: 'static' }}
-                    role="status"
-                    aria-label={`Network ${summary.byStatus.LOS > 0 || summary.byStatus.DISCONNECTED > 0 ? 'fault' : summary.byStatus.WARNING > 0 ? 'marginal' : 'healthy'}`}
-                  >
-                    <span
-                      className={`pu-health ${
-                        summary.byStatus.LOS > 0 || summary.byStatus.DISCONNECTED > 0
-                          ? 'red'
-                          : summary.byStatus.WARNING > 0 || summary.byStatus.OVERLOAD > 0
-                            ? 'amber'
-                            : ''
-                      }`}
-                    >
-                      ●{' '}
-                      {summary.byStatus.LOS > 0 || summary.byStatus.DISCONNECTED > 0
-                        ? 'Network Fault'
-                        : summary.byStatus.WARNING > 0 || summary.byStatus.OVERLOAD > 0
-                          ? 'Network Marginal'
-                          : 'Network Healthy'}
-                    </span>
-                  </span>
-                </Panel>
-
                 {nodes.length === 0 && !emptyHintDismissed ? (
                   <Panel position="top-center" className="pu-empty-panel !m-3">
                     <div className="panel pu-empty-card shadow-panel">
@@ -1241,36 +1255,33 @@ function StudioWorkspace({
               />
             ) : null}
           </main>
-          <BottomPanel
+          <StatusBar
             summary={summary}
             simulation={simulation}
             nodes={nodes}
-            edgeCount={edges.length}
             powerBars={powerBars}
             worstLossDb={worstLossDb}
+            expanded={statusExpanded}
+            onExpandedChange={handleStatusExpandedChange}
             onOpenReports={openBom}
-            onSelectNode={(nodeId) => {
-              setSelectedNodeId(nodeId);
-              setSelectedEdgeId(null);
-              setSelection({ nodeIds: [nodeId], edgeIds: [] });
-              setNodes((current) => current.map((node) => ({ ...node, selected: node.id === nodeId })));
-            }}
+            onFocusNode={handleFocusNode}
           />
         </div>
 
-        <Inspector
-          node={selectedNode}
-          edge={selectedEdge}
-          simulation={simulation}
-          unitCosts={unitCosts}
-          onUnitCostsChange={handleUnitCostsChange}
-          onResetUnitCosts={resetUnitCosts}
-          onPatchNode={handlePatchNode}
-          onDeleteNode={handleDeleteNode}
-          onDeleteEdge={handleDeleteEdge}
-          collapsed={inspectorCollapsed}
-          onToggleCollapse={() => setInspectorCollapsed((prev) => !prev)}
-        />
+        {/* The panel only exists while a component is selected (and not closed),
+            so the canvas keeps the width the rest of the time. */}
+        {(selectedNode || selectedEdge) && !inspectorCollapsed ? (
+          <Inspector
+            key={selectedNode?.id ?? selectedEdge?.id ?? 'selection'}
+            node={selectedNode}
+            edge={selectedEdge}
+            simulation={simulation}
+            onPatchNode={handlePatchNode}
+            onDeleteNode={handleDeleteNode}
+            onDeleteEdge={handleDeleteEdge}
+            onClose={() => setInspectorCollapsed(true)}
+          />
+        ) : null}
       </div>
 
       <BOMModal
@@ -1281,6 +1292,8 @@ function StudioWorkspace({
         simulation={simulation}
         settings={settings}
         unitCosts={unitCosts}
+        onUnitCostsChange={handleUnitCostsChange}
+        onResetUnitCosts={resetUnitCosts}
         costBreakdown={costBreakdown}
       />
       <OtdrModal open={otdrOpen} onClose={closeOtdr} nodes={nodes} edges={edges} />
