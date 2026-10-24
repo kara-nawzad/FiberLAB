@@ -18,6 +18,11 @@ function openMoreTools() {
   fireEvent.click(screen.getByRole('button', { name: 'More tools' }));
 }
 
+/** The library is an accordion, so a category must be opened before its cards exist. */
+function openLibraryCategory(label: string) {
+  fireEvent.click(screen.getByRole('button', { name: new RegExp(`^${label}`) }));
+}
+
 function getCanvasNodeByText(text: string | RegExp): HTMLElement {
   const matches = screen.getAllByText(text);
   for (const match of matches) {
@@ -118,12 +123,36 @@ describe('FiberLAB application shell', () => {
     expect(getCanvasNodeByText('Tanaro Village — Remote')).toBeInTheDocument();
     const toolbox = screen.getByLabelText('Search components').closest('aside');
     expect(toolbox).not.toBeNull();
-    const thumbnails = within(toolbox as HTMLElement).getAllByRole('img');
-    expect(thumbnails).toHaveLength(8);
-    thumbnails.forEach((thumbnail) => {
-      expect(thumbnail).toHaveAttribute('src', expect.stringContaining('data:image/svg+xml'));
-      expect(thumbnail.parentElement).toHaveClass('th');
-    });
+
+    // The library is an accordion: one category open at a time, each with a
+    // count badge. Every category still shows its hardware artwork.
+    let thumbnails = 0;
+    for (const label of [
+      'OLT / Headend',
+      'Fiber Cables',
+      'Splitters',
+      'Splices & Closures',
+      'Customer / ONT',
+      'Tools',
+    ]) {
+      const header = within(toolbox as HTMLElement).getByRole('button', { name: new RegExp(`^${label}`) });
+      // One category is open by default; opening another closes it.
+      if (header.getAttribute('aria-expanded') !== 'true') fireEvent.click(header);
+      expect(header).toHaveAttribute('aria-expanded', 'true');
+      const openHeaders = within(toolbox as HTMLElement)
+        .getAllByRole('button')
+        .filter((button) => button.getAttribute('aria-expanded') === 'true');
+      expect(openHeaders).toHaveLength(1);
+
+      const images = within(toolbox as HTMLElement).queryAllByRole('img');
+      images.forEach((thumbnail) => {
+        expect(thumbnail).toHaveAttribute('src', expect.stringContaining('data:image/svg+xml'));
+        expect(thumbnail.parentElement).toHaveClass('th');
+      });
+      thumbnails += images.length;
+    }
+    // OLT + ODF, one cable card, one splitter card, closure + NAP, ONT + gateway.
+    expect(thumbnails).toBe(8);
   });
 
   it('drags a toolbox component onto the React Flow canvas', async () => {
@@ -154,16 +183,17 @@ describe('FiberLAB application shell', () => {
     expect(within(hardwareCard).getByText('2-pair ODF rack patch panel (reference)')).toBeInTheDocument();
   });
 
-  it('quick-adds NAP and Wi-Fi gateway equipment from the toolbox into the hardware Inspector', async () => {
+  it('quick-adds NAP and Wi-Fi gateway equipment from the component library into the hardware Inspector', async () => {
     await renderStudio();
-    const napTool = screen.getByRole('button', { name: /Outdoor NAP \/ FAT/i });
-    fireEvent.doubleClick(napTool);
+    openLibraryCategory('Splices & Closures');
+    fireEvent.click(screen.getByRole('button', { name: /Outdoor NAP \/ FAT/i }));
 
     fireEvent.click(screen.getByRole('tab', { name: 'Info' }));
     const hardwareCard = await screen.findByRole('region', { name: 'Field hardware reference' });
     expect(within(hardwareCard).getByText('Outdoor NAP/FAT 1:8 terminal (reference)')).toBeInTheDocument();
 
-    fireEvent.doubleClick(screen.getByRole('button', { name: /Wi-Fi 6 Gateway/i }));
+    openLibraryCategory('Customer / ONT');
+    fireEvent.click(screen.getByRole('button', { name: /Wi-Fi 6 Gateway/i }));
     expect(await screen.findByText('Dual-band Wi-Fi 6 GPON / XGS-PON gateway (reference)')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('tab', { name: 'Properties' }));
     expect((screen.getByRole('textbox', { name: 'Wi-Fi SSID' }) as HTMLInputElement).value).toMatch(/^FiberLAB-/);
@@ -171,7 +201,8 @@ describe('FiberLAB application shell', () => {
 
   it('adds an OSP dome closure and toggles color-coded tray splices in the Inspector', async () => {
     await renderStudio();
-    fireEvent.doubleClick(screen.getByRole('button', { name: /Dome Splice Closure/i }));
+    openLibraryCategory('Splices & Closures');
+    fireEvent.click(screen.getByRole('button', { name: /Dome Splice Closure/i }));
 
     const closureTitle = await screen.findByText('Dome splice closure');
     const closureNode = closureTitle.closest('.react-flow__node');
@@ -652,19 +683,68 @@ describe('FiberLAB application shell', () => {
     expect(screen.getByText(/remaining fan-out stays a ribbon trunk/i)).toBeInTheDocument();
   });
 
-  it('treats splitter ratio chips as pickers, not quick-adds', async () => {
+  it('searches across every library category and labels each hit', async () => {
+    await renderStudio();
+    fireEvent.change(screen.getByLabelText('Search components'), { target: { value: 'closure' } });
+
+    const results = screen.getByRole('group', { name: 'Search results' });
+    // The category name is part of the index, so both parts in it are labelled.
+    expect(within(results).getAllByText('Splices & Closures')).toHaveLength(2);
+    expect(within(results).getByRole('button', { name: /Dome Splice Closure/i })).toBeInTheDocument();
+    // The accordion steps aside while a query is active.
+    expect(screen.queryByRole('group', { name: 'Component categories' })).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('Search components'), { target: { value: 'nonsense' } });
+    expect(within(results).getByText(/No components match/)).toBeInTheDocument();
+  });
+
+  it('remembers recently used parts as one-click shortcuts', async () => {
+    await renderStudio();
+    expect(screen.queryByRole('group', { name: 'Recently used components' })).not.toBeInTheDocument();
+
+    openLibraryCategory('Customer / ONT');
+    fireEvent.click(screen.getByRole('button', { name: /Wi-Fi 6 Gateway/i }));
+
+    const recent = await screen.findByRole('group', { name: 'Recently used components' });
+    expect(within(recent).getByRole('button', { name: 'Recently used: Wi-Fi 6 Gateway' })).toBeInTheDocument();
+  });
+
+  it('collapses the library from its header and reopens it from the rail', async () => {
+    await renderStudio();
+    const library = screen.getByLabelText('Component library');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Hide component library' }));
+    expect(library).not.toBeVisible();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Design' }));
+    expect(screen.getByLabelText('Component library')).toBeVisible();
+  });
+
+  it('drives one splitter card from the ratio selector instead of a list of cards', async () => {
     const { container } = await renderStudio();
     const before = container.querySelectorAll('.react-flow__node').length;
 
-    const chips = screen.getByRole('group', { name: 'Splitter ratio shortcuts' });
-    const chip = within(chips).getByRole('button', { name: 'Use splitter ratio 1:16' });
-    fireEvent.click(chip);
+    openLibraryCategory('Splitters');
+    const selector = screen.getByRole('group', { name: 'Splitter ratio' });
+    const sixteen = within(selector).getByRole('button', { name: 'Splitter ratio 1:16' });
+    fireEvent.click(sixteen);
 
-    expect(chip).toHaveAttribute('aria-pressed', 'true');
-    expect(within(chips).getByRole('button', { name: 'Use splitter ratio 1:8' })).toHaveAttribute(
+    expect(sixteen).toHaveAttribute('aria-pressed', 'true');
+    expect(within(selector).getByRole('button', { name: 'Splitter ratio 1:8' })).toHaveAttribute(
       'aria-pressed',
       'false',
     );
+    // Picking a ratio is a picker, not a quick-add…
     expect(container.querySelectorAll('.react-flow__node')).toHaveLength(before);
+
+    // …and the single card follows the selector with its insertion loss.
+    const library = screen.getByLabelText('Search components').closest('aside') as HTMLElement;
+    const cards = library.querySelectorAll('.pu-acc-body .pu-tool');
+    expect(cards).toHaveLength(1);
+    expect(cards[0]).toHaveTextContent('1:16');
+    expect(cards[0]).toHaveTextContent('13.8 dB insertion loss');
+
+    fireEvent.click(cards[0]);
+    await waitFor(() => expect(container.querySelectorAll('.react-flow__node').length).toBe(before + 1));
   });
 });

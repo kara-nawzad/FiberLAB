@@ -367,22 +367,207 @@
   overflow-y: auto;
   padding: 0 var(--shell-pad) var(--sp-3);
 }
-.pu-sec > summary {
+/* Library header: title + desktop collapse toggle. */
+.pu-comp-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--sp-2) 0 var(--sp-1);
-  font-size: var(--fs-sm);
-  font-weight: var(--fw-bold);
-  color: var(--pu-ink);
-  cursor: pointer;
-  list-style: none;
+  gap: var(--sp-2);
+  min-height: var(--panel-head-h);
+  padding: 0 var(--shell-pad);
 }
-.pu-sec > summary::-webkit-details-marker {
+.pu-comp-head h3 {
+  min-height: 0;
+  padding: 0;
+}
+.pu-comp-collapse {
+  display: inline-flex;
+  width: var(--control-sm);
+  height: var(--control-sm);
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--pu-line);
+  border-radius: var(--r-md);
+  background: #ffffff;
+  color: var(--pu-mut);
+}
+.pu-comp-collapse:hover {
+  border-color: var(--pu-pri);
+  color: var(--pu-pri);
+}
+
+/* Recently used: four shortcuts, one row. */
+.pu-recent {
+  display: grid;
+  gap: var(--sp-1);
+  margin: 0 var(--shell-pad) var(--sp-2);
+}
+.pu-recent-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  color: var(--pu-mut);
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: var(--type-caption);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+}
+.pu-recent-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--sp-1);
+}
+.pu-recent-chip {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  height: var(--control-md);
+  overflow: hidden;
+  border: 1px solid var(--pu-line);
+  border-radius: var(--r-md);
+  background: #ffffff;
+  color: var(--pu-pri);
+}
+.pu-recent-chip:hover {
+  border-color: var(--pu-pri);
+  background: var(--pu-pri-soft);
+}
+.pu-recent-chip img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Accordion: exactly one category open at a time. */
+.pu-acc {
+  display: grid;
+  gap: var(--sp-1);
+}
+.pu-acc-section {
+  border-bottom: 1px solid var(--pu-line);
+}
+.pu-acc-head {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: var(--control-md);
+  padding: var(--sp-2) 0;
+  color: var(--pu-ink);
+  font-size: var(--type-body);
+  font-weight: var(--fw-bold);
+  text-align: left;
+}
+.pu-acc-head:hover {
+  color: var(--pu-pri);
+}
+.pu-acc-chevron {
+  flex: 0 0 auto;
+  color: var(--pu-mut);
+  transition: transform 150ms ease;
+}
+.pu-acc-section.is-open .pu-acc-chevron {
+  transform: rotate(90deg);
+  color: var(--pu-pri);
+}
+.pu-acc-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pu-lib-count {
+  display: inline-flex;
+  min-width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--sp-1);
+  border-radius: var(--r-pill);
+  background: var(--pu-elevated);
+  color: var(--pu-mut);
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: var(--type-caption);
+  font-weight: var(--fw-bold);
+}
+.pu-acc-section.is-open .pu-lib-count {
+  background: var(--pu-pri-soft);
+  color: var(--pu-pri);
+}
+.pu-acc-body {
+  padding-bottom: var(--sp-2);
+}
+.pu-acc-note {
+  margin: var(--sp-1) 0 0;
+  color: var(--pu-mut);
+  font-size: var(--type-small);
+  line-height: var(--leading-snug);
+}
+
+/* Ratio / cable-type selector: compact segmented control above the card. */
+.pu-seg {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sp-1);
+  margin-bottom: var(--sp-2);
+}
+.pu-seg button {
+  min-height: var(--control-sm);
+  padding: 0 var(--sp-1);
+  border: 1px solid var(--pu-line);
+  border-radius: var(--r-md);
+  background: #ffffff;
+  color: var(--pu-ink);
+  font:
+    var(--fw-semibold) var(--type-small) 'JetBrains Mono',
+    monospace;
+  white-space: nowrap;
+}
+.pu-seg button:hover {
+  border-color: var(--pu-pri);
+  color: var(--pu-pri);
+}
+.pu-seg button.is-active {
+  border-color: var(--pu-pri);
+  background: var(--pu-pri-soft);
+  color: var(--pu-pri);
+}
+
+/* Search results: one flat list, category name as the label. */
+.pu-lib-results {
+  display: grid;
+  gap: var(--sp-2);
+}
+.pu-lib-result {
+  display: grid;
+  gap: var(--sp-1);
+}
+.pu-lib-cat {
+  color: var(--pu-mut);
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: var(--type-caption);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+}
+.pu-lib-empty {
+  margin: 0;
+  color: var(--pu-mut);
+  font-size: var(--type-body);
+}
+
+/* Phone sheet handle — hidden everywhere the library is a column. */
+.pu-sheet-handle {
   display: none;
 }
-.pu-sec[open] > summary svg {
-  transform: rotate(180deg);
+
+/* Phone-only trigger for the component sheet. */
+.pu-fab-components {
+  display: none;
 }
 .pu-tool {
   display: flex;
@@ -432,28 +617,6 @@
   font-size: var(--type-small);
   color: var(--pu-mut);
 }
-.pu-chips {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--sp-1);
-  margin-bottom: var(--sp-2);
-}
-.pu-chips button {
-  min-height: var(--control-sm);
-  padding: var(--sp-2) 0;
-  border: 1px solid var(--pu-line);
-  border-radius: var(--r-md);
-  background: #ffffff;
-  color: var(--pu-ink);
-  font:
-    var(--fw-semibold) var(--type-caption) 'JetBrains Mono',
-    monospace;
-}
-.pu-chips button.is-active {
-  background: var(--pu-pri-soft);
-  border-color: var(--pu-pri);
-  color: var(--pu-pri);
-}
 .pu-sel {
   width: 100%;
   min-height: var(--control-md);
@@ -464,13 +627,6 @@
   font-size: var(--type-body);
   background: #ffffff;
   color: var(--pu-ink);
-}
-.pu-foot {
-  padding: var(--sp-2) var(--sp-4);
-  border-top: 1px solid var(--pu-line);
-  font-size: var(--type-caption);
-  color: var(--pu-mut);
-  background: var(--pu-panel);
 }
 
 /* Canvas toolbar */
@@ -1191,7 +1347,7 @@
 .pu-btn,
 .pu-search input,
 .pu-menu button,
-.pu-sec > summary,
+.pu-acc-head,
 .pu-toolbar .pu-btn,
 .pu-insp-card h4 {
   font-size: var(--type-body);
@@ -1305,6 +1461,22 @@
 }
 
 /* Canvas "More tools" menu: same control rhythm as the panels. */
+.pu-menu-links {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  color: var(--pu-mut);
+  font-size: var(--type-small);
+}
+.pu-menu-links a {
+  color: var(--pu-pri);
+  font-weight: var(--fw-semibold);
+  text-decoration: none;
+}
+.pu-menu-links a:hover {
+  text-decoration: underline;
+}
 .pu-menu-row {
   display: flex;
   align-items: center;
@@ -1676,7 +1848,6 @@
 
   /* Touch-sized targets even in a narrow desktop window. */
   .pu-btabs button,
-  .pu-chips button,
   .pu-doc-tab,
   .pu-itabs button,
   .pu-menu button.pu-switch,
@@ -1698,6 +1869,94 @@
   }
 }
 
+/* Phone: the library leaves the column flow and becomes a bottom sheet
+ * summoned by the "+ Components" button. Drag the handle up to expand it, down
+ * to shrink or dismiss; tapping a component places it and closes the sheet. */
+@media (max-width: 767px) {
+  .pu-comp {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 45;
+    width: auto;
+    max-height: 82vh;
+    border: 1px solid var(--pu-line) !important;
+    border-right: 1px solid var(--pu-line) !important;
+    border-radius: var(--r-2xl) var(--r-2xl) 0 0;
+    box-shadow: 0 -18px 40px rgba(43, 26, 20, 0.22);
+    transition: max-height 180ms ease;
+  }
+  .pu-comp.is-sheet-full {
+    max-height: 92vh;
+  }
+  .pu-sheet-handle {
+    display: grid;
+    min-height: var(--control-tap);
+    flex: 0 0 auto;
+    place-items: center;
+    cursor: grab;
+    touch-action: none;
+  }
+  .pu-sheet-grip {
+    width: 44px;
+    height: 4px;
+    border-radius: var(--r-pill);
+    background: #d9c8b6;
+  }
+  .pu-fab-components {
+    position: absolute;
+    bottom: calc(var(--sp-3) + var(--control-tap));
+    left: var(--sp-3);
+    z-index: 8;
+    display: inline-flex;
+    min-height: var(--control-tap);
+    align-items: center;
+    gap: var(--sp-1);
+    padding: 0 var(--sp-4);
+    border: 1px solid var(--pu-pri);
+    border-radius: var(--r-pill);
+    background: var(--pu-pri);
+    box-shadow: 0 6px 18px rgba(228, 103, 63, 0.3);
+    color: #ffffff;
+    font-size: var(--type-body);
+    font-weight: var(--fw-semibold);
+  }
+  .pu-fab-components:active {
+    transform: translateY(1px);
+  }
+  /* Sheet controls are touch-sized and the cards invite a tap, not a drag. */
+  .pu-comp-head {
+    padding: 0 var(--sp-4);
+  }
+  .pu-comp-collapse,
+  .pu-recent-chip,
+  .pu-acc-head,
+  .pu-seg button {
+    min-height: var(--control-tap);
+  }
+  .pu-seg button {
+    font-size: var(--type-body);
+  }
+  .pu-comp-collapse {
+    width: var(--control-tap);
+    height: var(--control-tap);
+  }
+  .pu-search {
+    margin-bottom: var(--sp-2);
+  }
+  .pu-search input {
+    min-height: var(--control-tap);
+    font-size: var(--type-body);
+  }
+  .pu-tool {
+    min-height: var(--control-tap);
+    cursor: pointer;
+  }
+  .pu-tool small,
+  .pu-acc-note {
+    font-size: var(--type-body);
+  }
+}
+
 /* Touch sizing sits last so it wins over the narrow-width overrides above. */
 @media (pointer: coarse) {
   .btn,
@@ -1712,7 +1971,6 @@
   .pu-search,
   .pu-menu button,
   .pu-btabs button,
-  .pu-chips button,
   .pu-doc-tab,
   .pu-itabs button,
   .pu-menu button.pu-switch,

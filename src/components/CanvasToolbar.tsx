@@ -205,6 +205,22 @@ export function CanvasToolbar(props: CanvasToolbarProps) {
             >
               <Trash2 size={14} className="pu-menu-ico" /> Clear canvas
             </button>
+            {/* Learning resources used to sit under the component library; they
+                live here now so the library stays a pure parts bin. */}
+            <div className="pu-menu-links" role="group" aria-label="Learning resources">
+              <span>Need help?</span>
+              <a
+                href="https://github.com/kara-nawzad/FiberLAB/tree/main/docs"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Docs
+              </a>
+              <span aria-hidden="true">·</span>
+              <a href="https://github.com/kara-nawzad/FiberLAB" target="_blank" rel="noopener noreferrer">
+                GitHub
+              </a>
+            </div>
           </div>
         ) : null}
       </div>
