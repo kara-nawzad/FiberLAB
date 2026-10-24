@@ -13,6 +13,16 @@
     height: 100%;
   }
 
+  /* Mobile browsers shrink the viewport as their chrome appears; the shell must
+   * follow it or the bottom panel ends up under the URL bar. */
+  @supports (height: 100dvh) {
+    html,
+    body,
+    #root {
+      height: 100dvh;
+    }
+  }
+
   body {
     @apply bg-noc-950 text-noc-200 antialiased;
     font-family:
@@ -23,6 +33,29 @@
       'Segoe UI',
       sans-serif;
     overscroll-behavior: none;
+    /* Nothing may scroll the page sideways: wide tables scroll in their card. */
+    overflow-x: clip;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-weight: var(--fw-bold);
+    line-height: var(--leading-tight);
+    text-wrap: balance;
+  }
+
+  p,
+  li,
+  dd {
+    line-height: var(--leading-normal);
+  }
+
+  small {
+    line-height: var(--leading-snug);
   }
 
   input[type='number']::-webkit-outer-spin-button,
@@ -46,7 +79,7 @@
 
   ::-webkit-scrollbar-thumb {
     border: 2px solid #fff4e6;
-    border-radius: 9999px;
+    border-radius: var(--r-pill);
     background: #eed8bf;
   }
 
@@ -62,25 +95,38 @@
 
 @layer components {
   .panel {
-    @apply border border-slate-200 bg-white;
+    @apply border;
+    border-color: var(--pu-line);
+    background: var(--pu-panel);
   }
 
   .panel-header {
-    @apply flex items-center justify-between border-b border-slate-200 px-3 py-2.5;
+    @apply flex flex-wrap items-center justify-between gap-y-2 border-b;
+    border-color: var(--pu-line);
+    padding: var(--sp-3) var(--shell-pad);
   }
 
   .eyebrow {
-    @apply text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-600;
+    @apply text-caption font-semibold uppercase;
+    color: var(--pu-mut);
+    letter-spacing: var(--tracking-eyebrow);
   }
 
   .btn {
-    @apply inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold
-      transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600/35
+    @apply inline-flex min-h-9 items-center justify-center gap-2 rounded-lg border px-3 py-2 text-body font-semibold
+      transition-colors duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#e4673f]/40
       disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .btn-primary {
-    @apply btn border-blue-700 bg-blue-600 text-white shadow-sm hover:border-blue-800 hover:bg-blue-700;
+    @apply btn text-white shadow-sm;
+    border-color: var(--pu-pri);
+    background: var(--pu-pri);
+  }
+
+  .btn-primary:hover {
+    border-color: var(--pu-pri-strong);
+    background: var(--pu-pri-strong);
   }
 
   .btn-ghost {
@@ -92,12 +138,13 @@
   }
 
   .field-label {
-    @apply mb-1 block text-[11px] font-semibold text-slate-700;
+    @apply mb-1 block text-label font-semibold text-slate-700;
   }
 
   .input {
-    @apply w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 font-mono text-xs text-slate-900
+    @apply w-full min-h-9 border border-slate-300 bg-white px-3 py-2 font-mono text-body text-slate-900
       outline-none transition-colors placeholder:text-slate-500 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/15;
+    border-radius: var(--r-md);
   }
 
   .select {
@@ -114,11 +161,18 @@
   }
 
   .metric {
-    @apply rounded-md border border-slate-200 bg-slate-50 px-2 py-1.5;
+    @apply border border-slate-200 bg-slate-50 px-3 py-2;
+    border-radius: var(--r-md);
+  }
+
+  /* caption sits 4px above its value, in every metric box */
+  .metric > :first-child {
+    margin-bottom: var(--sp-1);
   }
 
   .metric-value {
     @apply font-mono text-sm font-semibold text-slate-900;
+    font-variant-numeric: tabular-nums;
   }
 }
 
@@ -136,7 +190,7 @@
   width: 12px;
   height: 12px;
   border: 2px solid #b18c72;
-  border-radius: 9999px;
+  border-radius: var(--r-pill);
   background: #fffaf2;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
   transition:
@@ -146,8 +200,8 @@
 }
 
 .react-flow__handle:hover {
-  border-color: #2f6bff;
-  box-shadow: 0 0 0 4px rgba(47, 107, 255, 0.14);
+  border-color: #e4673f;
+  box-shadow: 0 0 0 4px rgba(228, 103, 63, 0.14);
   transform: scale(1.12);
 }
 
@@ -192,9 +246,9 @@
 }
 
 .react-flow__node.selected .node-shell {
-  border-color: #2f6bff !important;
+  border-color: #e4673f !important;
   box-shadow:
-    0 0 0 2px rgba(47, 107, 255, 0.16),
+    0 0 0 2px rgba(228, 103, 63, 0.16),
     0 4px 14px rgba(15, 23, 42, 0.1) !important;
 }
 
@@ -210,7 +264,7 @@
 .react-flow__controls {
   overflow: hidden;
   border: 1px solid #eed8bf;
-  border-radius: 10px;
+  border-radius: var(--r-lg);
   background: #fffaf2;
   box-shadow:
     0 1px 2px rgba(15, 23, 42, 0.06),
@@ -238,14 +292,14 @@
 .react-flow__minimap {
   overflow: hidden;
   border: 1px solid #eed8bf;
-  border-radius: 10px;
+  border-radius: var(--r-lg);
   background: #fffaf2;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
 }
 
 .react-flow__minimap-mask {
   fill: rgba(248, 250, 252, 0.68);
-  stroke: #2f6bff;
+  stroke: #e4673f;
   stroke-width: 1;
 }
 
@@ -254,7 +308,7 @@
 input[type='range'] {
   width: 100%;
   height: 4px;
-  border-radius: 9999px;
+  border-radius: var(--r-pill);
   appearance: none;
   background: #eed8bf;
   outline: none;
@@ -266,9 +320,9 @@ input[type='range']::-webkit-slider-thumb {
   border: 2px solid #fffaf2;
   border-radius: 50%;
   appearance: none;
-  background: #2f6bff;
+  background: #e4673f;
   box-shadow:
-    0 0 0 1px #2f6bff,
+    0 0 0 1px #e4673f,
     0 1px 3px rgba(15, 23, 42, 0.22);
   cursor: pointer;
 }
@@ -278,9 +332,9 @@ input[type='range']::-moz-range-thumb {
   height: 12px;
   border: 2px solid #fffaf2;
   border-radius: 50%;
-  background: #2f6bff;
+  background: #e4673f;
   box-shadow:
-    0 0 0 1px #2f6bff,
+    0 0 0 1px #e4673f,
     0 1px 3px rgba(15, 23, 42, 0.22);
   cursor: pointer;
 }

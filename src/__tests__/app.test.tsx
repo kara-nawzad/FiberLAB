@@ -6,6 +6,11 @@ async function renderStudio() {
   render(<App />);
   fireEvent.click(await screen.findByRole('button', { name: /Launch Interactive Studio/i }));
   await screen.findByRole('button', { name: 'Bill of Materials' });
+  // The workbench opens on an empty canvas, so load the reference tree the
+  // assertions below are written against.
+  fireEvent.click(screen.getByRole('button', { name: /Preset Topologies/i }));
+  fireEvent.click(await screen.findByRole('button', { name: /Standard 1:32 GPON Tree/i }));
+  await waitFor(() => expect(screen.getAllByText('Al-Sulaymaniyah — Unit 12').length).toBeGreaterThan(0));
 }
 
 function openMoreTools() {
@@ -30,22 +35,17 @@ describe('FiberLAB application shell', () => {
   it('presents the living waveguide and routes the guided-mission CTA into the studio', async () => {
     render(<App />);
 
-    expect(await screen.findByRole('heading', { name: /Shoot the laser\. Split the spectrum/i })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /Splice the fiber/i })).toBeInTheDocument();
     expect(await screen.findByText('-21.57 dBm')).toBeInTheDocument();
-    const launchSlider = screen.getByLabelText(/Optical Launch Power/i);
+
+    // One interactive control, and the reference numbers an engineer will check.
+    const launchSlider = screen.getByLabelText(/Laser launch power/i);
     expect(launchSlider).toHaveValue('5');
     fireEvent.change(launchSlider, { target: { value: '6.4' } });
     expect(launchSlider).toHaveValue('6.4');
-
-    const upstreamChip = screen.getByRole('button', {
-      name: /1310 nm \(Upstream - 0\.35 dB\/km\)/i,
-    });
-    fireEvent.click(upstreamChip);
-    expect(upstreamChip).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByRole('button', { name: /1490 nm \(Downstream - 0\.25 dB\/km\)/i })).toHaveAttribute(
-      'aria-pressed',
-      'false',
-    );
+    expect(screen.getByText('0.25 dB/km')).toBeInTheDocument();
+    expect(screen.getByText('Splitter 1:4')).toBeInTheDocument();
+    expect(screen.getAllByText('−7.20 dB').length).toBeGreaterThan(0);
 
     fireEvent.click(screen.getByRole('button', { name: /Explore Guided Missions \(5 Scenarios\)/i }));
     expect(await screen.findByRole('dialog', { name: 'Field missions' })).toBeInTheDocument();
@@ -80,13 +80,32 @@ describe('FiberLAB application shell', () => {
     expect(await screen.findByRole('region', { name: 'Field hardware reference' })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Overview & Physics' }));
-    expect(await screen.findByRole('heading', { name: /Shoot the laser\. Split the spectrum/i })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /Splice the fiber/i })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Launch Interactive Studio/i }));
     await waitFor(() => expect(screen.getAllByText('Dukan Ridge — Tower 7').length).toBeGreaterThan(0));
     expect(screen.getByRole('region', { name: 'Field hardware reference' })).toBeInTheDocument();
   });
 
-  it('boots with the standard 1:32 tree and renders every element', async () => {
+  it('opens the workbench on an empty canvas with a friendly mission hint', async () => {
+    render(<App />);
+    fireEvent.click(await screen.findByRole('button', { name: /Launch Interactive Studio/i }));
+    await screen.findByRole('button', { name: 'Bill of Materials' });
+
+    expect(await screen.findByText('The canvas is empty')).toBeInTheDocument();
+    expect(screen.queryByText('Al-Sulaymaniyah — Unit 12')).not.toBeInTheDocument();
+    expect(screen.getByText('Drag in an OLT, or let a mission walk you through it.')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open the mission' }));
+    expect(await screen.findByRole('dialog', { name: 'Field missions' })).toBeInTheDocument();
+    fireEvent.keyDown(document, { key: 'Escape' });
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Field missions' })).not.toBeInTheDocument());
+
+    // The hint is a nudge, not furniture: it can be dismissed.
+    fireEvent.click(screen.getByRole('button', { name: 'Dismiss canvas hint' }));
+    expect(screen.queryByText('The canvas is empty')).not.toBeInTheDocument();
+  });
+
+  it('loads the standard 1:32 tree and renders every element', async () => {
     await renderStudio();
 
     expect((await screen.findAllByText('Standard 1:32 GPON Tree')).length).toBeGreaterThan(0);
@@ -109,6 +128,8 @@ describe('FiberLAB application shell', () => {
   it('drags a toolbox component onto the React Flow canvas', async () => {
     const { container } = render(<App />);
     fireEvent.click(screen.getByRole('button', { name: 'Launch Studio' }));
+    fireEvent.click(await screen.findByRole('button', { name: /Preset Topologies/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /Standard 1:32 GPON Tree/i }));
     await waitFor(() => expect(screen.getAllByText('Al-Sulaymaniyah — Unit 12').length).toBeGreaterThan(0));
 
     const values = new Map<string, string>();
@@ -220,6 +241,8 @@ describe('FiberLAB application shell', () => {
   it('connects and disconnects node pairs in Link nodes mode and deletes a selected span', async () => {
     render(<App />);
     fireEvent.click(screen.getByRole('button', { name: 'Launch Studio' }));
+    fireEvent.click(await screen.findByRole('button', { name: /Preset Topologies/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /Standard 1:32 GPON Tree/i }));
     await waitFor(() => expect(screen.getAllByText('Al-Sulaymaniyah — Unit 12').length).toBeGreaterThan(0));
 
     expect(screen.getByLabelText('Network health: Marginal links detected')).toBeInTheDocument();
@@ -530,5 +553,72 @@ describe('FiberLAB application shell', () => {
     // Collapse and re-expand Inspector
     fireEvent.click(screen.getByRole('button', { name: 'Collapse inspector' }));
     fireEvent.click(screen.getByRole('button', { name: 'Expand inspector' }));
+  });
+
+  it('treats the Bill of Materials as a keyboard-dismissable dialog', async () => {
+    await renderStudio();
+    const reportsButton = screen.getByRole('button', { name: 'Bill of Materials' });
+    reportsButton.focus();
+    fireEvent.click(reportsButton);
+
+    const dialog = await screen.findByRole('dialog', { name: 'Bill of Materials' });
+    expect(dialog).toHaveAttribute('aria-modal', 'true');
+    expect(dialog).toHaveFocus();
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(screen.queryByRole('dialog', { name: 'Bill of Materials' })).not.toBeInTheDocument();
+    await waitFor(() => expect(reportsButton).toHaveFocus());
+  });
+
+  it('keeps one modal in charge of the keyboard at a time', async () => {
+    await renderStudio();
+    fireEvent.click(screen.getByRole('button', { name: 'Bill of Materials' }));
+    await screen.findByRole('dialog', { name: 'Bill of Materials' });
+
+    openMoreTools();
+    fireEvent.click(screen.getByRole('button', { name: /^Missions$/i }));
+
+    await screen.findByRole('dialog', { name: 'Field missions' });
+    expect(screen.queryByRole('dialog', { name: 'Bill of Materials' })).not.toBeInTheDocument();
+  });
+
+  it('closes the More tools popover on Escape and returns focus to its trigger', async () => {
+    await renderStudio();
+    const trigger = screen.getByRole('button', { name: 'More tools' });
+    fireEvent.click(trigger);
+    expect(screen.getByRole('button', { name: 'OTDR Trace' })).toBeInTheDocument();
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+
+    expect(screen.queryByRole('button', { name: 'OTDR Trace' })).not.toBeInTheDocument();
+    await waitFor(() => expect(trigger).toHaveFocus());
+  });
+
+  it('marks a keyboard-deleted element as an edit and clears the selection', async () => {
+    const { container } = render(<App />);
+    fireEvent.click(await screen.findByRole('button', { name: /Launch Interactive Studio/i }));
+    await screen.findByRole('button', { name: 'Bill of Materials' });
+    fireEvent.click(screen.getByRole('button', { name: /Preset Topologies/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /Standard 1:32 GPON Tree/i }));
+
+    const dropSpan = getCanvasNodeByText(/^6\.0 km$/);
+    fireEvent.click(dropSpan);
+    expect(await screen.findByRole('switch', { name: 'Macro-bend fault (<15 mm)' })).toBeInTheDocument();
+
+    fireEvent.keyDown(container.querySelector('.react-flow__pane') as Element, { key: 'Delete' });
+
+    await waitFor(() => expect(screen.queryAllByText(/^6\.0 km$/)).toHaveLength(0));
+    expect(await screen.findByText('Edited')).toBeInTheDocument();
+  });
+
+  it('marks the loaded preset as edited once the canvas deviates from it', async () => {
+    await renderStudio();
+    expect(screen.queryByText('Edited')).not.toBeInTheDocument();
+
+    const dropSpan = getCanvasNodeByText(/^6\.0 km$/);
+    fireEvent.click(dropSpan);
+    fireEvent.click(screen.getByRole('switch', { name: 'Macro-bend fault (<15 mm)' }));
+
+    expect(await screen.findByText('Edited')).toBeInTheDocument();
   });
 });

@@ -22,7 +22,7 @@ repository's `.nvmrc` selects Node 22.
 npm ci
 npm run dev        # http://localhost:5173
 npm run build      # tsc --noEmit && vite build
-npm run test       # 89 tests: optical engine, upstream dynamic range, OPM, OTDR, equipment, CAPEX, missions, and app interactions
+npm run test       # 94 tests: optical engine, upstream dynamic range, OPM, OTDR, equipment, CAPEX, missions, overlays, and app interactions
 npm run typecheck  # strict TypeScript, no emit
 npm run lint       # ESLint checks for source and configuration files
 npm run format:check  # verify Prettier formatting
@@ -171,7 +171,7 @@ fixed allowances, not universal measured values.
 │   ├── context/SimulationContext.ts
 │   ├── data/                      Catalogues, hardwareArtwork, pricing, and data tests
 │   ├── engine/                    Pure simulation, opticalPhysics, presets, missions, and engine tests
-│   ├── styles/                    global.css, theme.css, and photo-ui.css
+│   ├── styles/                    tokens.css (design tokens), global.css, theme.css, photo-ui.css
 │   ├── test/setup.ts              Vitest / Testing Library setup
 │   ├── __tests__/app.test.tsx     Mounted application tests
 │   ├── App.tsx                    Persistent studio shell and orchestration

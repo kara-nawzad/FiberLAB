@@ -114,6 +114,44 @@ export default {
           900: '#392558',
         },
       },
+      // Mirrors src/styles/tokens.css — use these instead of text-[Npx] literals.
+      // Values live in src/styles/tokens.css — never hard-code a px size here.
+      fontSize: {
+        caption: 'var(--fs-2xs)',
+        label: 'var(--fs-xs)',
+        body: 'var(--fs-sm)',
+        lead: 'var(--fs-md)',
+        title: 'var(--fs-lg)',
+        metric: 'var(--fs-xl)',
+        panel: 'var(--type-panel-title)',
+        section: 'var(--type-section-title)',
+        display: 'var(--fs-2xl)',
+      },
+      fontWeight: {
+        regular: 'var(--fw-regular)',
+        medium: 'var(--fw-medium)',
+        semibold: 'var(--fw-semibold)',
+        bold: 'var(--fw-bold)',
+        black: 'var(--fw-black)',
+      },
+      lineHeight: {
+        none: 'var(--leading-none)',
+        tight: 'var(--leading-tight)',
+        snug: 'var(--leading-snug)',
+        normal: 'var(--leading-normal)',
+        relaxed: 'var(--leading-relaxed)',
+      },
+      letterSpacing: {
+        display: 'var(--tracking-display)',
+        tight: 'var(--tracking-tight)',
+        label: 'var(--tracking-label)',
+        eyebrow: 'var(--tracking-eyebrow)',
+        // Defaults kept for any surface that still wants plain tracking.
+        normal: '0em',
+        wide: '0.025em',
+        wider: '0.05em',
+        widest: '0.1em',
+      },
       fontFamily: {
         sans: ['Manrope', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
         mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Consolas', 'monospace'],

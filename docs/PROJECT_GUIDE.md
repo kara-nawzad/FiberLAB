@@ -52,6 +52,40 @@ Photos alone do not create field experience. A task such as “find why this sub
 - Telecom cues remain explicit: cable yellow `#FACC15`, SC/APC green, and SC/UPC cobalt. Text labels accompany these colors; connector polish is illustrative only—the graph does not model or enforce connector compatibility, so confirm installed interfaces and never mate APC with UPC.
 - Display typography uses the exact Google Font families **Sora**, **Manrope**, and **JetBrains Mono**, with system fallbacks. The HTML imports them from Google Fonts.
 
+`src/styles/tokens.css` holds one type scale (11 / 12 / 13 / 15 / 18 / 22 / 28 px) with semantic roles, one 4 px spacing scale (4 / 8 / 12 / 16 / 24 / 32), six radii and one control-height set. Body copy is never smaller than 13 px; the 11 px step is reserved for uppercase chips, unit suffixes and canvas node art. Sizing roles:
+
+| Role                    | Token                                | Size                    | Weight  |
+| ----------------------- | ------------------------------------ | ----------------------- | ------- |
+| Landing hero            | `--type-display`                     | `clamp(45, 5.25vw, 76)` | 700     |
+| Landing section heading | `--type-section-title-lg`            | 28 (22 ≤640)            | 700     |
+| Section / modal title   | `--type-section-title`               | 22                      | 700     |
+| Panel title             | `--type-panel-title`                 | 18                      | 700     |
+| Card title              | `--type-card-title`                  | 15                      | 600     |
+| Body                    | `--type-body`                        | 13                      | 400–500 |
+| Label / tab / table     | `--type-small`                       | 12                      | 600     |
+| Caption / unit          | `--type-caption`                     | 11                      | 600–700 |
+| Metric                  | `--type-metric` / `--type-metric-sm` | 28 / 22                 | 700     |
+
+Spacing follows the same rule: every `padding`, `margin` and `gap` resolves to `--sp-1` (4) / `--sp-2` (8) / `--sp-3` (12) / `--sp-4` (16) / `--sp-6` (24) / `--sp-8` (32). Cards, tables and rows use one of three rhythms — 4 px between a label and its value, 8 px between rows, 12 px inside a card, 16 px from a panel edge (`--shell-pad`) — and the same element type always has the same padding (for example `--card-pad` for every stat, card and tile). Tailwind utilities in the components use only the matching steps (`gap-1` … `gap-8`), never the half steps. Controls share `--control-sm/md/lg` (32 / 36 / 40) so a select, a button and a pill on the same row line up. Numeric readouts and numeric table columns use `font-variant-numeric: tabular-nums` and a right edge of their own, which keeps digits from jumping as values update. Tracking follows four steps — `--tracking-display` (-0.07em for the wordmark and large readouts), `--tracking-tight` (-0.02em for titles), `--tracking-label` (0.08em for uppercase labels) and `--tracking-eyebrow` (0.13em for eyebrows) — and every `border-radius` resolves to one of the six `--r-*` steps in both the workbench and the landing views. Control padding comes from `--inset-control` (8/12), so a button, a select and a search field are inset identically.
+
+Interactive components follow one spec, so a button, a select and a tab never disagree:
+
+| Component               | Height              | Padding                   | Radius                        | Type             |
+| ----------------------- | ------------------- | ------------------------- | ----------------------------- | ---------------- |
+| Button / select (`md`)  | `--control-md` (36) | `--inset-control` (8/12)  | `--r-md` (8)                  | 13 / 600         |
+| Compact button, chip    | `--control-sm` (32) | 8/0 – 8/8                 | `--r-md`                      | 11–12 mono       |
+| CTA (`.landing-button`) | `--control-lg` (40) | 0/16                      | `--r-pill`                    | 13 / 700         |
+| Input / select          | 36                  | 8/12                      | `--r-md`                      | 13 mono          |
+| Tab                     | `--tab-h` (40)      | 0 (text), 0/16 (doc chip) | `--r-md` when contained       | 13 / 600→700     |
+| Table header            | —                   | 0 0 8                     | —                             | 11 uppercase/600 |
+| Table cell              | 8 vertical          | 8 / 12                    | —                             | 12               |
+| Badge / pill            | 4 vertical          | 4/8                       | `--r-sm` (6), pill for status | 11 / 700         |
+| Icon                    | 12 · 14 · 16 · 20   | —                         | —                             | —                |
+
+Icon sizes carry meaning: 12 inside a badge or caption row, 14 inline with 13 px text (buttons, selects, chevrons), 16 in a panel or modal header and in icon-only 36 px buttons, 20 in the rail/sidebar. Touch devices (`pointer: coarse`) lift every control to the 44 px `--control-tap` target.
+
+**Responsive behaviour.** Five widths are checked — 1920, 1440, 1024, 768 and 390 px. Above 1024 px the shell keeps all four columns and nothing stretches: the shell has a fixed rail, a fixed library and inspector, and the canvas takes the rest. At ≤1024 px the header drops the zoom menu and the stat grid falls to two columns; at ≤900 px the component library and the inspector become overlay sheets inside the body gutter (both start collapsed, and the inspector re-opens when a node is selected), the bottom panel stacks its cards into one scrolling column, and the header scrolls as a last resort while its menus are rendered as fixed panels so a scroll container cannot clip them. At ≤640 px the health pill gives way to the canvas status chip and buttons print their short captions; at ≤560 px every tab, chip, menu row and icon button reaches the 44 px `--control-tap`, the preset and document names truncate with an ellipsis, and the page itself may not scroll sideways (`overflow-x: clip` on `body`, one row of overflow on the header only). Wide tables — OTDR events (850 px), BOM quotation (720 px) and the landing spec sheet (580 px) — scroll inside their own wrapper; `.pu-card--scroll` caps the budget card at 170 px; and the empty-canvas hint is offset so it clears the floating tool strip.
+
 The theme tokens are used by both the landing and the existing React Flow workbench. Status colors remain semantically distinct; telemetry values and statuses are still calculated by the simulator, not the stylesheet or prototype artwork.
 
 ### 2.2 Warm photonic landing and splice interaction
@@ -141,7 +175,9 @@ Fiber spans expose independent **Macro-bend fault (<15 mm)** and **Dirty SC/APC 
 
 ### 3.5 Use a preset or inspect the inventory
 
-The top bar includes the **Overview & Physics** return action, **Link nodes**, OPM and **OTDR Trace** tools, a selection-aware **Delete** action, presets, the **Missions** drawer, global safety margin, Auto mode, **Run test**, **Bill of Materials**, and **Clear**. It places the live estimated CAPEX and cost per home passed beside optical health. The workbench responds at tablet/mobile widths by stacking the canvas, a horizontal toolbox, and a scrollable Inspector while keeping the same graph.
+The top bar includes the **Overview & Physics** return action, **Link nodes**, OPM and **OTDR Trace** tools, a selection-aware **Delete** action, presets, the **Missions** drawer, global safety margin, Auto mode, **Run test**, **Bill of Materials**, and **Clear**. It places the live estimated CAPEX and cost per home passed beside optical health. The studio is a four-column grid — rail · component library · canvas · inspector — whose widths come from `tokens.css` (`--rail-w`, `--library-w`, `--inspector-w`, `--topbar-h`) with one flexible canvas column (`minmax(0, 1fr)`). One gutter, `--shell-gap`, separates the tab strip, canvas and bottom panel, and `--shell-pad` aligns the top bar, library title, inspector title and every panel edge on the same vertical line. The bottom panel is capped at `--bottom-max-h` (44 / 40 / 38 / 34 vh as the viewport narrows) and scrolls internally, so the canvas always keeps the majority of the height. Column widths step at 1280 px (rail 64, library 208, inspector 264), 1024 px (56 / 184 / 240) and 900 px.
+
+At or below 900 px the workbench becomes canvas-first: the icon rail stays fixed while the component library and the Inspector float above the canvas (opening the Inspector on selection) instead of squeezing it out of the row, and the minimap is hidden. The 560 px breakpoint collapses popovers into a full-width sheet under the top bar. Every overlay — Bill of Materials, OTDR analyzer, and mission drawer — is a labelled `aria-modal` dialog that closes on Escape or a backdrop click, traps Tab inside itself, and returns focus to the control that opened it; only one overlay can be open at a time. The document tab marks a topology as **Edited** once it deviates from the preset it was loaded from.
 
 The BOM has an **Optical Budget Audit** view and a **Commercial Quotation & CAPEX** view. The commercial view groups detailed quotation lines into Cables, Passives, Active Gear, and Labor & Splicing, and reports material subtotal, labor subtotal, total project CAPEX, cost per home passed, and cost per connected subscriber. Export actions include:
 
@@ -448,6 +484,7 @@ The app is a client-side React/TypeScript application. There is no backend servi
 | `src/engine/__tests__/opticalSimulator.test.ts`             | Optical graph simulation tests, including the public alias.                          |
 | `src/engine/__tests__/otdrSimulator.test.ts`                | OTDR route and event generation tests.                                               |
 | `src/engine/__tests__/xgsPon.test.ts`                       | XGS-PON standards and equipment tests.                                               |
+| `src/styles/tokens.css`                                     | Design tokens: type scale, 4px spacing scale, radii, panel padding, control heights. |
 | `src/styles/global.css`                                     | Tailwind layers, application-wide styles, and mission keyframes.                     |
 | `src/styles/photo-ui.css`                                   | Photo-inspired studio UI overrides, loaded last.                                     |
 | `src/styles/theme.css`                                      | Warm responsive landing and studio theme, including modal and hardware treatments.   |
@@ -517,7 +554,7 @@ On 13 October 2026, after the ODF/NAP/gateway and XGS-PON expansion:
 
 - `npm ci --no-audit`: passed; dependencies installed from the lockfile. No automatic dependency fixes were applied.
 - `npm run typecheck`: passed.
-- `npm test -- --reporter=dot`: **89 tests passed** across 11 files (26 optical-simulator, 5 OPM, 5 OTDR, 5 XGS-PON/equipment, 6 mission, 5 pricing, 3 commercial-export, 7 hardware-catalogue, 2 optical-physics, 24 app, and 1 splice-hero tests).
+- `npm test -- --reporter=dot`: **94 tests passed** across 11 files (26 optical-simulator, 5 OPM, 5 OTDR, 5 XGS-PON/equipment, 6 mission, 5 pricing, 3 commercial-export, 7 hardware-catalogue, 2 optical-physics, 29 app, and 1 splice-hero tests).
 - `npm run build`: passed, including strict TypeScript checking and a Vite production build. Vite reports an informational large-chunk advisory for the 650.10 kB minified JavaScript bundle.
 - `git diff --check`: passed.
 - A previous audit scan reported **13 dependency findings** (5 moderate, 6 high, 2 critical). Review these before production; no `npm audit fix` was run.

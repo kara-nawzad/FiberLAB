@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react';
 import { Download, FileJson, Table2, X } from 'lucide-react';
-import type { DesignSettings, PonEdge, PonNode, SimulationResult, SplitRatio, TopologyExport } from '../types';
+import type { DesignSettings, PonEdge, PonNode, SimulationResult, SplitRatio } from '../types';
 import { SPLIT_RATIOS, SPLITTER_LOSS_DB, STATUS_STYLES } from '../types';
 import { describeStatus, formatDbm } from '../engine/opticalSimulator';
 import type { NetworkCostBreakdown, UnitCostProfile } from '../data/pricingCatalogue';
 import { formatUsd } from '../data/pricingCatalogue';
+import { useDialogA11y } from '../hooks/useDialogA11y';
+import { buildCommercialCsv, buildQuotationExport, connectedSubscriberCount } from '../data/commercialQuoteExports';
 
 /* ========================================================================== *
  * Bill of Materials — deployment statistics + per-subscriber optical budget.
@@ -33,156 +35,11 @@ function triggerDownload(filename: string, contents: string, mime: string) {
   URL.revokeObjectURL(url);
 }
 
-function connectedSubscriberCount(nodes: PonNode[], simulation: SimulationResult): number {
-  return nodes.filter(
-    (node) => (node.type === 'ont' || node.type === 'gateway') && Boolean(simulation.bestPaths[node.id]),
-  ).length;
-}
-
-export function buildQuotationExport(
-  nodes: PonNode[],
-  edges: PonEdge[],
-  simulation: SimulationResult,
-  settings: DesignSettings,
-  unitCosts: UnitCostProfile,
-  costBreakdown: NetworkCostBreakdown,
-): TopologyExport {
-  const connectedCount = connectedSubscriberCount(nodes, simulation);
-  return {
-    format: 'ftth-studio/topology',
-    version: 2,
-    exportedAt: new Date().toISOString(),
-    settings,
-    nodes,
-    edges,
-    simulation: {
-      summary: simulation.summary,
-      ontTelemetry: simulation.ontTelemetry,
-      gatewayTelemetry: simulation.gatewayTelemetry,
-    },
-    commercial: {
-      currency: 'USD',
-      unitCosts,
-      breakdown: costBreakdown,
-      connectedSubscriberCount: connectedCount,
-      costPerConnectedSubscriber:
-        connectedCount === 0 ? 0 : Math.round((costBreakdown.totalCapex / connectedCount + Number.EPSILON) * 100) / 100,
-    },
-  };
-}
-
-function csvCell(value: unknown): string {
-  const text = value === null || value === undefined ? '' : String(value);
-  return `"${text.replace(/"/g, '""')}"`;
-}
-
-/** One quotation/summary section and the existing per-ONT optical audit in one CSV. */
-export function buildCommercialCsv(
-  nodes: PonNode[],
-  simulation: SimulationResult,
-  costBreakdown: NetworkCostBreakdown,
-): string {
-  const headers = [
-    'record_type',
-    'category',
-    'item',
-    'quantity',
-    'unit',
-    'unit_price_usd',
-    'extended_price_usd',
-    'materials_cost_usd',
-    'labor_cost_usd',
-    'total_capex_usd',
-    'cost_per_home_passed_usd',
-    'cost_per_connected_subscriber_usd',
-    'ont_id',
-    'subscriber',
-    'serial',
-    'ssid',
-    'service_ip_address',
-    'pon_standard',
-    'estimated_down_mbps',
-    'estimated_up_mbps',
-    'status',
-    'rx_power_dbm',
-    'total_path_loss_db',
-    'link_margin_db',
-    'fiber_km',
-    'split_stages',
-    'cumulative_split_ratio',
-    'splices',
-    'connectors',
-    'source_olt',
-    'endpoint_type',
-  ];
-  const connectedCount = connectedSubscriberCount(nodes, simulation);
-  const costPerConnected =
-    connectedCount === 0 ? 0 : Math.round((costBreakdown.totalCapex / connectedCount + Number.EPSILON) * 100) / 100;
-  const serialize = (record: Record<string, unknown>) => headers.map((header) => csvCell(record[header])).join(',');
-
-  const rows = [
-    serialize({
-      record_type: 'quotation_summary',
-      category: 'Summary',
-      item: 'Project CAPEX summary',
-      unit: 'USD',
-      materials_cost_usd: costBreakdown.materialsCost,
-      labor_cost_usd: costBreakdown.laborCost,
-      total_capex_usd: costBreakdown.totalCapex,
-      cost_per_home_passed_usd: costBreakdown.costPerHomePassed,
-      cost_per_connected_subscriber_usd: costPerConnected,
-    }),
-    ...costBreakdown.lineItems.map((line) =>
-      serialize({
-        record_type: 'quotation_line',
-        category: line.category,
-        item: line.item,
-        quantity: line.quantity,
-        unit: line.unit,
-        unit_price_usd: line.unitPrice,
-        extended_price_usd: line.totalPrice,
-      }),
-    ),
-    ...nodes
-      .filter((node) => node.type === 'ont' || node.type === 'gateway')
-      .map((node) => {
-        const telemetry = node.type === 'ont' ? simulation.ontTelemetry[node.id] : simulation.gatewayTelemetry[node.id];
-        const gatewayReading = node.type === 'gateway' ? simulation.gatewayTelemetry[node.id] : undefined;
-        if (!telemetry) return null;
-        return serialize({
-          record_type: 'optical_budget',
-          endpoint_type: node.type,
-          ont_id: node.id,
-          subscriber: node.data.subscriber,
-          serial: node.data.serial,
-          ssid: node.type === 'gateway' ? node.data.ssid : '',
-          service_ip_address: gatewayReading?.serviceIpAddress ?? '',
-          pon_standard: gatewayReading?.ponStandard ?? simulation.bestPaths[node.id]?.ponStandard ?? '',
-          estimated_down_mbps: gatewayReading?.estimatedDownMbps ?? '',
-          estimated_up_mbps: gatewayReading?.estimatedUpMbps ?? '',
-          status: telemetry.status,
-          rx_power_dbm: telemetry.rxPowerDbm,
-          total_path_loss_db: telemetry.totalLossDb,
-          link_margin_db: telemetry.rxPowerDbm === null ? '' : telemetry.marginDb,
-          fiber_km: telemetry.fiberKm,
-          split_stages: telemetry.splitStages,
-          cumulative_split_ratio: telemetry.cumulativeSplitRatio,
-          splices: telemetry.splices,
-          connectors: telemetry.connectors,
-          source_olt: telemetry.sourceOltId ?? '',
-        });
-      })
-      .filter((row): row is string => row !== null),
-  ];
-
-  return [headers.map(csvCell).join(','), ...rows].join('\n');
-}
-
 function StatCard({
   label,
   value,
   sub,
-  tone = 'text-noc-200',
+  tone = 'text-[var(--pu-ink)]',
 }: {
   label: string;
   value: string;
@@ -190,10 +47,10 @@ function StatCard({
   tone?: string;
 }) {
   return (
-    <div className="rounded-lg border border-noc-700/60 bg-noc-950/50 px-3 py-2.5">
-      <div className="text-[10px] font-medium uppercase tracking-[0.12em] text-noc-400">{label}</div>
-      <div className={`mt-0.5 font-mono text-xl font-bold leading-tight ${tone}`}>{value}</div>
-      {sub ? <div className="mt-0.5 text-[10px] text-noc-500">{sub}</div> : null}
+    <div className="rounded-lg border border-[var(--pu-line)] bg-white px-3 py-2">
+      <div className="text-caption font-medium uppercase tracking-eyebrow text-[var(--pu-mut)]">{label}</div>
+      <div className={`mt-1 font-mono text-xl font-bold leading-tight ${tone}`}>{value}</div>
+      {sub ? <div className="mt-1 text-caption text-[var(--pu-mut)]">{sub}</div> : null}
     </div>
   );
 }
@@ -215,33 +72,39 @@ function CommercialQuotationView({
   return (
     <section aria-label="Commercial quotation and CAPEX" data-testid="commercial-quotation">
       <div className="mb-3 grid grid-cols-2 gap-2 md:grid-cols-4">
-        <StatCard label="Total Materials Cost" value={formatUsd(costBreakdown.materialsCost)} tone="text-sky-300" />
+        <StatCard
+          label="Total Materials Cost"
+          value={formatUsd(costBreakdown.materialsCost)}
+          tone="text-[var(--pu-pri)]"
+        />
         <StatCard
           label="Total Labor & Splicing Cost"
           value={formatUsd(costBreakdown.laborCost)}
-          tone="text-amber-300"
+          tone="text-[var(--pu-warn)]"
         />
-        <StatCard label="Total Project CAPEX" value={formatUsd(costBreakdown.totalCapex)} tone="text-emerald-300" />
+        <StatCard label="Total Project CAPEX" value={formatUsd(costBreakdown.totalCapex)} tone="text-[var(--pu-ok)]" />
         <StatCard
           label="CAPEX / Connected Subscriber"
           value={connectedCount === 0 ? '—' : formatUsd(costPerConnected)}
           sub={`${formatUsd(costBreakdown.costPerHomePassed)} per home passed · ${homeCount} homes / endpoints`}
-          tone="text-orange-300"
+          tone="text-[var(--pu-pri)]"
         />
       </div>
 
-      <div className="overflow-hidden rounded-lg border border-noc-700/60">
-        <div className="flex items-center justify-between gap-2 bg-noc-800/80 px-3 py-2">
+      <div className="overflow-hidden rounded-lg border border-[var(--pu-line)]">
+        <div className="flex items-center justify-between gap-2 bg-[var(--pu-elevated)] px-3 py-2">
           <div>
-            <h3 className="text-[11px] font-semibold text-noc-200">Detailed quotation</h3>
-            <p className="text-[9px] text-noc-500">Deployed quantities · reference USD rates</p>
+            <h3 className="text-label font-semibold text-[var(--pu-ink)]">Detailed quotation</h3>
+            <p className="text-body text-[var(--pu-mut)]">Deployed quantities · reference USD rates</p>
           </div>
-          <span className="font-mono text-[10px] text-noc-400">{costBreakdown.lineItems.length} line items</span>
+          <span className="font-mono text-caption text-[var(--pu-mut)]">
+            {costBreakdown.lineItems.length} line items
+          </span>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[720px] font-mono text-[10px]" data-testid="quotation-line-items">
+          <table className="w-full min-w-[720px] font-mono text-label" data-testid="quotation-line-items">
             <thead>
-              <tr className="border-t border-noc-700/60 bg-noc-950/70 text-[9px] uppercase tracking-wide text-noc-500">
+              <tr className="border-t border-[var(--pu-line)] bg-white text-caption uppercase tracking-label text-[var(--pu-mut)]">
                 <th className="px-2 py-2 text-left font-medium">Category</th>
                 <th className="px-2 py-2 text-left font-medium">Item</th>
                 <th className="px-2 py-2 text-right font-medium">Qty</th>
@@ -253,39 +116,42 @@ function CommercialQuotationView({
             <tbody>
               {costBreakdown.lineItems.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-3 py-6 text-center text-noc-500">
+                  <td colSpan={6} className="px-3 py-6 text-center text-[var(--pu-mut)]">
                     No priced components on the canvas yet.
                   </td>
                 </tr>
               ) : (
                 costBreakdown.lineItems.map((line) => (
-                  <tr key={`${line.category}-${line.item}`} className="border-t border-noc-700/40 text-noc-300">
-                    <td className="px-2 py-2 text-noc-500">{line.category}</td>
-                    <td className="px-2 py-2 text-noc-200">{line.item}</td>
+                  <tr
+                    key={`${line.category}-${line.item}`}
+                    className="border-t border-[var(--pu-line)] text-[var(--pu-ink)]"
+                  >
+                    <td className="px-2 py-2 text-[var(--pu-mut)]">{line.category}</td>
+                    <td className="px-2 py-2 text-[var(--pu-ink)]">{line.item}</td>
                     <td className="px-2 py-2 text-right">
                       {line.quantity.toLocaleString('en-US', { maximumFractionDigits: 3 })}
                     </td>
-                    <td className="px-2 py-2 text-noc-500">{line.unit}</td>
+                    <td className="px-2 py-2 text-[var(--pu-mut)]">{line.unit}</td>
                     <td className="px-2 py-2 text-right">{formatUsd(line.unitPrice)}</td>
-                    <td className="px-2 py-2 text-right font-semibold text-emerald-300">
+                    <td className="px-2 py-2 text-right font-semibold text-[var(--pu-ok)]">
                       {formatUsd(line.totalPrice)}
                     </td>
                   </tr>
                 ))
               )}
-              <tr className="border-t border-noc-600 bg-noc-800/70 font-semibold text-noc-100">
+              <tr className="border-t border-[var(--pu-line)] bg-[var(--pu-elevated)] font-semibold text-[var(--pu-ink)]">
                 <td colSpan={4} className="px-2 py-2 text-right">
                   Total quoted CAPEX
                 </td>
                 <td className="px-2 py-2 text-right">—</td>
-                <td className="px-2 py-2 text-right text-emerald-300">{formatUsd(costBreakdown.totalCapex)}</td>
+                <td className="px-2 py-2 text-right text-[var(--pu-ok)]">{formatUsd(costBreakdown.totalCapex)}</td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
 
-      <p className="mt-3 rounded-md border border-amber-800/40 bg-amber-950/20 px-3 py-2 text-[9px] leading-relaxed text-amber-200/80">
+      <p className="mt-3 rounded-md border border-[var(--pu-line)] bg-[var(--pu-elevated)] px-3 py-2 text-body leading-relaxed text-[var(--pu-mut)]">
         Educational USD planning rates only—not a supplier quote, installed-price guarantee, tax estimate, or market
         survey. Edit local reference rates in the Inspector before exporting a quotation.
       </p>
@@ -304,6 +170,7 @@ export function BOMModal({
   costBreakdown,
 }: BOMModalProps) {
   const [activeTab, setActiveTab] = useState<'optical' | 'commercial'>('optical');
+  const { dialogRef } = useDialogA11y({ open, onClose });
   const summary = simulation.summary;
 
   const subscriberRows = useMemo(
@@ -324,16 +191,33 @@ export function BOMModal({
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-      <div className="panel flex max-h-[88vh] w-full max-w-5xl flex-col overflow-hidden rounded-xl shadow-panel">
-        <div className="panel-header !py-3">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <section
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="bom-title"
+        aria-describedby="bom-description"
+        tabIndex={-1}
+        className="panel flex max-h-[88vh] w-full min-w-0 max-w-5xl flex-col overflow-hidden rounded-xl shadow-panel outline-none"
+      >
+        <div className="panel-header">
           <div className="flex items-center gap-2">
-            <span className="flex h-7 w-7 items-center justify-center rounded-md bg-sky-500/15 text-sky-300">
-              <Table2 size={15} />
+            <span className="flex h-7 w-7 items-center justify-center rounded-md bg-[var(--pu-pri-soft)] text-[var(--pu-pri)]">
+              <Table2 size={16} />
             </span>
             <div>
-              <div className="text-[14px] font-semibold text-noc-200">Bill of Materials</div>
-              <div className="text-[10px] text-noc-500">Optical audit &amp; commercial CAPEX quotation</div>
+              <h2 id="bom-title" className="text-section font-bold leading-tight text-[var(--pu-ink)]">
+                Bill of Materials
+              </h2>
+              <p id="bom-description" className="text-body text-[var(--pu-mut)]">
+                Optical audit &amp; commercial CAPEX quotation
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -348,7 +232,7 @@ export function BOMModal({
                 )
               }
             >
-              <Download size={13} /> Quote CSV
+              <Download size={14} /> Quote CSV
             </button>
             <button
               type="button"
@@ -365,16 +249,16 @@ export function BOMModal({
                 )
               }
             >
-              <FileJson size={13} /> Quote JSON
+              <FileJson size={14} /> Quote JSON
             </button>
             <button
               type="button"
-              className="btn-ghost !p-1.5"
+              className="btn-ghost h-9 w-9 !p-0"
               onClick={onClose}
               aria-label="Close bill of materials"
               title="Close"
             >
-              <X size={14} />
+              <X size={16} />
             </button>
           </div>
         </div>
@@ -382,7 +266,7 @@ export function BOMModal({
         <div
           role="tablist"
           aria-label="Bill of materials views"
-          className="flex shrink-0 gap-1 border-b border-noc-700/60 px-4 pt-2"
+          className="flex shrink-0 gap-1 overflow-x-auto border-b border-[var(--pu-line)] px-4 pt-2"
         >
           <button
             type="button"
@@ -413,7 +297,7 @@ export function BOMModal({
           tabIndex={0}
           id={activeTab === 'optical' ? 'optical-budget-panel' : 'commercial-quotation-panel'}
           aria-labelledby={activeTab === 'optical' ? 'optical-budget-tab' : 'commercial-quotation-tab'}
-          className="flex-1 overflow-y-auto px-4 py-4"
+          className="min-w-0 flex-1 overflow-y-auto px-4 py-4"
         >
           {activeTab === 'commercial' ? (
             <CommercialQuotationView nodes={nodes} simulation={simulation} costBreakdown={costBreakdown} />
@@ -425,7 +309,7 @@ export function BOMModal({
                   label="Fiber deployed"
                   value={`${summary.totalFiberKm.toFixed(2)}`}
                   sub="km of plant on canvas"
-                  tone="text-sky-300"
+                  tone="text-[var(--pu-pri)]"
                 />
                 <StatCard
                   label={summary.gatewayCount === 0 ? 'ONTs provisioned' : 'Subscriber endpoints'}
@@ -436,72 +320,78 @@ export function BOMModal({
                   label="Online"
                   value={`${summary.byStatus.ONLINE + summary.byStatus.WARNING + summary.byStatus.OVERLOAD}`}
                   sub={`${summary.byStatus.ONLINE} optimal · ${summary.byStatus.WARNING} marginal`}
-                  tone="text-emerald-300"
+                  tone="text-[var(--pu-ok)]"
                 />
                 <StatCard
                   label="Offline"
                   value={`${summary.byStatus.LOS + summary.byStatus.DISCONNECTED}`}
                   sub={`${summary.byStatus.LOS} LOS · ${summary.byStatus.DISCONNECTED} unwired`}
-                  tone={summary.byStatus.LOS + summary.byStatus.DISCONNECTED > 0 ? 'text-red-300' : 'text-noc-200'}
+                  tone={
+                    summary.byStatus.LOS + summary.byStatus.DISCONNECTED > 0
+                      ? 'text-[var(--pu-bad)]'
+                      : 'text-[var(--pu-ink)]'
+                  }
                 />
               </div>
 
               {/* --------------------------- Passive plant -------------------------- */}
               <div className="mt-3 grid gap-2 md:grid-cols-2">
-                <div className="rounded-lg border border-noc-700/60 bg-noc-950/50 p-3">
+                <div className="rounded-lg border border-[var(--pu-line)] bg-white p-3">
                   <div className="eyebrow mb-2">Splitters by ratio</div>
                   {summary.splitterTotal === 0 ? (
-                    <p className="text-[11px] text-noc-500">No splitters deployed.</p>
+                    <p className="text-body text-[var(--pu-mut)]">No splitters deployed.</p>
                   ) : (
-                    <div className="flex flex-wrap gap-1.5">
+                    <div className="flex flex-wrap gap-2">
                       {SPLIT_RATIOS.filter((ratio: SplitRatio) => summary.splitterCountByRatio[ratio]).map((ratio) => (
                         <span
                           key={ratio}
-                          className="rounded border border-purple-500/40 bg-purple-500/15 px-2 py-1 font-mono text-[11px] text-purple-200"
+                          className="rounded border border-[var(--pu-line)] bg-[var(--pu-pri-soft)] px-2 py-1 font-mono text-label text-[var(--pu-pri)]"
                         >
                           1:{ratio} × {summary.splitterCountByRatio[ratio]}
-                          <span className="ml-1.5 text-purple-800">−{SPLITTER_LOSS_DB[ratio].toFixed(1)} dB each</span>
+                          <span className="ml-2 text-[var(--pu-mut)]">
+                            −{SPLITTER_LOSS_DB[ratio].toFixed(1)} dB each
+                          </span>
                         </span>
                       ))}
                     </div>
                   )}
-                  <div className="mt-2 border-t border-noc-700/50 pt-2 font-mono text-[11px] text-noc-400">
-                    Total passive splitters: <span className="text-noc-200">{summary.splitterTotal}</span>
+                  <div className="mt-2 border-t border-[var(--pu-line)] pt-2 font-mono text-label text-[var(--pu-mut)]">
+                    Total passive splitters: <span className="text-[var(--pu-ink)]">{summary.splitterTotal}</span>
                   </div>
                 </div>
 
-                <div className="rounded-lg border border-noc-700/60 bg-noc-950/50 p-3">
+                <div className="rounded-lg border border-[var(--pu-line)] bg-white p-3">
                   <div className="eyebrow mb-2">Termination &amp; splicing</div>
-                  <table className="w-full font-mono text-[11px]">
-                    <tbody className="text-noc-300">
+                  <table className="w-full font-mono text-label">
+                    <tbody className="text-[var(--pu-ink)]">
                       <tr>
-                        <td className="py-0.5 text-noc-400">Fusion splices</td>
-                        <td className="py-0.5 text-right">{summary.totalSplices}</td>
-                        <td className="py-0.5 pl-3 text-right text-noc-500">
+                        <td className="py-1 text-[var(--pu-mut)]">Fusion splices</td>
+                        <td className="py-1 text-right">{summary.totalSplices}</td>
+                        <td className="py-1 pl-3 text-right text-[var(--pu-mut)]">
                           {(summary.totalSplices * 0.1).toFixed(1)} dB worst case
                         </td>
                       </tr>
                       <tr>
-                        <td className="py-0.5 text-noc-400">SC/APC connectors</td>
-                        <td className="py-0.5 text-right">{summary.totalConnectors}</td>
-                        <td className="py-0.5 pl-3 text-right text-noc-500">
+                        <td className="py-1 text-[var(--pu-mut)]">SC/APC connectors</td>
+                        <td className="py-1 text-right">{summary.totalConnectors}</td>
+                        <td className="py-1 pl-3 text-right text-[var(--pu-mut)]">
                           {(summary.totalConnectors * 0.5).toFixed(1)} dB worst case
                         </td>
                       </tr>
                       <tr>
-                        <td className="py-0.5 text-noc-400">Safety margin</td>
-                        <td className="py-0.5 text-right">{settings.safetyMarginDb.toFixed(1)} dB</td>
-                        <td className="py-0.5 pl-3 text-right text-noc-500">per subscriber</td>
+                        <td className="py-1 text-[var(--pu-mut)]">Safety margin</td>
+                        <td className="py-1 text-right">{settings.safetyMarginDb.toFixed(1)} dB</td>
+                        <td className="py-1 pl-3 text-right text-[var(--pu-mut)]">per subscriber</td>
                       </tr>
-                      <tr className="border-t border-noc-700/50">
-                        <td className="py-1 text-noc-400">Mean Rx power</td>
-                        <td className="py-1 text-right text-noc-200" colSpan={2}>
+                      <tr className="border-t border-[var(--pu-line)]">
+                        <td className="py-1 text-[var(--pu-mut)]">Mean Rx power</td>
+                        <td className="py-1 text-right text-[var(--pu-ink)]" colSpan={2}>
                           {formatDbm(summary.meanRxDbm)}
                         </td>
                       </tr>
                       <tr>
-                        <td className="py-0.5 text-noc-400">Worst Rx power</td>
-                        <td className="py-0.5 text-right text-noc-200" colSpan={2}>
+                        <td className="py-1 text-[var(--pu-mut)]">Worst Rx power</td>
+                        <td className="py-1 text-right text-[var(--pu-ink)]" colSpan={2}>
                           {formatDbm(summary.worstRxDbm)}
                         </td>
                       </tr>
@@ -513,10 +403,10 @@ export function BOMModal({
               {/* ----------------------- Per-subscriber budget ---------------------- */}
               <div className="mt-4">
                 <div className="eyebrow mb-2">Optical budget per subscriber</div>
-                <div className="overflow-hidden rounded-lg border border-noc-700/60">
-                  <table className="w-full font-mono text-[11px]">
+                <div className="overflow-hidden rounded-lg border border-[var(--pu-line)]">
+                  <table className="w-full font-mono text-label">
                     <thead>
-                      <tr className="bg-noc-800/80 text-[10px] uppercase tracking-wide text-noc-400">
+                      <tr className="bg-[var(--pu-elevated)] text-caption uppercase tracking-label text-[var(--pu-mut)]">
                         <th className="px-2 py-2 text-left font-medium">Subscriber</th>
                         <th className="px-2 py-2 text-left font-medium">Status</th>
                         <th className="px-2 py-2 text-right font-medium">Rx dBm</th>
@@ -533,7 +423,7 @@ export function BOMModal({
                     <tbody>
                       {subscriberRows.length === 0 ? (
                         <tr>
-                          <td className="px-2 py-3 text-noc-500" colSpan={11}>
+                          <td className="px-2 py-3 text-[var(--pu-mut)]" colSpan={11}>
                             No subscriber endpoints on the canvas yet — drag an ONT or gateway in from the toolbox.
                           </td>
                         </tr>
@@ -544,10 +434,15 @@ export function BOMModal({
                           const data = node.data as { serial: string; subscriber: string };
                           const path = simulation.bestPaths[node.id];
                           return (
-                            <tr key={node.id} className="border-t border-noc-700/50 text-noc-300 hover:bg-noc-800/40">
-                              <td className="px-2 py-1.5">
-                                <div className="truncate font-sans text-[11px] text-noc-200">{data.subscriber}</div>
-                                <div className="text-[9px] text-noc-500">
+                            <tr
+                              key={node.id}
+                              className="border-t border-[var(--pu-line)] text-[var(--pu-ink)] hover:bg-[var(--pu-elevated)]"
+                            >
+                              <td className="px-2 py-2">
+                                <div className="truncate font-sans text-label text-[var(--pu-ink)]">
+                                  {data.subscriber}
+                                </div>
+                                <div className="text-label text-[var(--pu-mut)]">
                                   {node.type === 'gateway'
                                     ? `Wi-Fi gateway · ${data.serial} · ${node.data.ssid}`
                                     : `ONT · ${data.serial}`}
@@ -557,28 +452,28 @@ export function BOMModal({
                                     : ''}
                                 </div>
                               </td>
-                              <td className="px-2 py-1.5">
+                              <td className="px-2 py-2">
                                 <span
-                                  className={`inline-flex items-center gap-1 rounded border px-1.5 py-[1px] text-[9px] font-semibold ${style.badge}`}
+                                  className={`inline-flex items-center gap-1 rounded-md border px-2 py-1 text-caption font-semibold ${style.badge}`}
                                   title={describeStatus(telemetry.status)}
                                 >
                                   <span className="h-1.5 w-1.5 rounded-full" style={{ background: style.hex }} />
                                   {style.label}
                                 </span>
                               </td>
-                              <td className="px-2 py-1.5 text-right font-semibold" style={{ color: style.hex }}>
+                              <td className="px-2 py-2 text-right font-semibold" style={{ color: style.hex }}>
                                 {formatDbm(telemetry.rxPowerDbm)}
                               </td>
-                              <td className="px-2 py-1.5 text-right">
+                              <td className="px-2 py-2 text-right">
                                 {telemetry.rxPowerDbm === null ? '—' : telemetry.totalLossDb.toFixed(2)}
                               </td>
-                              <td className="px-2 py-1.5 text-right">
+                              <td className="px-2 py-2 text-right">
                                 {telemetry.rxPowerDbm === null ? '—' : `${telemetry.marginDb.toFixed(2)}`}
                               </td>
                               <td
-                                className={`px-2 py-1.5 text-right ${
+                                className={`px-2 py-2 text-right ${
                                   telemetry.upstreamDeltaDb !== null && telemetry.upstreamDeltaDb > 15
-                                    ? 'font-semibold text-amber-400'
+                                    ? 'font-semibold text-[var(--pu-warn)]'
                                     : ''
                                 }`}
                               >
@@ -586,13 +481,13 @@ export function BOMModal({
                                   ? '—'
                                   : `${telemetry.upstreamDeltaDb.toFixed(2)} dB`}
                               </td>
-                              <td className="px-2 py-1.5 text-right">{telemetry.fiberKm.toFixed(2)}</td>
-                              <td className="px-2 py-1.5 text-right">
+                              <td className="px-2 py-2 text-right">{telemetry.fiberKm.toFixed(2)}</td>
+                              <td className="px-2 py-2 text-right">
                                 {telemetry.rxPowerDbm === null ? '—' : `1:${telemetry.cumulativeSplitRatio}`}
                               </td>
-                              <td className="px-2 py-1.5 text-right">{telemetry.splices}</td>
-                              <td className="px-2 py-1.5 text-right">{telemetry.connectors}</td>
-                              <td className="px-2 py-1.5 text-[10px] text-noc-400">
+                              <td className="px-2 py-2 text-right">{telemetry.splices}</td>
+                              <td className="px-2 py-2 text-right">{telemetry.connectors}</td>
+                              <td className="px-2 py-2 text-label text-[var(--pu-mut)]">
                                 {path ? `${path.oltPort} @ ${path.txPowerDbm.toFixed(1)} dBm` : '—'}
                               </td>
                             </tr>
@@ -609,7 +504,7 @@ export function BOMModal({
                 {(Object.keys(STATUS_STYLES) as Array<keyof typeof STATUS_STYLES>).map((key) => (
                   <div
                     key={key}
-                    className="flex items-center gap-1.5 rounded border border-noc-700/60 bg-noc-950/50 px-2 py-1"
+                    className="flex items-center gap-2 rounded border border-[var(--pu-line)] bg-white px-2 py-1"
                   >
                     <span
                       className="h-2 w-2 rounded-full"
@@ -618,15 +513,15 @@ export function BOMModal({
                         boxShadow: `0 0 6px ${STATUS_STYLES[key].hex}`,
                       }}
                     />
-                    <span className="font-mono text-[10px] text-noc-300">{STATUS_STYLES[key].label}</span>
-                    <span className="font-mono text-[10px] text-noc-500">{summary.byStatus[key]}</span>
+                    <span className="font-mono text-label text-[var(--pu-ink)]">{STATUS_STYLES[key].label}</span>
+                    <span className="font-mono text-label text-[var(--pu-mut)]">{summary.byStatus[key]}</span>
                   </div>
                 ))}
               </div>
             </>
           )}
         </div>
-      </div>
+      </section>
     </div>
   );
 }

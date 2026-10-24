@@ -9,6 +9,7 @@ import { SpliceIntroHero } from './SpliceIntroHero';
 export interface LandingViewProps {
   simulation: SimulationResult | null;
   simulationStale: boolean;
+  simulationIsReference?: boolean;
   onLaunchStudio: () => void;
   onExploreMissions: () => void;
   onLoadPreset: (presetId: string) => void;
@@ -18,6 +19,7 @@ export interface LandingViewProps {
 export function LandingView({
   simulation,
   simulationStale,
+  simulationIsReference = false,
   onLaunchStudio,
   onExploreMissions,
   onLoadPreset,
@@ -30,15 +32,17 @@ export function LandingView({
           <div className="landing-nav-wrap">
             <LandingNav onLaunchStudio={onLaunchStudio} onLoadPreset={onLoadPreset} />
           </div>
-          <SpliceIntroHero simulation={simulation} simulationStale={simulationStale} onLaunchStudio={onLaunchStudio} />
+          <SpliceIntroHero
+            simulation={simulation}
+            simulationStale={simulationStale}
+            simulationIsReference={simulationIsReference}
+            onLaunchStudio={onLaunchStudio}
+            onExploreMissions={onExploreMissions}
+          />
         </div>
 
         <div className="landing-content">
-          <PhotonicHero
-            onLaunchStudio={onLaunchStudio}
-            onExploreMissions={onExploreMissions}
-            onLoadPreset={onLoadPreset}
-          />
+          <PhotonicHero onLoadPreset={onLoadPreset} />
           <PillarsGrid onStartVillaMission={onStartVillaMission} onOpenStudio={onLaunchStudio} />
           <SpecsStrip />
         </div>
@@ -54,7 +58,7 @@ export function LandingView({
           and device datasheets.
         </p>
         <button type="button" className="landing-footer-link" onClick={onLaunchStudio}>
-          Open the engineering canvas <ArrowUpRight size={13} aria-hidden="true" />
+          Open the engineering canvas <ArrowUpRight size={14} aria-hidden="true" />
         </button>
       </footer>
     </div>

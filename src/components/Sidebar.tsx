@@ -122,10 +122,12 @@ export function Sidebar({
           aria-label="Design"
           title="Show or hide the component library"
         >
-          <LayoutDashboard size={20} /> Design
+          <LayoutDashboard size={20} />
+          <span className="pu-rail-label">Design</span>
         </button>
         <button type="button" onClick={onRunSimulation} aria-label="Simulation" title="Run the optical simulation">
-          <PlayCircle size={20} /> Simulation
+          <PlayCircle size={20} />
+          <span className="pu-rail-label">Simulation</span>
         </button>
         <button
           type="button"
@@ -133,10 +135,12 @@ export function Sidebar({
           aria-label="Reports"
           title="Bill of materials & optical budget audit"
         >
-          <FileText size={20} /> Reports
+          <FileText size={20} />
+          <span className="pu-rail-label">Reports</span>
         </button>
         <button type="button" onClick={onOpenSettings} aria-label="Settings" title="Safety margin, OPM, OTDR and more">
-          <Settings2 size={20} /> Settings
+          <Settings2 size={20} />
+          <span className="pu-rail-label">Settings</span>
         </button>
       </nav>
 
@@ -286,7 +290,7 @@ export function Sidebar({
           <Section title="Tools">
             {onToggleOpm ? (
               <ToolItem
-                icon={<Gauge size={22} />}
+                icon={<Gauge size={20} />}
                 title="Power Meter"
                 subtitle="Probe a port or patch cord"
                 onClick={onToggleOpm}
@@ -294,7 +298,7 @@ export function Sidebar({
             ) : null}
             {onOpenOtdr ? (
               <ToolItem
-                icon={<Activity size={22} />}
+                icon={<Activity size={20} />}
                 title="OTDR Trace"
                 subtitle="Find events and breaks"
                 onClick={onOpenOtdr}
@@ -305,7 +309,11 @@ export function Sidebar({
 
         <div className="pu-foot">
           Need help?{' '}
-          <button type="button" onClick={onOpenOverview} style={{ color: 'var(--pu-pri)', fontWeight: 600 }}>
+          <button
+            type="button"
+            onClick={onOpenOverview}
+            style={{ color: 'var(--pu-pri)', fontWeight: 'var(--fw-semibold)' }}
+          >
             Learn
           </button>{' '}
           ·{' '}

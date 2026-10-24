@@ -1,0 +1,178 @@
+/* ==========================================================================
+ * FiberLAB design tokens — the single source of truth for type, space,
+ * radius and panel padding.
+ *
+ * Loaded FIRST in src/main.tsx, before global.css / theme.css / photo-ui.css,
+ * so every later rule can reference these variables.
+ *
+ * Rules for using this file:
+ *   • Sizing values in component CSS come from here, not from ad-hoc px.
+ *   • Two layers: a raw numeric scale (--fs-*, --sp-*, --r-*) and semantic
+ *     roles (--type-*, --panel-*, --control-*). Prefer the semantic role in
+ *     component CSS; the numeric scale is for one-off exceptions.
+ *   • One spacing scale: 4 / 8 / 12 / 16 / 24 / 32.
+ *   • One type scale: 10 / 11 / 12 / 14 / 16 / 20 / 24 (+ display clamp).
+ * ========================================================================== */
+
+:root {
+  /* ---------------------------------------------------------------- type ---
+   * One scale, 7 steps. Body is 13px — nothing that sets running copy may go
+   * below it. Micro text (11px) is reserved for uppercase chips, unit suffixes
+   * and canvas node art, never for sentences. */
+  --fs-2xs: 11px; /* micro: uppercase chip, unit suffix, node art */
+  --fs-xs: 12px; /* label: tab, badge, table cell, dense metadata */
+  --fs-sm: 13px; /* body: default reading size — never smaller */
+  --fs-md: 15px; /* lead: card title, lede, emphasised value */
+  --fs-lg: 18px; /* panel title */
+  --fs-xl: 22px; /* section + modal title, small metric */
+  --fs-2xl: 28px; /* display heading, large metric */
+
+  /* Semantic roles — pick the role, not the number. */
+  --type-display: clamp(45px, 5.25vw, 76px); /* landing hero h1 */
+  --type-display-sm: clamp(33px, 3.7vw, 52px); /* landing secondary title */
+  --type-section-title: var(--fs-xl); /* modal title, major section heading */
+  --type-section-title-lg: var(--fs-2xl); /* landing section heading */
+  --type-panel-title: var(--fs-lg); /* panel / drawer / card heading */
+  --type-card-title: var(--fs-md); /* title inside a small card */
+  --type-subtitle: var(--fs-md); /* sub-heading, lede paragraph */
+  --type-body: var(--fs-sm); /* default body copy */
+  --type-small: var(--fs-xs); /* labels, tabs, dense tables */
+  --type-caption: var(--fs-2xs); /* uppercase caption, units, node art */
+  --type-metric: var(--fs-2xl); /* instrument readout, headline number */
+  --type-metric-sm: var(--fs-xl); /* stat-card value */
+  --type-brand: var(--fs-xl); /* wordmark */
+
+  /* Weights — five steps, used by role. */
+  --fw-regular: 400; /* body copy */
+  --fw-medium: 500; /* emphasised body, data values */
+  --fw-semibold: 600; /* labels, tabs, panel titles */
+  --fw-bold: 700; /* headings, metrics, active state */
+  --fw-black: 800; /* wordmark only */
+
+  /* Line heights, paired with the roles above. */
+  --leading-none: 1;
+  --leading-tight: 1.2; /* display + section titles */
+  --leading-snug: 1.35; /* panel titles, labels, dense rows */
+  --leading-normal: 1.5; /* body */
+  --leading-relaxed: 1.6; /* long-form lede text */
+
+  /* Tracking — four steps. Headings pull in, uppercase labels push out. */
+  --tracking-display: -0.07em; /* wordmark, large numeric readouts */
+  --tracking-tight: -0.02em; /* display + section titles */
+  --tracking-label: 0.08em; /* uppercase table headers, badges, chips */
+  --tracking-eyebrow: 0.13em; /* eyebrows and wide uppercase captions */
+
+  /* ------------------------------------------------------------- spacing ---
+   * 4px base. Nothing in component CSS should use 5/6/7/9/10/11/13… px. */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+
+  --inset-control: var(--sp-2) var(--sp-3); /* padding inside a button/input */
+
+  /* -------------------------------------------------------------- radius ---
+   * Six steps cover every surface in the app. */
+  --r-sm: 6px; /* chip, badge, small inner box */
+  --r-md: 8px; /* button, input, tab */
+  --r-lg: 10px; /* card, menu item, meter well */
+  --r-xl: 12px; /* panel, card, popover */
+  --r-2xl: 16px; /* modal, hero card */
+  --r-pill: 999px; /* status pill, avatar, toggle */
+
+  /* -------------------------------------------------------------- panels ---
+   * Panel padding / gutters. Applied as a single value per surface so the
+   * library, canvas and inspector share one gutter. */
+  --panel-pad: var(--sp-4); /* 16 — one panel gutter */
+
+  /* -------------------------------------------------------------- layout ---
+   * The workbench is a four-column row: rail | component library | canvas |
+   * inspector. Column widths are fixed per breakpoint, the canvas takes the
+   * remaining space (minmax(0, 1fr)), and one gutter value separates every
+   * panel. Every letter-spaced edge (top bar, library title, inspector title,
+   * bottom-panel tabs) starts on --shell-pad. */
+  --topbar-h: 56px;
+  --rail-w: 84px; /* fits the longest rail label on one line */
+  --library-w: clamp(200px, 17vw, 240px);
+  --inspector-w: clamp(256px, 21vw, 300px);
+  --inspector-w-collapsed: 44px;
+  --shell-gap: var(--sp-3); /* 12 — gap between canvas, tabstrip, bottom panel */
+  --shell-pad: var(--panel-pad); /* 16 — side padding of every panel */
+  --canvas-min-w: 360px;
+  --panel-head-h: 48px; /* title row: library, inspector, document tab strip */
+  --tab-h: 40px; /* every tab button, all three tab bars */
+  --card-pad: var(--sp-3); /* inner padding of every card/stat/tile */
+  --bottom-max-h: 44vh; /* bottom panel never eats more than this share */
+  --toolbar-gutter: 208px; /* reserved for the minimap next to the toolbar */
+
+  /* Landing / overview page container */
+  --page-max: 1390px;
+  --page-gutter: clamp(16px, 4vw, 72px);
+
+  /* ------------------------------------------------------------ controls ---
+   * Control heights. --control-tap is the phone minimum (44px). */
+  --control-sm: 32px;
+  --control-md: 36px;
+  --control-lg: 40px;
+  --control-tap: 44px;
+}
+
+/* Display type is the only thing that changes size between breakpoints; the
+ * component rules always reference the token, never a local clamp. */
+@media (max-width: 900px) {
+  :root {
+    --type-display: clamp(48px, 7vw, 68px);
+  }
+}
+
+@media (max-width: 640px) {
+  :root {
+    --type-display: clamp(41px, 11.5vw, 60px);
+    --type-display-sm: clamp(30px, 9vw, 42px);
+    --type-section-title-lg: var(--fs-xl);
+  }
+}
+
+/* --------------------------------------------------------------------------
+ * Breakpoint steps for the shell. Three sizes only: 1280 (compact desktop),
+ * 1024 (small laptop / tablet landscape) and 900 (canvas-first overlay mode).
+ * -------------------------------------------------------------------------- */
+@media (max-width: 1280px) {
+  :root {
+    --topbar-h: 52px;
+    --rail-w: 84px;
+    --library-w: 208px;
+    --inspector-w: 264px;
+  }
+}
+
+@media (max-width: 1024px) {
+  :root {
+    --rail-w: 84px;
+    --library-w: 184px;
+    --inspector-w: 240px;
+    --canvas-min-w: 320px; /* the wider rail takes its share from the canvas floor */
+    --shell-gap: var(--sp-2);
+    --shell-pad: var(--sp-3); /* compact panels get one narrower gutter everywhere */
+    --bottom-max-h: 40vh;
+  }
+}
+
+@media (max-width: 900px) {
+  :root {
+    --library-w: min(280px, calc(100vw - var(--rail-w) - var(--sp-3) * 2));
+    --inspector-w: min(320px, calc(100vw - var(--rail-w) - var(--sp-3) * 2));
+    --canvas-min-w: 0;
+    --bottom-max-h: 44vh; /* stacked cards need the room */
+  }
+}
+
+@media (max-width: 560px) {
+  :root {
+    --topbar-h: 52px;
+    --shell-gap: var(--sp-2);
+    --bottom-max-h: 40vh;
+  }
+}

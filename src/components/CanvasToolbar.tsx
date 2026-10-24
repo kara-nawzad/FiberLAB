@@ -67,14 +67,24 @@ export function CanvasToolbar(props: CanvasToolbarProps) {
     onClear,
   } = props;
   const menuRef = useRef<HTMLDivElement | null>(null);
+  const menuButtonRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
     if (!toolsOpen) return;
     const onDown = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as globalThis.Node)) onToolsOpenChange(false);
     };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      onToolsOpenChange(false);
+      menuButtonRef.current?.focus({ preventScroll: true });
+    };
     document.addEventListener('mousedown', onDown);
-    return () => document.removeEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
   }, [toolsOpen, onToolsOpenChange]);
 
   const close = (fn: () => void) => () => {
@@ -127,18 +137,21 @@ export function CanvasToolbar(props: CanvasToolbarProps) {
 
       <div style={{ position: 'relative' }} ref={menuRef}>
         <button
+          ref={menuButtonRef}
           type="button"
           className={`pu-btn ${toolsOpen || opmActive || activeMissionTitle ? 'is-active' : ''}`}
           onClick={() => onToolsOpenChange(!toolsOpen)}
           aria-expanded={toolsOpen}
+          aria-haspopup="true"
+          aria-controls="canvas-more-tools"
           aria-label="More tools"
         >
           <SlidersHorizontal size={14} /> More tools
         </button>
         {toolsOpen ? (
-          <div className="pu-menu" style={{ top: 'calc(100% + 8px)', left: 0, width: 280 }}>
+          <div id="canvas-more-tools" className="pu-menu" style={{ top: 'calc(100% + 8px)', left: 0, width: 280 }}>
             <button type="button" onClick={close(onOpenOverview)} aria-label="Overview & Physics">
-              <ArrowLeft size={13} style={{ display: 'inline', marginRight: 8 }} /> Overview &amp; Physics
+              <ArrowLeft size={14} className="pu-menu-ico" /> Overview &amp; Physics
             </button>
             <button
               type="button"
@@ -146,33 +159,21 @@ export function CanvasToolbar(props: CanvasToolbarProps) {
               aria-pressed={opmActive}
               aria-label={opmActive ? 'Close OPM' : 'OPM Tool'}
             >
-              <Crosshair size={13} style={{ display: 'inline', marginRight: 8 }} />{' '}
-              {opmActive ? 'Close OPM' : 'OPM Tool'} — probe a port
+              <Crosshair size={14} className="pu-menu-ico" /> {opmActive ? 'Close OPM' : 'OPM Tool'} — probe a port
             </button>
             <button type="button" onClick={close(onOpenOtdr)} aria-label="OTDR Trace">
-              <ScanLine size={13} style={{ display: 'inline', marginRight: 8 }} /> OTDR Trace
+              <ScanLine size={14} className="pu-menu-ico" /> OTDR Trace
             </button>
             <button
               type="button"
               onClick={close(onOpenMissions)}
               aria-label={activeMissionTitle ? `Missions, active: ${activeMissionTitle}` : 'Missions'}
             >
-              <ClipboardList size={13} style={{ display: 'inline', marginRight: 8 }} /> Missions
+              <ClipboardList size={14} className="pu-menu-ico" /> Missions
               {activeMissionTitle ? ` · ${activeMissionTitle}` : ''}
             </button>
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                padding: '10px 14px',
-                borderBottom: '1px solid var(--pu-line)',
-                fontSize: 12,
-              }}
-            >
-              <label htmlFor="safety-margin" style={{ fontWeight: 600 }}>
-                Safety margin
-              </label>
+            <div className="pu-menu-row">
+              <label htmlFor="safety-margin">Safety margin</label>
               <input
                 id="safety-margin"
                 type="number"
@@ -181,13 +182,7 @@ export function CanvasToolbar(props: CanvasToolbarProps) {
                 step={0.5}
                 value={settings.safetyMarginDb}
                 onChange={(event) => onSettingsChange({ safetyMarginDb: Math.max(0, Number(event.target.value) || 0) })}
-                style={{
-                  width: 54,
-                  padding: '4px 6px',
-                  border: '1px solid var(--pu-line)',
-                  borderRadius: 7,
-                  textAlign: 'center',
-                }}
+                className="pu-input-sm"
               />
               <span className="pu-mut">dB</span>
               <button
@@ -196,15 +191,7 @@ export function CanvasToolbar(props: CanvasToolbarProps) {
                 aria-checked={settings.autoRun}
                 onClick={() => onSettingsChange({ autoRun: !settings.autoRun })}
                 title="Recalculate the optical budget on every edit"
-                style={{
-                  marginLeft: 'auto',
-                  width: 'auto',
-                  padding: '4px 10px',
-                  borderRadius: 99,
-                  border: '1px solid var(--pu-line)',
-                  fontWeight: 700,
-                  color: settings.autoRun ? 'var(--pu-ok)' : 'var(--pu-mut)',
-                }}
+                className={`pu-switch ${settings.autoRun ? 'is-on' : ''}`}
               >
                 Auto {settings.autoRun ? 'on' : 'off'}
               </button>
@@ -214,9 +201,9 @@ export function CanvasToolbar(props: CanvasToolbarProps) {
               onClick={close(onClear)}
               aria-label="Clear Canvas"
               title="Remove every element"
-              style={{ color: 'var(--pu-bad)' }}
+              className="is-danger"
             >
-              <Trash2 size={13} style={{ display: 'inline', marginRight: 8 }} /> Clear canvas
+              <Trash2 size={14} className="pu-menu-ico" /> Clear canvas
             </button>
           </div>
         ) : null}

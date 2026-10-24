@@ -1,11 +1,4 @@
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type KeyboardEvent as ReactKeyboardEvent,
-  type PointerEvent as ReactPointerEvent,
-} from 'react';
+import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { Activity, ChevronDown, Radio, ScanLine, X } from 'lucide-react';
 import type { PonEdge, PonNode, Wavelength } from '../types';
 import {
@@ -16,6 +9,7 @@ import {
   type OtdrEvent,
   type OtdrPulseWidthNs,
 } from '../engine/otdrSimulator';
+import { useDialogA11y } from '../hooks/useDialogA11y';
 
 interface OtdrModalProps {
   open: boolean;
@@ -499,53 +493,18 @@ export function OtdrModal({ open, onClose, nodes, edges }: OtdrModalProps) {
     onClose();
   };
 
+  // Clear a pending acquisition whenever the analyzer is dismissed, including
+  // the Escape path handled by the shared dialog hook.
   useEffect(() => {
-    if (!open) {
-      if (timeoutRef.current !== null) {
-        window.clearTimeout(timeoutRef.current);
-        timeoutRef.current = null;
-      }
-      setAcquiring(false);
-      return;
+    if (open) return;
+    if (timeoutRef.current !== null) {
+      window.clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
     }
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
-      if (timeoutRef.current !== null) {
-        window.clearTimeout(timeoutRef.current);
-        timeoutRef.current = null;
-      }
-      setAcquiring(false);
-      onClose();
-    };
-    document.addEventListener('keydown', closeOnEscape);
-    return () => document.removeEventListener('keydown', closeOnEscape);
-  }, [open, onClose]);
-
-  useEffect(() => {
-    if (open) closeButtonRef.current?.focus();
+    setAcquiring(false);
   }, [open]);
 
-  const trapDialogTab = (event: ReactKeyboardEvent<HTMLElement>) => {
-    if (event.key !== 'Tab') return;
-    const focusable = Array.from(
-      event.currentTarget.querySelectorAll<HTMLElement>(
-        'button:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
-      ),
-    );
-    if (focusable.length === 0) {
-      event.preventDefault();
-      return;
-    }
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
-    if (event.shiftKey && document.activeElement === first) {
-      event.preventDefault();
-      last.focus();
-    } else if (!event.shiftKey && document.activeElement === last) {
-      event.preventDefault();
-      first.focus();
-    }
-  };
+  const { dialogRef } = useDialogA11y({ open, onClose: handleClose, initialFocusRef: closeButtonRef });
 
   if (!open) return null;
 
@@ -559,17 +518,17 @@ export function OtdrModal({ open, onClose, nodes, edges }: OtdrModalProps) {
       }}
     >
       <section
+        ref={dialogRef}
         className="otdr-modal panel"
         role="dialog"
         aria-modal="true"
         aria-labelledby="otdr-modal-title"
         aria-describedby="otdr-modal-description"
-        onKeyDown={trapDialogTab}
       >
         <header className="otdr-modal-header">
           <div className="otdr-title-group">
             <span className="otdr-title-icon">
-              <Activity size={17} aria-hidden="true" />
+              <Activity size={16} aria-hidden="true" />
             </span>
             <div>
               <div className="otdr-eyebrow">FIBERLAB · FIELD DIAGNOSTICS</div>
@@ -607,7 +566,7 @@ export function OtdrModal({ open, onClose, nodes, edges }: OtdrModalProps) {
                     </option>
                   ))}
                 </select>
-                <ChevronDown size={13} aria-hidden="true" />
+                <ChevronDown size={14} aria-hidden="true" />
               </span>
             </label>
 
@@ -627,7 +586,7 @@ export function OtdrModal({ open, onClose, nodes, edges }: OtdrModalProps) {
                     </option>
                   ))}
                 </select>
-                <ChevronDown size={13} aria-hidden="true" />
+                <ChevronDown size={14} aria-hidden="true" />
               </span>
             </label>
 
@@ -648,7 +607,7 @@ export function OtdrModal({ open, onClose, nodes, edges }: OtdrModalProps) {
               </div>
             </fieldset>
 
-            <fieldset className="otdr-segment-control pulse-control">
+            <fieldset className="otdr-segment-control">
               <legend>Pulse width</legend>
               <div>
                 {OTDR_PULSE_WIDTHS_NS.map((pulse) => (
@@ -722,10 +681,10 @@ export function OtdrModal({ open, onClose, nodes, edges }: OtdrModalProps) {
                   <tr>
                     <th>#</th>
                     <th>Type / event</th>
-                    <th>Location</th>
-                    <th>Loss step</th>
-                    <th>Cumulative loss</th>
-                    <th>Reflectance peak</th>
+                    <th className="is-num">Location</th>
+                    <th className="is-num">Loss step</th>
+                    <th className="is-num">Cumulative loss</th>
+                    <th className="is-num">Reflectance peak</th>
                     <th>Assessment</th>
                   </tr>
                 </thead>
@@ -738,13 +697,15 @@ export function OtdrModal({ open, onClose, nodes, edges }: OtdrModalProps) {
                         {eventLabel(event.type)}
                         <small>{event.description}</small>
                       </td>
-                      <td>{event.distanceKm.toFixed(3)} km</td>
-                      <td className={event.relativeLossDb < 0 ? 'is-loss' : ''}>
+                      <td className="is-num">{event.distanceKm.toFixed(3)} km</td>
+                      <td className={`is-num ${event.relativeLossDb < 0 ? 'is-loss' : ''}`}>
                         {event.relativeLossDb > 0 ? '+' : ''}
                         {event.relativeLossDb.toFixed(2)} dB
                       </td>
-                      <td>{event.cumulativeLossDb.toFixed(2)} dB</td>
-                      <td>{event.reflectionPeakDb === undefined ? '—' : `+${event.reflectionPeakDb.toFixed(2)} dB`}</td>
+                      <td className="is-num">{event.cumulativeLossDb.toFixed(2)} dB</td>
+                      <td className="is-num">
+                        {event.reflectionPeakDb === undefined ? '—' : `+${event.reflectionPeakDb.toFixed(2)} dB`}
+                      </td>
                       <td>
                         <span className={`otdr-status ${event.passFail.toLowerCase()}`}>{event.passFail}</span>
                       </td>

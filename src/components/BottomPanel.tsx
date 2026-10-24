@@ -1,5 +1,17 @@
 import { useMemo, useState } from 'react';
-import { AlertTriangle, CheckCircle2, ChevronDown, ChevronUp, Info, Route, Ruler, Users } from 'lucide-react';
+import {
+  AlertTriangle,
+  CheckCircle2,
+  ChevronDown,
+  ChevronUp,
+  GitMerge,
+  Info,
+  Plug,
+  Route,
+  Ruler,
+  Split,
+  Users,
+} from 'lucide-react';
 import type { NetworkSummary, PonNode, SimulationResult } from '../types';
 import { STATUS_STYLES } from '../types';
 import { formatDbm } from '../engine/opticalSimulator';
@@ -120,35 +132,39 @@ export function BottomPanel({
       data-testid="network-summary-strip"
       aria-label="Network summary"
     >
-      <div className="pu-btabs" role="tablist">
-        {TABS.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            role="tab"
-            aria-selected={tab === item.id}
-            className={tab === item.id ? 'is-active' : ''}
-            onClick={() => {
-              setTab(item.id);
-              setMinimized(false);
-            }}
-          >
-            {item.label}
-          </button>
-        ))}
+      <div className="pu-bhead">
+        <div className="pu-btabs" role="tablist" aria-label="Network summary views">
+          {TABS.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              role="tab"
+              aria-selected={tab === item.id}
+              className={tab === item.id ? 'is-active' : ''}
+              onClick={() => {
+                setTab(item.id);
+                setMinimized(false);
+              }}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
         <button
           type="button"
-          style={{ marginLeft: 'auto' }}
+          className="pu-bcollapse"
           onClick={() => setMinimized((value) => !value)}
-          aria-label={minimized ? 'Expand summary' : 'Minimize summary'}
+          aria-label={minimized ? 'Expand summary' : 'Collapse summary'}
+          title={minimized ? 'Expand the network summary' : 'Collapse the network summary'}
         >
           {minimized ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          <span className="pu-bcollapse-label">{minimized ? 'Expand' : 'Collapse'}</span>
         </button>
       </div>
 
       {!minimized && tab === 'overview' ? (
         <div className="pu-bottom-grid">
-          <div className="pu-stats" style={{ gridTemplateColumns: 'repeat(2,1fr)' }}>
+          <div className="pu-stats pu-stats--pairs">
             <div className="pu-stat">
               <i>
                 <Ruler size={16} />
@@ -211,10 +227,10 @@ export function BottomPanel({
               </div>
             ))}
           </div>
-          <div className="pu-card" style={{ maxHeight: 150, overflowY: 'auto' }}>
+          <div className="pu-card pu-card--events">
             <h6>Recent Events</h6>
             {events.length === 0 ? (
-              <div className="pu-mut" style={{ fontSize: 11 }}>
+              <div className="pu-mut" style={{ fontSize: 'var(--fs-xs)' }}>
                 Add an OLT and a subscriber to begin.
               </div>
             ) : null}
@@ -234,26 +250,33 @@ export function BottomPanel({
       ) : null}
 
       {!minimized && tab === 'budget' ? (
-        <div className="pu-bottom-grid" style={{ gridTemplateColumns: '1fr' }}>
-          <div className="pu-card" style={{ maxHeight: 170, overflowY: 'auto' }}>
-            <table style={{ width: '100%', fontSize: 11 }}>
+        <div className="pu-bottom-grid pu-bottom-grid--stack">
+          <div className="pu-card pu-card--scroll">
+            <table className="pu-data-table">
               <thead className="pu-mut">
-                <tr style={{ textAlign: 'left' }}>
+                <tr>
                   <th>Subscriber</th>
-                  <th>Rx power</th>
-                  <th>Path loss</th>
-                  <th>Margin</th>
+                  <th className="is-num">Rx power</th>
+                  <th className="is-num">Path loss</th>
+                  <th className="is-num">Margin</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
                 {endpoints.map(({ node, reading }) => (
                   <tr key={node.id} onClick={() => onSelectNode(node.id)} style={{ cursor: 'pointer' }}>
-                    <td style={{ padding: '4px 0', fontWeight: 600 }}>{node.data.subscriber}</td>
-                    <td>{formatDbm(reading?.rxPowerDbm ?? null)}</td>
-                    <td>{reading ? `${reading.totalLossDb.toFixed(1)} dB` : '—'}</td>
-                    <td>{reading?.rxPowerDbm != null ? `${reading.marginDb.toFixed(1)} dB` : '—'}</td>
-                    <td style={{ fontWeight: 700, color: STATUS_STYLES[reading?.status ?? 'DISCONNECTED'].hex }}>
+                    <td style={{ fontWeight: 'var(--fw-semibold)' }}>{node.data.subscriber}</td>
+                    <td className="is-num">{formatDbm(reading?.rxPowerDbm ?? null)}</td>
+                    <td className="is-num">{reading ? `${reading.totalLossDb.toFixed(1)} dB` : '—'}</td>
+                    <td className="is-num">
+                      {reading?.rxPowerDbm != null ? `${reading.marginDb.toFixed(1)} dB` : '—'}
+                    </td>
+                    <td
+                      style={{
+                        fontWeight: 'var(--fw-bold)',
+                        color: STATUS_STYLES[reading?.status ?? 'DISCONNECTED'].hex,
+                      }}
+                    >
                       {STATUS_STYLES[reading?.status ?? 'DISCONNECTED'].label}
                     </td>
                   </tr>
@@ -268,7 +291,7 @@ export function BottomPanel({
       ) : null}
 
       {!minimized && tab === 'components' ? (
-        <div className="pu-bottom-grid" style={{ gridTemplateColumns: 'repeat(4,1fr)' }}>
+        <div className="pu-bottom-grid pu-bottom-grid--quarters">
           {Object.entries(counts).map(([kind, count]) => (
             <div className="pu-stat" key={kind}>
               <div>
@@ -281,7 +304,7 @@ export function BottomPanel({
       ) : null}
 
       {!minimized && tab === 'topology' ? (
-        <div className="pu-bottom-grid" style={{ gridTemplateColumns: 'repeat(4,1fr)' }}>
+        <div className="pu-bottom-grid pu-bottom-grid--quarters">
           <div className="pu-stat">
             <i>
               <Route size={16} />
@@ -292,18 +315,27 @@ export function BottomPanel({
             </div>
           </div>
           <div className="pu-stat">
+            <i>
+              <Split size={16} />
+            </i>
             <div>
               <small>Splitters</small>
               <b>{summary.splitterTotal}</b>
             </div>
           </div>
           <div className="pu-stat">
+            <i>
+              <GitMerge size={16} />
+            </i>
             <div>
               <small>Splices</small>
               <b>{summary.totalSplices}</b>
             </div>
           </div>
           <div className="pu-stat">
+            <i>
+              <Plug size={16} />
+            </i>
             <div>
               <small>Connectors</small>
               <b>{summary.totalConnectors}</b>
