@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react';
-import { Download, FileJson, Table2, X } from 'lucide-react';
+import { ArrowLeft, Download, FileJson, Table2, X } from 'lucide-react';
 import type { DesignSettings, PonEdge, PonNode, SimulationResult, SplitRatio } from '../types';
 import { SPLIT_RATIOS, SPLITTER_LOSS_DB, STATUS_STYLES } from '../types';
 import { describeStatus, formatDbm } from '../engine/opticalSimulator';
 import type { NetworkCostBreakdown, UnitCostProfile } from '../data/pricingCatalogue';
 import { formatUsd } from '../data/pricingCatalogue';
 import { useDialogA11y } from '../hooks/useDialogA11y';
+import { useSectionFocus } from '../hooks/useSectionFocus';
 import { buildCommercialCsv, buildQuotationExport, connectedSubscriberCount } from '../data/commercialQuoteExports';
 import { PricingSettings } from './PricingSettings';
 
@@ -82,6 +83,7 @@ function CommercialQuotationView({
 
   return (
     <section aria-label="Commercial quotation and CAPEX" data-testid="commercial-quotation">
+      <h2 className="sr-only">Commercial quotation &amp; CAPEX</h2>
       <div className="mb-3 grid grid-cols-2 gap-2 md:grid-cols-4">
         <StatCard
           label="Total Materials Cost"
@@ -192,6 +194,8 @@ export function BOMModal({
   const [activeTab, setActiveTab] = useState<'optical' | 'commercial'>('optical');
   const isDialog = variant === 'dialog';
   const { dialogRef } = useDialogA11y({ open: isDialog && open, onClose });
+  /* Reports is a section: opening it puts the keyboard on the report title. */
+  const titleRef = useSectionFocus<HTMLHeadingElement>();
   const summary = simulation.summary;
 
   const subscriberRows = useMemo(
@@ -211,8 +215,13 @@ export function BOMModal({
 
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
 
+  /* As the Reports screen the report *is* the page, so it renders <main>;
+   * as an overlay it stays a labelled dialog. Same markup, two landmarks. */
+  const ScreenTag = (isDialog ? 'section' : 'main') as 'section';
+  const TitleTag = (isDialog ? 'h2' : 'h1') as 'h2';
+
   const body = (
-    <section
+    <ScreenTag
       ref={dialogRef}
       role={isDialog ? 'dialog' : undefined}
       aria-modal={isDialog ? true : undefined}
@@ -225,15 +234,28 @@ export function BOMModal({
           : 'pu-screen pu-reports-screen'
       }
     >
+      {isDialog ? null : (
+        <div className="pu-reports-back">
+          <button type="button" className="pu-btn" onClick={onClose}>
+            <ArrowLeft size={14} aria-hidden="true" /> Back to Design
+          </button>
+        </div>
+      )}
+
       <div className="panel-header">
         <div className="flex items-center gap-2">
           <span className="flex h-7 w-7 items-center justify-center rounded-md bg-[var(--pu-pri-soft)] text-[var(--pu-pri)]">
             <Table2 size={16} />
           </span>
           <div>
-            <h2 id="bom-title" className="text-section font-bold leading-tight text-[var(--pu-ink)]">
+            <TitleTag
+              id="bom-title"
+              ref={isDialog ? undefined : titleRef}
+              tabIndex={isDialog ? undefined : -1}
+              className="text-section font-bold leading-tight text-[var(--pu-ink)]"
+            >
               Bill of Materials
-            </h2>
+            </TitleTag>
             <p id="bom-description" className="text-body text-[var(--pu-mut)]">
               Optical audit &amp; commercial CAPEX quotation
             </p>
@@ -373,7 +395,7 @@ export function BOMModal({
 
             {/* Deployed components: the old Components/Topology tabs now live here. */}
             <div className="mt-3 rounded-lg border border-[var(--pu-line)] bg-white p-3">
-              <div className="eyebrow mb-2">Deployed components</div>
+              <h2 className="eyebrow mb-2">Deployed components</h2>
               <div className="grid grid-cols-2 gap-x-4 gap-y-1 font-mono text-label md:grid-cols-4">
                 {(
                   [
@@ -407,7 +429,7 @@ export function BOMModal({
             {/* --------------------------- Passive plant -------------------------- */}
             <div className="mt-3 grid gap-2 md:grid-cols-2">
               <div className="rounded-lg border border-[var(--pu-line)] bg-white p-3">
-                <div className="eyebrow mb-2">Splitters by ratio</div>
+                <h2 className="eyebrow mb-2">Splitters by ratio</h2>
                 {summary.splitterTotal === 0 ? (
                   <p className="text-body text-[var(--pu-mut)]">No splitters deployed.</p>
                 ) : (
@@ -429,139 +451,145 @@ export function BOMModal({
               </div>
 
               <div className="rounded-lg border border-[var(--pu-line)] bg-white p-3">
-                <div className="eyebrow mb-2">Termination &amp; splicing</div>
-                <table className="w-full font-mono text-label">
-                  <tbody className="text-[var(--pu-ink)]">
-                    <tr>
-                      <td className="py-1 text-[var(--pu-mut)]">Fusion splices</td>
-                      <td className="py-1 text-right">{summary.totalSplices}</td>
-                      <td className="py-1 pl-3 text-right text-[var(--pu-mut)]">
-                        {(summary.totalSplices * 0.1).toFixed(1)} dB worst case
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="py-1 text-[var(--pu-mut)]">SC/APC connectors</td>
-                      <td className="py-1 text-right">{summary.totalConnectors}</td>
-                      <td className="py-1 pl-3 text-right text-[var(--pu-mut)]">
-                        {(summary.totalConnectors * 0.5).toFixed(1)} dB worst case
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="py-1 text-[var(--pu-mut)]">Safety margin</td>
-                      <td className="py-1 text-right">{settings.safetyMarginDb.toFixed(1)} dB</td>
-                      <td className="py-1 pl-3 text-right text-[var(--pu-mut)]">per subscriber</td>
-                    </tr>
-                    <tr className="border-t border-[var(--pu-line)]">
-                      <td className="py-1 text-[var(--pu-mut)]">Mean Rx power</td>
-                      <td className="py-1 text-right text-[var(--pu-ink)]" colSpan={2}>
-                        {formatDbm(summary.meanRxDbm)}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="py-1 text-[var(--pu-mut)]">Worst Rx power</td>
-                      <td className="py-1 text-right text-[var(--pu-ink)]" colSpan={2}>
-                        {formatDbm(summary.worstRxDbm)}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+                <h2 className="eyebrow mb-2">Termination &amp; splicing</h2>
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[320px] font-mono text-label">
+                    <tbody className="text-[var(--pu-ink)]">
+                      <tr>
+                        <td className="py-1 text-[var(--pu-mut)]">Fusion splices</td>
+                        <td className="py-1 text-right">{summary.totalSplices}</td>
+                        <td className="py-1 pl-3 text-right text-[var(--pu-mut)]">
+                          {(summary.totalSplices * 0.1).toFixed(1)} dB worst case
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="py-1 text-[var(--pu-mut)]">SC/APC connectors</td>
+                        <td className="py-1 text-right">{summary.totalConnectors}</td>
+                        <td className="py-1 pl-3 text-right text-[var(--pu-mut)]">
+                          {(summary.totalConnectors * 0.5).toFixed(1)} dB worst case
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="py-1 text-[var(--pu-mut)]">Safety margin</td>
+                        <td className="py-1 text-right">{settings.safetyMarginDb.toFixed(1)} dB</td>
+                        <td className="py-1 pl-3 text-right text-[var(--pu-mut)]">per subscriber</td>
+                      </tr>
+                      <tr className="border-t border-[var(--pu-line)]">
+                        <td className="py-1 text-[var(--pu-mut)]">Mean Rx power</td>
+                        <td className="py-1 text-right text-[var(--pu-ink)]" colSpan={2}>
+                          {formatDbm(summary.meanRxDbm)}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="py-1 text-[var(--pu-mut)]">Worst Rx power</td>
+                        <td className="py-1 text-right text-[var(--pu-ink)]" colSpan={2}>
+                          {formatDbm(summary.worstRxDbm)}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
 
             {/* ----------------------- Per-subscriber budget ---------------------- */}
             <div className="mt-4">
-              <div className="eyebrow mb-2">Optical budget per subscriber</div>
+              <h2 className="eyebrow mb-2">Optical budget per subscriber</h2>
               <div className="overflow-hidden rounded-lg border border-[var(--pu-line)]">
-                <table className="w-full font-mono text-label">
-                  <thead>
-                    <tr className="bg-[var(--pu-elevated)] text-caption uppercase tracking-label text-[var(--pu-mut)]">
-                      <th className="px-2 py-2 text-left font-medium">Subscriber</th>
-                      <th className="px-2 py-2 text-left font-medium">Status</th>
-                      <th className="px-2 py-2 text-right font-medium">Rx dBm</th>
-                      <th className="px-2 py-2 text-right font-medium">Loss dB</th>
-                      <th className="px-2 py-2 text-right font-medium">Margin</th>
-                      <th className="px-2 py-2 text-right font-medium">Upstream Δ</th>
-                      <th className="px-2 py-2 text-right font-medium">Fiber km</th>
-                      <th className="px-2 py-2 text-right font-medium">Split</th>
-                      <th className="px-2 py-2 text-right font-medium">SPL</th>
-                      <th className="px-2 py-2 text-right font-medium">CON</th>
-                      <th className="px-2 py-2 text-left font-medium">OLT port</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {subscriberRows.length === 0 ? (
-                      <tr>
-                        <td className="px-2 py-3 text-[var(--pu-mut)]" colSpan={11}>
-                          No subscriber endpoints on the canvas yet — drag an ONT or gateway in from the toolbox.
-                        </td>
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[860px] font-mono text-label" data-testid="subscriber-budget">
+                    <thead>
+                      <tr className="bg-[var(--pu-elevated)] text-caption uppercase tracking-label text-[var(--pu-mut)]">
+                        <th className="px-2 py-2 text-left font-medium">Subscriber</th>
+                        <th className="px-2 py-2 text-left font-medium">Status</th>
+                        <th className="px-2 py-2 text-right font-medium">Rx dBm</th>
+                        <th className="px-2 py-2 text-right font-medium">Loss dB</th>
+                        <th className="px-2 py-2 text-right font-medium">Margin</th>
+                        <th className="px-2 py-2 text-right font-medium">Upstream Δ</th>
+                        <th className="px-2 py-2 text-right font-medium">Fiber km</th>
+                        <th className="px-2 py-2 text-right font-medium">Split</th>
+                        <th className="px-2 py-2 text-right font-medium">SPL</th>
+                        <th className="px-2 py-2 text-right font-medium">CON</th>
+                        <th className="px-2 py-2 text-left font-medium">OLT port</th>
                       </tr>
-                    ) : (
-                      subscriberRows.map(({ node, telemetry }) => {
-                        if (!telemetry) return null;
-                        const style = STATUS_STYLES[telemetry.status];
-                        const data = node.data as { serial: string; subscriber: string };
-                        const path = simulation.bestPaths[node.id];
-                        return (
-                          <tr
-                            key={node.id}
-                            className="border-t border-[var(--pu-line)] text-[var(--pu-ink)] hover:bg-[var(--pu-elevated)]"
-                          >
-                            <td className="px-2 py-2">
-                              <div className="truncate font-sans text-label text-[var(--pu-ink)]">
-                                {data.subscriber}
-                              </div>
-                              <div className="text-label text-[var(--pu-mut)]">
-                                {node.type === 'gateway'
-                                  ? `Wi-Fi gateway · ${data.serial} · ${node.data.ssid}`
-                                  : `ONT · ${data.serial}`}
-                                {node.type === 'gateway' &&
-                                simulation.gatewayTelemetry[node.id]?.estimatedDownMbps !== null
-                                  ? ` · ${simulation.gatewayTelemetry[node.id]?.estimatedDownMbps?.toFixed(0)} Mbps down`
-                                  : ''}
-                              </div>
-                            </td>
-                            <td className="px-2 py-2">
-                              <span
-                                className={`inline-flex items-center gap-1 rounded-md border px-2 py-1 text-caption font-semibold ${style.badge}`}
-                                title={describeStatus(telemetry.status)}
-                              >
-                                <span className="h-1.5 w-1.5 rounded-full" style={{ background: style.hex }} />
-                                {style.label}
-                              </span>
-                            </td>
-                            <td className="px-2 py-2 text-right font-semibold" style={{ color: style.hex }}>
-                              {formatDbm(telemetry.rxPowerDbm)}
-                            </td>
-                            <td className="px-2 py-2 text-right">
-                              {telemetry.rxPowerDbm === null ? '—' : telemetry.totalLossDb.toFixed(2)}
-                            </td>
-                            <td className="px-2 py-2 text-right">
-                              {telemetry.rxPowerDbm === null ? '—' : `${telemetry.marginDb.toFixed(2)}`}
-                            </td>
-                            <td
-                              className={`px-2 py-2 text-right ${
-                                telemetry.upstreamDeltaDb !== null && telemetry.upstreamDeltaDb > 15
-                                  ? 'font-semibold text-[var(--pu-warn)]'
-                                  : ''
-                              }`}
+                    </thead>
+                    <tbody>
+                      {subscriberRows.length === 0 ? (
+                        <tr>
+                          <td className="px-2 py-3 text-[var(--pu-mut)]" colSpan={11}>
+                            No subscriber endpoints on the canvas yet — drag an ONT or gateway in from the toolbox.
+                          </td>
+                        </tr>
+                      ) : (
+                        subscriberRows.map(({ node, telemetry }) => {
+                          if (!telemetry) return null;
+                          const style = STATUS_STYLES[telemetry.status];
+                          const data = node.data as { serial: string; subscriber: string };
+                          const path = simulation.bestPaths[node.id];
+                          return (
+                            <tr
+                              key={node.id}
+                              className="border-t border-[var(--pu-line)] text-[var(--pu-ink)] hover:bg-[var(--pu-elevated)]"
                             >
-                              {telemetry.upstreamDeltaDb === null ? '—' : `${telemetry.upstreamDeltaDb.toFixed(2)} dB`}
-                            </td>
-                            <td className="px-2 py-2 text-right">{telemetry.fiberKm.toFixed(2)}</td>
-                            <td className="px-2 py-2 text-right">
-                              {telemetry.rxPowerDbm === null ? '—' : `1:${telemetry.cumulativeSplitRatio}`}
-                            </td>
-                            <td className="px-2 py-2 text-right">{telemetry.splices}</td>
-                            <td className="px-2 py-2 text-right">{telemetry.connectors}</td>
-                            <td className="px-2 py-2 text-label text-[var(--pu-mut)]">
-                              {path ? `${path.oltPort} @ ${path.txPowerDbm.toFixed(1)} dBm` : '—'}
-                            </td>
-                          </tr>
-                        );
-                      })
-                    )}
-                  </tbody>
-                </table>
+                              <td className="px-2 py-2">
+                                <div className="truncate font-sans text-label text-[var(--pu-ink)]">
+                                  {data.subscriber}
+                                </div>
+                                <div className="text-label text-[var(--pu-mut)]">
+                                  {node.type === 'gateway'
+                                    ? `Wi-Fi gateway · ${data.serial} · ${node.data.ssid}`
+                                    : `ONT · ${data.serial}`}
+                                  {node.type === 'gateway' &&
+                                  simulation.gatewayTelemetry[node.id]?.estimatedDownMbps !== null
+                                    ? ` · ${simulation.gatewayTelemetry[node.id]?.estimatedDownMbps?.toFixed(0)} Mbps down`
+                                    : ''}
+                                </div>
+                              </td>
+                              <td className="px-2 py-2">
+                                <span
+                                  className={`inline-flex items-center gap-1 rounded-md border px-2 py-1 text-caption font-semibold ${style.badge}`}
+                                  title={describeStatus(telemetry.status)}
+                                >
+                                  <span className="h-1.5 w-1.5 rounded-full" style={{ background: style.hex }} />
+                                  {style.label}
+                                </span>
+                              </td>
+                              <td className="px-2 py-2 text-right font-semibold" style={{ color: style.hex }}>
+                                {formatDbm(telemetry.rxPowerDbm)}
+                              </td>
+                              <td className="px-2 py-2 text-right">
+                                {telemetry.rxPowerDbm === null ? '—' : telemetry.totalLossDb.toFixed(2)}
+                              </td>
+                              <td className="px-2 py-2 text-right">
+                                {telemetry.rxPowerDbm === null ? '—' : `${telemetry.marginDb.toFixed(2)}`}
+                              </td>
+                              <td
+                                className={`px-2 py-2 text-right ${
+                                  telemetry.upstreamDeltaDb !== null && telemetry.upstreamDeltaDb > 15
+                                    ? 'font-semibold text-[var(--pu-warn)]'
+                                    : ''
+                                }`}
+                              >
+                                {telemetry.upstreamDeltaDb === null
+                                  ? '—'
+                                  : `${telemetry.upstreamDeltaDb.toFixed(2)} dB`}
+                              </td>
+                              <td className="px-2 py-2 text-right">{telemetry.fiberKm.toFixed(2)}</td>
+                              <td className="px-2 py-2 text-right">
+                                {telemetry.rxPowerDbm === null ? '—' : `1:${telemetry.cumulativeSplitRatio}`}
+                              </td>
+                              <td className="px-2 py-2 text-right">{telemetry.splices}</td>
+                              <td className="px-2 py-2 text-right">{telemetry.connectors}</td>
+                              <td className="px-2 py-2 text-label text-[var(--pu-mut)]">
+                                {path ? `${path.oltPort} @ ${path.txPowerDbm.toFixed(1)} dBm` : '—'}
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
 
@@ -587,7 +615,7 @@ export function BOMModal({
           </>
         )}
       </div>
-    </section>
+    </ScreenTag>
   );
 
   if (!isDialog) return body;

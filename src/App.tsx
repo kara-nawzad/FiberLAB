@@ -85,6 +85,8 @@ import { BOMModal } from './components/BOMModal';
 import { TopBar } from './components/TopBar';
 import { DesignBar } from './components/DesignBar';
 import { SectionRail, SectionTabBar, type SectionId } from './components/SectionNav';
+import { useSectionFocus } from './hooks/useSectionFocus';
+import { useSectionHistory } from './hooks/useSectionHistory';
 import { SimulationScreen } from './components/SimulationScreen';
 import { SettingsScreen } from './components/SettingsScreen';
 import { CanvasToolbar } from './components/CanvasToolbar';
@@ -209,12 +211,13 @@ function StudioWorkspace({
   const [committedSim, setCommittedSim] = useState<SimulationResult | null>(null);
   const [canvasTool, setCanvasTool] = useState<'select' | 'pan'>('select');
   const [toolsOpen, setToolsOpen] = useState(false);
+  const [snapToGrid, setSnapToGrid] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [inspectorCollapsed, setInspectorCollapsed] = useState(false);
   const [statusExpanded, setStatusExpanded] = useState(false);
   const [emptyHintDismissed, setEmptyHintDismissed] = useState(false);
 
-  const { screenToFlowPosition, deleteElements, fitView, getNodes, getEdges, zoomIn, zoomOut } = useReactFlow<
+  const { screenToFlowPosition, deleteElements, fitView, getNodes, getEdges, zoomIn, zoomOut, zoomTo } = useReactFlow<
     PonNode,
     PonEdge
   >();
@@ -606,8 +609,10 @@ function StudioWorkspace({
   const selectionCount = selection.nodeIds.length + selection.edgeIds.length;
 
   /* Design → Simulation → Reports → Settings. Leaving Design folds every
-   * design-only affordance so the next screen is clean. */
-  const handleSectionChange = useCallback((section: SectionId) => {
+   * design-only affordance so the next screen is clean. `applySection` is the
+   * pure state move; `handleSectionChange` adds the history bookkeeping so the
+   * browser Back button walks the same path. */
+  const applySection = useCallback((section: SectionId) => {
     setActiveSection(section);
     setToolsOpen(false);
     setStatusExpanded(false);
@@ -625,6 +630,23 @@ function StudioWorkspace({
     }
   }, []);
 
+  const { push: pushSection } = useSectionHistory(applySection);
+
+  const handleSectionChange = useCallback(
+    (section: SectionId) => {
+      if (section !== activeSection) pushSection(section);
+      applySection(section);
+    },
+    [activeSection, applySection, pushSection],
+  );
+
+  /** Every "get me back to the canvas" affordance moves through the same path. */
+  const goToDesign = useCallback(() => handleSectionChange('design'), [handleSectionChange]);
+
+  /* Design is a canvas, not a document, so its focus target is a hidden heading
+   * that names the screen for assistive tech. */
+  const designHeadingRef = useSectionFocus<HTMLHeadingElement>();
+
   /* The status bar is the third phone sheet, so opening it folds the others. */
   const handleStatusExpandedChange = useCallback((open: boolean) => {
     setStatusExpanded(open);
@@ -637,7 +659,7 @@ function StudioWorkspace({
   /* A warning in the Events list jumps to the component it belongs to. */
   const handleFocusNode = useCallback(
     (nodeId: string) => {
-      setActiveSection('design');
+      goToDesign();
       setSelectedNodeId(nodeId);
       setSelectedEdgeId(null);
       setInspectorCollapsed(false);
@@ -646,7 +668,7 @@ function StudioWorkspace({
       if (isNarrowViewport()) setStatusExpanded(false);
       void fitView({ nodes: [{ id: nodeId }], duration: 320, padding: 2.4, maxZoom: 1.15 });
     },
-    [fitView, setNodes],
+    [fitView, goToDesign, setNodes],
   );
 
   const handleDeleteSelection = useCallback(() => {
@@ -842,13 +864,26 @@ function StudioWorkspace({
   );
 
   /* Only one overlay owns the keyboard at a time: opening one closes the others. */
-  const closeBom = useCallback(() => setActiveSection('design'), []);
+  const closeBom = useCallback(() => goToDesign(), [goToDesign]);
   /** Reports is a section now, not a dialog. */
   const openBom = useCallback(() => {
     setMissionsOpen(false);
     setOtdrOpen(false);
-    setActiveSection('reports');
-  }, []);
+    handleSectionChange('reports');
+  }, [handleSectionChange]);
+  /* Reports is a reading screen; Escape is the keyboard's Back to Design. */
+  useEffect(() => {
+    if (activeSection !== 'reports') return;
+    const onEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      if (document.querySelector('[role="dialog"]')) return;
+      event.preventDefault();
+      closeBom();
+    };
+    document.addEventListener('keydown', onEscape);
+    return () => document.removeEventListener('keydown', onEscape);
+  }, [activeSection, closeBom]);
+
   const closeMissions = useCallback(() => setMissionsOpen(false), []);
   const openMissions = useCallback(() => {
     setOtdrOpen(false);
@@ -926,12 +961,12 @@ function StudioWorkspace({
       setOpmProbe(null);
       opmProbeRef.current = null;
       setOtdrOpen(false);
-      setActiveSection('design');
+      goToDesign();
       window.requestAnimationFrame(() => {
         void fitView({ padding: 0.08, maxZoom: 1.15, duration: 350 });
       });
     },
-    [setNodes, setEdges, fitView],
+    [setNodes, setEdges, fitView, goToDesign],
   );
 
   useEffect(() => {
@@ -1096,6 +1131,9 @@ function StudioWorkspace({
 
         {activeSection === 'design' ? (
           <>
+            <h1 ref={designHeadingRef} tabIndex={-1} className="sr-only">
+              Design canvas
+            </h1>
             <Sidebar
               onQuickAdd={handleQuickAdd}
               onToggleOpm={handleToggleOpm}
@@ -1125,13 +1163,11 @@ function StudioWorkspace({
                 <CanvasToolbar
                   canvasTool={canvasTool}
                   linkMode={linkMode}
-                  opmActive={opmActive}
                   selectionCount={selectionCount}
-                  activeMissionTitle={activeMissionId ? (getMissionById(activeMissionId)?.title ?? null) : null}
-                  settings={settings}
                   toolsOpen={toolsOpen}
                   onToolsOpenChange={setToolsOpen}
-                  onSettingsChange={handleSettingsChange}
+                  snapToGrid={snapToGrid}
+                  onToggleSnap={() => setSnapToGrid((value) => !value)}
                   onSelectTool={() => {
                     setCanvasTool('select');
                     if (linkMode) handleToggleLink();
@@ -1145,11 +1181,7 @@ function StudioWorkspace({
                   onFit={() => void fitView({ padding: 0.16, duration: 350 })}
                   onZoomIn={() => void zoomIn({ duration: 180 })}
                   onZoomOut={() => void zoomOut({ duration: 180 })}
-                  onOpenOverview={handleOpenOverview}
-                  onToggleOpm={handleToggleOpm}
-                  onOpenOtdr={handleOpenOtdr}
-                  onOpenMissions={openMissions}
-                  onClear={clearCanvas}
+                  onZoomReset={() => void zoomTo(1, { duration: 200 })}
                 />
                 {/* Phones have no room for a permanent library column, so the
                 component sheet is summoned from here. */}
@@ -1170,6 +1202,8 @@ function StudioWorkspace({
                   <ReactFlow<PonNode, PonEdge>
                     nodes={nodes}
                     edges={flowEdges}
+                    snapToGrid={snapToGrid}
+                    snapGrid={[16, 16]}
                     nodeTypes={nodeTypes}
                     edgeTypes={edgeTypes}
                     onNodesChange={onNodesChange}
@@ -1342,10 +1376,23 @@ function StudioWorkspace({
             settings={settings}
             onSettingsChange={handleSettingsChange}
             opmActive={opmActive}
-            onToggleOpm={handleToggleOpm}
-            onOpenOtdr={handleOpenOtdr}
-            onOpenMissions={openMissions}
-            onClear={clearCanvas}
+            activeMissionTitle={activeMission?.title ?? null}
+            onToggleOpm={() => {
+              goToDesign();
+              handleToggleOpm();
+            }}
+            onOpenOtdr={() => {
+              goToDesign();
+              handleOpenOtdr();
+            }}
+            onOpenMissions={() => {
+              goToDesign();
+              openMissions();
+            }}
+            onClear={() => {
+              goToDesign();
+              clearCanvas();
+            }}
             onOpenOverview={handleOpenOverview}
           />
         ) : null}

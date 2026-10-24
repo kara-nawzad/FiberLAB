@@ -215,6 +215,11 @@ button.pu-logo {
   opacity: 0.45;
   cursor: not-allowed;
 }
+.pu-btn.is-active {
+  border-color: var(--pu-pri);
+  background: var(--pu-pri-soft);
+  color: var(--pu-pri);
+}
 .pu-btn.pri {
   background: linear-gradient(135deg, #e4673f 0%, #d9532a 100%);
   color: #fff;
@@ -1707,7 +1712,8 @@ button.pu-logo {
   border-bottom: 1px solid var(--pu-line);
   font-size: var(--type-body);
 }
-.pu-menu-row label {
+.pu-menu-row label,
+.pu-menu-row .pu-menu-row-label {
   font-weight: var(--fw-semibold);
 }
 .pu-menu-row input.pu-input-sm {
@@ -2062,6 +2068,15 @@ button.pu-logo {
   gap: 0;
   padding: 0;
   overflow: hidden;
+}
+.pu-reports-back {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--shell-pad);
+  border-bottom: 1px solid var(--pu-line);
+  background: var(--pu-elevated);
 }
 .pu-reports-screen .panel-header {
   flex: 0 0 auto;

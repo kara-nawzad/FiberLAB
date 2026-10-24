@@ -4,6 +4,7 @@ import type { NetworkSummary, PonNode, SimulationResult } from '../types';
 import { STATUS_STYLES } from '../types';
 import { formatDbm } from '../engine/opticalSimulator';
 import type { PowerBar } from './StatusBar';
+import { useSectionFocus } from '../hooks/useSectionFocus';
 
 /* ========================================================================== *
  * Simulation — the focused step between Design and Reports.
@@ -53,6 +54,8 @@ export function SimulationScreen({
   onFocusNode,
   onOpenReports,
 }: SimulationScreenProps) {
+  const headingRef = useSectionFocus<HTMLHeadingElement>();
+
   const rows = useMemo(
     () =>
       nodes
@@ -74,7 +77,9 @@ export function SimulationScreen({
     <section className="pu-screen" aria-labelledby="simulation-title">
       <header className="pu-screen-head">
         <div className="pu-screen-head-copy">
-          <h1 id="simulation-title">Simulation</h1>
+          <h1 id="simulation-title" ref={headingRef} tabIndex={-1}>
+            Simulation
+          </h1>
           <p>
             Live optical budget for every subscriber endpoint. Edit the topology on the Design screen, then run the
             simulation again.

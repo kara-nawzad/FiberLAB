@@ -1,41 +1,35 @@
 import { useEffect, useRef } from 'react';
 import {
-  ArrowLeft,
-  ClipboardList,
-  Crosshair,
   Ellipsis,
+  Grid3x3,
   Hand,
   Link2,
   Maximize2,
   MousePointer2,
-  ScanLine,
+  RotateCcw,
   Trash2,
   ZoomIn,
   ZoomOut,
 } from 'lucide-react';
-import type { DesignSettings } from '../types';
 
 /* ========================================================================== *
  * Floating canvas toolbar.
  *
  * Only the tools an engineer touches while drawing live here: Select · Pan ·
- * Connect · Delete, then Zoom out · Zoom in · Fit. Everything else (Overview,
- * OPM, OTDR, Missions, safety margin, Auto, Clear, help links) sits behind one
- * "⋯" overflow menu. Adding components lives in the component library.
- * Desktop buttons print a short label with a tooltip; on phones the strip
- * collapses to icons and floats along the bottom of the canvas.
+ * Connect · Delete, then Zoom out · Zoom in · Fit. The overflow holds canvas
+ * actions only — fit, zoom reset and grid snapping. Everything that configures
+ * the app (Overview, OPM, OTDR, Missions, safety margin, Auto, Clear, help)
+ * lives in the Settings section. Adding components lives in the library.
  * ========================================================================== */
 
 export interface CanvasToolbarProps {
   canvasTool: 'select' | 'pan';
   linkMode: boolean;
-  opmActive: boolean;
   selectionCount: number;
-  activeMissionTitle: string | null;
-  settings: DesignSettings;
   toolsOpen: boolean;
   onToolsOpenChange: (open: boolean) => void;
-  onSettingsChange: (patch: Partial<DesignSettings>) => void;
+  snapToGrid: boolean;
+  onToggleSnap: () => void;
   onSelectTool: () => void;
   onPanTool: () => void;
   onToggleLink: () => void;
@@ -43,11 +37,7 @@ export interface CanvasToolbarProps {
   onFit: () => void;
   onZoomIn: () => void;
   onZoomOut: () => void;
-  onOpenOverview: () => void;
-  onToggleOpm: () => void;
-  onOpenOtdr: () => void;
-  onOpenMissions: () => void;
-  onClear: () => void;
+  onZoomReset: () => void;
 }
 
 function ToolButton({
@@ -92,13 +82,11 @@ export function CanvasToolbar(props: CanvasToolbarProps) {
   const {
     canvasTool,
     linkMode,
-    opmActive,
     selectionCount,
-    activeMissionTitle,
-    settings,
     toolsOpen,
     onToolsOpenChange,
-    onSettingsChange,
+    snapToGrid,
+    onToggleSnap,
     onSelectTool,
     onPanTool,
     onToggleLink,
@@ -106,11 +94,7 @@ export function CanvasToolbar(props: CanvasToolbarProps) {
     onFit,
     onZoomIn,
     onZoomOut,
-    onOpenOverview,
-    onToggleOpm,
-    onOpenOtdr,
-    onOpenMissions,
-    onClear,
+    onZoomReset,
   } = props;
   const menuRef = useRef<HTMLDivElement | null>(null);
   const menuButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -209,88 +193,45 @@ export function CanvasToolbar(props: CanvasToolbarProps) {
         <button
           ref={menuButtonRef}
           type="button"
-          className={`pu-btn pu-tb-btn pu-tb-more-btn${toolsOpen || opmActive || activeMissionTitle ? ' is-active' : ''}`}
+          className={`pu-btn pu-tb-btn pu-tb-more-btn${toolsOpen || snapToGrid ? ' is-active' : ''}`}
           onClick={() => onToolsOpenChange(!toolsOpen)}
           aria-expanded={toolsOpen}
           aria-haspopup="true"
           aria-controls="canvas-more-tools"
           aria-label="More tools"
-          title="More tools — missions, test gear, settings"
+          title="More tools — fit, zoom and grid snapping"
         >
           <Ellipsis size={18} aria-hidden="true" />
         </button>
         {toolsOpen ? (
-          <div id="canvas-more-tools" className="pu-menu" style={{ top: 'calc(100% + 8px)', right: 0, width: 280 }}>
-            <button type="button" onClick={close(onOpenOverview)} aria-label="Overview & Physics">
-              <ArrowLeft size={14} className="pu-menu-ico" /> Overview &amp; Physics
+          <div
+            id="canvas-more-tools"
+            className="pu-menu"
+            role="group"
+            aria-label="Canvas actions"
+            style={{ top: 'calc(100% + 8px)', right: 0, width: 244 }}
+          >
+            <button type="button" onClick={close(onFit)} aria-label="Fit view to screen">
+              <Maximize2 size={14} className="pu-menu-ico" aria-hidden="true" /> Fit view to screen
             </button>
-            <button
-              type="button"
-              onClick={close(onToggleOpm)}
-              aria-pressed={opmActive}
-              aria-label={opmActive ? 'Close OPM' : 'OPM Tool'}
-            >
-              <Crosshair size={14} className="pu-menu-ico" /> {opmActive ? 'Close OPM' : 'OPM Tool'} — probe a port
-            </button>
-            <button type="button" onClick={close(onOpenOtdr)} aria-label="OTDR Trace">
-              <ScanLine size={14} className="pu-menu-ico" /> OTDR Trace
-            </button>
-            <button
-              type="button"
-              onClick={close(onOpenMissions)}
-              aria-label={activeMissionTitle ? `Missions, active: ${activeMissionTitle}` : 'Missions'}
-            >
-              <ClipboardList size={14} className="pu-menu-ico" /> Missions
-              {activeMissionTitle ? ` · ${activeMissionTitle}` : ''}
+            <button type="button" onClick={close(onZoomReset)} aria-label="Zoom to 100%">
+              <RotateCcw size={14} className="pu-menu-ico" aria-hidden="true" /> Zoom to 100%
             </button>
             <div className="pu-menu-row">
-              <label htmlFor="safety-margin">Safety margin</label>
-              <input
-                id="safety-margin"
-                type="number"
-                min={0}
-                max={10}
-                step={0.5}
-                value={settings.safetyMarginDb}
-                onChange={(event) => onSettingsChange({ safetyMarginDb: Math.max(0, Number(event.target.value) || 0) })}
-                className="pu-input-sm"
-              />
-              <span className="pu-mut">dB</span>
+              <span id="canvas-snap-label" className="pu-menu-row-label">
+                <Grid3x3 size={14} className="pu-menu-ico" aria-hidden="true" /> Snap to grid
+              </span>
               <button
                 type="button"
                 role="switch"
-                aria-checked={settings.autoRun}
-                onClick={() => onSettingsChange({ autoRun: !settings.autoRun })}
-                title="Recalculate the optical budget on every edit"
-                className={`pu-switch ${settings.autoRun ? 'is-on' : ''}`}
+                aria-checked={snapToGrid}
+                aria-labelledby="canvas-snap-label"
+                onClick={onToggleSnap}
+                title="Align dragged components to a 16 px grid"
+                className={`pu-switch ${snapToGrid ? 'is-on' : ''}`}
               >
-                Auto {settings.autoRun ? 'on' : 'off'}
+                {snapToGrid ? 'On' : 'Off'}
               </button>
-            </div>
-            <button
-              type="button"
-              onClick={close(onClear)}
-              aria-label="Clear Canvas"
-              title="Remove every element"
-              className="is-danger"
-            >
-              <Trash2 size={14} className="pu-menu-ico" /> Clear canvas
-            </button>
-            {/* Learning resources used to sit under the component library; they
-                live here now so the library stays a pure parts bin. */}
-            <div className="pu-menu-links" role="group" aria-label="Learning resources">
-              <span>Need help?</span>
-              <a
-                href="https://github.com/kara-nawzad/FiberLAB/tree/main/docs"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Docs
-              </a>
-              <span aria-hidden="true">·</span>
-              <a href="https://github.com/kara-nawzad/FiberLAB" target="_blank" rel="noopener noreferrer">
-                GitHub
-              </a>
             </div>
           </div>
         ) : null}

@@ -42,6 +42,16 @@ function openMoreTools() {
   fireEvent.click(screen.getByRole('button', { name: 'More tools' }));
 }
 
+/**
+ * The canvas ⋯ menu only holds canvas actions. App-level actions (test gear,
+ * missions, safety margin, Auto-run, Clear, help) live in Settings, so tests
+ * that need one of those walk there first.
+ */
+function useSettingsAction(name: string | RegExp) {
+  openSection('Settings');
+  fireEvent.click(screen.getByRole('button', { name }));
+}
+
 /** Detailed values (loss tables, fault switches) hide behind one disclosure. */
 function expandAdvanced() {
   fireEvent.click(screen.getByRole('button', { name: /^Advanced/ }));
@@ -98,7 +108,11 @@ describe('FiberLAB application shell', () => {
     expect(screen.queryByRole('dialog', { name: 'Field missions' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Overview & Physics' })).toHaveFocus();
 
+    // The ⋯ menu is canvas-only; the mission state is reported in Settings.
     openMoreTools();
+    expect(screen.getByRole('button', { name: 'Fit view to screen' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Missions/ })).not.toBeInTheDocument();
+    openSection('Settings');
     expect(
       screen.getByRole('button', { name: 'Missions, active: Rescue the Unpatched Subscriber' }),
     ).toBeInTheDocument();
@@ -260,10 +274,10 @@ describe('FiberLAB application shell', () => {
 
   it('uses the OPM HUD to probe a span at selectable simulated wavelengths and exits on Escape', async () => {
     await renderStudio();
-    openMoreTools();
-    fireEvent.click(screen.getByRole('button', { name: 'OPM Tool' }));
-    openMoreTools();
-    expect(screen.getByRole('button', { name: 'Close OPM' })).toHaveAttribute('aria-pressed', 'true');
+    useSettingsAction('OPM Tool');
+    // The tool arms the canvas, so Settings hands the screen back to Design.
+    expect(screen.getByRole('toolbar', { name: 'Canvas workbench tools' })).toBeInTheDocument();
+    expect(document.querySelector('.pu-canvas.opm-probe-mode')).not.toBeNull();
 
     const feeder = getCanvasNodeByText(/^5\.0 km$/);
     const outputPort = feeder.querySelector('.react-flow__handle[data-handleid="out"]');
@@ -483,9 +497,10 @@ describe('FiberLAB application shell', () => {
     await renderStudio();
     await waitFor(() => expect(screen.getAllByText('Al-Sulaymaniyah — Unit 12').length).toBeGreaterThan(0));
 
-    openMoreTools();
-    fireEvent.click(screen.getByRole('button', { name: /Clear Canvas/i }));
+    useSettingsAction(/Clear Canvas/i);
 
+    // Clearing hands the empty canvas back to the user.
+    expect(screen.getByRole('toolbar', { name: 'Canvas workbench tools' })).toBeInTheDocument();
     expect(screen.queryByText('Al-Sulaymaniyah — Unit 12')).not.toBeInTheDocument();
     expect(await screen.findByText('The canvas is empty')).toBeInTheDocument();
   });
@@ -493,9 +508,7 @@ describe('FiberLAB application shell', () => {
   it('opens a field mission, loads its scenario, and tracks objectives live', async () => {
     await renderStudio();
 
-    openMoreTools();
-    const missionsButton = screen.getByRole('button', { name: /^Missions$/i });
-    fireEvent.click(missionsButton);
+    useSettingsAction(/^Missions$/i);
     expect(await screen.findByRole('dialog', { name: 'Field missions' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Start mission' }));
 
@@ -509,14 +522,13 @@ describe('FiberLAB application shell', () => {
     fireEvent.keyDown(document, { key: 'Escape' });
     expect(screen.queryByRole('dialog', { name: 'Field missions' })).not.toBeInTheDocument();
 
-    openMoreTools();
+    openSection('Settings');
     expect(screen.getByRole('button', { name: 'Missions, active: The Marginal Villa' })).toBeInTheDocument();
   });
 
   it('tracks the Budget Crunch mission against the live CAPEX estimate', async () => {
     await renderStudio();
-    openMoreTools();
-    fireEvent.click(screen.getByRole('button', { name: /^Missions$/i }));
+    useSettingsAction(/^Missions$/i);
     await screen.findByRole('dialog', { name: 'Field missions' });
     fireEvent.click(screen.getByRole('button', { name: /The Budget Crunch: Cost vs. Performance/ }));
     fireEvent.click(screen.getByRole('button', { name: 'Start mission' }));
@@ -532,8 +544,7 @@ describe('FiberLAB application shell', () => {
 
   it('acquires an interactive OTDR trace from the studio and lists terminal Fresnel events', async () => {
     await renderStudio();
-    openMoreTools();
-    fireEvent.click(screen.getByRole('button', { name: 'OTDR Trace' }));
+    useSettingsAction('OTDR Trace');
     expect(screen.getByRole('dialog', { name: 'OTDR Trace Analyzer' })).toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: 'OTDR source node' })).toHaveValue('olt-a');
     expect(screen.getByRole('combobox', { name: 'OTDR target subscriber' })).toHaveValue('ont-a1');
@@ -622,8 +633,7 @@ describe('FiberLAB application shell', () => {
     expect(screen.getByText('0.00 dB')).toBeInTheDocument();
     openSection('Design');
 
-    openMoreTools();
-    fireEvent.click(screen.getByRole('button', { name: /^Missions$/i }));
+    useSettingsAction(/^Missions$/i);
     await screen.findByRole('dialog', { name: 'Field missions' });
     fireEvent.click(screen.getByRole('button', { name: /Blind Fault: The Cut in the Trunk/ }));
     fireEvent.click(screen.getByRole('button', { name: 'Start mission' }));
@@ -737,6 +747,77 @@ describe('FiberLAB application shell', () => {
     expect(screen.getByTestId('capex-telemetry')).toHaveTextContent('CAPEX $3,747');
   });
 
+  it('returns from Reports with the back button, Escape, or the browser back gesture', async () => {
+    await renderStudio();
+    openSection('Reports');
+
+    const back = screen.getByRole('button', { name: 'Back to Design' });
+    expect(back).toBeVisible();
+    fireEvent.click(back);
+    expect(screen.getByRole('toolbar', { name: 'Canvas workbench tools' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Bill of Materials' })).not.toBeInTheDocument();
+
+    // Escape is the keyboard's way back.
+    openSection('Reports');
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(screen.queryByRole('heading', { name: 'Bill of Materials' })).not.toBeInTheDocument();
+    expect(screen.getByRole('toolbar', { name: 'Canvas workbench tools' })).toBeInTheDocument();
+
+    // The browser Back button and the phone back gesture walk the same steps.
+    openSection('Reports');
+    window.history.back();
+    await waitFor(() => expect(screen.getByRole('toolbar', { name: 'Canvas workbench tools' })).toBeInTheDocument());
+  });
+
+  it('moves keyboard focus to the heading of the section that opens', async () => {
+    await renderStudio();
+
+    openSection('Reports');
+    expect(screen.getByRole('heading', { level: 1, name: 'Bill of Materials' })).toHaveFocus();
+
+    openSection('Settings');
+    expect(screen.getByRole('heading', { level: 1, name: 'Settings' })).toHaveFocus();
+
+    openSection('Simulation');
+    expect(screen.getByRole('heading', { level: 1, name: 'Simulation' })).toHaveFocus();
+
+    openSection('Design');
+    expect(screen.getByRole('heading', { level: 1, name: 'Design canvas' })).toHaveFocus();
+  });
+
+  it('gives Reports a main landmark, a heading hierarchy and self-scrolling tables', async () => {
+    await renderStudio();
+    openSection('Reports');
+
+    const main = document.querySelector('main.pu-reports-screen') as HTMLElement;
+    expect(main).not.toBeNull();
+    expect(within(main).getByRole('heading', { level: 1, name: 'Bill of Materials' })).toBeInTheDocument();
+    expect(within(main).getByRole('heading', { level: 2, name: 'Optical budget per subscriber' })).toBeInTheDocument();
+
+    // Every table scrolls inside its own box, so the page never scrolls sideways.
+    const subscriberTable = screen.getByTestId('subscriber-budget');
+    expect(subscriberTable.parentElement).toHaveClass('overflow-x-auto');
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Commercial Quotation & CAPEX' }));
+    const quotationTable = screen.getByTestId('quotation-line-items');
+    expect(quotationTable.parentElement).toHaveClass('overflow-x-auto');
+    expect(within(main).getByRole('heading', { level: 2, name: 'Commercial quotation & CAPEX' })).toBeInTheDocument();
+  });
+
+  it('keeps the URL hash while the sections move', async () => {
+    window.location.hash = '#reference';
+    await renderStudio();
+
+    openSection('Reports');
+    expect(window.location.hash).toBe('#reference');
+    openSection('Settings');
+    expect(window.location.hash).toBe('#reference');
+    openSection('Design');
+    expect(window.location.hash).toBe('#reference');
+
+    window.history.replaceState({}, '', window.location.pathname);
+  });
+
   it('offers the same four sections in the phone tab bar', async () => {
     await renderStudio();
     const tabs = screen.getByRole('navigation', { name: 'Sections' });
@@ -789,12 +870,10 @@ describe('FiberLAB application shell', () => {
 
   it('keeps one dialog in charge of the keyboard at a time', async () => {
     await renderStudio();
-    openMoreTools();
-    fireEvent.click(screen.getByRole('button', { name: 'OTDR Trace' }));
+    useSettingsAction('OTDR Trace');
     await screen.findByRole('dialog', { name: 'OTDR Trace Analyzer' });
 
-    openMoreTools();
-    fireEvent.click(screen.getByRole('button', { name: /^Missions$/i }));
+    useSettingsAction(/^Missions$/i);
 
     await screen.findByRole('dialog', { name: 'Field missions' });
     expect(screen.queryByRole('dialog', { name: 'OTDR Trace Analyzer' })).not.toBeInTheDocument();
@@ -804,12 +883,29 @@ describe('FiberLAB application shell', () => {
     await renderStudio();
     const trigger = screen.getByRole('button', { name: 'More tools' });
     fireEvent.click(trigger);
-    expect(screen.getByRole('button', { name: 'OTDR Trace' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Zoom to 100%' })).toBeInTheDocument();
 
     fireEvent.keyDown(document, { key: 'Escape' });
 
-    expect(screen.queryByRole('button', { name: 'OTDR Trace' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Zoom to 100%' })).not.toBeInTheDocument();
     await waitFor(() => expect(trigger).toHaveFocus());
+  });
+
+  it('keeps the canvas overflow to canvas actions only', async () => {
+    await renderStudio();
+    openMoreTools();
+    const menu = document.getElementById('canvas-more-tools') as HTMLElement;
+    const labels = within(menu)
+      .getAllByRole('button')
+      .map((button) => button.getAttribute('aria-label'));
+
+    expect(labels).toEqual(['Fit view to screen', 'Zoom to 100%']);
+    expect(within(menu).getByRole('switch', { name: 'Snap to grid' })).toBeInTheDocument();
+    // Everything that configures the app moved to Settings instead.
+    for (const moved of ['Overview & Physics', 'OPM Tool', 'OTDR Trace', 'Missions', 'Clear Canvas']) {
+      expect(within(menu).queryByRole('button', { name: moved })).not.toBeInTheDocument();
+    }
+    expect(within(menu).queryByRole('spinbutton')).not.toBeInTheDocument();
   });
 
   it('marks a keyboard-deleted element as an edit and clears the selection', async () => {

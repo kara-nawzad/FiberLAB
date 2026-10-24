@@ -1,5 +1,6 @@
 import { Crosshair, ExternalLink, ScanLine, ClipboardList, Trash2, ArrowLeft, Gauge } from 'lucide-react';
 import type { DesignSettings } from '../types';
+import { useSectionFocus } from '../hooks/useSectionFocus';
 
 /* ========================================================================== *
  * Settings — the fourth section: simulation options, test gear, workspace.
@@ -15,6 +16,7 @@ interface SettingsScreenProps {
   onToggleOpm: () => void;
   onOpenOtdr: () => void;
   onOpenMissions: () => void;
+  activeMissionTitle?: string | null;
   onClear: () => void;
   onOpenOverview: () => void;
 }
@@ -26,14 +28,19 @@ export function SettingsScreen({
   onToggleOpm,
   onOpenOtdr,
   onOpenMissions,
+  activeMissionTitle = null,
   onClear,
   onOpenOverview,
 }: SettingsScreenProps) {
+  const headingRef = useSectionFocus<HTMLHeadingElement>();
+
   return (
     <section className="pu-screen" aria-labelledby="settings-title">
       <header className="pu-screen-head">
         <div className="pu-screen-head-copy">
-          <h1 id="settings-title">Settings</h1>
+          <h1 id="settings-title" ref={headingRef} tabIndex={-1}>
+            Settings
+          </h1>
           <p>
             Simulation behaviour, test gear and workspace actions. Optical physics stays the same — these only change
             how it is reported.
@@ -111,13 +118,26 @@ export function SettingsScreen({
               <button type="button" className="pu-btn" onClick={onOpenOtdr} aria-label="OTDR Trace">
                 <ScanLine size={16} aria-hidden="true" /> OTDR Trace
               </button>
-              <button type="button" className="pu-btn" onClick={onOpenMissions} aria-label="Missions">
+              <button
+                type="button"
+                className={`pu-btn${activeMissionTitle ? ' is-active' : ''}`}
+                onClick={onOpenMissions}
+                aria-label={activeMissionTitle ? `Missions, active: ${activeMissionTitle}` : 'Missions'}
+              >
                 <ClipboardList size={16} aria-hidden="true" /> Missions
               </button>
             </div>
             <p className="pu-set-note">
-              The power meter probes a port, the OTDR traces a route, and the guided missions walk through the same
-              simulator.
+              {activeMissionTitle ? (
+                <>
+                  Active mission: <strong>{activeMissionTitle}</strong>. Each button opens on the canvas, where it acts.
+                </>
+              ) : (
+                <>
+                  The power meter probes a port, the OTDR traces a route, and the guided missions walk through the same
+                  simulator.
+                </>
+              )}
             </p>
           </section>
 
