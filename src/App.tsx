@@ -117,6 +117,12 @@ interface StudioWorkspaceProps {
 
 /** Matches the canvas-first breakpoint in photo-ui.css. */
 const NARROW_VIEWPORT_QUERY = '(max-width: 900px)';
+/** Touch hardware drags the plane with one finger; a mouse keeps its buttons. */
+const isCoarsePointer = () =>
+  typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+    ? window.matchMedia('(pointer: coarse)').matches
+    : false;
+
 const isNarrowViewport = () =>
   typeof window !== 'undefined' && typeof window.matchMedia === 'function'
     ? window.matchMedia(NARROW_VIEWPORT_QUERY).matches
@@ -212,6 +218,8 @@ function StudioWorkspace({
   const [canvasTool, setCanvasTool] = useState<'select' | 'pan'>('select');
   const [toolsOpen, setToolsOpen] = useState(false);
   const [snapToGrid, setSnapToGrid] = useState(false);
+  /* Read once: a phone does not become a desktop mid-session. */
+  const [coarsePointer] = useState(isCoarsePointer);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [inspectorCollapsed, setInspectorCollapsed] = useState(false);
   const [statusExpanded, setStatusExpanded] = useState(false);
@@ -1224,7 +1232,9 @@ function StudioWorkspace({
                     nodesConnectable={!opmActive}
                     elementsSelectable={!opmActive}
                     selectionOnDrag={!opmActive && canvasTool === 'select'}
-                    panOnDrag={canvasTool === 'pan' ? true : [1, 2]}
+                    /* Select mode pans with middle/right drag on a mouse, but a
+                     * finger drag on empty canvas must pan too (nodes still drag). */
+                    panOnDrag={canvasTool === 'pan' || coarsePointer ? true : [1, 2]}
                     deleteKeyCode={['Backspace', 'Delete']}
                     minZoom={0.2}
                     maxZoom={2.2}

@@ -11,6 +11,16 @@
   --pu-pri: #e4673f;
   --pu-pri-strong: #c8512c;
   --pu-pri-soft: #fff0df;
+  /* Contrast pair for the accent. `--pu-pri` is the bright brand orange, used
+   * for fills, borders, dots and strokes; small text on a light surface uses
+   * `--pu-pri-text` (5.1:1) and anything carrying white copy is filled with
+   * `--pu-pri-cta` (4.5:1) so both clear WCAG AA. */
+  --pu-pri-text: #b8471f;
+  --pu-pri-cta: #c8512c;
+  --pu-pri-cta-2: #b8471f;
+  --pu-pri-cta-hover: #a84118;
+  --pu-ok-text: #0b7a52;
+  --pu-warn-text: #9a5603;
   --pu-fiber: #e4673f;
   --pu-ok: #0f8a5f;
   --pu-ok-soft: #e2f6ee;
@@ -25,6 +35,9 @@
   flex-direction: column;
   height: 100%;
   width: 100%;
+  /* Landscape phones keep the notch off the rail and the panels. */
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
   background: var(--pu-bg) !important;
   color: var(--pu-ink);
   font-family: Manrope, system-ui, sans-serif;
@@ -65,7 +78,7 @@
   border: 1px solid var(--pu-line);
   border-radius: var(--r-md);
   background: var(--pu-panel);
-  color: var(--pu-pri);
+  color: var(--pu-pri-text);
   font-size: var(--type-body);
   font-weight: var(--fw-bold);
 }
@@ -205,7 +218,11 @@ button.pu-logo {
   color: var(--pu-ink);
   font-size: var(--type-body);
   font-weight: var(--fw-semibold);
-  transition: 0.12s;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms ease;
 }
 .pu-btn:hover:not(:disabled) {
   border-color: var(--pu-pri);
@@ -216,18 +233,18 @@ button.pu-logo {
   cursor: not-allowed;
 }
 .pu-btn.is-active {
-  border-color: var(--pu-pri);
+  border-color: var(--pu-pri-text);
   background: var(--pu-pri-soft);
   color: var(--pu-pri);
 }
 .pu-btn.pri {
-  background: linear-gradient(135deg, #e4673f 0%, #d9532a 100%);
+  background: linear-gradient(135deg, var(--pu-pri-cta) 0%, var(--pu-pri-cta-2) 100%);
   color: #fff;
-  border-color: var(--pu-pri);
-  box-shadow: 0 4px 12px rgba(228, 103, 63, 0.28);
+  border-color: var(--pu-pri-cta);
+  box-shadow: 0 4px 12px rgba(200, 81, 44, 0.28);
 }
 .pu-btn.pri:hover:not(:disabled) {
-  background: linear-gradient(135deg, #ec7048 0%, #e05a30 100%);
+  background: linear-gradient(135deg, #bd4c26 0%, var(--pu-pri-cta-hover) 100%);
   color: #fff;
 }
 .pu-health {
@@ -239,11 +256,11 @@ button.pu-logo {
   font-size: var(--fs-xs);
   font-weight: var(--fw-bold);
   background: var(--pu-ok-soft);
-  color: var(--pu-ok);
+  color: var(--pu-ok-text);
 }
 .pu-health.amber {
   background: var(--pu-warn-soft);
-  color: #b36b00;
+  color: var(--pu-warn-text);
 }
 .pu-health.red {
   background: var(--pu-bad-soft);
@@ -529,7 +546,7 @@ button.pu-logo {
   color: var(--pu-pri);
 }
 .pu-seg button.is-active {
-  border-color: var(--pu-pri);
+  border-color: var(--pu-pri-text);
   background: var(--pu-pri-soft);
   color: var(--pu-pri);
 }
@@ -579,7 +596,10 @@ button.pu-logo {
   background: #ffffff;
   text-align: left;
   cursor: grab;
-  transition: 0.12s;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease;
 }
 .pu-tool:hover {
   border-color: var(--pu-pri);
@@ -659,7 +679,7 @@ button.pu-logo {
   white-space: nowrap;
 }
 .pu-capex-banner strong {
-  color: var(--pu-pri);
+  color: var(--pu-pri-text);
   font-family: 'JetBrains Mono', ui-monospace, monospace;
   font-size: var(--type-body);
 }
@@ -685,12 +705,12 @@ button.pu-logo {
   display: grid;
   place-items: center;
   background: var(--pu-warn-soft);
-  color: var(--pu-warn);
+  color: var(--pu-warn-text);
   flex-shrink: 0;
 }
 .pu-event u.ok {
   background: var(--pu-ok-soft);
-  color: var(--pu-ok);
+  color: var(--pu-ok-text);
 }
 .pu-event u.bad {
   background: var(--pu-bad-soft);
@@ -860,7 +880,7 @@ button.pu-logo {
   color: var(--pu-ink);
 }
 .pu-sb-tabs button.is-active {
-  border-color: var(--pu-pri);
+  border-color: var(--pu-pri-text);
   color: var(--pu-pri);
 }
 .pu-sb-count {
@@ -1047,7 +1067,7 @@ button.pu-logo {
   border-bottom: 2px solid transparent;
 }
 .pu-itabs button.is-active {
-  color: var(--pu-pri);
+  color: var(--pu-pri-text);
   border-color: var(--pu-pri);
 }
 .fiberlab-inspector .input,
@@ -1561,9 +1581,9 @@ button.pu-logo {
     left: var(--sp-2);
     right: var(--sp-2);
   }
-  /* Menus become a full-width sheet; anchored popovers would run off a phone. */
-  .pu-top .pu-menu,
-  .pu-toolbar .pu-menu {
+  /* The top bar's menus become a full-width sheet; anchored popovers would run
+   * off a phone. The canvas strip keeps its own menu anchored above itself. */
+  .pu-top .pu-menu {
     position: fixed !important;
     top: calc(var(--topbar-h) + var(--sp-2)) !important;
     left: var(--sp-2) !important;
@@ -1697,7 +1717,7 @@ button.pu-logo {
   font-size: var(--type-small);
 }
 .pu-menu-links a {
-  color: var(--pu-pri);
+  color: var(--pu-pri-text);
   font-weight: var(--fw-semibold);
   text-decoration: none;
 }
@@ -2059,7 +2079,7 @@ button.pu-logo {
   display: inline-flex;
   align-items: center;
   gap: var(--sp-1);
-  color: var(--pu-pri);
+  color: var(--pu-pri-text);
   font-weight: var(--fw-semibold);
 }
 
@@ -2119,7 +2139,7 @@ button.pu-logo {
 }
 .pu-preset-loaded {
   float: right;
-  color: var(--pu-pri);
+  color: var(--pu-pri-text);
   font-size: var(--fs-2xs);
   font-weight: var(--fw-bold);
 }
@@ -2487,10 +2507,10 @@ button.pu-logo {
     align-items: center;
     gap: var(--sp-1);
     padding: 0 var(--sp-4);
-    border: 1px solid var(--pu-pri);
+    border: 1px solid var(--pu-pri-cta);
     border-radius: var(--r-pill);
-    background: var(--pu-pri);
-    box-shadow: 0 6px 18px rgba(228, 103, 63, 0.3);
+    background: var(--pu-pri-cta);
+    box-shadow: 0 6px 18px rgba(200, 81, 44, 0.3);
     color: #ffffff;
     font-size: var(--type-body);
     font-weight: var(--fw-semibold);
@@ -2541,19 +2561,17 @@ button.pu-logo {
     bottom: calc(var(--sp-3) + var(--control-md) + var(--sp-2));
     left: var(--sp-2);
     max-width: none;
-    flex-wrap: nowrap;
+    /* Wrapping rather than scrolling: a scroll container would clip the ⋯
+     * menu, and 7 × 44 px + gaps still fits one 360 px row. */
+    flex-wrap: wrap;
     justify-content: flex-start;
     gap: 2px;
     padding: var(--sp-1);
     border: 1px solid var(--pu-line);
-    border-radius: var(--r-pill);
+    border-radius: var(--r-xl);
     background: var(--pu-panel);
     box-shadow: 0 6px 18px rgba(43, 26, 20, 0.12);
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-  .pu-toolbar::-webkit-scrollbar {
-    display: none;
+    overflow: visible;
   }
   .pu-toolbar .pu-tb-btn,
   .pu-toolbar .pu-tb-btn.is-compact {
@@ -2706,18 +2724,22 @@ button.pu-logo {
     gap: 2px;
     border-radius: var(--r-md);
     color: var(--pu-mut);
-    font-size: var(--fs-2xs);
+    font-size: var(--type-small);
     font-weight: var(--fw-semibold);
   }
   .pu-tabbar-btn.is-active {
     background: var(--pu-pri-soft);
-    color: var(--pu-pri);
+    color: var(--pu-pri-text);
   }
-  /* Sheets open above the tab bar so navigation never gets buried. */
+  /* Sheets open above the tab bar so navigation never gets buried, and they
+   * never grow past the space between the top bar and that bar. */
   .pu-comp,
+  .pu-comp.is-sheet-full,
   .fiberlab-inspector,
+  .fiberlab-inspector.is-sheet-full,
   .pu-sb-detail {
     bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px));
+    max-height: calc(100vh - var(--topbar-h) - var(--tabbar-h) - var(--sp-4));
   }
 
   /* Top bar: logo mark, truncated project, icon + label run button. */
@@ -2774,7 +2796,7 @@ button.pu-logo {
     flex: 1 1 100%;
   }
   .pu-firstrun-steps {
-    font-size: var(--fs-2xs);
+    font-size: var(--type-small);
   }
 }
 
@@ -2825,5 +2847,117 @@ button.pu-logo {
   .pu-canvas .react-flow__handle {
     width: 20px;
     height: 20px;
+  }
+}
+
+/* ==========================================================================
+ * Final polish (Task 5): one focus ring, motion that can be switched off, and
+ * a phone in landscape that still keeps more than half its height for canvas.
+ * ========================================================================== */
+
+/* Keyboard users get the same ring on every interactive element, including the
+ * ones added later. `:where()` keeps the specificity at zero so component rules
+ * (and their own focus-visible styles) still win. */
+:where(button, a[href], summary, [role='button'], [role='tab'], [tabindex]:not([tabindex='-1'])):focus-visible {
+  outline: 2px solid var(--pu-pri-text);
+  outline-offset: 2px;
+}
+/* Canvas nodes are focusable but drawn as cards, so ring them just outside. */
+.react-flow__node:focus-visible {
+  outline: 2px solid var(--pu-pri);
+  outline-offset: 3px;
+  border-radius: var(--r-md);
+}
+/* The overflow menus sit flush against an edge; keep the ring inside. */
+.pu-menu button:focus-visible {
+  outline-offset: -2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Phone, landscape (e.g. 740 × 360): the top bar, design bar and tab bar all sit
+ * on the 44 px tap floor and the status bar floats over the canvas instead of
+ * taking a row, which lifts the canvas from ~37 % to ~58 % of the height. */
+@media (max-width: 900px) and (max-height: 520px) and (orientation: landscape) {
+  :root {
+    --topbar-h: 44px;
+    --panel-head-h: 40px;
+    --shell-gap: var(--sp-2);
+  }
+  .pu-center {
+    position: relative;
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+  .pu-design-bar {
+    min-height: 40px;
+    gap: var(--sp-1);
+  }
+  /* The three-step hint is the only thing that can go without losing a control:
+   * it is dismissible copy, and presets stay one tap away. */
+  .pu-firstrun {
+    display: none;
+  }
+  .pu-statusbar {
+    position: absolute;
+    right: var(--sp-2);
+    bottom: var(--sp-2);
+    left: var(--sp-2);
+    z-index: 7;
+  }
+  .pu-sb-main {
+    border-radius: var(--r-pill);
+    box-shadow: 0 6px 18px rgba(43, 26, 20, 0.16);
+  }
+  /* Keep the tool strip above the floating status pill. */
+  .pu-toolbar {
+    bottom: calc(var(--sp-2) + var(--control-tap) + var(--sp-3));
+  }
+  .pu-fab-components {
+    min-height: var(--control-tap);
+    padding: 0 var(--sp-3);
+    font-size: var(--type-small);
+  }
+  .pu-screen {
+    padding-top: var(--sp-2);
+  }
+  /* A full-height sheet still has to leave the top bar and tab bar visible. */
+  .pu-comp,
+  .pu-comp.is-sheet-full,
+  .fiberlab-inspector,
+  .fiberlab-inspector.is-sheet-full,
+  .pu-sb-detail {
+    max-height: calc(100vh - var(--topbar-h) - var(--tabbar-h) - var(--sp-4));
+  }
+}
+
+/* Very short landscape windows (phone rotated, keyboard open) still need the
+ * canvas; drop the design bar rather than squeeze the drawing area to nothing. */
+@media (max-width: 900px) and (max-height: 400px) and (orientation: landscape) {
+  .pu-design-bar {
+    display: none;
+  }
+}
+
+/* Mobile browsers size `vh` from the largest viewport (URL bar hidden), which
+ * makes a sheet taller than the visible screen. `dvh` tracks the visible one;
+ * browsers without it simply keep the `vh` cap above. */
+@supports (height: 1dvh) {
+  @media (max-width: 767px) {
+    .pu-comp,
+    .pu-comp.is-sheet-full,
+    .fiberlab-inspector,
+    .fiberlab-inspector.is-sheet-full,
+    .pu-sb-detail {
+      max-height: calc(100dvh - var(--topbar-h) - var(--tabbar-h) - var(--sp-4));
+    }
   }
 }
