@@ -531,4 +531,69 @@ describe('FiberLAB application shell', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Collapse inspector' }));
     fireEvent.click(screen.getByRole('button', { name: 'Expand inspector' }));
   });
+
+  it('treats the Bill of Materials as a keyboard-dismissable dialog', async () => {
+    await renderStudio();
+    const reportsButton = screen.getByRole('button', { name: 'Bill of Materials' });
+    reportsButton.focus();
+    fireEvent.click(reportsButton);
+
+    const dialog = await screen.findByRole('dialog', { name: 'Bill of Materials' });
+    expect(dialog).toHaveAttribute('aria-modal', 'true');
+    expect(dialog).toHaveFocus();
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(screen.queryByRole('dialog', { name: 'Bill of Materials' })).not.toBeInTheDocument();
+    await waitFor(() => expect(reportsButton).toHaveFocus());
+  });
+
+  it('keeps one modal in charge of the keyboard at a time', async () => {
+    await renderStudio();
+    fireEvent.click(screen.getByRole('button', { name: 'Bill of Materials' }));
+    await screen.findByRole('dialog', { name: 'Bill of Materials' });
+
+    openMoreTools();
+    fireEvent.click(screen.getByRole('button', { name: /^Missions$/i }));
+
+    await screen.findByRole('dialog', { name: 'Field missions' });
+    expect(screen.queryByRole('dialog', { name: 'Bill of Materials' })).not.toBeInTheDocument();
+  });
+
+  it('closes the More tools popover on Escape and returns focus to its trigger', async () => {
+    await renderStudio();
+    const trigger = screen.getByRole('button', { name: 'More tools' });
+    fireEvent.click(trigger);
+    expect(screen.getByRole('button', { name: 'OTDR Trace' })).toBeInTheDocument();
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+
+    expect(screen.queryByRole('button', { name: 'OTDR Trace' })).not.toBeInTheDocument();
+    await waitFor(() => expect(trigger).toHaveFocus());
+  });
+
+  it('marks a keyboard-deleted element as an edit and clears the selection', async () => {
+    const { container } = render(<App />);
+    fireEvent.click(await screen.findByRole('button', { name: /Launch Interactive Studio/i }));
+    await screen.findByRole('button', { name: 'Bill of Materials' });
+
+    const dropSpan = getCanvasNodeByText(/^6\.0 km$/);
+    fireEvent.click(dropSpan);
+    expect(await screen.findByRole('switch', { name: 'Macro-bend fault (<15 mm)' })).toBeInTheDocument();
+
+    fireEvent.keyDown(container.querySelector('.react-flow__pane') as Element, { key: 'Delete' });
+
+    await waitFor(() => expect(screen.queryAllByText(/^6\.0 km$/)).toHaveLength(0));
+    expect(await screen.findByText('Edited')).toBeInTheDocument();
+  });
+
+  it('marks the loaded preset as edited once the canvas deviates from it', async () => {
+    await renderStudio();
+    expect(screen.queryByText('Edited')).not.toBeInTheDocument();
+
+    const dropSpan = getCanvasNodeByText(/^6\.0 km$/);
+    fireEvent.click(dropSpan);
+    fireEvent.click(screen.getByRole('switch', { name: 'Macro-bend fault (<15 mm)' }));
+
+    expect(await screen.findByText('Edited')).toBeInTheDocument();
+  });
 });

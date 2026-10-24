@@ -1,11 +1,4 @@
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type KeyboardEvent as ReactKeyboardEvent,
-  type PointerEvent as ReactPointerEvent,
-} from 'react';
+import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { Activity, ChevronDown, Radio, ScanLine, X } from 'lucide-react';
 import type { PonEdge, PonNode, Wavelength } from '../types';
 import {
@@ -16,6 +9,7 @@ import {
   type OtdrEvent,
   type OtdrPulseWidthNs,
 } from '../engine/otdrSimulator';
+import { useDialogA11y } from '../hooks/useDialogA11y';
 
 interface OtdrModalProps {
   open: boolean;
@@ -499,53 +493,18 @@ export function OtdrModal({ open, onClose, nodes, edges }: OtdrModalProps) {
     onClose();
   };
 
+  // Clear a pending acquisition whenever the analyzer is dismissed, including
+  // the Escape path handled by the shared dialog hook.
   useEffect(() => {
-    if (!open) {
-      if (timeoutRef.current !== null) {
-        window.clearTimeout(timeoutRef.current);
-        timeoutRef.current = null;
-      }
-      setAcquiring(false);
-      return;
+    if (open) return;
+    if (timeoutRef.current !== null) {
+      window.clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
     }
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
-      if (timeoutRef.current !== null) {
-        window.clearTimeout(timeoutRef.current);
-        timeoutRef.current = null;
-      }
-      setAcquiring(false);
-      onClose();
-    };
-    document.addEventListener('keydown', closeOnEscape);
-    return () => document.removeEventListener('keydown', closeOnEscape);
-  }, [open, onClose]);
-
-  useEffect(() => {
-    if (open) closeButtonRef.current?.focus();
+    setAcquiring(false);
   }, [open]);
 
-  const trapDialogTab = (event: ReactKeyboardEvent<HTMLElement>) => {
-    if (event.key !== 'Tab') return;
-    const focusable = Array.from(
-      event.currentTarget.querySelectorAll<HTMLElement>(
-        'button:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
-      ),
-    );
-    if (focusable.length === 0) {
-      event.preventDefault();
-      return;
-    }
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
-    if (event.shiftKey && document.activeElement === first) {
-      event.preventDefault();
-      last.focus();
-    } else if (!event.shiftKey && document.activeElement === last) {
-      event.preventDefault();
-      first.focus();
-    }
-  };
+  const { dialogRef } = useDialogA11y({ open, onClose: handleClose, initialFocusRef: closeButtonRef });
 
   if (!open) return null;
 
@@ -559,12 +518,12 @@ export function OtdrModal({ open, onClose, nodes, edges }: OtdrModalProps) {
       }}
     >
       <section
+        ref={dialogRef}
         className="otdr-modal panel"
         role="dialog"
         aria-modal="true"
         aria-labelledby="otdr-modal-title"
         aria-describedby="otdr-modal-description"
-        onKeyDown={trapDialogTab}
       >
         <header className="otdr-modal-header">
           <div className="otdr-title-group">

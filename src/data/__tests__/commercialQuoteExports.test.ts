@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_SETTINGS } from '../../types';
-import { buildCommercialCsv, buildQuotationExport } from '../../components/BOMModal';
+import { buildCommercialCsv, buildQuotationExport } from '../commercialQuoteExports';
 import { buildPreset } from '../../engine/presets';
 import { simulateTopology } from '../../engine/opticalSimulator';
 import { calculateNetworkCost, DEFAULT_UNIT_COSTS } from '../pricingCatalogue';

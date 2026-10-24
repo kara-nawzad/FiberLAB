@@ -67,14 +67,24 @@ export function CanvasToolbar(props: CanvasToolbarProps) {
     onClear,
   } = props;
   const menuRef = useRef<HTMLDivElement | null>(null);
+  const menuButtonRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
     if (!toolsOpen) return;
     const onDown = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as globalThis.Node)) onToolsOpenChange(false);
     };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      onToolsOpenChange(false);
+      menuButtonRef.current?.focus({ preventScroll: true });
+    };
     document.addEventListener('mousedown', onDown);
-    return () => document.removeEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
   }, [toolsOpen, onToolsOpenChange]);
 
   const close = (fn: () => void) => () => {
@@ -127,16 +137,19 @@ export function CanvasToolbar(props: CanvasToolbarProps) {
 
       <div style={{ position: 'relative' }} ref={menuRef}>
         <button
+          ref={menuButtonRef}
           type="button"
           className={`pu-btn ${toolsOpen || opmActive || activeMissionTitle ? 'is-active' : ''}`}
           onClick={() => onToolsOpenChange(!toolsOpen)}
           aria-expanded={toolsOpen}
+          aria-haspopup="true"
+          aria-controls="canvas-more-tools"
           aria-label="More tools"
         >
           <SlidersHorizontal size={14} /> More tools
         </button>
         {toolsOpen ? (
-          <div className="pu-menu" style={{ top: 'calc(100% + 8px)', left: 0, width: 280 }}>
+          <div id="canvas-more-tools" className="pu-menu" style={{ top: 'calc(100% + 8px)', left: 0, width: 280 }}>
             <button type="button" onClick={close(onOpenOverview)} aria-label="Overview & Physics">
               <ArrowLeft size={13} style={{ display: 'inline', marginRight: 8 }} /> Overview &amp; Physics
             </button>

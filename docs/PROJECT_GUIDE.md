@@ -141,7 +141,7 @@ Fiber spans expose independent **Macro-bend fault (<15 mm)** and **Dirty SC/APC 
 
 ### 3.5 Use a preset or inspect the inventory
 
-The top bar includes the **Overview & Physics** return action, **Link nodes**, OPM and **OTDR Trace** tools, a selection-aware **Delete** action, presets, the **Missions** drawer, global safety margin, Auto mode, **Run test**, **Bill of Materials**, and **Clear**. It places the live estimated CAPEX and cost per home passed beside optical health. The workbench responds at tablet/mobile widths by stacking the canvas, a horizontal toolbox, and a scrollable Inspector while keeping the same graph.
+The top bar includes the **Overview & Physics** return action, **Link nodes**, OPM and **OTDR Trace** tools, a selection-aware **Delete** action, presets, the **Missions** drawer, global safety margin, Auto mode, **Run test**, **Bill of Materials**, and **Clear**. It places the live estimated CAPEX and cost per home passed beside optical health. At or below 900 px the workbench becomes canvas-first: the icon rail stays fixed while the component library and the Inspector float above the canvas (opening the Inspector on selection) instead of squeezing it out of the row, and the minimap is hidden. The 560 px breakpoint collapses popovers into a full-width sheet under the top bar. Every overlay — Bill of Materials, OTDR analyzer, and mission drawer — is a labelled `aria-modal` dialog that closes on Escape or a backdrop click, traps Tab inside itself, and returns focus to the control that opened it; only one overlay can be open at a time. The document tab marks a topology as **Edited** once it deviates from the preset it was loaded from.
 
 The BOM has an **Optical Budget Audit** view and a **Commercial Quotation & CAPEX** view. The commercial view groups detailed quotation lines into Cables, Passives, Active Gear, and Labor & Splicing, and reports material subtotal, labor subtotal, total project CAPEX, cost per home passed, and cost per connected subscriber. Export actions include:
 
@@ -517,7 +517,7 @@ On 13 October 2026, after the ODF/NAP/gateway and XGS-PON expansion:
 
 - `npm ci --no-audit`: passed; dependencies installed from the lockfile. No automatic dependency fixes were applied.
 - `npm run typecheck`: passed.
-- `npm test -- --reporter=dot`: **89 tests passed** across 11 files (26 optical-simulator, 5 OPM, 5 OTDR, 5 XGS-PON/equipment, 6 mission, 5 pricing, 3 commercial-export, 7 hardware-catalogue, 2 optical-physics, 24 app, and 1 splice-hero tests).
+- `npm test -- --reporter=dot`: **94 tests passed** across 11 files (26 optical-simulator, 5 OPM, 5 OTDR, 5 XGS-PON/equipment, 6 mission, 5 pricing, 3 commercial-export, 7 hardware-catalogue, 2 optical-physics, 29 app, and 1 splice-hero tests).
 - `npm run build`: passed, including strict TypeScript checking and a Vite production build. Vite reports an informational large-chunk advisory for the 650.10 kB minified JavaScript bundle.
 - `git diff --check`: passed.
 - A previous audit scan reported **13 dependency findings** (5 moderate, 6 high, 2 critical). Review these before production; no `npm audit fix` was run.

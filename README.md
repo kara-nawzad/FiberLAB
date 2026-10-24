@@ -22,7 +22,7 @@ repository's `.nvmrc` selects Node 22.
 npm ci
 npm run dev        # http://localhost:5173
 npm run build      # tsc --noEmit && vite build
-npm run test       # 89 tests: optical engine, upstream dynamic range, OPM, OTDR, equipment, CAPEX, missions, and app interactions
+npm run test       # 94 tests: optical engine, upstream dynamic range, OPM, OTDR, equipment, CAPEX, missions, overlays, and app interactions
 npm run typecheck  # strict TypeScript, no emit
 npm run lint       # ESLint checks for source and configuration files
 npm run format:check  # verify Prettier formatting

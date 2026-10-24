@@ -120,7 +120,7 @@ export function BottomPanel({
       data-testid="network-summary-strip"
       aria-label="Network summary"
     >
-      <div className="pu-btabs" role="tablist">
+      <div className="pu-btabs" role="tablist" aria-label="Network summary views">
         {TABS.map((item) => (
           <button
             key={item.id}

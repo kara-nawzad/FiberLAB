@@ -4,6 +4,7 @@ import type { PonEdge, PonNode, SimulationResult } from '../types';
 import type { NetworkCostBreakdown } from '../data/pricingCatalogue';
 import { formatDbm } from '../engine/opticalSimulator';
 import { evaluateMissionObjectives, MISSIONS, type Mission } from '../engine/missions';
+import { useDialogA11y } from '../hooks/useDialogA11y';
 
 interface MissionDrawerProps {
   open: boolean;
@@ -42,57 +43,12 @@ export function MissionDrawer({
   onStartMission,
 }: MissionDrawerProps) {
   const [selectedMissionId, setSelectedMissionId] = useState(activeMissionId ?? MISSIONS[0]?.id ?? '');
-  const dialogRef = useRef<HTMLElement | null>(null);
-  const previouslyFocusedRef = useRef<HTMLElement | null>(null);
+  const titleRef = useRef<HTMLHeadingElement | null>(null);
+  const { dialogRef } = useDialogA11y({ open, onClose, initialFocusRef: titleRef });
 
   useEffect(() => {
     if (activeMissionId) setSelectedMissionId(activeMissionId);
   }, [activeMissionId]);
-
-  useEffect(() => {
-    if (!open) return;
-    previouslyFocusedRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    const dialog = dialogRef.current;
-    const focusableSelector =
-      'button:not([disabled]), summary, a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
-    const getFocusable = () => Array.from(dialog?.querySelectorAll<HTMLElement>(focusableSelector) ?? []);
-    const title = dialog?.querySelector<HTMLElement>('#mission-drawer-title');
-    (title ?? getFocusable()[0])?.focus();
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        onClose();
-        return;
-      }
-      if (event.key !== 'Tab') return;
-      const focusable = getFocusable();
-      if (focusable.length === 0) return;
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-      if (event.shiftKey && (document.activeElement === first || !dialog?.contains(document.activeElement))) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && (document.activeElement === last || !dialog?.contains(document.activeElement))) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-    document.addEventListener('keydown', onKeyDown);
-    return () => {
-      document.removeEventListener('keydown', onKeyDown);
-      const previouslyFocused = previouslyFocusedRef.current;
-      const previousIsHidden =
-        !previouslyFocused ||
-        !document.body.contains(previouslyFocused) ||
-        Boolean(previouslyFocused.closest('[aria-hidden="true"], [inert]'));
-      if (previousIsHidden) {
-        document.getElementById('studio-overview-toggle')?.focus({ preventScroll: true });
-      } else {
-        previouslyFocused.focus();
-      }
-      previouslyFocusedRef.current = null;
-    };
-  }, [open, onClose]);
 
   const mission = useMemo(
     () => MISSIONS.find((candidate) => candidate.id === selectedMissionId) ?? MISSIONS[0],
@@ -129,7 +85,12 @@ export function MissionDrawer({
             <div className="mb-1 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.16em] text-blue-700">
               <Flag size={13} /> FiberLAB training
             </div>
-            <h2 id="mission-drawer-title" tabIndex={-1} className="text-lg font-bold tracking-tight text-slate-900">
+            <h2
+              id="mission-drawer-title"
+              ref={titleRef}
+              tabIndex={-1}
+              className="text-lg font-bold tracking-tight text-slate-900 outline-none"
+            >
               Field missions
             </h2>
             <p className="mt-0.5 text-xs text-slate-600">Practice network build and fault-finding.</p>

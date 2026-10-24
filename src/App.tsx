@@ -21,6 +21,7 @@ import {
   useNodesState,
   useReactFlow,
   type Connection,
+  type OnDelete,
   type OnSelectionChangeParams,
   type ReactFlowInstance,
 } from '@xyflow/react';
@@ -108,6 +109,13 @@ interface StudioWorkspaceProps {
   isActive?: boolean;
 }
 
+/** Matches the canvas-first breakpoint in photo-ui.css. */
+const NARROW_VIEWPORT_QUERY = '(max-width: 900px)';
+const isNarrowViewport = () =>
+  typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+    ? window.matchMedia(NARROW_VIEWPORT_QUERY).matches
+    : false;
+
 const MINIMAP_COLORS: Record<string, string> = {
   olt: '#1E293B',
   splitter: '#7C3AED',
@@ -172,6 +180,7 @@ function StudioWorkspace({
   const [settings, setSettings] = useState<DesignSettings>(DEFAULT_SETTINGS);
   const [unitCosts, setUnitCosts] = useState<UnitCostProfile>(() => resolveUnitCosts(DEFAULT_UNIT_COSTS));
   const [activePresetId, setActivePresetId] = useState<string | null>('standard-1x32');
+  const [presetEdited, setPresetEdited] = useState(false);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null);
   const [selection, setSelection] = useState<{ nodeIds: string[]; edgeIds: string[] }>({ nodeIds: [], edgeIds: [] });
@@ -343,7 +352,12 @@ function StudioWorkspace({
 
   /* ------------------------------ Mutations ------------------------------ */
 
-  const markDirty = useCallback(() => setDirty(true), []);
+  // Any edit both stales the committed run and distances the canvas from the
+  // preset it was loaded from, so the document tab can say so.
+  const markDirty = useCallback(() => {
+    setDirty(true);
+    setPresetEdited(true);
+  }, []);
 
   const handlePatchNode = useCallback(
     (nodeId: string, patch: Partial<AnyNodeData>) => {
@@ -399,6 +413,20 @@ function StudioWorkspace({
     [deleteElements, markDirty],
   );
 
+  // Backspace/Delete on the canvas bypasses the toolbar, so it needs the same
+  // bookkeeping: stale the committed run and drop deleted rows from the inspector.
+  const handleCanvasDelete = useCallback<OnDelete<PonNode, PonEdge>>(
+    ({ nodes: deletedNodes, edges: deletedEdges }) => {
+      if (deletedNodes.length === 0 && deletedEdges.length === 0) return;
+      const deletedNodeIds = new Set(deletedNodes.map((node) => node.id));
+      const deletedEdgeIds = new Set(deletedEdges.map((edge) => edge.id));
+      setSelectedNodeId((current) => (current !== null && deletedNodeIds.has(current) ? null : current));
+      setSelectedEdgeId((current) => (current !== null && deletedEdgeIds.has(current) ? null : current));
+      markDirty();
+    },
+    [markDirty],
+  );
+
   const addComponent = useCallback(
     (payload: ToolboxPayload, position: { x: number; y: number }) => {
       const kind = payload.component;
@@ -442,6 +470,9 @@ function StudioWorkspace({
       // Double-click placement: drop the element to the right of the current view centre.
       const spread = Math.random() * 120 - 60;
       addComponent(payload, { x: 420 + spread, y: 300 + spread });
+      // On narrow screens the library floats over the canvas; get out of the way
+      // once the component has landed.
+      if (isNarrowViewport()) setSidebarCollapsed(true);
     },
     [addComponent],
   );
@@ -728,7 +759,19 @@ function StudioWorkspace({
     [getEdges, getNodes, handleConnect, handleDeleteEdge, linkMode, linkStartNodeId],
   );
 
+  /* Only one overlay owns the keyboard at a time: opening one closes the others. */
+  const closeBom = useCallback(() => setBomOpen(false), []);
+  const openBom = useCallback(() => {
+    setMissionsOpen(false);
+    setOtdrOpen(false);
+    setBomOpen(true);
+  }, []);
   const closeMissions = useCallback(() => setMissionsOpen(false), []);
+  const openMissions = useCallback(() => {
+    setBomOpen(false);
+    setOtdrOpen(false);
+    setMissionsOpen(true);
+  }, []);
   const closeOtdr = useCallback(() => setOtdrOpen(false), []);
   const handleOpenOtdr = useCallback(() => {
     setBomOpen(false);
@@ -769,6 +812,7 @@ function StudioWorkspace({
       setOpmProbe(null);
       opmProbeRef.current = null;
       setDirty(false);
+      setPresetEdited(false);
       window.requestAnimationFrame(() => {
         void fitView({ padding: 0.08, maxZoom: 1.15, duration: 350 });
       });
@@ -790,6 +834,7 @@ function StudioWorkspace({
       }));
       setCommittedSim(null);
       setDirty(false);
+      setPresetEdited(false);
       setActivePresetId(mission.presetId);
       setActiveMissionId(mission.id);
       setSelectedNodeId(null);
@@ -817,9 +862,9 @@ function StudioWorkspace({
       const mission = getMissionById(landingCommand.missionId);
       if (mission) startMission(mission);
     } else {
-      setMissionsOpen(true);
+      openMissions();
     }
-  }, [landingCommand, applyPreset, startMission]);
+  }, [landingCommand, applyPreset, startMission, openMissions]);
 
   const clearCanvas = useCallback(() => {
     setNodes([]);
@@ -835,6 +880,7 @@ function StudioWorkspace({
     setOpmActive(false);
     setOpmProbe(null);
     opmProbeRef.current = null;
+    setPresetEdited(false);
     markDirty();
   }, [setNodes, setEdges, markDirty]);
 
@@ -891,6 +937,19 @@ function StudioWorkspace({
     return () => window.clearTimeout(timer);
   }, [isActive, sidebarCollapsed, inspectorCollapsed, fitView]);
 
+  // Canvas-first on small screens: start with the component library collapsed so
+  // the canvas is usable, and re-collapse it if the window shrinks to that size.
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
+    const query = window.matchMedia(NARROW_VIEWPORT_QUERY);
+    const sync = () => {
+      if (query.matches) setSidebarCollapsed(true);
+    };
+    sync();
+    query.addEventListener('change', sync);
+    return () => query.removeEventListener('change', sync);
+  }, []);
+
   /* -------------------------------- Selection ---------------------------- */
 
   const selectedNode = useMemo(() => nodes.find((node) => node.id === selectedNodeId) ?? null, [nodes, selectedNodeId]);
@@ -944,11 +1003,12 @@ function StudioWorkspace({
         costBreakdown={costBreakdown}
         onPreset={applyPreset}
         onRunTest={runLightTest}
-        onOpenBOM={() => setBomOpen(true)}
+        onOpenBOM={openBom}
         onOpenOverview={handleOpenOverview}
         testing={testing}
         stale={!settings.autoRun && dirty}
         activePresetId={activePresetId}
+        presetEdited={presetEdited}
       />
 
       <div className="fiberlab-studio__body pu-body">
@@ -957,7 +1017,7 @@ function StudioWorkspace({
           onToggleOpm={handleToggleOpm}
           onOpenOtdr={handleOpenOtdr}
           onRunSimulation={runLightTest}
-          onOpenReports={() => setBomOpen(true)}
+          onOpenReports={openBom}
           onOpenSettings={() => setToolsOpen(true)}
           onOpenOverview={handleOpenOverview}
           collapsed={sidebarCollapsed}
@@ -968,6 +1028,7 @@ function StudioWorkspace({
           <div className="pu-tabstrip">
             <span className="pu-doc-tab">
               {PRESETS.find((preset) => preset.id === activePresetId)?.name ?? 'FTTH Network Design'}
+              {presetEdited && activePresetId ? <span className="pu-doc-tab-edited">Edited</span> : null}
             </span>
           </div>
           <main
@@ -1002,7 +1063,7 @@ function StudioWorkspace({
               onOpenOverview={handleOpenOverview}
               onToggleOpm={handleToggleOpm}
               onOpenOtdr={handleOpenOtdr}
-              onOpenMissions={() => setMissionsOpen(true)}
+              onOpenMissions={openMissions}
               onClear={clearCanvas}
             />
             <SimulationContext.Provider value={simulation}>
@@ -1016,6 +1077,7 @@ function StudioWorkspace({
                 onConnect={handleConnect}
                 onNodeClick={handleNodeClick}
                 onSelectionChange={handleSelectionChange}
+                onDelete={handleCanvasDelete}
                 onInit={handleInit}
                 onDragOver={handleDragOver}
                 onDrop={handleDrop}
@@ -1044,7 +1106,7 @@ function StudioWorkspace({
                 />
 
                 {linkMode ? (
-                  <Panel position="top-left" className="!m-3 !mt-14">
+                  <Panel position="top-left" className="pu-link-panel !m-3 !mt-14">
                     <div
                       className="link-mode-panel panel flex max-w-[min(420px,calc(100vw-28px))] items-center gap-3 rounded-xl px-3 py-2.5 shadow-panel"
                       role="status"
@@ -1124,7 +1186,7 @@ function StudioWorkspace({
             edgeCount={edges.length}
             powerBars={powerBars}
             worstLossDb={worstLossDb}
-            onOpenReports={() => setBomOpen(true)}
+            onOpenReports={openBom}
             onSelectNode={(nodeId) => {
               setSelectedNodeId(nodeId);
               setSelectedEdgeId(null);
@@ -1158,7 +1220,7 @@ function StudioWorkspace({
 
       <BOMModal
         open={bomOpen}
-        onClose={() => setBomOpen(false)}
+        onClose={closeBom}
         nodes={nodes}
         edges={flowEdges}
         simulation={simulation}

@@ -24,6 +24,8 @@ interface TopBarProps {
   testing: boolean;
   stale: boolean;
   activePresetId: string | null;
+  /** True once the canvas has been edited away from the loaded preset. */
+  presetEdited?: boolean;
 }
 
 function deriveHealth(summary: NetworkSummary): Health {
@@ -51,11 +53,14 @@ export function TopBar({
   testing,
   stale,
   activePresetId,
+  presetEdited = false,
 }: TopBarProps) {
   const [presetOpen, setPresetOpen] = useState(false);
   const [zoomOpen, setZoomOpen] = useState(false);
   const presetRef = useRef<HTMLDivElement | null>(null);
   const zoomRef = useRef<HTMLDivElement | null>(null);
+  const presetButtonRef = useRef<HTMLButtonElement | null>(null);
+  const zoomButtonRef = useRef<HTMLButtonElement | null>(null);
   const { zoomIn, zoomOut, fitView, zoomTo } = useReactFlow();
   const zoom = useStore((state) => state.transform[2]);
   const health = deriveHealth(summary);
@@ -68,8 +73,25 @@ export function TopBar({
       if (presetRef.current && !presetRef.current.contains(target)) setPresetOpen(false);
       if (zoomRef.current && !zoomRef.current.contains(target)) setZoomOpen(false);
     };
+    // Escape dismisses a popover and returns focus to the button that opened it,
+    // matching how the workspace overlays behave.
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      if (presetOpen) {
+        setPresetOpen(false);
+        presetButtonRef.current?.focus({ preventScroll: true });
+      }
+      if (zoomOpen) {
+        setZoomOpen(false);
+        zoomButtonRef.current?.focus({ preventScroll: true });
+      }
+    };
     document.addEventListener('mousedown', onDown);
-    return () => document.removeEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
   }, [presetOpen, zoomOpen]);
 
   return (
@@ -91,10 +113,13 @@ export function TopBar({
 
       <div className="relative" ref={presetRef}>
         <button
+          ref={presetButtonRef}
           type="button"
           className="pu-select"
           onClick={() => setPresetOpen((open) => !open)}
           aria-expanded={presetOpen}
+          aria-haspopup="true"
+          aria-controls="preset-menu"
           aria-label="Preset Topologies"
         >
           <LayoutGrid size={15} className="pu-mut" />
@@ -102,7 +127,7 @@ export function TopBar({
           <ChevronDown size={14} className="pu-mut" />
         </button>
         {presetOpen ? (
-          <div className="pu-menu" style={{ top: 'calc(100% + 8px)', left: 0, width: 340 }}>
+          <div id="preset-menu" className="pu-menu" style={{ top: 'calc(100% + 8px)', left: 0, width: 340 }}>
             {PRESETS.map((preset) => (
               <button
                 key={preset.id}
@@ -114,7 +139,9 @@ export function TopBar({
               >
                 <strong style={{ fontSize: 12.5 }}>{preset.name}</strong>
                 {activePresetId === preset.id ? (
-                  <span style={{ float: 'right', color: 'var(--pu-pri)', fontSize: 10, fontWeight: 700 }}>LOADED</span>
+                  <span style={{ float: 'right', color: 'var(--pu-pri)', fontSize: 10, fontWeight: 700 }}>
+                    {presetEdited ? 'LOADED · EDITED' : 'LOADED'}
+                  </span>
                 ) : null}
                 <div className="pu-mut" style={{ fontSize: 10.5, marginTop: 3 }}>
                   {preset.description}
@@ -148,11 +175,20 @@ export function TopBar({
       {stale ? <span className="pu-health amber">UNSAVED BUDGET — RUN SIMULATION</span> : null}
 
       <div className="relative" ref={zoomRef}>
-        <button type="button" className="pu-select" onClick={() => setZoomOpen((open) => !open)} aria-label="Zoom">
+        <button
+          ref={zoomButtonRef}
+          type="button"
+          className="pu-select"
+          onClick={() => setZoomOpen((open) => !open)}
+          aria-label="Zoom"
+          aria-expanded={zoomOpen}
+          aria-haspopup="true"
+          aria-controls="zoom-menu"
+        >
           {Math.round(zoom * 100)}% <ChevronDown size={14} className="pu-mut" />
         </button>
         {zoomOpen ? (
-          <div className="pu-menu" style={{ top: 'calc(100% + 8px)', right: 0, minWidth: 160 }}>
+          <div id="zoom-menu" className="pu-menu" style={{ top: 'calc(100% + 8px)', right: 0, minWidth: 160 }}>
             <button type="button" onClick={() => void zoomIn({ duration: 200 })}>
               Zoom in
             </button>

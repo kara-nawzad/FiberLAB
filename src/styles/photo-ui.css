@@ -971,3 +971,141 @@
   height: auto;
   display: block;
 }
+
+/* ------------------------------------------------------------------------- */
+/* Polish pass: document tab, keyboard focus, touch targets, narrow screens.  */
+/* ------------------------------------------------------------------------- */
+
+.pu-doc-tab-edited {
+  margin-left: 8px;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  background: var(--pu-warn-soft);
+  color: #b36b00;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
+/* The warm buttons are custom-styled, so give them the same visible keyboard
+ * focus ring the Tailwind `.btn` helpers get. */
+.pu-btn:focus-visible,
+.pu-select:focus-visible,
+.pu-tool:focus-visible,
+.pu-rail button:focus-visible,
+.pu-menu button:focus-visible,
+.pu-doc-tab:focus-visible,
+.pu-chip:focus-visible {
+  outline: 2px solid var(--pu-pri);
+  outline-offset: 2px;
+}
+
+/* Comfortable hit areas on touch devices without changing the desktop density. */
+@media (pointer: coarse) {
+  .pu-btn {
+    min-height: 40px;
+  }
+  .pu-menu button {
+    min-height: 44px;
+  }
+  .pu-rail button {
+    min-height: 52px;
+  }
+}
+
+/* ------------------------------------------------------------------------- */
+/* Canvas-first layout for tablets and phones.                                */
+/* The rail stays a fixed 48–56 px strip; the component library and the       */
+/* inspector float above the canvas instead of squeezing it out of the row.   */
+/* ------------------------------------------------------------------------- */
+@media (max-width: 900px) {
+  .pu-body {
+    position: relative;
+  }
+  .pu-center {
+    min-width: 0;
+  }
+  .pu-comp {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 48px;
+    z-index: 20;
+    width: min(272px, calc(100% - 48px));
+    box-shadow:
+      0 0 0 1px var(--pu-line),
+      14px 0 32px rgba(43, 26, 20, 0.16);
+  }
+  .fiberlab-inspector:not(.is-collapsed) {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 20;
+    width: min(320px, calc(100% - 56px));
+    box-shadow:
+      0 0 0 1px var(--pu-line),
+      -14px 0 32px rgba(43, 26, 20, 0.16);
+  }
+  .pu-toolbar {
+    max-width: calc(100% - 24px);
+    gap: 6px;
+  }
+  .pu-toolbar .pu-btn {
+    padding: 7px 10px;
+    font-size: 11.5px;
+  }
+  .pu-canvas .react-flow__minimap {
+    display: none;
+  }
+  .pu-top {
+    height: 54px;
+    gap: 10px;
+  }
+  /* The toolbar wraps onto more rows here, so the link banner sits lower. */
+  .pu-canvas .react-flow__panel.pu-link-panel {
+    margin-top: 6.75rem !important;
+  }
+  .fiberlab-inspector .btn,
+  .fiberlab-inspector .btn-ghost {
+    min-height: 32px;
+  }
+}
+
+@media (max-width: 560px) {
+  /* Keep the top bar a single 54 px row (it scrolls sideways) so the popover
+   * sheet below always has a predictable anchor. */
+  .pu-top {
+    height: 54px;
+    padding: 0 12px;
+  }
+  .pu-toolbar {
+    right: 12px;
+  }
+  /* Menus become a full-width sheet; anchored popovers would run off a phone. */
+  .pu-top .pu-menu,
+  .pu-toolbar .pu-menu {
+    position: fixed !important;
+    top: 62px !important;
+    left: 8px !important;
+    right: 8px !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-height: 62vh;
+    overflow-y: auto;
+    border-radius: 14px;
+  }
+  .pu-toolbar .pu-btn {
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+  .pu-toolbar .pu-btn svg {
+    width: 13px;
+    height: 13px;
+  }
+  .pu-center {
+    padding: 8px;
+  }
+}
