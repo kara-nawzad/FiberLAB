@@ -953,6 +953,198 @@
   border-radius: var(--r-lg);
 }
 
+/* ---- Canvas toolbar: core tools, view controls, one overflow menu ---- */
+.pu-toolbar .pu-tb-group {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+}
+.pu-toolbar .pu-tb-sep {
+  width: 1px;
+  height: var(--sp-4);
+  margin: 0 var(--sp-1);
+  background: var(--pu-line);
+}
+.pu-toolbar .pu-tb-btn {
+  gap: var(--sp-2);
+  min-height: var(--control-md);
+  padding: 0 var(--sp-3);
+  color: var(--pu-ink);
+}
+.pu-toolbar .pu-tb-btn.is-active,
+.pu-toolbar .pu-tb-btn.is-active:hover:not(:disabled) {
+  border-color: var(--pu-pri);
+  background: var(--pu-pri);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(228, 103, 63, 0.28);
+}
+.pu-toolbar .pu-tb-btn.is-active svg {
+  color: #ffffff;
+}
+.pu-toolbar .pu-tb-btn.is-compact {
+  width: var(--control-md);
+  padding: 0;
+  justify-content: center;
+}
+.pu-toolbar .pu-tb-btn.is-compact .pu-tb-label {
+  display: none;
+}
+.pu-tb-more {
+  position: relative;
+  display: flex;
+}
+.pu-toolbar .pu-tb-more-btn {
+  padding: 0 var(--sp-2);
+  font-size: var(--fs-lg);
+  letter-spacing: 0.05em;
+}
+
+/* ---- Inspector: header, type line, Advanced disclosure, remove action ---- */
+.pu-insp-close {
+  display: inline-flex;
+  width: var(--control-sm);
+  height: var(--control-sm);
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--pu-line);
+  border-radius: var(--r-md);
+  background: #ffffff;
+  color: var(--pu-mut);
+}
+.pu-insp-close:hover {
+  border-color: var(--pu-pri);
+  color: var(--pu-pri);
+}
+.pu-insp-type {
+  margin-top: var(--sp-1);
+  overflow: hidden;
+  color: var(--pu-mut);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: var(--type-caption);
+  line-height: var(--leading-snug);
+}
+.pu-insp-summary {
+  margin: 0 0 var(--sp-2);
+  padding: var(--sp-2);
+  border: 1px solid #f0d1b1;
+  border-radius: var(--r-md);
+  background: #fff0df;
+  color: var(--pu-ink);
+  font-size: var(--type-small);
+  line-height: var(--leading-snug);
+}
+.pu-adv {
+  margin-top: var(--sp-2);
+  border-top: 1px solid var(--pu-line);
+}
+.pu-adv-head {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: var(--sp-1);
+  min-height: var(--control-md);
+  color: var(--pu-mut);
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: var(--type-caption);
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+}
+.pu-adv-head:hover {
+  color: var(--pu-pri);
+}
+.pu-adv-chevron {
+  flex: 0 0 auto;
+  transition: transform 150ms ease;
+}
+.pu-adv.is-open .pu-adv-chevron {
+  transform: rotate(90deg);
+  color: var(--pu-pri);
+}
+.pu-adv-label {
+  flex: 0 0 auto;
+}
+.pu-adv-hint {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--pu-mut);
+  font-family: inherit;
+  font-size: var(--type-caption);
+  font-weight: var(--fw-regular);
+  letter-spacing: 0;
+  text-align: right;
+  text-overflow: ellipsis;
+  text-transform: none;
+  white-space: nowrap;
+}
+.pu-adv-body {
+  padding-bottom: var(--sp-1);
+}
+.pu-insp-foot {
+  flex: 0 0 auto;
+  padding: var(--sp-2) var(--shell-pad);
+  border-top: 1px solid var(--pu-line);
+  background: var(--pu-panel);
+}
+.pu-btn-danger {
+  display: inline-flex;
+  min-height: var(--control-md);
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  padding: 0 var(--sp-3);
+  border: 1px solid #f6c9cb;
+  border-radius: var(--r-lg);
+  background: var(--pu-bad-soft);
+  color: var(--pu-bad);
+  font-size: var(--type-body);
+  font-weight: var(--fw-semibold);
+}
+.pu-btn-danger:hover {
+  border-color: var(--pu-bad);
+  background: #fde8e8;
+}
+.pu-btn-quiet {
+  display: inline-flex;
+  min-height: var(--control-md);
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--sp-3);
+  border: 1px solid var(--pu-line);
+  border-radius: var(--r-lg);
+  background: #ffffff;
+  color: var(--pu-ink);
+  font-size: var(--type-body);
+  font-weight: var(--fw-semibold);
+}
+.pu-btn-quiet:hover {
+  border-color: var(--pu-pri);
+  color: var(--pu-pri);
+}
+.pu-btn-block {
+  width: 100%;
+}
+.pu-confirm {
+  display: grid;
+  gap: var(--sp-2);
+}
+.pu-confirm p {
+  margin: 0;
+  color: var(--pu-ink);
+  font-size: var(--type-small);
+  line-height: var(--leading-snug);
+}
+.pu-confirm-actions {
+  display: flex;
+  gap: var(--sp-2);
+}
+.pu-confirm-actions > .pu-btn {
+  flex: 1 1 0;
+}
+
 /* Hardware nodes */
 .hw-olt {
   position: relative;
@@ -1954,6 +2146,116 @@
   .pu-tool small,
   .pu-acc-note {
     font-size: var(--type-body);
+  }
+
+  /* ---- Phone canvas chrome -------------------------------------------------
+   * The tool strip drops to the bottom of the canvas as a compact icon bar that
+   * sits above the status chip, freeing the top of the canvas. React Flow's own
+   * zoom buttons are redundant next to Zoom in / Zoom out / Fit. */
+  .pu-toolbar {
+    top: auto;
+    right: var(--sp-2);
+    bottom: calc(var(--sp-3) + var(--control-md) + var(--sp-2));
+    left: var(--sp-2);
+    max-width: none;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    gap: 2px;
+    padding: var(--sp-1);
+    border: 1px solid var(--pu-line);
+    border-radius: var(--r-pill);
+    background: var(--pu-panel);
+    box-shadow: 0 6px 18px rgba(43, 26, 20, 0.12);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .pu-toolbar::-webkit-scrollbar {
+    display: none;
+  }
+  .pu-toolbar .pu-tb-btn,
+  .pu-toolbar .pu-tb-btn.is-compact {
+    width: var(--control-tap);
+    min-width: var(--control-tap);
+    min-height: var(--control-tap);
+    justify-content: center;
+    padding: 0;
+    border-radius: var(--r-pill);
+  }
+  .pu-toolbar .pu-tb-more-btn {
+    min-width: var(--control-tap);
+    padding: 0;
+  }
+  .pu-tb-label,
+  .pu-toolbar .pu-tb-sep {
+    display: none;
+  }
+  /* The menu opens upward from the strip instead of hanging off the top bar. */
+  .pu-toolbar .pu-menu {
+    top: auto !important;
+    bottom: calc(var(--control-tap) + var(--sp-4)) !important;
+    max-height: 58vh;
+  }
+  .pu-canvas .react-flow__controls {
+    display: none !important;
+  }
+  /* The "+ Components" pill hosts the library at the top-left now that the
+   * tool strip lives along the bottom. */
+  .pu-fab-components {
+    top: var(--sp-2);
+    bottom: auto;
+    left: var(--sp-2);
+  }
+
+  /* ---- Inspector as a half/full bottom sheet ------------------------------- */
+  .fiberlab-inspector,
+  .fiberlab-inspector:not(.is-collapsed) {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 46;
+    width: auto;
+    max-width: none;
+    height: 56vh;
+    max-height: 92vh;
+    border: 1px solid var(--pu-line) !important;
+    border-radius: var(--r-2xl) var(--r-2xl) 0 0;
+    box-shadow: 0 -18px 40px rgba(43, 26, 20, 0.22);
+    transition: height 180ms ease;
+  }
+  .fiberlab-inspector.is-sheet-full {
+    height: 92vh;
+  }
+  .fiberlab-inspector {
+    animation: pu-sheet-in 180ms ease-out;
+  }
+  .pu-insp-close,
+  .pu-adv-head,
+  .pu-insp-foot .pu-btn {
+    min-height: var(--control-tap);
+  }
+  .pu-insp-close {
+    width: var(--control-tap);
+    height: var(--control-tap);
+  }
+  .pu-adv-hint {
+    display: none;
+  }
+}
+
+@keyframes pu-sheet-in {
+  from {
+    opacity: 0.4;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fiberlab-inspector,
+  .pu-comp {
+    animation: none;
   }
 }
 

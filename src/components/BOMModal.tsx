@@ -7,6 +7,7 @@ import type { NetworkCostBreakdown, UnitCostProfile } from '../data/pricingCatal
 import { formatUsd } from '../data/pricingCatalogue';
 import { useDialogA11y } from '../hooks/useDialogA11y';
 import { buildCommercialCsv, buildQuotationExport, connectedSubscriberCount } from '../data/commercialQuoteExports';
+import { PricingSettings } from './PricingSettings';
 
 /* ========================================================================== *
  * Bill of Materials — deployment statistics + per-subscriber optical budget.
@@ -20,6 +21,8 @@ interface BOMModalProps {
   simulation: SimulationResult;
   settings: DesignSettings;
   unitCosts: UnitCostProfile;
+  onUnitCostsChange: (unitCosts: UnitCostProfile) => void;
+  onResetUnitCosts: () => void;
   costBreakdown: NetworkCostBreakdown;
 }
 
@@ -59,10 +62,16 @@ function CommercialQuotationView({
   nodes,
   simulation,
   costBreakdown,
+  unitCosts,
+  onUnitCostsChange,
+  onResetUnitCosts,
 }: {
   nodes: PonNode[];
   simulation: SimulationResult;
   costBreakdown: NetworkCostBreakdown;
+  unitCosts: UnitCostProfile;
+  onUnitCostsChange: (unitCosts: UnitCostProfile) => void;
+  onResetUnitCosts: () => void;
 }) {
   const connectedCount = connectedSubscriberCount(nodes, simulation);
   const costPerConnected =
@@ -153,8 +162,14 @@ function CommercialQuotationView({
 
       <p className="mt-3 rounded-md border border-[var(--pu-line)] bg-[var(--pu-elevated)] px-3 py-2 text-body leading-relaxed text-[var(--pu-mut)]">
         Educational USD planning rates only—not a supplier quote, installed-price guarantee, tax estimate, or market
-        survey. Edit local reference rates in the Inspector before exporting a quotation.
+        survey. Edit the local reference rates below before exporting a quotation.
       </p>
+
+      {/* Unit pricing moved here from the Inspector: it is a quotation-wide
+          setting, not a property of whichever component happens to be selected. */}
+      <div className="mt-3">
+        <PricingSettings unitCosts={unitCosts} onChange={onUnitCostsChange} onReset={onResetUnitCosts} />
+      </div>
     </section>
   );
 }
@@ -167,6 +182,8 @@ export function BOMModal({
   simulation,
   settings,
   unitCosts,
+  onUnitCostsChange,
+  onResetUnitCosts,
   costBreakdown,
 }: BOMModalProps) {
   const [activeTab, setActiveTab] = useState<'optical' | 'commercial'>('optical');
@@ -300,7 +317,14 @@ export function BOMModal({
           className="min-w-0 flex-1 overflow-y-auto px-4 py-4"
         >
           {activeTab === 'commercial' ? (
-            <CommercialQuotationView nodes={nodes} simulation={simulation} costBreakdown={costBreakdown} />
+            <CommercialQuotationView
+              nodes={nodes}
+              simulation={simulation}
+              costBreakdown={costBreakdown}
+              unitCosts={unitCosts}
+              onUnitCostsChange={onUnitCostsChange}
+              onResetUnitCosts={onResetUnitCosts}
+            />
           ) : (
             <>
               {/* ------------------------- Headline metrics ------------------------- */}

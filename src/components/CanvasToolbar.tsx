@@ -3,21 +3,27 @@ import {
   ArrowLeft,
   ClipboardList,
   Crosshair,
+  Ellipsis,
   Hand,
   Link2,
   Maximize2,
   MousePointer2,
-  PlusCircle,
   ScanLine,
-  SlidersHorizontal,
   Trash2,
+  ZoomIn,
+  ZoomOut,
 } from 'lucide-react';
 import type { DesignSettings } from '../types';
 
 /* ========================================================================== *
- * Floating canvas toolbar: Select · Pan · Connect · Add Node · Delete, plus a
- * "More tools" popover that keeps every advanced FiberLAB feature reachable
- * (OPM probe, OTDR, Missions, safety margin, Auto, Overview, Clear).
+ * Floating canvas toolbar.
+ *
+ * Only the tools an engineer touches while drawing live here: Select · Pan ·
+ * Connect · Delete, then Zoom out · Zoom in · Fit. Everything else (Overview,
+ * OPM, OTDR, Missions, safety margin, Auto, Clear, help links) sits behind one
+ * "⋯" overflow menu. Adding components lives in the component library.
+ * Desktop buttons print a short label with a tooltip; on phones the strip
+ * collapses to icons and floats along the bottom of the canvas.
  * ========================================================================== */
 
 export interface CanvasToolbarProps {
@@ -33,14 +39,53 @@ export interface CanvasToolbarProps {
   onSelectTool: () => void;
   onPanTool: () => void;
   onToggleLink: () => void;
-  onAddNode: () => void;
   onDelete: () => void;
   onFit: () => void;
+  onZoomIn: () => void;
+  onZoomOut: () => void;
   onOpenOverview: () => void;
   onToggleOpm: () => void;
   onOpenOtdr: () => void;
   onOpenMissions: () => void;
   onClear: () => void;
+}
+
+function ToolButton({
+  icon,
+  label,
+  ariaLabel,
+  title,
+  active = false,
+  disabled = false,
+  pressed,
+  compact = false,
+  onClick,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  ariaLabel?: string;
+  title: string;
+  active?: boolean;
+  disabled?: boolean;
+  pressed?: boolean;
+  /** View utilities read better as square icon buttons with a tooltip. */
+  compact?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      className={`pu-btn pu-tb-btn${compact ? ' is-compact' : ''}${active ? ' is-active' : ''}`}
+      onClick={onClick}
+      disabled={disabled}
+      title={title}
+      aria-label={ariaLabel ?? label}
+      aria-pressed={pressed}
+    >
+      {icon}
+      <span className="pu-tb-label">{label}</span>
+    </button>
+  );
 }
 
 export function CanvasToolbar(props: CanvasToolbarProps) {
@@ -57,9 +102,10 @@ export function CanvasToolbar(props: CanvasToolbarProps) {
     onSelectTool,
     onPanTool,
     onToggleLink,
-    onAddNode,
     onDelete,
     onFit,
+    onZoomIn,
+    onZoomOut,
     onOpenOverview,
     onToggleOpm,
     onOpenOtdr,
@@ -94,62 +140,87 @@ export function CanvasToolbar(props: CanvasToolbarProps) {
 
   return (
     <div role="toolbar" aria-label="Canvas workbench tools" className="pu-toolbar">
-      <button
-        type="button"
-        className={`pu-btn ${canvasTool === 'select' && !linkMode ? 'is-active' : ''}`}
-        onClick={onSelectTool}
-      >
-        <MousePointer2 size={14} /> Select
-      </button>
-      <button
-        type="button"
-        className={`pu-btn ${canvasTool === 'pan' && !linkMode ? 'is-active' : ''}`}
-        onClick={onPanTool}
-      >
-        <Hand size={14} /> Pan
-      </button>
-      <button
-        type="button"
-        className={`pu-btn ${linkMode ? 'is-active' : ''}`}
-        onClick={onToggleLink}
-        aria-pressed={linkMode}
-        aria-label="Link nodes"
-        title={linkMode ? 'Cancel link mode or press Escape' : 'Select a source node, then a destination node'}
-      >
-        <Link2 size={14} /> Connect
-      </button>
-      <button type="button" className="pu-btn" onClick={onAddNode} title="Quickly place a subscriber ONT on the canvas">
-        <PlusCircle size={14} /> Add Node
-      </button>
-      <button
-        type="button"
-        className="pu-btn"
-        disabled={selectionCount === 0}
-        onClick={onDelete}
-        aria-label="Delete selected elements"
-        title="Delete selected node or cable"
-      >
-        <Trash2 size={14} /> Delete{selectionCount > 1 ? ` (${selectionCount})` : ''}
-      </button>
-      <button type="button" className="pu-btn" onClick={onFit} title="Fit topology to screen" aria-label="Fit View">
-        <Maximize2 size={14} />
-      </button>
+      <div className="pu-tb-group">
+        <ToolButton
+          icon={<MousePointer2 size={16} aria-hidden="true" />}
+          label="Select"
+          title="Select and move components (V)"
+          active={canvasTool === 'select' && !linkMode}
+          pressed={canvasTool === 'select' && !linkMode}
+          onClick={onSelectTool}
+        />
+        <ToolButton
+          icon={<Hand size={16} aria-hidden="true" />}
+          label="Pan"
+          title="Pan the canvas (H)"
+          active={canvasTool === 'pan' && !linkMode}
+          pressed={canvasTool === 'pan' && !linkMode}
+          onClick={onPanTool}
+        />
+        <ToolButton
+          icon={<Link2 size={16} aria-hidden="true" />}
+          label="Connect"
+          ariaLabel="Link nodes"
+          title="Link nodes: pick a source, then a destination"
+          active={linkMode}
+          pressed={linkMode}
+          onClick={onToggleLink}
+        />
+        <ToolButton
+          icon={<Trash2 size={16} aria-hidden="true" />}
+          label={selectionCount > 1 ? `Delete (${selectionCount})` : 'Delete'}
+          ariaLabel="Delete selected elements"
+          title="Delete the selected node or cable"
+          disabled={selectionCount === 0}
+          onClick={onDelete}
+        />
+      </div>
 
-      <div style={{ position: 'relative' }} ref={menuRef}>
+      <span className="pu-tb-sep" aria-hidden="true" />
+
+      <div className="pu-tb-group">
+        <ToolButton
+          icon={<ZoomOut size={16} aria-hidden="true" />}
+          label="Zoom out"
+          title="Zoom out"
+          compact
+          onClick={onZoomOut}
+        />
+        <ToolButton
+          icon={<ZoomIn size={16} aria-hidden="true" />}
+          label="Zoom in"
+          title="Zoom in"
+          compact
+          onClick={onZoomIn}
+        />
+        <ToolButton
+          icon={<Maximize2 size={16} aria-hidden="true" />}
+          label="Fit"
+          ariaLabel="Fit View"
+          title="Fit the topology to the screen"
+          compact
+          onClick={onFit}
+        />
+      </div>
+
+      <span className="pu-tb-sep" aria-hidden="true" />
+
+      <div className="pu-tb-more" ref={menuRef}>
         <button
           ref={menuButtonRef}
           type="button"
-          className={`pu-btn ${toolsOpen || opmActive || activeMissionTitle ? 'is-active' : ''}`}
+          className={`pu-btn pu-tb-btn pu-tb-more-btn${toolsOpen || opmActive || activeMissionTitle ? ' is-active' : ''}`}
           onClick={() => onToolsOpenChange(!toolsOpen)}
           aria-expanded={toolsOpen}
           aria-haspopup="true"
           aria-controls="canvas-more-tools"
           aria-label="More tools"
+          title="More tools — missions, test gear, settings"
         >
-          <SlidersHorizontal size={14} /> More tools
+          <Ellipsis size={18} aria-hidden="true" />
         </button>
         {toolsOpen ? (
-          <div id="canvas-more-tools" className="pu-menu" style={{ top: 'calc(100% + 8px)', left: 0, width: 280 }}>
+          <div id="canvas-more-tools" className="pu-menu" style={{ top: 'calc(100% + 8px)', right: 0, width: 280 }}>
             <button type="button" onClick={close(onOpenOverview)} aria-label="Overview & Physics">
               <ArrowLeft size={14} className="pu-menu-ico" /> Overview &amp; Physics
             </button>

@@ -2,6 +2,19 @@ import { describe, expect, it } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import App from '../App';
 
+// jsdom ships no PointerEvent, but the component sheets are pointer-driven, so
+// give the environment a minimal MouseEvent-backed shim (clientY and all).
+if (typeof window !== 'undefined' && !window.PointerEvent) {
+  class PointerEventShim extends MouseEvent {
+    pointerId: number;
+    constructor(type: string, params: PointerEventInit = {}) {
+      super(type, params);
+      this.pointerId = params.pointerId ?? 1;
+    }
+  }
+  (window as unknown as { PointerEvent: unknown }).PointerEvent = PointerEventShim;
+}
+
 async function renderStudio() {
   const { container } = render(<App />);
   fireEvent.click(await screen.findByRole('button', { name: /Launch Interactive Studio/i }));
@@ -16,6 +29,11 @@ async function renderStudio() {
 
 function openMoreTools() {
   fireEvent.click(screen.getByRole('button', { name: 'More tools' }));
+}
+
+/** Detailed values (loss tables, fault switches) hide behind one disclosure. */
+function expandAdvanced() {
+  fireEvent.click(screen.getByRole('button', { name: /^Advanced/ }));
 }
 
 /** The library is an accordion, so a category must be opened before its cards exist. */
@@ -194,6 +212,9 @@ describe('FiberLAB application shell', () => {
 
     openLibraryCategory('Customer / ONT');
     fireEvent.click(screen.getByRole('button', { name: /Wi-Fi 6 Gateway/i }));
+    // A new selection reopens the panel on Properties.
+    expect(await screen.findByRole('textbox', { name: 'Wi-Fi SSID' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('tab', { name: 'Info' }));
     expect(await screen.findByText('Dual-band Wi-Fi 6 GPON / XGS-PON gateway (reference)')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('tab', { name: 'Properties' }));
     expect((screen.getByRole('textbox', { name: 'Wi-Fi SSID' }) as HTMLInputElement).value).toMatch(/^FiberLAB-/);
@@ -254,6 +275,7 @@ describe('FiberLAB application shell', () => {
     await renderStudio();
     const feeder = getCanvasNodeByText(/^5\.0 km$/);
     fireEvent.click(feeder);
+    expandAdvanced();
 
     const macroBend = screen.getByRole('switch', { name: 'Macro-bend fault (<15 mm)' });
     const dirtyFerrule = screen.getByRole('switch', { name: 'Dirty SC/APC ferrule' });
@@ -266,6 +288,7 @@ describe('FiberLAB application shell', () => {
     const subscriberShell = subscriber.querySelector('.hw-onu');
     expect(within(subscriberShell as HTMLElement).getByText(/WARNING/)).toBeInTheDocument();
     fireEvent.click(subscriber);
+    fireEvent.click(screen.getByRole('tab', { name: 'Optical Power' }));
     expect(await screen.findByText('Fault Penalty: Macro-Bend (-3.50 dB)')).toBeInTheDocument();
     expect(screen.getByText('Fault Penalty: Dust Contamination (-2.00 dB)')).toBeInTheDocument();
   });
@@ -342,12 +365,13 @@ describe('FiberLAB application shell', () => {
     expect(screen.queryByText('Optical audit & commercial CAPEX quotation')).not.toBeInTheDocument();
   });
 
-  it('edits local USD pricing in the Inspector without changing optical status', async () => {
+  it('edits local USD pricing in the Bill of Materials without changing optical status', async () => {
     await renderStudio();
     const capexBadge = screen.getByTestId('capex-telemetry');
     expect(capexBadge).toHaveTextContent('$3,747');
 
-    fireEvent.click(screen.getByRole('tab', { name: 'Info' }));
+    fireEvent.click(screen.getByRole('button', { name: /Bill of Materials/i }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Commercial Quotation & CAPEX' }));
     fireEvent.click(screen.getByText('Local unit pricing'));
     const feederRate = screen.getByRole('spinbutton', { name: 'Feeder / OSP cable' });
     expect(feederRate).toHaveValue(350);
@@ -359,6 +383,7 @@ describe('FiberLAB application shell', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Restore reference pricing' }));
     expect(capexBadge).toHaveTextContent('$3,747');
+    fireEvent.click(screen.getByRole('button', { name: 'Close bill of materials' }));
   });
 
   it('shows a commercial quotation tab with reconciling material and labor totals', async () => {
@@ -385,10 +410,11 @@ describe('FiberLAB application shell', () => {
     const wrapper = getCanvasNodeByText('Al-Sulaymaniyah — Unit 12');
     fireEvent.click(wrapper);
 
+    expect(screen.getByText('ONT serial number')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('tab', { name: 'Optical Power' }));
     expect(await screen.findByText('Link budget breakdown')).toBeInTheDocument();
     expect(screen.getByText('P_rx = P_tx − ΣL − margin')).toBeInTheDocument();
     expect(screen.getByText(/System safety margin/)).toBeInTheDocument();
-    expect(screen.getByText('ONT serial number')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('tab', { name: 'Info' }));
     expect(await screen.findByRole('region', { name: 'Field hardware reference' })).toBeInTheDocument();
@@ -490,6 +516,7 @@ describe('FiberLAB application shell', () => {
 
     fireEvent.click(gatewayNode);
     expect(screen.getByRole('textbox', { name: 'Wi-Fi SSID' })).toHaveValue('FiberLAB-XGS-01');
+    fireEvent.click(screen.getByRole('tab', { name: 'Optical Power' }));
     expect(screen.getByText('1244 / 1244 Mbps')).toBeInTheDocument();
     expect(screen.getByText('Internet IP (simulated)')).toBeInTheDocument();
     expect(screen.getByText(/TEST-NET placeholder only/)).toBeInTheDocument();
@@ -513,6 +540,7 @@ describe('FiberLAB application shell', () => {
 
     const subscriber = getCanvasNodeByText('Al-Sulaymaniyah — Unit 12');
     fireEvent.click(subscriber);
+    fireEvent.click(screen.getByRole('tab', { name: 'Optical Power' }));
     expect(await screen.findByText(/Feeder cable — 5 km @ 0\.22 dB\/km @ 1577 nm/)).toBeInTheDocument();
   });
 
@@ -520,6 +548,7 @@ describe('FiberLAB application shell', () => {
     await renderStudio();
     const dropSpan = getCanvasNodeByText(/^6\.0 km$/);
     fireEvent.click(dropSpan);
+    expandAdvanced();
 
     fireEvent.click(screen.getByRole('switch', { name: 'Macro-bend fault (<15 mm)' }));
     fireEvent.click(screen.getByRole('switch', { name: 'Dirty SC/APC ferrule' }));
@@ -564,7 +593,13 @@ describe('FiberLAB application shell', () => {
     expect(within(canvasToolbar).getByRole('button', { name: 'Select' })).toBeInTheDocument();
     expect(within(canvasToolbar).getByRole('button', { name: 'Pan' })).toBeInTheDocument();
     expect(within(canvasToolbar).getByRole('button', { name: 'Link nodes' })).toBeInTheDocument();
-    expect(within(canvasToolbar).getByRole('button', { name: 'Add Node' })).toBeInTheDocument();
+    expect(within(canvasToolbar).getByRole('button', { name: 'Delete selected elements' })).toBeInTheDocument();
+    expect(within(canvasToolbar).getByRole('button', { name: 'Zoom in' })).toBeInTheDocument();
+    expect(within(canvasToolbar).getByRole('button', { name: 'Zoom out' })).toBeInTheDocument();
+    expect(within(canvasToolbar).getByRole('button', { name: 'Fit View' })).toBeInTheDocument();
+    // Adding components lives in the library; the overflow keeps everything else.
+    expect(within(canvasToolbar).queryByRole('button', { name: 'Add Node' })).not.toBeInTheDocument();
+    expect(within(canvasToolbar).getByRole('button', { name: 'More tools' })).toBeInTheDocument();
 
     // Bottom panel with Network Overview, Optical Budget, Components, and Topology tabs
     const bottomPanel = screen.getByTestId('network-summary-strip');
@@ -575,16 +610,24 @@ describe('FiberLAB application shell', () => {
     fireEvent.click(within(bottomPanel).getByRole('tab', { name: 'Optical Budget' }));
     expect(within(bottomPanel).getByText('Open full audit & quotation')).toBeInTheDocument();
 
-    // Inspector tab navigation & collapsible panel
+    // The panel only exists while something is selected.
+    expect(screen.queryByRole('tablist', { name: 'Inspector sections' })).not.toBeInTheDocument();
     fireEvent.click(oltNode as HTMLElement);
     const tabList = screen.getByRole('tablist', { name: 'Inspector sections' });
+    expect(
+      within(tabList)
+        .getAllByRole('tab')
+        .map((tab) => tab.textContent),
+    ).toEqual(['Properties', 'Optical Power', 'Info']);
     fireEvent.click(within(tabList).getByRole('tab', { name: 'Optical Power' }));
     fireEvent.click(within(tabList).getByRole('tab', { name: 'Info' }));
     fireEvent.click(within(tabList).getByRole('tab', { name: 'Properties' }));
 
-    // Collapse and re-expand Inspector
-    fireEvent.click(screen.getByRole('button', { name: 'Collapse inspector' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Expand inspector' }));
+    // Closing it frees the canvas; clicking the part again brings it back.
+    fireEvent.click(screen.getByRole('button', { name: 'Close inspector' }));
+    expect(screen.queryByRole('tablist', { name: 'Inspector sections' })).not.toBeInTheDocument();
+    fireEvent.click(oltNode as HTMLElement);
+    expect(screen.getByRole('tablist', { name: 'Inspector sections' })).toBeInTheDocument();
   });
 
   it('treats the Bill of Materials as a keyboard-dismissable dialog', async () => {
@@ -635,7 +678,7 @@ describe('FiberLAB application shell', () => {
 
     const dropSpan = getCanvasNodeByText(/^6\.0 km$/);
     fireEvent.click(dropSpan);
-    expect(await screen.findByRole('switch', { name: 'Macro-bend fault (<15 mm)' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Remove component' })).toBeInTheDocument();
 
     fireEvent.keyDown(container.querySelector('.react-flow__pane') as Element, { key: 'Delete' });
 
@@ -649,6 +692,7 @@ describe('FiberLAB application shell', () => {
 
     const dropSpan = getCanvasNodeByText(/^6\.0 km$/);
     fireEvent.click(dropSpan);
+    expandAdvanced();
     fireEvent.click(screen.getByRole('switch', { name: 'Macro-bend fault (<15 mm)' }));
 
     expect(await screen.findByText('Edited')).toBeInTheDocument();
@@ -662,7 +706,7 @@ describe('FiberLAB application shell', () => {
     expect(splitter.querySelector('.react-flow__handle[data-handleid="out-7"]')).not.toBeNull();
 
     fireEvent.click(splitter);
-    fireEvent.click(screen.getByRole('tab', { name: 'Ports' }));
+    expandAdvanced();
     expect(await screen.findByText('Physical Optical Interface Ports')).toBeInTheDocument();
     expect(screen.getByText(/8 × SC\/APC branch outputs/)).toBeInTheDocument();
   });
@@ -679,8 +723,69 @@ describe('FiberLAB application shell', () => {
     expect(within(splitter).getByText(/rest trunked/i)).toBeInTheDocument();
 
     fireEvent.click(splitter);
-    fireEvent.click(screen.getByRole('tab', { name: 'Ports' }));
+    expandAdvanced();
     expect(screen.getByText(/remaining fan-out stays a ribbon trunk/i)).toBeInTheDocument();
+  });
+
+  it('keeps loss tables and allowances folded behind Advanced until asked', async () => {
+    await renderStudio();
+    fireEvent.click(getCanvasNodeByText('PLC Splitter 1:8'));
+
+    // Essentials first: the ratio and its insertion loss.
+    expect(screen.getByRole('combobox', { name: 'Split ratio' })).toHaveValue('8');
+    expect(screen.getByText('Insertion loss')).toBeInTheDocument();
+    const advanced = screen.getByRole('button', { name: /^Advanced/ });
+    expect(advanced).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByText('Excess / uniformity loss')).not.toBeInTheDocument();
+
+    expandAdvanced();
+    expect(advanced).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByText('Excess / uniformity loss')).toBeInTheDocument();
+    expect(screen.getByText('Total modeled insertion loss')).toBeInTheDocument();
+  });
+
+  it('confirms before removing a selected component', async () => {
+    await renderStudio();
+    fireEvent.click(getCanvasNodeByText('PLC Splitter 1:8'));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Remove component' }));
+    const confirm = await screen.findByRole('alertdialog', { name: 'Confirm removal' });
+    fireEvent.click(within(confirm).getByRole('button', { name: 'Cancel' }));
+    expect(screen.getByRole('tablist', { name: 'Inspector sections' })).toBeInTheDocument();
+    expect(screen.getAllByText('PLC Splitter 1:8').length).toBeGreaterThan(0);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Remove component' }));
+    const again = await screen.findByRole('alertdialog', { name: 'Confirm removal' });
+    fireEvent.click(within(again).getByRole('button', { name: 'Remove' }));
+
+    await waitFor(() => expect(screen.queryByText('PLC Splitter 1:8')).not.toBeInTheDocument());
+    // The panel leaves with the component it described.
+    expect(screen.queryByRole('tablist', { name: 'Inspector sections' })).not.toBeInTheDocument();
+  });
+
+  it('drags the phone inspector sheet between half and full height, then closes it', async () => {
+    const { container } = await renderStudio();
+    fireEvent.click(getCanvasNodeByText('PLC Splitter 1:8'));
+
+    // The swipe handle only exists (visually) on phones, but its gestures are the
+    // same handlers in every viewport.
+    const handle = container.querySelector('.pu-insp-handle') as HTMLElement;
+    expect(handle).not.toBeNull();
+
+    fireEvent.pointerDown(handle, { clientY: 400 });
+    fireEvent.pointerMove(handle, { clientY: 330 });
+    fireEvent.pointerUp(handle, { clientY: 330 });
+    expect(screen.getByLabelText('Selected component')).toHaveClass('is-sheet-full');
+
+    fireEvent.pointerDown(handle, { clientY: 330 });
+    fireEvent.pointerMove(handle, { clientY: 400 });
+    fireEvent.pointerUp(handle, { clientY: 400 });
+    expect(screen.getByLabelText('Selected component')).not.toHaveClass('is-sheet-full');
+
+    fireEvent.pointerDown(handle, { clientY: 330 });
+    fireEvent.pointerMove(handle, { clientY: 400 });
+    fireEvent.pointerUp(handle, { clientY: 400 });
+    await waitFor(() => expect(screen.queryByRole('tablist', { name: 'Inspector sections' })).not.toBeInTheDocument());
   });
 
   it('searches across every library category and labels each hit', async () => {

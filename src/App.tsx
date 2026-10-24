@@ -209,7 +209,10 @@ function StudioWorkspace({
   const [inspectorCollapsed, setInspectorCollapsed] = useState(false);
   const [emptyHintDismissed, setEmptyHintDismissed] = useState(false);
 
-  const { screenToFlowPosition, deleteElements, fitView, getNodes, getEdges } = useReactFlow<PonNode, PonEdge>();
+  const { screenToFlowPosition, deleteElements, fitView, getNodes, getEdges, zoomIn, zoomOut } = useReactFlow<
+    PonNode,
+    PonEdge
+  >();
 
   /* --------------------------- Simulation core --------------------------- */
 
@@ -1090,9 +1093,10 @@ function StudioWorkspace({
                 if (linkMode) handleToggleLink();
               }}
               onToggleLink={handleToggleLink}
-              onAddNode={() => handleQuickAdd({ component: 'ont' })}
               onDelete={handleDeleteSelection}
               onFit={() => void fitView({ padding: 0.16, duration: 350 })}
+              onZoomIn={() => void zoomIn({ duration: 180 })}
+              onZoomOut={() => void zoomOut({ duration: 180 })}
               onOpenOverview={handleOpenOverview}
               onToggleOpm={handleToggleOpm}
               onOpenOtdr={handleOpenOtdr}
@@ -1120,7 +1124,12 @@ function StudioWorkspace({
                 onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
                 onConnect={handleConnect}
-                onNodeClick={handleNodeClick}
+                onNodeClick={(event, clickedNode) => {
+                  // Clicking a part always brings the panel back, even if it was closed.
+                  setInspectorCollapsed(false);
+                  handleNodeClick(event, clickedNode);
+                }}
+                onEdgeClick={() => setInspectorCollapsed(false)}
                 onSelectionChange={handleSelectionChange}
                 onDelete={handleCanvasDelete}
                 onInit={handleInit}
@@ -1252,25 +1261,27 @@ function StudioWorkspace({
             onSelectNode={(nodeId) => {
               setSelectedNodeId(nodeId);
               setSelectedEdgeId(null);
+              setInspectorCollapsed(false);
               setSelection({ nodeIds: [nodeId], edgeIds: [] });
               setNodes((current) => current.map((node) => ({ ...node, selected: node.id === nodeId })));
             }}
           />
         </div>
 
-        <Inspector
-          node={selectedNode}
-          edge={selectedEdge}
-          simulation={simulation}
-          unitCosts={unitCosts}
-          onUnitCostsChange={handleUnitCostsChange}
-          onResetUnitCosts={resetUnitCosts}
-          onPatchNode={handlePatchNode}
-          onDeleteNode={handleDeleteNode}
-          onDeleteEdge={handleDeleteEdge}
-          collapsed={inspectorCollapsed}
-          onToggleCollapse={() => setInspectorCollapsed((prev) => !prev)}
-        />
+        {/* The panel only exists while a component is selected (and not closed),
+            so the canvas keeps the width the rest of the time. */}
+        {(selectedNode || selectedEdge) && !inspectorCollapsed ? (
+          <Inspector
+            key={selectedNode?.id ?? selectedEdge?.id ?? 'selection'}
+            node={selectedNode}
+            edge={selectedEdge}
+            simulation={simulation}
+            onPatchNode={handlePatchNode}
+            onDeleteNode={handleDeleteNode}
+            onDeleteEdge={handleDeleteEdge}
+            onClose={() => setInspectorCollapsed(true)}
+          />
+        ) : null}
       </div>
 
       <BOMModal
@@ -1281,6 +1292,8 @@ function StudioWorkspace({
         simulation={simulation}
         settings={settings}
         unitCosts={unitCosts}
+        onUnitCostsChange={handleUnitCostsChange}
+        onResetUnitCosts={resetUnitCosts}
         costBreakdown={costBreakdown}
       />
       <OtdrModal open={otdrOpen} onClose={closeOtdr} nodes={nodes} edges={edges} />
