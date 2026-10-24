@@ -850,6 +850,83 @@
   margin-top: var(--sp-6);
 }
 
+/* Optional flourish: press and hold to fuse the fibre on the scene. The Launch
+ * button above does the same job in one click, so this never gates the studio. */
+.splice-fuse {
+  position: absolute;
+  right: clamp(20px, 5vw, 64px);
+  bottom: clamp(24px, 8vh, 72px);
+  z-index: 2;
+  display: inline-flex;
+  min-height: var(--control-lg);
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 0 var(--sp-4);
+  border: 1px solid rgba(43, 26, 20, 0.62);
+  border-radius: var(--r-pill);
+  background: rgba(43, 26, 20, 0.84);
+  color: #fffaf2;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+  backdrop-filter: blur(6px);
+  transition:
+    border-color 170ms ease,
+    background 170ms ease,
+    box-shadow 170ms ease,
+    transform 170ms ease;
+}
+
+.splice-fuse:hover {
+  border-color: var(--fiber-coral);
+  background: #2b1a14;
+  box-shadow: 0 8px 24px rgba(43, 26, 20, 0.22);
+}
+
+.splice-fuse:active {
+  transform: scale(0.99);
+}
+
+.splice-fuse:focus-visible {
+  outline: 3px solid rgba(228, 103, 63, 0.6);
+  outline-offset: 3px;
+}
+
+.splice-fuse.is-complete {
+  border-color: var(--fiber-green);
+  background: #0b6045;
+}
+
+.splice-fuse-progress {
+  position: absolute;
+  inset: 0;
+  transform: scaleX(0);
+  transform-origin: left center;
+  background: linear-gradient(90deg, rgba(228, 103, 63, 0.18), rgba(228, 103, 63, 0.62));
+  pointer-events: none;
+}
+
+.splice-fuse-content {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: var(--type-caption);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--tracking-label);
+  white-space: nowrap;
+}
+
+.splice-fuse-content svg {
+  color: #ffbb70;
+}
+
+.splice-fuse.is-complete .splice-fuse-content svg {
+  color: #bbf7d0;
+}
+
 /* ------------------------ Preserved live waveguide exhibit */
 .landing-content {
   width: min(calc(100% - var(--page-gutter) * 2), var(--page-max));
@@ -1694,6 +1771,15 @@
       rgba(43, 26, 20, 0.05) 100%
     );
   }
+  /* Reserve the strip the fusion pill floats in, so the reading never sits
+   * underneath it at tablet widths. */
+  .splice-hero-content {
+    padding-bottom: calc(var(--sp-8) + var(--control-lg) + var(--sp-6));
+  }
+  .splice-fuse {
+    right: var(--page-gutter);
+    bottom: var(--sp-4);
+  }
   .landing-hero {
     grid-template-columns: 1fr;
     gap: var(--sp-6);
@@ -1805,6 +1891,12 @@
     max-width: 410px;
     margin-top: var(--sp-3);
     font-size: var(--fs-sm);
+  }
+  /* The scene is a backdrop at this width; the fusion pill joins the column. */
+  .splice-fuse {
+    position: static;
+    align-self: flex-start;
+    margin-top: var(--sp-4);
   }
   .splice-live-readout {
     width: min(410px, 100%);
@@ -1972,7 +2064,8 @@
     animation: none !important;
   }
 
-  .landing-button {
+  .landing-button,
+  .splice-fuse {
     transition-duration: 1ms !important;
   }
 }
