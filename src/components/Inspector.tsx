@@ -411,7 +411,7 @@ export function Inspector({
             <PanelRightOpen size={16} />
           </button>
           <span
-            className="font-mono text-caption font-bold uppercase tracking-widest text-slate-400"
+            className="font-mono text-caption font-bold uppercase tracking-eyebrow text-slate-400"
             style={{ writingMode: 'vertical-rl' }}
           >
             Inspector
@@ -519,7 +519,7 @@ export function Inspector({
 
           {node && !isClosureNode(node) && activeTab === 'ports' ? (
             <div className="mb-3 rounded-lg border border-[#EED8BF] bg-[#FFF4E6] p-2 text-label text-[#2B1A14]">
-              <div className="font-mono text-caption font-bold uppercase tracking-wider text-[#C8502B] mb-1">
+              <div className="font-mono text-caption font-bold uppercase tracking-label text-[#C8502B] mb-1">
                 Physical Optical Interface Ports
               </div>
               {isOltNode(node) ? (
@@ -679,11 +679,11 @@ export function Inspector({
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div className="metric">
-                  <div className="text-caption uppercase tracking-wide text-slate-500">Class budget</div>
+                  <div className="text-caption uppercase tracking-label text-slate-500">Class budget</div>
                   <div className="metric-value">{OLT_CLASS_SPECS[node.data.oltClass].linkBudgetDb.toFixed(0)} dB</div>
                 </div>
                 <div className="metric">
-                  <div className="text-caption uppercase tracking-wide text-slate-500">Rx sensitivity</div>
+                  <div className="text-caption uppercase tracking-label text-slate-500">Rx sensitivity</div>
                   <div className="metric-value">
                     {OLT_CLASS_SPECS[node.data.oltClass].rxSensitivityDbm.toFixed(0)} dBm
                   </div>
@@ -741,7 +741,7 @@ export function Inspector({
                 onChange={(value) => onPatchNode(node.id, { excessLossDb: value })}
               />
               <div className="metric">
-                <div className="text-caption uppercase tracking-wide text-slate-500">Total insertion loss</div>
+                <div className="text-caption uppercase tracking-label text-slate-500">Total insertion loss</div>
                 <div className="metric-value text-violet-700">{computeSplitterLoss(node.data).toFixed(2)} dB</div>
               </div>
             </>
@@ -765,11 +765,11 @@ export function Inspector({
               />
               <div className="grid grid-cols-2 gap-2">
                 <div className="metric">
-                  <div className="text-caption uppercase tracking-wide text-slate-500">Optical inputs</div>
+                  <div className="text-caption uppercase tracking-label text-slate-500">Optical inputs</div>
                   <div className="metric-value">{ODF_INPUT_PORTS}</div>
                 </div>
                 <div className="metric">
-                  <div className="text-caption uppercase tracking-wide text-slate-500">Matched outputs</div>
+                  <div className="text-caption uppercase tracking-label text-slate-500">Matched outputs</div>
                   <div className="metric-value">{ODF_OUTPUT_PORTS}</div>
                 </div>
               </div>
@@ -788,19 +788,19 @@ export function Inspector({
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div className="metric">
-                  <div className="text-caption uppercase tracking-wide text-slate-500">Split ratio</div>
+                  <div className="text-caption uppercase tracking-label text-slate-500">Split ratio</div>
                   <div className="metric-value text-orange-800">1:{NAP_SPLIT_RATIO}</div>
                 </div>
                 <div className="metric">
-                  <div className="text-caption uppercase tracking-wide text-slate-500">Branch insertion loss</div>
+                  <div className="text-caption uppercase tracking-label text-slate-500">Branch insertion loss</div>
                   <div className="metric-value text-orange-800">{node.data.splitLossDb.toFixed(2)} dB</div>
                 </div>
                 <div className="metric">
-                  <div className="text-caption uppercase tracking-wide text-slate-500">Optical inputs</div>
+                  <div className="text-caption uppercase tracking-label text-slate-500">Optical inputs</div>
                   <div className="metric-value">1</div>
                 </div>
                 <div className="metric">
-                  <div className="text-caption uppercase tracking-wide text-slate-500">Drop outputs</div>
+                  <div className="text-caption uppercase tracking-label text-slate-500">Drop outputs</div>
                   <div className="metric-value">{NAP_OUTPUT_PORTS}</div>
                 </div>
               </div>
@@ -969,11 +969,11 @@ export function Inspector({
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div className="metric">
-                  <div className="text-caption uppercase tracking-wide text-noc-400">Cable loss</div>
+                  <div className="text-caption uppercase tracking-label text-noc-400">Cable loss</div>
                   <div className="metric-value">{computeFiberLoss(node.data).cableDb.toFixed(2)} dB</div>
                 </div>
                 <div className="metric">
-                  <div className="text-caption uppercase tracking-wide text-noc-400">Span total</div>
+                  <div className="text-caption uppercase tracking-label text-noc-400">Span total</div>
                   <div className="metric-value text-emerald-300">
                     {computeFiberLoss(node.data).totalDb.toFixed(2)} dB
                   </div>
@@ -1029,25 +1029,25 @@ export function Inspector({
                   </div>
                   <div className="mb-3 grid grid-cols-2 gap-2">
                     <div className="metric">
-                      <div className="text-caption uppercase tracking-wide text-noc-400">Rx power</div>
+                      <div className="text-caption uppercase tracking-label text-noc-400">Rx power</div>
                       <div className="metric-value" style={{ color: STATUS_STYLES[telemetry.status].hex }}>
                         {formatDbm(telemetry.rxPowerDbm)}
                       </div>
                     </div>
                     <div className="metric">
-                      <div className="text-caption uppercase tracking-wide text-noc-400">Link margin</div>
+                      <div className="text-caption uppercase tracking-label text-noc-400">Link margin</div>
                       <div className="metric-value">
                         {telemetry.rxPowerDbm === null ? '—' : `${telemetry.marginDb.toFixed(2)} dB`}
                       </div>
                     </div>
                     <div className="metric">
-                      <div className="text-caption uppercase tracking-wide text-noc-400">Feeder route</div>
+                      <div className="text-caption uppercase tracking-label text-noc-400">Feeder route</div>
                       <div className="metric-value">
                         {telemetry.rxPowerDbm === null ? '—' : `${telemetry.fiberKm.toFixed(2)} km`}
                       </div>
                     </div>
                     <div className="metric">
-                      <div className="text-caption uppercase tracking-wide text-noc-400">Split ratio</div>
+                      <div className="text-caption uppercase tracking-label text-noc-400">Split ratio</div>
                       <div className="metric-value">
                         {telemetry.rxPowerDbm === null ? '—' : `1:${telemetry.cumulativeSplitRatio}`}
                       </div>
@@ -1136,31 +1136,31 @@ export function Inspector({
                   </div>
                   <div className="mb-3 grid grid-cols-2 gap-2">
                     <div className="metric">
-                      <div className="text-caption uppercase tracking-wide text-noc-400">Optical Rx</div>
+                      <div className="text-caption uppercase tracking-label text-noc-400">Optical Rx</div>
                       <div className="metric-value" style={{ color: STATUS_STYLES[telemetry.status].hex }}>
                         {formatDbm(telemetry.rxPowerDbm)}
                       </div>
                     </div>
                     <div className="metric">
-                      <div className="text-caption uppercase tracking-wide text-noc-400">Link margin</div>
+                      <div className="text-caption uppercase tracking-label text-noc-400">Link margin</div>
                       <div className="metric-value">
                         {telemetry.rxPowerDbm === null ? '—' : `${telemetry.marginDb.toFixed(2)} dB`}
                       </div>
                     </div>
                     <div className="metric">
-                      <div className="text-caption uppercase tracking-wide text-slate-500">PON standard</div>
+                      <div className="text-caption uppercase tracking-label text-slate-500">PON standard</div>
                       <div className="metric-value text-blue-700">
                         {gatewayTelemetry.ponStandard ?? 'No active link'}
                       </div>
                     </div>
                     <div className="metric">
-                      <div className="text-caption uppercase tracking-wide text-slate-500">Split ratio</div>
+                      <div className="text-caption uppercase tracking-label text-slate-500">Split ratio</div>
                       <div className="metric-value">
                         {telemetry.rxPowerDbm === null ? '—' : `1:${telemetry.cumulativeSplitRatio}`}
                       </div>
                     </div>
                     <div className="metric">
-                      <div className="text-caption uppercase tracking-wide text-slate-500">Down / up line rate</div>
+                      <div className="text-caption uppercase tracking-label text-slate-500">Down / up line rate</div>
                       <div className="metric-value">
                         {gatewayTelemetry.downstreamLineRateGbps === null
                           ? '—'
@@ -1168,7 +1168,7 @@ export function Inspector({
                       </div>
                     </div>
                     <div className="metric">
-                      <div className="text-caption uppercase tracking-wide text-slate-500">Estimated down / up</div>
+                      <div className="text-caption uppercase tracking-label text-slate-500">Estimated down / up</div>
                       <div className="metric-value text-emerald-700">
                         {gatewayTelemetry.estimatedDownMbps === null
                           ? '—'
@@ -1176,7 +1176,9 @@ export function Inspector({
                       </div>
                     </div>
                     <div className="metric">
-                      <div className="text-caption uppercase tracking-wide text-slate-500">Internet IP (simulated)</div>
+                      <div className="text-caption uppercase tracking-label text-slate-500">
+                        Internet IP (simulated)
+                      </div>
                       <div className="metric-value">
                         {telemetry.status === 'ONLINE' ? gatewayTelemetry.serviceIpAddress : 'Not assigned'}
                       </div>
@@ -1217,11 +1219,11 @@ export function Inspector({
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div className="metric">
-                  <div className="text-caption uppercase tracking-wide text-slate-500">Power at far end</div>
+                  <div className="text-caption uppercase tracking-label text-slate-500">Power at far end</div>
                   <div className="metric-value">{formatDbm(simulation.edgeTelemetry[edge.id]?.powerDbm ?? null)}</div>
                 </div>
                 <div className="metric">
-                  <div className="text-caption uppercase tracking-wide text-slate-500">State</div>
+                  <div className="text-caption uppercase tracking-label text-slate-500">State</div>
                   <div className="metric-value uppercase">{simulation.edgeTelemetry[edge.id]?.edgeState ?? 'idle'}</div>
                 </div>
               </div>

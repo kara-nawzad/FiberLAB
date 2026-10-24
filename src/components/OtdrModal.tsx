@@ -607,7 +607,7 @@ export function OtdrModal({ open, onClose, nodes, edges }: OtdrModalProps) {
               </div>
             </fieldset>
 
-            <fieldset className="otdr-segment-control pulse-control">
+            <fieldset className="otdr-segment-control">
               <legend>Pulse width</legend>
               <div>
                 {OTDR_PULSE_WIDTHS_NS.map((pulse) => (

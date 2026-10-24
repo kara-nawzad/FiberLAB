@@ -65,7 +65,7 @@ export function ClosureNode({ id, data, selected }: NodeProps<ClosureFlowNode>) 
         {/* Top Dome Header */}
         <div className="flex items-center justify-between border-b border-slate-700 pb-2">
           <div>
-            <div className="font-mono text-caption font-bold uppercase tracking-wider text-amber-300">
+            <div className="font-mono text-caption font-bold uppercase tracking-label text-amber-300">
               OSP JOINT ENCLOSURE · IP68
             </div>
             <div className="font-sans text-body font-bold leading-tight text-white">Dome splice closure</div>

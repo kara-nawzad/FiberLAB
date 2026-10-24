@@ -51,7 +51,7 @@ export function ODFNode({ id, data, selected }: NodeProps<OdfFlowNode>) {
         {/* Top 1U Patch Panel Silkscreen Bar */}
         <div className="flex items-center justify-between border-b border-slate-700 pb-2">
           <div>
-            <div className="font-mono text-caption font-bold uppercase tracking-wider text-teal-300">
+            <div className="font-mono text-caption font-bold uppercase tracking-label text-teal-300">
               1U RACK PATCH FIELD · SC/APC
             </div>
             <div className="font-sans text-body font-bold leading-tight text-white">ODF rack panel</div>
@@ -78,7 +78,7 @@ export function ODFNode({ id, data, selected }: NodeProps<OdfFlowNode>) {
                 >
                   <span>{portNum}</span>
                   <span
-                    className={`mt-1 h-1.5 w-2.5 rounded-xs ${isMatchedPair ? 'bg-emerald-500' : 'bg-slate-600'}`}
+                    className={`mt-1 h-1.5 w-2.5 rounded-sm ${isMatchedPair ? 'bg-emerald-500' : 'bg-slate-600'}`}
                   />
                 </div>
               );

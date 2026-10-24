@@ -63,7 +63,7 @@ export function MissionDrawer({
   const connectedCount = simulation.summary.subscriberCount - simulation.summary.byStatus.DISCONNECTED;
 
   return (
-    <div className="mission-backdrop fixed inset-0 z-[60] flex justify-end">
+    <div className="fixed inset-0 z-[60] flex justify-end">
       <button
         type="button"
         className="absolute inset-0 cursor-default bg-slate-900/20 backdrop-blur-[1px]"
@@ -80,7 +80,7 @@ export function MissionDrawer({
       >
         <header className="flex shrink-0 items-start justify-between gap-4 border-b border-slate-200 px-4 py-4">
           <div>
-            <div className="mb-1 flex items-center gap-2 text-caption font-bold uppercase tracking-[0.16em] text-blue-700">
+            <div className="mb-1 flex items-center gap-2 text-caption font-bold uppercase tracking-eyebrow text-blue-700">
               <Flag size={14} /> FiberLAB training
             </div>
             <h2
@@ -105,7 +105,7 @@ export function MissionDrawer({
 
         <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
           <div className="mb-2 flex items-center justify-between">
-            <h3 className="text-label font-bold uppercase tracking-[0.12em] text-slate-500">Choose a mission</h3>
+            <h3 className="text-label font-bold uppercase tracking-eyebrow text-slate-500">Choose a mission</h3>
             {activeMissionId ? (
               <span className="inline-flex items-center gap-2 text-caption font-semibold text-emerald-700">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" /> Mission active
@@ -147,7 +147,7 @@ export function MissionDrawer({
           <section className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-caption font-bold uppercase tracking-[0.14em] text-blue-700">Scenario brief</p>
+                <p className="text-caption font-bold uppercase tracking-eyebrow text-blue-700">Scenario brief</p>
                 <h3 className="mt-1 text-sm font-bold text-slate-900">{mission.title}</h3>
               </div>
               <DifficultyPill difficulty={mission.difficulty} />
@@ -167,7 +167,7 @@ export function MissionDrawer({
             <div className="mb-2 flex items-center justify-between">
               <h3
                 id="mission-objectives-title"
-                className="text-label font-bold uppercase tracking-[0.12em] text-slate-700"
+                className="text-label font-bold uppercase tracking-eyebrow text-slate-700"
               >
                 Objectives
               </h3>
@@ -208,7 +208,7 @@ export function MissionDrawer({
                     }`}
                   >
                     <span
-                      className={`mission-check mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-caption font-bold transition-all duration-300 ${
+                      className={`mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-caption font-bold transition-all duration-300 ${
                         met
                           ? 'mission-check-complete border-emerald-600 bg-emerald-600 text-white'
                           : 'border-slate-300 bg-white text-slate-500'
@@ -245,19 +245,19 @@ export function MissionDrawer({
               </p>
               <div className="mt-3 grid grid-cols-3 gap-2">
                 <div className="rounded-md border border-emerald-200/80 bg-white/80 p-2">
-                  <div className="text-caption font-semibold uppercase tracking-wide text-slate-500">Mean Rx</div>
+                  <div className="text-caption font-semibold uppercase tracking-label text-slate-500">Mean Rx</div>
                   <div className="mt-1 font-mono text-label font-bold text-slate-900">
                     {formatDbm(simulation.summary.meanRxDbm)}
                   </div>
                 </div>
                 <div className="rounded-md border border-emerald-200/80 bg-white/80 p-2">
-                  <div className="text-caption font-semibold uppercase tracking-wide text-slate-500">Worst Rx</div>
+                  <div className="text-caption font-semibold uppercase tracking-label text-slate-500">Worst Rx</div>
                   <div className="mt-1 font-mono text-label font-bold text-slate-900">
                     {formatDbm(simulation.summary.worstRxDbm)}
                   </div>
                 </div>
                 <div className="rounded-md border border-emerald-200/80 bg-white/80 p-2">
-                  <div className="text-caption font-semibold uppercase tracking-wide text-slate-500">Margin</div>
+                  <div className="text-caption font-semibold uppercase tracking-label text-slate-500">Margin</div>
                   <div className="mt-1 font-mono text-label font-bold text-slate-900">
                     {simulation.safetyMarginDb.toFixed(1)} dB
                   </div>

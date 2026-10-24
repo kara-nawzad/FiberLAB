@@ -19,10 +19,10 @@ export function FieldHardwareCard({ profile, configurationLabel }: FieldHardware
       className="mb-3 overflow-hidden rounded-lg border border-sky-500/25 bg-noc-950/65"
     >
       <div className="flex items-center justify-between border-b border-noc-700/60 bg-sky-500/[0.07] px-2 py-2">
-        <div className="flex items-center gap-2 text-caption font-semibold uppercase tracking-[0.12em] text-sky-200">
+        <div className="flex items-center gap-2 text-caption font-semibold uppercase tracking-eyebrow text-sky-200">
           <Info size={12} /> Field hardware
         </div>
-        <span className="rounded-md border border-noc-600/80 bg-noc-900/70 px-2 py-1 font-mono text-caption uppercase tracking-wide text-noc-400">
+        <span className="rounded-md border border-noc-600/80 bg-noc-900/70 px-2 py-1 font-mono text-caption uppercase tracking-label text-noc-400">
           Reference illustration
         </span>
       </div>
@@ -40,7 +40,7 @@ export function FieldHardwareCard({ profile, configurationLabel }: FieldHardware
         </div>
         <figcaption className="px-2 pb-2 pt-2">
           <div className="text-label font-semibold leading-snug text-noc-100">{profile.modelName}</div>
-          <div className="mt-1 text-caption uppercase tracking-[0.1em] text-noc-500">{profile.vendorCategory}</div>
+          <div className="mt-1 text-caption uppercase tracking-eyebrow text-noc-500">{profile.vendorCategory}</div>
           {configurationLabel ? (
             <div className="mt-1 truncate font-mono text-label text-sky-300" title={configurationLabel}>
               {configurationLabel}
@@ -56,7 +56,7 @@ export function FieldHardwareCard({ profile, configurationLabel }: FieldHardware
 
       <div className="space-y-2 p-2">
         <section aria-label={constructionLabel}>
-          <h3 className="mb-2 flex items-center gap-2 text-caption font-semibold uppercase tracking-[0.12em] text-noc-300">
+          <h3 className="mb-2 flex items-center gap-2 text-caption font-semibold uppercase tracking-eyebrow text-noc-300">
             <Cable size={12} className="text-sky-300" /> {constructionLabel}
           </h3>
           <ul className="space-y-1">
@@ -70,7 +70,7 @@ export function FieldHardwareCard({ profile, configurationLabel }: FieldHardware
         </section>
 
         <section aria-label="Field tips" className="border-t border-noc-700/50 pt-2">
-          <h3 className="mb-2 flex items-center gap-2 text-caption font-semibold uppercase tracking-[0.12em] text-noc-300">
+          <h3 className="mb-2 flex items-center gap-2 text-caption font-semibold uppercase tracking-eyebrow text-noc-300">
             <Lightbulb size={12} className="text-amber-300" /> Field tips
           </h3>
           <ul className="space-y-2">
@@ -86,7 +86,7 @@ export function FieldHardwareCard({ profile, configurationLabel }: FieldHardware
         </section>
 
         <details className="border-t border-noc-700/50 pt-2">
-          <summary className="flex cursor-pointer list-none items-center gap-2 text-caption font-semibold uppercase tracking-[0.12em] text-noc-300 marker:hidden">
+          <summary className="flex cursor-pointer list-none items-center gap-2 text-caption font-semibold uppercase tracking-eyebrow text-noc-300 marker:hidden">
             <ShieldCheck size={12} className="text-emerald-300" /> Datasheet context
           </summary>
           <dl className="mt-2 space-y-2">

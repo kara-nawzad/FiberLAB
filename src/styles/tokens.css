@@ -30,7 +30,6 @@
   /* Semantic roles — pick the role, not the number. */
   --type-display: clamp(45px, 5.25vw, 76px); /* landing hero h1 */
   --type-display-sm: clamp(33px, 3.7vw, 52px); /* landing secondary title */
-  --type-page-title: clamp(30px, 3.2vw, 44px); /* app page title */
   --type-section-title: var(--fs-xl); /* modal title, major section heading */
   --type-section-title-lg: var(--fs-2xl); /* landing section heading */
   --type-panel-title: var(--fs-lg); /* panel / drawer / card heading */
@@ -42,9 +41,6 @@
   --type-metric: var(--fs-2xl); /* instrument readout, headline number */
   --type-metric-sm: var(--fs-xl); /* stat-card value */
   --type-brand: var(--fs-xl); /* wordmark */
-
-  /* Display roles scale once per breakpoint (see the media rules at the end). */
-  --type-display: clamp(45px, 5.25vw, 76px);
 
   /* Weights — five steps, used by role. */
   --fw-regular: 400; /* body copy */
@@ -60,9 +56,14 @@
   --leading-normal: 1.5; /* body */
   --leading-relaxed: 1.6; /* long-form lede text */
 
+  /* Tracking — four steps. Headings pull in, uppercase labels push out. */
+  --tracking-display: -0.07em; /* wordmark, large numeric readouts */
+  --tracking-tight: -0.02em; /* display + section titles */
+  --tracking-label: 0.08em; /* uppercase table headers, badges, chips */
+  --tracking-eyebrow: 0.13em; /* eyebrows and wide uppercase captions */
+
   /* ------------------------------------------------------------- spacing ---
    * 4px base. Nothing in component CSS should use 5/6/7/9/10/11/13… px. */
-  --sp-0: 0;
   --sp-1: 4px;
   --sp-2: 8px;
   --sp-3: 12px;
@@ -70,10 +71,6 @@
   --sp-6: 24px;
   --sp-8: 32px;
 
-  /* Semantic spacing roles. */
-  --gap-row: var(--sp-2); /* between sibling rows in a panel */
-  --gap-group: var(--sp-3); /* between groups of rows */
-  --gap-section: var(--sp-4); /* between sections */
   --inset-control: var(--sp-2) var(--sp-3); /* padding inside a button/input */
 
   /* -------------------------------------------------------------- radius ---
@@ -88,11 +85,7 @@
   /* -------------------------------------------------------------- panels ---
    * Panel padding / gutters. Applied as a single value per surface so the
    * library, canvas and inspector share one gutter. */
-  --panel-pad-sm: var(--sp-3); /* 12 */
-  --panel-pad: var(--sp-4); /* 16 */
-  --panel-pad-lg: var(--sp-6); /* 24 */
-  --panel-gap: var(--sp-3); /* space between stacked panels */
-  --panel-header-pad: var(--sp-3) var(--sp-4); /* header bar: 12 / 16 */
+  --panel-pad: var(--sp-4); /* 16 — one panel gutter */
 
   /* -------------------------------------------------------------- layout ---
    * The workbench is a four-column row: rail | component library | canvas |
@@ -124,11 +117,6 @@
   --control-md: 36px;
   --control-lg: 40px;
   --control-tap: 44px;
-
-  /* ------------------------------------------------------------- borders --- */
-  --border-hairline: 1px;
-  --focus-ring-width: 2px;
-  --focus-ring-offset: 2px;
 }
 
 /* Display type is the only thing that changes size between breakpoints; the

@@ -141,6 +141,17 @@ export default {
         normal: 'var(--leading-normal)',
         relaxed: 'var(--leading-relaxed)',
       },
+      letterSpacing: {
+        display: 'var(--tracking-display)',
+        tight: 'var(--tracking-tight)',
+        label: 'var(--tracking-label)',
+        eyebrow: 'var(--tracking-eyebrow)',
+        // Defaults kept for any surface that still wants plain tracking.
+        normal: '0em',
+        wide: '0.025em',
+        wider: '0.05em',
+        widest: '0.1em',
+      },
       fontFamily: {
         sans: ['Manrope', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
         mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Consolas', 'monospace'],

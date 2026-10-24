@@ -48,7 +48,7 @@ function StatCard({
 }) {
   return (
     <div className="rounded-lg border border-noc-700/60 bg-noc-950/50 px-3 py-2">
-      <div className="text-caption font-medium uppercase tracking-[0.12em] text-noc-400">{label}</div>
+      <div className="text-caption font-medium uppercase tracking-eyebrow text-noc-400">{label}</div>
       <div className={`mt-1 font-mono text-xl font-bold leading-tight ${tone}`}>{value}</div>
       {sub ? <div className="mt-1 text-caption text-noc-500">{sub}</div> : null}
     </div>
@@ -98,7 +98,7 @@ function CommercialQuotationView({
         <div className="overflow-x-auto">
           <table className="w-full min-w-[720px] font-mono text-label" data-testid="quotation-line-items">
             <thead>
-              <tr className="border-t border-noc-700/60 bg-noc-950/70 text-caption uppercase tracking-wide text-noc-500">
+              <tr className="border-t border-noc-700/60 bg-noc-950/70 text-caption uppercase tracking-label text-noc-500">
                 <th className="px-2 py-2 text-left font-medium">Category</th>
                 <th className="px-2 py-2 text-left font-medium">Item</th>
                 <th className="px-2 py-2 text-right font-medium">Qty</th>
@@ -391,7 +391,7 @@ export function BOMModal({
                 <div className="overflow-hidden rounded-lg border border-noc-700/60">
                   <table className="w-full font-mono text-label">
                     <thead>
-                      <tr className="bg-noc-800/80 text-caption uppercase tracking-wide text-noc-400">
+                      <tr className="bg-noc-800/80 text-caption uppercase tracking-label text-noc-400">
                         <th className="px-2 py-2 text-left font-medium">Subscriber</th>
                         <th className="px-2 py-2 text-left font-medium">Status</th>
                         <th className="px-2 py-2 text-right font-medium">Rx dBm</th>

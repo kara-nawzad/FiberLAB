@@ -54,7 +54,7 @@ export function GatewayNode({ id, data, selected }: NodeProps<GatewayFlowNode>) 
         {/* Top Gateway Header */}
         <div className="flex items-start justify-between gap-2 border-b border-slate-100 pb-2">
           <div className="min-w-0">
-            <div className="font-mono text-caption font-bold uppercase tracking-wider text-slate-400">
+            <div className="font-mono text-caption font-bold uppercase tracking-label text-slate-400">
               OPTICAL WI-FI 6 GATEWAY
             </div>
             <div className="truncate font-sans text-body font-bold leading-snug text-slate-900">{data.subscriber}</div>

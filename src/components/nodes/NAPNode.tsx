@@ -57,7 +57,7 @@ export function NAPNode({ id, data, selected }: NodeProps<NapFlowNode>) {
         {/* Weatherproof Enclosure Header */}
         <div className="border-b border-slate-200 pb-2 pr-3">
           <div className="flex items-center justify-between">
-            <span className="font-mono text-caption font-bold uppercase tracking-wider text-orange-700">
+            <span className="font-mono text-caption font-bold uppercase tracking-label text-orange-700">
               OUTDOOR ACCESS BOX · IP65
             </span>
             <span className="rounded bg-orange-100 px-2 py-1 font-mono text-label font-bold text-orange-900 border border-orange-300">
