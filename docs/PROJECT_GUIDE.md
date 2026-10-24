@@ -66,6 +66,8 @@ Photos alone do not create field experience. A task such as “find why this sub
 | Caption / unit          | `--type-caption`                     | 11                      | 600–700 |
 | Metric                  | `--type-metric` / `--type-metric-sm` | 28 / 22                 | 700     |
 
+Spacing follows the same rule: every `padding`, `margin` and `gap` resolves to `--sp-1` (4) / `--sp-2` (8) / `--sp-3` (12) / `--sp-4` (16) / `--sp-6` (24) / `--sp-8` (32). Cards, tables and rows use one of three rhythms — 4 px between a label and its value, 8 px between rows, 12 px inside a card, 16 px from a panel edge (`--shell-pad`) — and the same element type always has the same padding (for example `--card-pad` for every stat, card and tile). Tailwind utilities in the components use only the matching steps (`gap-1` … `gap-8`), never the half steps. Controls share `--control-sm/md/lg` (32 / 36 / 40) so a select, a button and a pill on the same row line up. Numeric readouts and numeric table columns use `font-variant-numeric: tabular-nums` and a right edge of their own, which keeps digits from jumping as values update.
+
 The theme tokens are used by both the landing and the existing React Flow workbench. Status colors remain semantically distinct; telemetry values and statuses are still calculated by the simulator, not the stylesheet or prototype artwork.
 
 ### 2.2 Warm photonic landing and splice interaction

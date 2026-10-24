@@ -41,7 +41,7 @@ export function GatewayNode({ id, data, selected }: NodeProps<GatewayFlowNode>) 
       {/* Left Green SC/APC Optical Input Receptacle */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -left-2.5 top-1/2 -translate-y-1/2 flex items-center"
+        className="pointer-events-none absolute -left-2 top-1/2 -translate-y-1/2 flex items-center"
       >
         <span className="h-4 w-3 rounded-l border border-emerald-500 bg-emerald-600 shadow-sm" />
       </div>
@@ -66,7 +66,7 @@ export function GatewayNode({ id, data, selected }: NodeProps<GatewayFlowNode>) 
         </div>
 
         {/* Status Badges & Live RX Reading */}
-        <div className="my-2 flex flex-wrap items-center gap-1.5">
+        <div className="my-2 flex flex-wrap items-center gap-2">
           <Badge className="border-blue-200 bg-blue-50 text-blue-800">Wi-Fi 6</Badge>
           {standard === 'XGS-PON' ? (
             <Badge className="border-sky-200 bg-sky-50 text-sky-900">XGS-PON 10G ACTIVE</Badge>
@@ -78,7 +78,7 @@ export function GatewayNode({ id, data, selected }: NodeProps<GatewayFlowNode>) 
         </div>
 
         {/* Service Telemetry Grid */}
-        <div className="grid grid-cols-2 gap-1.5">
+        <div className="grid grid-cols-2 gap-2">
           <Stat
             label="PON standard"
             value={standard ?? 'Awaiting link'}
@@ -94,18 +94,18 @@ export function GatewayNode({ id, data, selected }: NodeProps<GatewayFlowNode>) 
         </div>
 
         {telemetry ? (
-          <div className="mt-1.5 text-label leading-snug text-slate-500">
+          <div className="mt-2 text-label leading-snug text-slate-500">
             {describeStatus(telemetry.status, telemetry.ponStandard ?? undefined)} · shared line-rate estimate, not a
             measured speed test.
           </div>
         ) : (
-          <div className="mt-1.5 flex items-center gap-1 text-label text-slate-500">
+          <div className="mt-2 flex items-center gap-1 text-label text-slate-500">
             <Wifi size={10} /> Dual-band gateway; connect its PON input to simulate service.
           </div>
         )}
 
         {/* Footer */}
-        <div className="mt-2 flex items-center justify-between gap-2 border-t border-slate-100 pt-1.5">
+        <div className="mt-2 flex items-center justify-between gap-2 border-t border-slate-100 pt-2">
           <span className="truncate font-mono text-label text-slate-500" title={data.ssid}>
             SSID · {data.ssid}
           </span>

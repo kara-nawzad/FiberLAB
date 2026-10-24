@@ -47,10 +47,10 @@ function StatCard({
   tone?: string;
 }) {
   return (
-    <div className="rounded-lg border border-noc-700/60 bg-noc-950/50 px-3 py-2.5">
+    <div className="rounded-lg border border-noc-700/60 bg-noc-950/50 px-3 py-2">
       <div className="text-caption font-medium uppercase tracking-[0.12em] text-noc-400">{label}</div>
-      <div className={`mt-0.5 font-mono text-xl font-bold leading-tight ${tone}`}>{value}</div>
-      {sub ? <div className="mt-0.5 text-caption text-noc-500">{sub}</div> : null}
+      <div className={`mt-1 font-mono text-xl font-bold leading-tight ${tone}`}>{value}</div>
+      {sub ? <div className="mt-1 text-caption text-noc-500">{sub}</div> : null}
     </div>
   );
 }
@@ -244,12 +244,12 @@ export function BOMModal({
             </button>
             <button
               type="button"
-              className="btn-ghost !p-1.5"
+              className="btn-ghost h-9 w-9 !p-0"
               onClick={onClose}
               aria-label="Close bill of materials"
               title="Close"
             >
-              <X size={14} />
+              <X size={16} />
             </button>
           </div>
         </div>
@@ -328,14 +328,14 @@ export function BOMModal({
                   {summary.splitterTotal === 0 ? (
                     <p className="text-body text-noc-500">No splitters deployed.</p>
                   ) : (
-                    <div className="flex flex-wrap gap-1.5">
+                    <div className="flex flex-wrap gap-2">
                       {SPLIT_RATIOS.filter((ratio: SplitRatio) => summary.splitterCountByRatio[ratio]).map((ratio) => (
                         <span
                           key={ratio}
                           className="rounded border border-purple-500/40 bg-purple-500/15 px-2 py-1 font-mono text-label text-purple-200"
                         >
                           1:{ratio} × {summary.splitterCountByRatio[ratio]}
-                          <span className="ml-1.5 text-purple-800">−{SPLITTER_LOSS_DB[ratio].toFixed(1)} dB each</span>
+                          <span className="ml-2 text-purple-800">−{SPLITTER_LOSS_DB[ratio].toFixed(1)} dB each</span>
                         </span>
                       ))}
                     </div>
@@ -350,23 +350,23 @@ export function BOMModal({
                   <table className="w-full font-mono text-label">
                     <tbody className="text-noc-300">
                       <tr>
-                        <td className="py-0.5 text-noc-400">Fusion splices</td>
-                        <td className="py-0.5 text-right">{summary.totalSplices}</td>
-                        <td className="py-0.5 pl-3 text-right text-noc-500">
+                        <td className="py-1 text-noc-400">Fusion splices</td>
+                        <td className="py-1 text-right">{summary.totalSplices}</td>
+                        <td className="py-1 pl-3 text-right text-noc-500">
                           {(summary.totalSplices * 0.1).toFixed(1)} dB worst case
                         </td>
                       </tr>
                       <tr>
-                        <td className="py-0.5 text-noc-400">SC/APC connectors</td>
-                        <td className="py-0.5 text-right">{summary.totalConnectors}</td>
-                        <td className="py-0.5 pl-3 text-right text-noc-500">
+                        <td className="py-1 text-noc-400">SC/APC connectors</td>
+                        <td className="py-1 text-right">{summary.totalConnectors}</td>
+                        <td className="py-1 pl-3 text-right text-noc-500">
                           {(summary.totalConnectors * 0.5).toFixed(1)} dB worst case
                         </td>
                       </tr>
                       <tr>
-                        <td className="py-0.5 text-noc-400">Safety margin</td>
-                        <td className="py-0.5 text-right">{settings.safetyMarginDb.toFixed(1)} dB</td>
-                        <td className="py-0.5 pl-3 text-right text-noc-500">per subscriber</td>
+                        <td className="py-1 text-noc-400">Safety margin</td>
+                        <td className="py-1 text-right">{settings.safetyMarginDb.toFixed(1)} dB</td>
+                        <td className="py-1 pl-3 text-right text-noc-500">per subscriber</td>
                       </tr>
                       <tr className="border-t border-noc-700/50">
                         <td className="py-1 text-noc-400">Mean Rx power</td>
@@ -375,8 +375,8 @@ export function BOMModal({
                         </td>
                       </tr>
                       <tr>
-                        <td className="py-0.5 text-noc-400">Worst Rx power</td>
-                        <td className="py-0.5 text-right text-noc-200" colSpan={2}>
+                        <td className="py-1 text-noc-400">Worst Rx power</td>
+                        <td className="py-1 text-right text-noc-200" colSpan={2}>
                           {formatDbm(summary.worstRxDbm)}
                         </td>
                       </tr>
@@ -420,7 +420,7 @@ export function BOMModal({
                           const path = simulation.bestPaths[node.id];
                           return (
                             <tr key={node.id} className="border-t border-noc-700/50 text-noc-300 hover:bg-noc-800/40">
-                              <td className="px-2 py-1.5">
+                              <td className="px-2 py-2">
                                 <div className="truncate font-sans text-label text-noc-200">{data.subscriber}</div>
                                 <div className="text-label text-noc-500">
                                   {node.type === 'gateway'
@@ -432,26 +432,26 @@ export function BOMModal({
                                     : ''}
                                 </div>
                               </td>
-                              <td className="px-2 py-1.5">
+                              <td className="px-2 py-2">
                                 <span
-                                  className={`inline-flex items-center gap-1 rounded border px-1.5 py-[1px] text-caption font-semibold ${style.badge}`}
+                                  className={`inline-flex items-center gap-1 rounded border px-2 py-0 text-caption font-semibold ${style.badge}`}
                                   title={describeStatus(telemetry.status)}
                                 >
                                   <span className="h-1.5 w-1.5 rounded-full" style={{ background: style.hex }} />
                                   {style.label}
                                 </span>
                               </td>
-                              <td className="px-2 py-1.5 text-right font-semibold" style={{ color: style.hex }}>
+                              <td className="px-2 py-2 text-right font-semibold" style={{ color: style.hex }}>
                                 {formatDbm(telemetry.rxPowerDbm)}
                               </td>
-                              <td className="px-2 py-1.5 text-right">
+                              <td className="px-2 py-2 text-right">
                                 {telemetry.rxPowerDbm === null ? '—' : telemetry.totalLossDb.toFixed(2)}
                               </td>
-                              <td className="px-2 py-1.5 text-right">
+                              <td className="px-2 py-2 text-right">
                                 {telemetry.rxPowerDbm === null ? '—' : `${telemetry.marginDb.toFixed(2)}`}
                               </td>
                               <td
-                                className={`px-2 py-1.5 text-right ${
+                                className={`px-2 py-2 text-right ${
                                   telemetry.upstreamDeltaDb !== null && telemetry.upstreamDeltaDb > 15
                                     ? 'font-semibold text-amber-400'
                                     : ''
@@ -461,13 +461,13 @@ export function BOMModal({
                                   ? '—'
                                   : `${telemetry.upstreamDeltaDb.toFixed(2)} dB`}
                               </td>
-                              <td className="px-2 py-1.5 text-right">{telemetry.fiberKm.toFixed(2)}</td>
-                              <td className="px-2 py-1.5 text-right">
+                              <td className="px-2 py-2 text-right">{telemetry.fiberKm.toFixed(2)}</td>
+                              <td className="px-2 py-2 text-right">
                                 {telemetry.rxPowerDbm === null ? '—' : `1:${telemetry.cumulativeSplitRatio}`}
                               </td>
-                              <td className="px-2 py-1.5 text-right">{telemetry.splices}</td>
-                              <td className="px-2 py-1.5 text-right">{telemetry.connectors}</td>
-                              <td className="px-2 py-1.5 text-label text-noc-400">
+                              <td className="px-2 py-2 text-right">{telemetry.splices}</td>
+                              <td className="px-2 py-2 text-right">{telemetry.connectors}</td>
+                              <td className="px-2 py-2 text-label text-noc-400">
                                 {path ? `${path.oltPort} @ ${path.txPowerDbm.toFixed(1)} dBm` : '—'}
                               </td>
                             </tr>
@@ -484,7 +484,7 @@ export function BOMModal({
                 {(Object.keys(STATUS_STYLES) as Array<keyof typeof STATUS_STYLES>).map((key) => (
                   <div
                     key={key}
-                    className="flex items-center gap-1.5 rounded border border-noc-700/60 bg-noc-950/50 px-2 py-1"
+                    className="flex items-center gap-2 rounded border border-noc-700/60 bg-noc-950/50 px-2 py-1"
                   >
                     <span
                       className="h-2 w-2 rounded-full"

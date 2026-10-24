@@ -150,7 +150,7 @@ export function TopBar({
                     {presetEdited ? 'LOADED · EDITED' : 'LOADED'}
                   </span>
                 ) : null}
-                <div className="pu-mut" style={{ fontSize: 'var(--fs-2xs)', marginTop: 3 }}>
+                <div className="pu-mut" style={{ fontSize: 'var(--fs-2xs)', marginTop: 4 }}>
                   {preset.description}
                 </div>
               </button>
@@ -158,7 +158,7 @@ export function TopBar({
           </div>
         ) : null}
       </div>
-      <div className="pu-health-wrap" style={{ display: 'flex', gap: 10, alignItems: 'center', marginLeft: 8 }}>
+      <div className="pu-health-wrap" style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 8 }}>
         <span
           className={`pu-health ${health === 'green' ? '' : health}`}
           aria-label={`Network health: ${HEALTH_TEXT[health]}`}

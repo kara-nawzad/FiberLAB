@@ -1108,7 +1108,7 @@ function StudioWorkspace({
                 {linkMode ? (
                   <Panel position="bottom-center" className="pu-link-panel !m-3">
                     <div
-                      className="link-mode-panel panel flex max-w-[min(420px,calc(100vw-28px))] items-center gap-3 rounded-xl px-3 py-2.5 shadow-panel"
+                      className="link-mode-panel panel flex max-w-[min(420px,calc(100vw-28px))] items-center gap-3 rounded-xl px-3 py-2 shadow-panel"
                       role="status"
                       aria-live="polite"
                     >
@@ -1154,7 +1154,7 @@ function StudioWorkspace({
 
                 {nodes.length === 0 ? (
                   <Panel position="top-center" className="!mt-16">
-                    <div className="panel flex items-center gap-2.5 rounded-lg px-4 py-3 shadow-panel">
+                    <div className="panel flex items-center gap-2 rounded-lg px-4 py-3 shadow-panel">
                       <MousePointer2 size={16} className="text-[#E4673F]" />
                       <div>
                         <div className="text-body font-semibold text-slate-900">The canvas is empty</div>

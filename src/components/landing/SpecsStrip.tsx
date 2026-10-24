@@ -28,8 +28,12 @@ export function SpecsStrip() {
                 <th scope="col">
                   Launch range · P<sub>tx</sub>
                 </th>
-                <th scope="col">OLT Rx sensitivity</th>
-                <th scope="col">Nominal budget</th>
+                <th scope="col" className="is-num">
+                  OLT Rx sensitivity
+                </th>
+                <th scope="col" className="is-num">
+                  Nominal budget
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -39,8 +43,8 @@ export function SpecsStrip() {
                   <td>
                     {dbm(spec.minTxDbm)} to {dbm(spec.maxTxDbm)}
                   </td>
-                  <td>{dbm(spec.rxSensitivityDbm)}</td>
-                  <td>{spec.linkBudgetDb.toFixed(1)} dB</td>
+                  <td className="is-num">{dbm(spec.rxSensitivityDbm)}</td>
+                  <td className="is-num">{spec.linkBudgetDb.toFixed(1)} dB</td>
                 </tr>
               ))}
             </tbody>

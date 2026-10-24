@@ -22,7 +22,7 @@ export function ODFNode({ id, data, selected }: NodeProps<OdfFlowNode>) {
           <div
             key={`left-boot-${index}`}
             aria-hidden="true"
-            className="pointer-events-none absolute -left-2.5 -translate-y-1/2 flex items-center"
+            className="pointer-events-none absolute -left-2 -translate-y-1/2 flex items-center"
             style={{ top: `${topPct}%` }}
           >
             <span className="h-4 w-3 rounded-l border border-emerald-500 bg-emerald-600 shadow-sm" />
@@ -35,7 +35,7 @@ export function ODFNode({ id, data, selected }: NodeProps<OdfFlowNode>) {
           <div
             key={`right-boot-${index}`}
             aria-hidden="true"
-            className="pointer-events-none absolute -right-2.5 -translate-y-1/2 flex items-center"
+            className="pointer-events-none absolute -right-2 -translate-y-1/2 flex items-center"
             style={{ top: `${topPct}%` }}
           >
             <span className="h-4 w-3 rounded-r border border-emerald-500 bg-emerald-600 shadow-sm" />
@@ -44,25 +44,25 @@ export function ODFNode({ id, data, selected }: NodeProps<OdfFlowNode>) {
       })}
 
       <div
-        className={`node-shell relative overflow-hidden rounded-lg border-2 bg-slate-800 p-2.5 text-slate-100 transition-all duration-150 ${
+        className={`node-shell relative overflow-hidden rounded-lg border-2 bg-slate-800 p-2 text-slate-100 transition-all duration-150 ${
           selected ? 'border-violet-600 shadow-lg' : 'border-slate-600'
         }`}
       >
         {/* Top 1U Patch Panel Silkscreen Bar */}
-        <div className="flex items-center justify-between border-b border-slate-700 pb-1.5">
+        <div className="flex items-center justify-between border-b border-slate-700 pb-2">
           <div>
             <div className="font-mono text-caption font-bold uppercase tracking-wider text-teal-300">
               1U RACK PATCH FIELD · SC/APC
             </div>
             <div className="font-sans text-body font-bold leading-tight text-white">ODF rack panel</div>
           </div>
-          <span className="rounded border border-teal-500/40 bg-teal-950/80 px-1.5 py-0.5 font-mono text-label font-semibold text-teal-200">
+          <span className="rounded border border-teal-500/40 bg-teal-950/80 px-2 py-1 font-mono text-label font-semibold text-teal-200">
             −{lossDb.toFixed(2)} dB / pair
           </span>
         </div>
 
         {/* 12-Port SC/APC Coupling Adapter Row (01 through 12) */}
-        <div className="my-2 rounded border border-slate-700 bg-slate-900 p-1.5">
+        <div className="my-2 rounded border border-slate-700 bg-slate-900 p-2">
           <div className="grid grid-cols-6 gap-1">
             {Array.from({ length: 6 }, (_, idx) => {
               const portNum = String(idx + 1).padStart(2, '0');
@@ -70,7 +70,7 @@ export function ODFNode({ id, data, selected }: NodeProps<OdfFlowNode>) {
               return (
                 <div
                   key={portNum}
-                  className={`flex flex-col items-center rounded border py-0.5 font-mono text-caption ${
+                  className={`flex flex-col items-center rounded border py-1 font-mono text-caption ${
                     isMatchedPair
                       ? 'border-emerald-500/80 bg-emerald-950 text-emerald-200'
                       : 'border-slate-700 bg-slate-800 text-slate-400'
@@ -78,7 +78,7 @@ export function ODFNode({ id, data, selected }: NodeProps<OdfFlowNode>) {
                 >
                   <span>{portNum}</span>
                   <span
-                    className={`mt-0.5 h-1.5 w-2.5 rounded-xs ${isMatchedPair ? 'bg-emerald-500' : 'bg-slate-600'}`}
+                    className={`mt-1 h-1.5 w-2.5 rounded-xs ${isMatchedPair ? 'bg-emerald-500' : 'bg-slate-600'}`}
                   />
                 </div>
               );

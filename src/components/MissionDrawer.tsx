@@ -26,9 +26,7 @@ function DifficultyPill({ difficulty }: { difficulty: Mission['difficulty'] }) {
         : 'border-violet-200 bg-violet-50 text-violet-800';
 
   return (
-    <span className={`inline-flex rounded-full border px-2 py-0.5 text-caption font-semibold ${tone}`}>
-      {difficulty}
-    </span>
+    <span className={`inline-flex rounded-full border px-2 py-1 text-caption font-semibold ${tone}`}>{difficulty}</span>
   );
 }
 
@@ -93,7 +91,7 @@ export function MissionDrawer({
             >
               Field missions
             </h2>
-            <p className="mt-0.5 text-body text-slate-600">Practice network build and fault-finding.</p>
+            <p className="mt-1 text-body text-slate-600">Practice network build and fault-finding.</p>
           </div>
           <button
             type="button"
@@ -109,7 +107,7 @@ export function MissionDrawer({
           <div className="mb-2 flex items-center justify-between">
             <h3 className="text-label font-bold uppercase tracking-[0.12em] text-slate-500">Choose a mission</h3>
             {activeMissionId ? (
-              <span className="inline-flex items-center gap-1.5 text-caption font-semibold text-emerald-700">
+              <span className="inline-flex items-center gap-2 text-caption font-semibold text-emerald-700">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" /> Mission active
               </span>
             ) : null}
@@ -131,9 +129,9 @@ export function MissionDrawer({
                       : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
                   }`}
                 >
-                  <div className="mb-1.5 flex items-center justify-between gap-2">
+                  <div className="mb-2 flex items-center justify-between gap-2">
                     <span className="text-body font-semibold text-slate-900">{candidate.title}</span>
-                    <span className="flex items-center gap-1.5">
+                    <span className="flex items-center gap-2">
                       {currentlyRunning ? (
                         <span className="font-mono text-caption font-bold uppercase text-emerald-700">Active</span>
                       ) : null}
@@ -146,7 +144,7 @@ export function MissionDrawer({
             })}
           </div>
 
-          <section className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3.5">
+          <section className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-caption font-bold uppercase tracking-[0.14em] text-blue-700">Scenario brief</p>
@@ -158,7 +156,7 @@ export function MissionDrawer({
             <button
               type="button"
               onClick={() => onStartMission(mission)}
-              className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-3 py-2.5 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
+              className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2"
             >
               {isActive ? <RotateCcw size={14} /> : <Play size={14} />}
               {isActive ? 'Restart mission' : 'Start mission'}
@@ -194,7 +192,7 @@ export function MissionDrawer({
                 />
               </div>
             ) : (
-              <p className="mb-2 rounded-md border border-blue-100 bg-blue-50 px-2.5 py-2 text-body leading-relaxed text-blue-900">
+              <p className="mb-2 rounded-md border border-blue-100 bg-blue-50 px-2 py-2 text-body leading-relaxed text-blue-900">
                 Start this mission to load its scenario and turn on live objective tracking.
               </p>
             )}
@@ -205,12 +203,12 @@ export function MissionDrawer({
                 return (
                   <li
                     key={objective.id}
-                    className={`flex items-start gap-2.5 rounded-lg border p-2.5 transition-all duration-300 ${
+                    className={`flex items-start gap-2 rounded-lg border p-2 transition-all duration-300 ${
                       met ? 'border-emerald-200 bg-emerald-50/70' : 'border-slate-200 bg-white'
                     }`}
                   >
                     <span
-                      className={`mission-check mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-caption font-bold transition-all duration-300 ${
+                      className={`mission-check mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-caption font-bold transition-all duration-300 ${
                         met
                           ? 'mission-check-complete border-emerald-600 bg-emerald-600 text-white'
                           : 'border-slate-300 bg-white text-slate-500'
@@ -233,7 +231,7 @@ export function MissionDrawer({
 
           {isComplete ? (
             <section
-              className="mission-complete-banner mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3.5"
+              className="mission-complete-banner mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3"
               aria-live="polite"
             >
               <div className="flex items-center gap-2 text-sm font-bold text-emerald-900">
@@ -245,22 +243,22 @@ export function MissionDrawer({
               <p className="mt-1 text-body leading-relaxed text-emerald-800">
                 Excellent field work. Your current network meets every mission objective.
               </p>
-              <div className="mt-3 grid grid-cols-3 gap-1.5">
+              <div className="mt-3 grid grid-cols-3 gap-2">
                 <div className="rounded-md border border-emerald-200/80 bg-white/80 p-2">
                   <div className="text-caption font-semibold uppercase tracking-wide text-slate-500">Mean Rx</div>
-                  <div className="mt-0.5 font-mono text-label font-bold text-slate-900">
+                  <div className="mt-1 font-mono text-label font-bold text-slate-900">
                     {formatDbm(simulation.summary.meanRxDbm)}
                   </div>
                 </div>
                 <div className="rounded-md border border-emerald-200/80 bg-white/80 p-2">
                   <div className="text-caption font-semibold uppercase tracking-wide text-slate-500">Worst Rx</div>
-                  <div className="mt-0.5 font-mono text-label font-bold text-slate-900">
+                  <div className="mt-1 font-mono text-label font-bold text-slate-900">
                     {formatDbm(simulation.summary.worstRxDbm)}
                   </div>
                 </div>
                 <div className="rounded-md border border-emerald-200/80 bg-white/80 p-2">
                   <div className="text-caption font-semibold uppercase tracking-wide text-slate-500">Margin</div>
-                  <div className="mt-0.5 font-mono text-label font-bold text-slate-900">
+                  <div className="mt-1 font-mono text-label font-bold text-slate-900">
                     {simulation.safetyMarginDb.toFixed(1)} dB
                   </div>
                 </div>
@@ -273,7 +271,7 @@ export function MissionDrawer({
           ) : null}
 
           <details className="mt-4 overflow-hidden rounded-xl border border-amber-200 bg-amber-50/70">
-            <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2.5 text-label font-semibold text-amber-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600">
+            <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 text-label font-semibold text-amber-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600">
               <CircleHelp size={14} className="text-amber-700" /> Field hints
               <ChevronDown size={13} className="ml-auto transition-transform details-chevron" />
             </summary>
@@ -288,7 +286,7 @@ export function MissionDrawer({
           </details>
         </div>
 
-        <footer className="shrink-0 border-t border-slate-200 bg-white px-5 py-3 text-body leading-relaxed text-slate-500">
+        <footer className="shrink-0 border-t border-slate-200 bg-white px-4 py-3 text-body leading-relaxed text-slate-500">
           Learning simulation only. Confirm live-network decisions against current standards, product datasheets, and
           qualified field procedures.
         </footer>

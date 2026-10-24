@@ -1,5 +1,17 @@
 import { useMemo, useState } from 'react';
-import { AlertTriangle, CheckCircle2, ChevronDown, ChevronUp, Info, Route, Ruler, Users } from 'lucide-react';
+import {
+  AlertTriangle,
+  CheckCircle2,
+  ChevronDown,
+  ChevronUp,
+  GitMerge,
+  Info,
+  Plug,
+  Route,
+  Ruler,
+  Split,
+  Users,
+} from 'lucide-react';
 import type { NetworkSummary, PonNode, SimulationResult } from '../types';
 import { STATUS_STYLES } from '../types';
 import { formatDbm } from '../engine/opticalSimulator';
@@ -236,23 +248,25 @@ export function BottomPanel({
       {!minimized && tab === 'budget' ? (
         <div className="pu-bottom-grid pu-bottom-grid--stack">
           <div className="pu-card" style={{ maxHeight: 170, overflowY: 'auto' }}>
-            <table style={{ width: '100%', fontSize: 'var(--fs-xs)' }}>
+            <table className="pu-data-table">
               <thead className="pu-mut">
-                <tr style={{ textAlign: 'left' }}>
+                <tr>
                   <th>Subscriber</th>
-                  <th>Rx power</th>
-                  <th>Path loss</th>
-                  <th>Margin</th>
+                  <th className="is-num">Rx power</th>
+                  <th className="is-num">Path loss</th>
+                  <th className="is-num">Margin</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
                 {endpoints.map(({ node, reading }) => (
                   <tr key={node.id} onClick={() => onSelectNode(node.id)} style={{ cursor: 'pointer' }}>
-                    <td style={{ padding: '4px 0', fontWeight: 'var(--fw-semibold)' }}>{node.data.subscriber}</td>
-                    <td>{formatDbm(reading?.rxPowerDbm ?? null)}</td>
-                    <td>{reading ? `${reading.totalLossDb.toFixed(1)} dB` : '—'}</td>
-                    <td>{reading?.rxPowerDbm != null ? `${reading.marginDb.toFixed(1)} dB` : '—'}</td>
+                    <td style={{ fontWeight: 'var(--fw-semibold)' }}>{node.data.subscriber}</td>
+                    <td className="is-num">{formatDbm(reading?.rxPowerDbm ?? null)}</td>
+                    <td className="is-num">{reading ? `${reading.totalLossDb.toFixed(1)} dB` : '—'}</td>
+                    <td className="is-num">
+                      {reading?.rxPowerDbm != null ? `${reading.marginDb.toFixed(1)} dB` : '—'}
+                    </td>
                     <td
                       style={{
                         fontWeight: 'var(--fw-bold)',
@@ -297,18 +311,27 @@ export function BottomPanel({
             </div>
           </div>
           <div className="pu-stat">
+            <i>
+              <Split size={16} />
+            </i>
             <div>
               <small>Splitters</small>
               <b>{summary.splitterTotal}</b>
             </div>
           </div>
           <div className="pu-stat">
+            <i>
+              <GitMerge size={16} />
+            </i>
             <div>
               <small>Splices</small>
               <b>{summary.totalSplices}</b>
             </div>
           </div>
           <div className="pu-stat">
+            <i>
+              <Plug size={16} />
+            </i>
             <div>
               <small>Connectors</small>
               <b>{summary.totalConnectors}</b>

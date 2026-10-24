@@ -27,7 +27,7 @@ export function ClosureNode({ id, data, selected }: NodeProps<ClosureFlowNode>) 
           <div
             key={`seal-in-${index}`}
             aria-hidden="true"
-            className="pointer-events-none absolute -left-2.5 -translate-y-1/2 flex items-center"
+            className="pointer-events-none absolute -left-2 -translate-y-1/2 flex items-center"
             style={{ top: `${topPct}%` }}
           >
             <span className="h-4 w-3 rounded-l border border-slate-500 bg-slate-800 shadow-sm" />
@@ -43,7 +43,7 @@ export function ClosureNode({ id, data, selected }: NodeProps<ClosureFlowNode>) 
           <div
             key={`seal-out-${index}`}
             aria-hidden="true"
-            className="pointer-events-none absolute -right-2.5 -translate-y-1/2 flex items-center"
+            className="pointer-events-none absolute -right-2 -translate-y-1/2 flex items-center"
             style={{ top: `${topPct}%` }}
           >
             <span
@@ -63,14 +63,14 @@ export function ClosureNode({ id, data, selected }: NodeProps<ClosureFlowNode>) 
         }}
       >
         {/* Top Dome Header */}
-        <div className="flex items-center justify-between border-b border-slate-700 pb-1.5">
+        <div className="flex items-center justify-between border-b border-slate-700 pb-2">
           <div>
             <div className="font-mono text-caption font-bold uppercase tracking-wider text-amber-300">
               OSP JOINT ENCLOSURE · IP68
             </div>
             <div className="font-sans text-body font-bold leading-tight text-white">Dome splice closure</div>
           </div>
-          <span className="rounded border border-slate-600 bg-slate-900 px-1.5 py-0.5 font-mono text-label font-semibold text-amber-300">
+          <span className="rounded border border-slate-600 bg-slate-900 px-2 py-1 font-mono text-label font-semibold text-amber-300">
             −{spliceLossDb.toFixed(2)} dB
           </span>
         </div>
@@ -88,7 +88,7 @@ export function ClosureNode({ id, data, selected }: NodeProps<ClosureFlowNode>) 
               return (
                 <div
                   key={branch}
-                  className={`flex items-center justify-between rounded border px-1.5 py-0.5 font-mono text-caption ${
+                  className={`flex items-center justify-between rounded border px-2 py-1 font-mono text-caption ${
                     active
                       ? 'border-slate-600 bg-slate-800 text-white'
                       : 'border-red-900/70 bg-red-950/60 text-red-300 line-through'

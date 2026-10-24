@@ -681,10 +681,10 @@ export function OtdrModal({ open, onClose, nodes, edges }: OtdrModalProps) {
                   <tr>
                     <th>#</th>
                     <th>Type / event</th>
-                    <th>Location</th>
-                    <th>Loss step</th>
-                    <th>Cumulative loss</th>
-                    <th>Reflectance peak</th>
+                    <th className="is-num">Location</th>
+                    <th className="is-num">Loss step</th>
+                    <th className="is-num">Cumulative loss</th>
+                    <th className="is-num">Reflectance peak</th>
                     <th>Assessment</th>
                   </tr>
                 </thead>
@@ -697,13 +697,15 @@ export function OtdrModal({ open, onClose, nodes, edges }: OtdrModalProps) {
                         {eventLabel(event.type)}
                         <small>{event.description}</small>
                       </td>
-                      <td>{event.distanceKm.toFixed(3)} km</td>
-                      <td className={event.relativeLossDb < 0 ? 'is-loss' : ''}>
+                      <td className="is-num">{event.distanceKm.toFixed(3)} km</td>
+                      <td className={`is-num ${event.relativeLossDb < 0 ? 'is-loss' : ''}`}>
                         {event.relativeLossDb > 0 ? '+' : ''}
                         {event.relativeLossDb.toFixed(2)} dB
                       </td>
-                      <td>{event.cumulativeLossDb.toFixed(2)} dB</td>
-                      <td>{event.reflectionPeakDb === undefined ? '—' : `+${event.reflectionPeakDb.toFixed(2)} dB`}</td>
+                      <td className="is-num">{event.cumulativeLossDb.toFixed(2)} dB</td>
+                      <td className="is-num">
+                        {event.reflectionPeakDb === undefined ? '—' : `+${event.reflectionPeakDb.toFixed(2)} dB`}
+                      </td>
                       <td>
                         <span className={`otdr-status ${event.passFail.toLowerCase()}`}>{event.passFail}</span>
                       </td>

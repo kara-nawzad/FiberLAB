@@ -18,7 +18,7 @@ export function NAPNode({ id, data, selected }: NodeProps<NapFlowNode>) {
       {/* Incoming Feeder Cable Gland on Left */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -left-2.5 top-1/2 -translate-y-1/2 flex items-center"
+        className="pointer-events-none absolute -left-2 top-1/2 -translate-y-1/2 flex items-center"
       >
         <span className="h-4 w-3 rounded-l border border-slate-500 bg-slate-700 shadow-sm" />
       </div>
@@ -30,7 +30,7 @@ export function NAPNode({ id, data, selected }: NodeProps<NapFlowNode>) {
           <div
             key={`drop-grommet-${index}`}
             aria-hidden="true"
-            className="pointer-events-none absolute -right-2.5 -translate-y-1/2 flex items-center"
+            className="pointer-events-none absolute -right-2 -translate-y-1/2 flex items-center"
             style={{ top: `${topPct}%` }}
           >
             <span className="h-3 w-3 rounded-r border border-emerald-500 bg-emerald-600 shadow-sm" />
@@ -55,12 +55,12 @@ export function NAPNode({ id, data, selected }: NodeProps<NapFlowNode>) {
         />
 
         {/* Weatherproof Enclosure Header */}
-        <div className="border-b border-slate-200 pb-1.5 pr-3">
+        <div className="border-b border-slate-200 pb-2 pr-3">
           <div className="flex items-center justify-between">
             <span className="font-mono text-caption font-bold uppercase tracking-wider text-orange-700">
               OUTDOOR ACCESS BOX · IP65
             </span>
-            <span className="rounded bg-orange-100 px-1.5 py-0.2 font-mono text-label font-bold text-orange-900 border border-orange-300">
+            <span className="rounded bg-orange-100 px-2 py-1 font-mono text-label font-bold text-orange-900 border border-orange-300">
               1:{NAP_SPLIT_RATIO}
             </span>
           </div>
@@ -73,11 +73,11 @@ export function NAPNode({ id, data, selected }: NodeProps<NapFlowNode>) {
             <span>Feeder In → 1:8 PLC</span>
             <span className="font-bold text-orange-700">−{lossDb.toFixed(2)} dB</span>
           </div>
-          <div className="mt-1.5 grid grid-cols-4 gap-1" aria-hidden="true">
+          <div className="mt-2 grid grid-cols-4 gap-1" aria-hidden="true">
             {Array.from({ length: 8 }, (_, idx) => (
               <div
                 key={idx}
-                className="flex items-center justify-center rounded border border-emerald-300 bg-emerald-50 py-0.5 font-mono text-caption font-bold text-emerald-800"
+                className="flex items-center justify-center rounded border border-emerald-300 bg-emerald-50 py-1 font-mono text-caption font-bold text-emerald-800"
               >
                 D{idx + 1}
               </div>
