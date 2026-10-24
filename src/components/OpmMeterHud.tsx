@@ -48,7 +48,9 @@ export const OpmMeterHud = forwardRef<HTMLElement, OpmMeterHudProps>(function Op
     setRelativeMode(true);
   };
 
-  const backlight = inRange && readingDbm !== null && readingDbm < -28 ? 'amber' : 'green';
+  // Amber for a weak-but-lit link, green inside the receiver window, and a dim
+  // "off" backlight when the probe sees no usable light at all.
+  const backlight = !inRange || readingDbm === null ? 'off' : readingDbm < -28 || readingDbm > -8 ? 'amber' : 'green';
 
   return (
     <section

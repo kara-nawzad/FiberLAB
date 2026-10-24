@@ -2064,6 +2064,16 @@
   background: linear-gradient(150deg, #ffefbd, #e9c56f);
   color: #3b2b0d;
 }
+.opm-meter-hud--off .opm-meter-reading-wrap {
+  background: linear-gradient(150deg, #2b3138, #1a1f25);
+  box-shadow:
+    inset 0 2px 5px rgba(0, 0, 0, 0.42),
+    0 1px 0 rgba(255, 255, 255, 0.05);
+  color: #8c99a6;
+}
+.opm-meter-hud--off .opm-meter-target {
+  color: rgba(214, 222, 230, 0.55);
+}
 .opm-meter-target {
   overflow: hidden;
   color: rgba(28, 42, 26, 0.7);
@@ -2116,6 +2126,10 @@
 .opm-meter-hud--amber .opm-meter-led {
   background: #ad6a06;
   box-shadow: 0 0 6px #ad6a06;
+}
+.opm-meter-hud--off .opm-meter-led {
+  background: #5b6570;
+  box-shadow: none;
 }
 .opm-meter-wavelengths {
   display: flex;

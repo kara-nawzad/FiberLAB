@@ -31,8 +31,11 @@ export function OLTNode({ id, data, selected }: NodeProps<OltFlowNode>) {
             {data.txPowerDbm.toFixed(1)} dBm
           </b>
         </div>
-        <div className="hw-kv">
-          <span>RX Power</span>
+        <div
+          className="hw-kv"
+          title="Strongest downstream reading reported by a subscriber endpoint. Upstream burst power at the OLT receiver is not simulated."
+        >
+          <span>ONU Rx (max)</span>
           <b style={{ fontSize: 'var(--fs-2xs)' }}>
             {rx !== null ? `${rx.toFixed(1)} dBm` : `${spec.rxSensitivityDbm.toFixed(0)} dBm sens`}
           </b>

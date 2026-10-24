@@ -30,15 +30,18 @@ export function SpliceIntroHero({
   onLaunchStudio,
   onExploreMissions,
 }: SpliceIntroHeroProps) {
+  // The hero promises the *weakest* home, so it has to look at every subscriber
+  // endpoint — ONTs and integrated gateways — and keep the lowest reading.
   const reading = useMemo(() => {
     if (!simulation) return null;
-    const values = Object.values(simulation.ontTelemetry);
-    return (
-      values.find((value) => value.status === 'ONLINE' && value.rxPowerDbm !== null) ??
-      values.find((value) => value.rxPowerDbm !== null) ??
-      values[0] ??
-      null
-    );
+    const endpoints = [...Object.values(simulation.ontTelemetry), ...Object.values(simulation.gatewayTelemetry)];
+    const lit = endpoints.filter((endpoint) => endpoint.rxPowerDbm !== null);
+    if (lit.length > 0) {
+      return lit.reduce((weakest, endpoint) =>
+        (endpoint.rxPowerDbm ?? 0) < (weakest.rxPowerDbm ?? 0) ? endpoint : weakest,
+      );
+    }
+    return endpoints[0] ?? null;
   }, [simulation]);
 
   const readingLabel =

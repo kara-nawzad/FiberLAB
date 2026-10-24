@@ -22,7 +22,7 @@ repository's `.nvmrc` selects Node 22.
 npm ci
 npm run dev        # http://localhost:5173
 npm run build      # tsc --noEmit && vite build
-npm run test       # 94 tests: optical engine, upstream dynamic range, OPM, OTDR, equipment, CAPEX, missions, overlays, and app interactions
+npm run test       # 103 tests: optical engine, upstream dynamic range, OPM, OTDR, equipment, CAPEX, missions, overlays, splitter port model, and app interactions
 npm run typecheck  # strict TypeScript, no emit
 npm run lint       # ESLint checks for source and configuration files
 npm run format:check  # verify Prettier formatting
@@ -70,8 +70,9 @@ The existing GPON receive-power classification is retained and reused for XGS-PO
 
 XGS-PON route simulation uses the downstream 1577 nm reference. The upstream wavelength and rate are displayed as capability references; upstream transmission, protocol overhead, OLT optical-class budgets, and service-plan limits are not simulated. A gateway's per-subscriber rate estimate divides the nominal shared line rate by the topology's cumulative split ratio—it is not a measured speed test.
 
-Optical edges are coloured by the light they carry: **green** when live, **red**
-when the carried power is below receiver sensitivity, **grey** when idle. Each
+Optical edges are coloured by the light they carry: **royal blue** when live, **red**
+when the carried power is below receiver sensitivity, **grey** when idle, and
+**violet** when the edge belongs to the selected component's optical path. Each
 edge labels power at its far end; a warning glyph marks the downstream patch cord
 of a span with an injected fault. The OPM re-simulates the current graph at its
 selected 1310/1490/1550 nm calibration without changing the saved topology.

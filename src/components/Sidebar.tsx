@@ -205,18 +205,17 @@ export function Sidebar({
                 onQuickAdd={onQuickAdd}
               />
             ) : null}
-            <div className="pu-chips">
+            <div className="pu-chips" role="group" aria-label="Splitter ratio shortcuts">
               {SPLIT_RATIOS.map((ratio) => (
                 <button
                   key={ratio}
                   type="button"
                   draggable
+                  aria-pressed={ratioDraft === ratio}
+                  title={`Select 1:${ratio} for the splitter below, or drag this chip onto the canvas`}
                   className={ratioDraft === ratio ? 'is-active' : ''}
                   onDragStart={(event) => startDrag(event, { component: 'splitter', ratio })}
-                  onClick={() => {
-                    setRatioDraft(ratio);
-                    onQuickAdd({ component: 'splitter', ratio });
-                  }}
+                  onClick={() => setRatioDraft(ratio)}
                 >
                   1:{ratio}
                 </button>

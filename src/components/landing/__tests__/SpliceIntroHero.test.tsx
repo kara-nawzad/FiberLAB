@@ -31,8 +31,10 @@ describe('SpliceIntroHero', () => {
     const { onLaunchStudio, onExploreMissions } = renderHero();
 
     expect(screen.getByRole('heading', { name: /Splice the fiber/i })).toBeInTheDocument();
-    expect(screen.getByText('-21.57 dBm')).toBeInTheDocument();
-    expect(screen.getByText('ONLINE')).toBeInTheDocument();
+    // The reference tree's weakest home is the 6 km Tanaro drop, not the first
+    // ONLINE reading the telemetry map happens to hold.
+    expect(screen.getByText('-24.30 dBm')).toBeInTheDocument();
+    expect(screen.getByText('MARGINAL')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /Launch Interactive Studio/i }));
     expect(onLaunchStudio).toHaveBeenCalledOnce();
@@ -46,5 +48,18 @@ describe('SpliceIntroHero', () => {
 
     expect(screen.getByText('REFERENCE 1:32 TREE')).toBeInTheDocument();
     expect(screen.getByText(/Sample reading from the reference tree/i)).toBeInTheDocument();
+  });
+
+  it('reads a gateway-only network instead of falling back to the empty state', () => {
+    const topology = buildPreset('modern-10g-xgs-pon-suburb');
+    if (!topology) throw new Error('The XGS-PON reference topology is missing.');
+    const simulation = simulateTopology(topology.nodes, topology.edges, DEFAULT_SETTINGS);
+
+    renderHero({ simulation });
+
+    // Three Wi-Fi gateways and no ONTs: the weakest home is still a real reading.
+    expect(screen.getByText('-12.45 dBm')).toBeInTheDocument();
+    expect(screen.getByText('ONLINE')).toBeInTheDocument();
+    expect(screen.queryByText('NO SIMULATED PATH')).not.toBeInTheDocument();
   });
 });

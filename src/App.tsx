@@ -42,7 +42,7 @@ import {
   NAP_OUTPUT_PORTS,
   ODF_INPUT_PORTS,
   ODF_OUTPUT_PORTS,
-  SPLITTER_OUTPUT_PORTS,
+  splitterBranchPortCount,
 } from './types';
 import {
   createClosureNode,
@@ -388,7 +388,7 @@ function StudioWorkspace({
       // Shrinking a splitter removes physical ports — prune dangling patch cords.
       const ratio = patch.ratio;
       if (typeof ratio === 'number') {
-        const portCount = SPLITTER_OUTPUT_PORTS[ratio as SplitRatio];
+        const portCount = splitterBranchPortCount(ratio as SplitRatio);
         setEdges((current) =>
           current.filter((edge) => {
             if (edge.source !== nodeId) return true;
@@ -480,14 +480,19 @@ function StudioWorkspace({
 
   const handleQuickAdd = useCallback(
     (payload: ToolboxPayload) => {
-      // Double-click placement: drop the element to the right of the current view centre.
-      const spread = Math.random() * 120 - 60;
-      addComponent(payload, { x: 420 + spread, y: 300 + spread });
+      // Double-click placement: drop the element around the current view centre
+      // and cascade repeats slightly so additions never stack exactly.
+      const bounds = studioMainRef.current?.getBoundingClientRect();
+      const centre = bounds
+        ? screenToFlowPosition({ x: bounds.left + bounds.width / 2, y: bounds.top + bounds.height / 2 })
+        : { x: 420, y: 300 };
+      const offset = (nodes.length % 5) * 26;
+      addComponent(payload, { x: centre.x + offset, y: centre.y + offset });
       // On narrow screens the library floats over the canvas; get out of the way
       // once the component has landed.
       if (isNarrowViewport()) setSidebarCollapsed(true);
     },
-    [addComponent],
+    [addComponent, nodes.length, screenToFlowPosition],
   );
 
   const handleConnect = useCallback(
@@ -505,6 +510,15 @@ function StudioWorkspace({
         if (!Number.isInteger(handleIndex) || !sourceNode.data.activeSpliceChannels[handleIndex]) return;
       }
       if (sourceNode && isOdfNode(sourceNode) && !['out-0', 'out-1'].includes(connection.sourceHandle ?? '')) return;
+      if (sourceNode && isSplitterNode(sourceNode)) {
+        const handleIndex = Number((connection.sourceHandle ?? '').replace(/^out-/, ''));
+        if (
+          !Number.isInteger(handleIndex) ||
+          handleIndex < 0 ||
+          handleIndex >= splitterBranchPortCount(sourceNode.data.ratio)
+        )
+          return;
+      }
       if (sourceNode && isNapNode(sourceNode)) {
         const handleIndex = Number((connection.sourceHandle ?? '').replace(/^out-/, ''));
         if (!Number.isInteger(handleIndex) || handleIndex < 0 || handleIndex >= NAP_OUTPUT_PORTS) return;
@@ -696,7 +710,7 @@ function StudioWorkspace({
         const usedHandles = new Set(
           currentEdges.filter((edge) => edge.source === sourceNode.id).map((edge) => edge.sourceHandle),
         );
-        const outputCount = SPLITTER_OUTPUT_PORTS[sourceNode.data.ratio];
+        const outputCount = splitterBranchPortCount(sourceNode.data.ratio);
         sourceHandle = Array.from({ length: outputCount }, (_, index) => `out-${index}`).find(
           (handle) => !usedHandles.has(handle),
         );

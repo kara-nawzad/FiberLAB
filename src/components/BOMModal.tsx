@@ -317,9 +317,9 @@ export function BOMModal({
                   sub={`${summary.oltActive}/${summary.oltCount} OLT lasers active`}
                 />
                 <StatCard
-                  label="Online"
+                  label="Reachable"
                   value={`${summary.byStatus.ONLINE + summary.byStatus.WARNING + summary.byStatus.OVERLOAD}`}
-                  sub={`${summary.byStatus.ONLINE} optimal · ${summary.byStatus.WARNING} marginal`}
+                  sub={`${summary.byStatus.ONLINE} optimal · ${summary.byStatus.WARNING} marginal · ${summary.byStatus.OVERLOAD} overload`}
                   tone="text-[var(--pu-ok)]"
                 />
                 <StatCard

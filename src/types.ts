@@ -79,14 +79,26 @@ export const SPLITTER_LOSS_DB: Record<SplitRatio, number> = {
 
 export const SPLIT_RATIOS: SplitRatio[] = [2, 4, 8, 16, 32, 64];
 
-/** Physical output port count exposed on the splitter node. */
+/**
+ * Number of patchable branch ports a splitter exposes on the canvas.
+ *
+ * One port per split output, so a 1:8 cassette really can feed eight drops.
+ * Ratios above 1:16 present sixteen branch ports: at 1:32/1:64 the remaining
+ * outputs are spliced into distribution fiber rather than terminated as
+ * individual SC/APC ports, which keeps the node patchable and readable.
+ */
+export function splitterBranchPortCount(ratio: SplitRatio): number {
+  return Math.min(ratio, 16);
+}
+
+/** Physical branch port count exposed on the splitter node, keyed by ratio. */
 export const SPLITTER_OUTPUT_PORTS: Record<SplitRatio, number> = {
   2: 2,
   4: 4,
-  8: 4,
-  16: 4,
-  32: 4,
-  64: 4,
+  8: 8,
+  16: 16,
+  32: 16,
+  64: 16,
 };
 
 /* -------------------------------------------------------------------------- *

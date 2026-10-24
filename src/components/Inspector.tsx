@@ -51,6 +51,7 @@ import {
   SPLICE_LOSS_DB,
   STATUS_STYLES,
   WAVELENGTH_LABEL,
+  splitterBranchPortCount,
 } from '../types';
 import {
   computeClosureSpliceLoss,
@@ -251,7 +252,7 @@ function SegmentTable({ telemetry }: { telemetry: SubscriberOpticalTelemetry }) 
   );
 }
 
-type InspectorTab = 'all' | 'properties' | 'optical' | 'ports' | 'info';
+type InspectorTab = 'properties' | 'ports' | 'optical' | 'info';
 
 export function Inspector({
   node,
@@ -269,7 +270,7 @@ export function Inspector({
   const [activeTab, setActiveTab] = useState<InspectorTab>('properties');
   const showProperties = activeTab === 'properties';
   const showOptical = activeTab === 'optical';
-  const showPorts = activeTab === 'properties';
+  const showPorts = activeTab === 'ports';
   const showInfo = activeTab === 'info';
   const telemetry: SubscriberOpticalTelemetry | undefined = node
     ? isOntNode(node)
@@ -470,6 +471,7 @@ export function Inspector({
           {(
             [
               { id: 'properties', label: 'Properties' },
+              { id: 'ports', label: 'Ports' },
               { id: 'optical', label: 'Optical Power' },
               { id: 'info', label: 'Info' },
             ] as Array<{ id: InspectorTab; label: string }>
@@ -498,14 +500,14 @@ export function Inspector({
             <FieldHardwareCard profile={hardwareInfo.profile} configurationLabel={hardwareInfo.configurationLabel} />
           ) : null}
 
-          {node && isClosureNode(node) && showPorts ? (
+          {node && isClosureNode(node) && (showPorts || showProperties) ? (
             <SpliceTrayView
               channels={node.data.activeSpliceChannels}
               onChange={(activeSpliceChannels) => onPatchNode(node.id, { activeSpliceChannels })}
             />
           ) : null}
 
-          {node && !isClosureNode(node) && activeTab === 'ports' ? (
+          {node && !isClosureNode(node) && showPorts ? (
             <div className="mb-3 rounded-lg border border-[#EED8BF] bg-[#FFF4E6] p-2 text-label text-[#2B1A14]">
               <div className="font-mono text-caption font-bold uppercase tracking-label text-[#C8502B] mb-1">
                 Physical Optical Interface Ports
@@ -514,8 +516,15 @@ export function Inspector({
                 <div>1 × SC/UPC headend output port (`out`) on SFP cage 1 · {node.data.portName}</div>
               ) : isSplitterNode(node) ? (
                 <div>
-                  1 × SC/APC input (`in`) → {node.data.ratio} × SC/APC fanout outputs (`out-0` .. `out-
-                  {node.data.ratio - 1}`)
+                  1 × SC/APC input (`in`) → {splitterBranchPortCount(node.data.ratio)} × SC/APC branch outputs (`out-0`
+                  .. `out-{splitterBranchPortCount(node.data.ratio) - 1}`)
+                  {splitterBranchPortCount(node.data.ratio) < node.data.ratio ? (
+                    <div className="mt-1 text-caption text-[#6E5649]">
+                      A 1:{node.data.ratio} cassette terminates 16 branch ports here; the remaining outputs are spliced
+                      into distribution fiber rather than connectorized. The modeled {SPLITTER_LOSS_DB[node.data.ratio]}
+                      &nbsp;dB insertion loss applies to every output.
+                    </div>
+                  ) : null}
                 </div>
               ) : isOdfNode(node) ? (
                 <div>2 × SC/APC inputs (`in-0`, `in-1`) → 2 × matched SC/APC outputs (`out-0`, `out-1`)</div>
