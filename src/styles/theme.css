@@ -507,33 +507,27 @@
   text-decoration: none;
 }
 
+/* Same wordmark as the workbench top bar (.pu-logo): tight, black weight,
+ * accents on "LAB" — no tagline underneath. */
 .landing-brand-wordmark {
-  display: grid;
-  grid-template-columns: auto auto;
+  display: inline-flex;
   align-items: baseline;
+  gap: 0;
+  font-family: Sora, Manrope, sans-serif;
+  font-size: var(--type-brand);
+  font-weight: var(--fw-black);
   line-height: 1;
+  letter-spacing: var(--tracking-display);
 }
 
 .landing-brand-wordmark strong,
 .landing-brand-wordmark b {
-  font-family: Sora, Manrope, sans-serif;
-  font-size: var(--type-panel-title);
-  font-weight: var(--fw-bold);
-  letter-spacing: var(--tracking-display);
+  font: inherit;
+  font-weight: var(--fw-black);
 }
 
 .landing-brand-wordmark b {
   color: var(--fiber-coral);
-}
-
-.landing-brand-wordmark small {
-  grid-column: 1 / -1;
-  margin-top: var(--sp-1);
-  color: var(--fiber-muted);
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
-  font-size: var(--type-caption);
-  font-weight: var(--fw-semibold);
-  letter-spacing: var(--tracking-eyebrow);
 }
 
 .landing-nav-links {
@@ -1881,12 +1875,8 @@
   .landing-brand {
     gap: var(--sp-2);
   }
-  .landing-brand-wordmark strong,
-  .landing-brand-wordmark b {
+  .landing-brand-wordmark {
     font-size: var(--type-panel-title);
-  }
-  .landing-brand-wordmark small {
-    font-size: var(--type-caption);
   }
   .landing-nav-links {
     display: none;

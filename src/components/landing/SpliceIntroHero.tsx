@@ -7,6 +7,7 @@ import spliceHeroScene from '../../assets/splice-hero-scene.svg?raw';
 interface SpliceIntroHeroProps {
   simulation: SimulationResult | null;
   simulationStale: boolean;
+  simulationIsReference?: boolean;
   onLaunchStudio: () => void;
 }
 
@@ -33,7 +34,12 @@ const STATUS_LABELS: Record<OntStatus, string> = {
   DISCONNECTED: 'DISCONNECTED',
 };
 
-export function SpliceIntroHero({ simulation, simulationStale, onLaunchStudio }: SpliceIntroHeroProps) {
+export function SpliceIntroHero({
+  simulation,
+  simulationStale,
+  simulationIsReference = false,
+  onLaunchStudio,
+}: SpliceIntroHeroProps) {
   const [progress, setProgress] = useState(0);
   const [fused, setFused] = useState(false);
   const [announcement, setAnnouncement] = useState('');
@@ -180,7 +186,13 @@ export function SpliceIntroHero({ simulation, simulationStale, onLaunchStudio }:
               <Radio size={16} aria-hidden="true" />
             </span>
             <span>
-              <small>{simulationStale ? 'LAST COMMITTED RUN' : 'LIVE STUDIO SIMULATION'}</small>
+              <small>
+                {simulationIsReference
+                  ? 'REFERENCE 1:32 TREE'
+                  : simulationStale
+                    ? 'LAST COMMITTED RUN'
+                    : 'LIVE STUDIO SIMULATION'}
+              </small>
               <strong>Receive power · best available ONT path</strong>
             </span>
           </div>
@@ -194,9 +206,11 @@ export function SpliceIntroHero({ simulation, simulationStale, onLaunchStudio }:
             </span>
           </div>
           <p>
-            {simulationStale
-              ? 'Auto is off. Run a studio test to refresh the committed reading.'
-              : 'Readouts come from the active React Flow network and optical simulator.'}
+            {simulationIsReference
+              ? 'Sample reading from the reference tree — the studio opens on an empty canvas.'
+              : simulationStale
+                ? 'Auto is off. Run a studio test to refresh the committed reading.'
+                : 'Readouts come from the active React Flow network and optical simulator.'}
           </p>
         </div>
 

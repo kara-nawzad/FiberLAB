@@ -25,7 +25,7 @@ import {
   type OnSelectionChangeParams,
   type ReactFlowInstance,
 } from '@xyflow/react';
-import { Link2, MousePointer2, X } from 'lucide-react';
+import { Flag, Link2, MousePointer2, X } from 'lucide-react';
 import type {
   AnyNodeData,
   DesignSettings,
@@ -104,7 +104,7 @@ type LandingCommand = LandingCommandInput & { requestId: number };
 
 interface StudioWorkspaceProps {
   onOpenOverview: () => void;
-  onSimulationChange: (simulation: SimulationResult, stale: boolean) => void;
+  onSimulationChange: (simulation: SimulationResult, stale: boolean, reference?: boolean) => void;
   landingCommand: LandingCommand | null;
   isActive?: boolean;
 }
@@ -160,8 +160,10 @@ function resolveProbeTarget(target: EventTarget | null): OpticalProbeTarget | nu
   return null;
 }
 
+/* The workbench opens on an empty canvas: pick a topology from the preset
+ * picker, load one from the overview page, or follow a guided mission. */
 function initialTopology(): { nodes: PonNode[]; edges: PonEdge[] } {
-  return buildPreset('standard-1x32') ?? { nodes: [], edges: [] };
+  return { nodes: [], edges: [] };
 }
 
 /* ========================================================================== *
@@ -179,7 +181,7 @@ function StudioWorkspace({
   const [edges, setEdges, onEdgesChange] = useEdgesState<PonEdge>(seeded.edges);
   const [settings, setSettings] = useState<DesignSettings>(DEFAULT_SETTINGS);
   const [unitCosts, setUnitCosts] = useState<UnitCostProfile>(() => resolveUnitCosts(DEFAULT_UNIT_COSTS));
-  const [activePresetId, setActivePresetId] = useState<string | null>('standard-1x32');
+  const [activePresetId, setActivePresetId] = useState<string | null>(null);
   const [presetEdited, setPresetEdited] = useState(false);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null);
@@ -212,6 +214,14 @@ function StudioWorkspace({
 
   const liveSimulation = useMemo(() => simulateTopology(nodes, edges, settings, 0), [nodes, edges, settings]);
 
+  /* The overview page always shows a reading. Until the user builds something in
+   * the (now blank) workbench it previews the reference 1:32 tree. */
+  const canvasIsEmpty = nodes.length === 0;
+  const referenceSimulation = useMemo(() => {
+    const preset = buildPreset('standard-1x32');
+    return preset ? simulateTopology(preset.nodes, preset.edges, DEFAULT_SETTINGS, 0) : null;
+  }, []);
+
   const activeMission = useMemo(
     () => (activeMissionId ? (getMissionById(activeMissionId) ?? null) : null),
     [activeMissionId],
@@ -232,9 +242,11 @@ function StudioWorkspace({
   const opmReading =
     opmActive && opmProbe && opmSimulation ? readOpticalPowerAtProbe(opmProbe, nodes, edges, opmSimulation) : null;
 
+  const landingSimulation = canvasIsEmpty && referenceSimulation ? referenceSimulation : simulation;
+
   useEffect(() => {
-    onSimulationChange(simulation, simulationStale);
-  }, [simulation, simulationStale, onSimulationChange]);
+    onSimulationChange(landingSimulation, simulationStale, canvasIsEmpty);
+  }, [landingSimulation, simulationStale, canvasIsEmpty, onSimulationChange]);
 
   const highlightedEdgeIds = useMemo(() => {
     const ids = new Set<string>();
@@ -1160,13 +1172,20 @@ function StudioWorkspace({
 
                 {nodes.length === 0 ? (
                   <Panel position="top-center" className="pu-empty-panel !m-3">
-                    <div className="panel flex max-w-[min(360px,calc(100vw-40px))] items-center gap-2 rounded-lg px-4 py-3 shadow-panel">
-                      <MousePointer2 size={16} className="text-[#E4673F]" />
-                      <div>
+                    <div className="panel pu-empty-card shadow-panel">
+                      <span className="pu-empty-icon" aria-hidden="true">
+                        <MousePointer2 size={16} />
+                      </span>
+                      <div className="pu-empty-copy">
                         <div className="text-body font-semibold text-slate-900">The canvas is empty</div>
                         <div className="text-label text-slate-500">
-                          Drag an OLT from the Component Library to start designing your PON.
+                          Drag an OLT from the Component Library whenever you are ready — or let a field mission walk
+                          you through the same build, step by step.
                         </div>
+                        <button type="button" className="pu-empty-action" onClick={openMissions}>
+                          <Flag size={14} aria-hidden="true" />
+                          Open the mission
+                        </button>
                       </div>
                     </div>
                   </Panel>
@@ -1252,7 +1271,11 @@ function StudioWorkspace({
 export default function App() {
   const [viewMode, setViewMode] = useState<'landing' | 'studio'>('landing');
   const [landingCommand, setLandingCommand] = useState<LandingCommand | null>(null);
-  const [landingSnapshot, setLandingSnapshot] = useState<{ simulation: SimulationResult; stale: boolean } | null>(null);
+  const [landingSnapshot, setLandingSnapshot] = useState<{
+    simulation: SimulationResult;
+    stale: boolean;
+    reference: boolean;
+  } | null>(null);
   const commandSequence = useRef(0);
   const hasEnteredStudio = useRef(false);
   const studioViewportRef = useRef<HTMLDivElement>(null);
@@ -1264,7 +1287,8 @@ export default function App() {
   }, [viewMode]);
 
   const updateLandingSimulation = useCallback(
-    (simulation: SimulationResult, stale: boolean) => setLandingSnapshot({ simulation, stale }),
+    (simulation: SimulationResult, stale: boolean, reference?: boolean) =>
+      setLandingSnapshot({ simulation, stale, reference: Boolean(reference) }),
     [],
   );
 
@@ -1319,6 +1343,7 @@ export default function App() {
           <LandingView
             simulation={landingSnapshot?.simulation ?? null}
             simulationStale={landingSnapshot?.stale ?? false}
+            simulationIsReference={landingSnapshot?.reference ?? false}
             onLaunchStudio={launchStudio}
             onExploreMissions={openMissions}
             onLoadPreset={loadPreset}

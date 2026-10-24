@@ -9,6 +9,7 @@ import { SpliceIntroHero } from './SpliceIntroHero';
 export interface LandingViewProps {
   simulation: SimulationResult | null;
   simulationStale: boolean;
+  simulationIsReference?: boolean;
   onLaunchStudio: () => void;
   onExploreMissions: () => void;
   onLoadPreset: (presetId: string) => void;
@@ -18,6 +19,7 @@ export interface LandingViewProps {
 export function LandingView({
   simulation,
   simulationStale,
+  simulationIsReference = false,
   onLaunchStudio,
   onExploreMissions,
   onLoadPreset,
@@ -30,7 +32,12 @@ export function LandingView({
           <div className="landing-nav-wrap">
             <LandingNav onLaunchStudio={onLaunchStudio} onLoadPreset={onLoadPreset} />
           </div>
-          <SpliceIntroHero simulation={simulation} simulationStale={simulationStale} onLaunchStudio={onLaunchStudio} />
+          <SpliceIntroHero
+            simulation={simulation}
+            simulationStale={simulationStale}
+            simulationIsReference={simulationIsReference}
+            onLaunchStudio={onLaunchStudio}
+          />
         </div>
 
         <div className="landing-content">

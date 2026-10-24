@@ -16,7 +16,6 @@ export function LandingNav({ onLaunchStudio, onLoadPreset }: LandingNavProps) {
         <span className="landing-brand-wordmark">
           <strong>Fiber</strong>
           <b>LAB</b>
-          <small>OPTICAL ENGINEERING</small>
         </span>
       </a>
 

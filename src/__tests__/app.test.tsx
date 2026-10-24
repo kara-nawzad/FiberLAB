@@ -6,6 +6,11 @@ async function renderStudio() {
   render(<App />);
   fireEvent.click(await screen.findByRole('button', { name: /Launch Interactive Studio/i }));
   await screen.findByRole('button', { name: 'Bill of Materials' });
+  // The workbench opens on an empty canvas, so load the reference tree the
+  // assertions below are written against.
+  fireEvent.click(screen.getByRole('button', { name: /Preset Topologies/i }));
+  fireEvent.click(await screen.findByRole('button', { name: /Standard 1:32 GPON Tree/i }));
+  await waitFor(() => expect(screen.getAllByText('Al-Sulaymaniyah — Unit 12').length).toBeGreaterThan(0));
 }
 
 function openMoreTools() {
@@ -86,7 +91,19 @@ describe('FiberLAB application shell', () => {
     expect(screen.getByRole('region', { name: 'Field hardware reference' })).toBeInTheDocument();
   });
 
-  it('boots with the standard 1:32 tree and renders every element', async () => {
+  it('opens the workbench on an empty canvas with a friendly mission hint', async () => {
+    render(<App />);
+    fireEvent.click(await screen.findByRole('button', { name: /Launch Interactive Studio/i }));
+    await screen.findByRole('button', { name: 'Bill of Materials' });
+
+    expect(await screen.findByText('The canvas is empty')).toBeInTheDocument();
+    expect(screen.queryByText('Al-Sulaymaniyah — Unit 12')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open the mission' }));
+    expect(await screen.findByRole('dialog', { name: 'Field missions' })).toBeInTheDocument();
+  });
+
+  it('loads the standard 1:32 tree and renders every element', async () => {
     await renderStudio();
 
     expect((await screen.findAllByText('Standard 1:32 GPON Tree')).length).toBeGreaterThan(0);
@@ -109,6 +126,8 @@ describe('FiberLAB application shell', () => {
   it('drags a toolbox component onto the React Flow canvas', async () => {
     const { container } = render(<App />);
     fireEvent.click(screen.getByRole('button', { name: 'Launch Studio' }));
+    fireEvent.click(await screen.findByRole('button', { name: /Preset Topologies/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /Standard 1:32 GPON Tree/i }));
     await waitFor(() => expect(screen.getAllByText('Al-Sulaymaniyah — Unit 12').length).toBeGreaterThan(0));
 
     const values = new Map<string, string>();
@@ -220,6 +239,8 @@ describe('FiberLAB application shell', () => {
   it('connects and disconnects node pairs in Link nodes mode and deletes a selected span', async () => {
     render(<App />);
     fireEvent.click(screen.getByRole('button', { name: 'Launch Studio' }));
+    fireEvent.click(await screen.findByRole('button', { name: /Preset Topologies/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /Standard 1:32 GPON Tree/i }));
     await waitFor(() => expect(screen.getAllByText('Al-Sulaymaniyah — Unit 12').length).toBeGreaterThan(0));
 
     expect(screen.getByLabelText('Network health: Marginal links detected')).toBeInTheDocument();
@@ -575,6 +596,8 @@ describe('FiberLAB application shell', () => {
     const { container } = render(<App />);
     fireEvent.click(await screen.findByRole('button', { name: /Launch Interactive Studio/i }));
     await screen.findByRole('button', { name: 'Bill of Materials' });
+    fireEvent.click(screen.getByRole('button', { name: /Preset Topologies/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /Standard 1:32 GPON Tree/i }));
 
     const dropSpan = getCanvasNodeByText(/^6\.0 km$/);
     fireEvent.click(dropSpan);
