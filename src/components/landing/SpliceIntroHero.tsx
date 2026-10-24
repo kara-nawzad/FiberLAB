@@ -76,8 +76,6 @@ export function SpliceIntroHero({
           </button>
         </div>
 
-        <p className="splice-hero-footnote">ITU-T G.984 GPON · 1490 nm downstream · runs on any screen</p>
-
         <div className="splice-live-readout" aria-label="Current studio simulation readout">
           <div className="splice-live-readout-label">
             <span className="splice-live-icon">

@@ -93,9 +93,16 @@ describe('FiberLAB application shell', () => {
 
     expect(await screen.findByText('The canvas is empty')).toBeInTheDocument();
     expect(screen.queryByText('Al-Sulaymaniyah — Unit 12')).not.toBeInTheDocument();
+    expect(screen.getByText('Drag in an OLT, or let a mission walk you through it.')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Open the mission' }));
     expect(await screen.findByRole('dialog', { name: 'Field missions' })).toBeInTheDocument();
+    fireEvent.keyDown(document, { key: 'Escape' });
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Field missions' })).not.toBeInTheDocument());
+
+    // The hint is a nudge, not furniture: it can be dismissed.
+    fireEvent.click(screen.getByRole('button', { name: 'Dismiss canvas hint' }));
+    expect(screen.queryByText('The canvas is empty')).not.toBeInTheDocument();
   });
 
   it('loads the standard 1:32 tree and renders every element', async () => {

@@ -15,7 +15,6 @@ import {
   Split,
   Wifi,
   Trash2,
-  X,
 } from 'lucide-react';
 import type {
   CableType,
@@ -87,7 +86,6 @@ interface InspectorProps {
   onPatchNode: (nodeId: string, patch: Partial<PonNode['data']>) => void;
   onDeleteNode: (nodeId: string) => void;
   onDeleteEdge: (edgeId: string) => void;
-  onClose: () => void;
   collapsed?: boolean;
   onToggleCollapse?: () => void;
 }
@@ -265,7 +263,6 @@ export function Inspector({
   onPatchNode,
   onDeleteNode,
   onDeleteEdge,
-  onClose,
   collapsed = false,
   onToggleCollapse,
 }: InspectorProps) {
@@ -434,15 +431,6 @@ export function Inspector({
                 <PanelRightClose size={16} />
               </button>
             ) : null}
-            <button
-              type="button"
-              className="btn-ghost h-9 w-9 !p-0"
-              onClick={onClose}
-              aria-label="Close inspector"
-              title="Clear selection"
-            >
-              <X size={16} />
-            </button>
           </div>
         </div>
 

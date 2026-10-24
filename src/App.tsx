@@ -207,6 +207,7 @@ function StudioWorkspace({
   const [toolsOpen, setToolsOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [inspectorCollapsed, setInspectorCollapsed] = useState(false);
+  const [emptyHintDismissed, setEmptyHintDismissed] = useState(false);
 
   const { screenToFlowPosition, deleteElements, fitView, getNodes, getEdges } = useReactFlow<PonNode, PonEdge>();
 
@@ -1170,20 +1171,30 @@ function StudioWorkspace({
                   </span>
                 </Panel>
 
-                {nodes.length === 0 ? (
+                {nodes.length === 0 && !emptyHintDismissed ? (
                   <Panel position="top-center" className="pu-empty-panel !m-3">
                     <div className="panel pu-empty-card shadow-panel">
                       <span className="pu-empty-icon" aria-hidden="true">
                         <MousePointer2 size={16} />
                       </span>
                       <div className="pu-empty-copy">
-                        <div className="text-body font-semibold text-slate-900">The canvas is empty</div>
-                        <div className="text-label text-slate-500">
-                          Drag an OLT from the Component Library whenever you are ready — or let a field mission walk
-                          you through the same build, step by step.
+                        <div className="pu-empty-title">
+                          <span className="text-body font-semibold text-[var(--pu-ink)]">The canvas is empty</span>
+                          <button
+                            type="button"
+                            className="pu-empty-dismiss"
+                            onClick={() => setEmptyHintDismissed(true)}
+                            aria-label="Dismiss canvas hint"
+                            title="Dismiss"
+                          >
+                            <X size={13} aria-hidden="true" />
+                          </button>
+                        </div>
+                        <div className="text-label text-[var(--pu-mut)]">
+                          Drag in an OLT, or let a mission walk you through it.
                         </div>
                         <button type="button" className="pu-empty-action" onClick={openMissions}>
-                          <Flag size={14} aria-hidden="true" />
+                          <Flag size={13} aria-hidden="true" />
                           Open the mission
                         </button>
                       </div>
@@ -1233,13 +1244,6 @@ function StudioWorkspace({
           onDeleteEdge={handleDeleteEdge}
           collapsed={inspectorCollapsed}
           onToggleCollapse={() => setInspectorCollapsed((prev) => !prev)}
-          onClose={() => {
-            setSelectedNodeId(null);
-            setSelectedEdgeId(null);
-            setSelection({ nodeIds: [], edgeIds: [] });
-            setNodes((current) => current.map((node) => ({ ...node, selected: false })));
-            setEdges((current) => current.map((edge) => ({ ...edge, selected: false })));
-          }}
         />
       </div>
 

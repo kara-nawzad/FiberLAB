@@ -850,15 +850,6 @@
   margin-top: var(--sp-6);
 }
 
-.splice-hero-meta {
-  margin: var(--sp-4) 0 0;
-  color: var(--fiber-muted);
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
-  font-size: var(--type-caption);
-  font-weight: var(--fw-semibold);
-  letter-spacing: var(--tracking-eyebrow);
-}
-
 /* ------------------------ Preserved live waveguide exhibit */
 .landing-content {
   width: min(calc(100% - var(--page-gutter) * 2), var(--page-max));
