@@ -101,7 +101,8 @@
   --shell-gap: var(--sp-3); /* 12 — gap between canvas, tabstrip, bottom panel */
   --shell-pad: var(--panel-pad); /* 16 — side padding of every panel */
   --canvas-min-w: 360px;
-  --panel-head-h: 48px; /* title row: library, inspector, document tab strip */
+  --panel-head-h: 48px; /* title row: library, inspector, design bar */
+  --tabbar-h: 52px; /* phone section tab bar: 44 px targets + 4 px padding */
   --tab-h: 40px; /* every tab button, all three tab bars */
   --card-pad: var(--sp-3); /* inner padding of every card/stat/tile */
   --bottom-max-h: 44vh; /* bottom panel never eats more than this share */

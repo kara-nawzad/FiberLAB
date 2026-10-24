@@ -83,6 +83,12 @@ import { Sidebar, DND_MIME, type ToolboxPayload } from './components/Sidebar';
 import { Inspector } from './components/Inspector';
 import { BOMModal } from './components/BOMModal';
 import { TopBar } from './components/TopBar';
+import { DesignBar } from './components/DesignBar';
+import { SectionRail, SectionTabBar, type SectionId } from './components/SectionNav';
+import { useSectionFocus } from './hooks/useSectionFocus';
+import { useSectionHistory } from './hooks/useSectionHistory';
+import { SimulationScreen } from './components/SimulationScreen';
+import { SettingsScreen } from './components/SettingsScreen';
 import { CanvasToolbar } from './components/CanvasToolbar';
 import { StatusBar } from './components/StatusBar';
 import { MissionDrawer } from './components/MissionDrawer';
@@ -111,6 +117,12 @@ interface StudioWorkspaceProps {
 
 /** Matches the canvas-first breakpoint in photo-ui.css. */
 const NARROW_VIEWPORT_QUERY = '(max-width: 900px)';
+/** Touch hardware drags the plane with one finger; a mouse keeps its buttons. */
+const isCoarsePointer = () =>
+  typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+    ? window.matchMedia('(pointer: coarse)').matches
+    : false;
+
 const isNarrowViewport = () =>
   typeof window !== 'undefined' && typeof window.matchMedia === 'function'
     ? window.matchMedia(NARROW_VIEWPORT_QUERY).matches
@@ -196,7 +208,7 @@ function StudioWorkspace({
   const [opmAnchor, setOpmAnchor] = useState({ x: 18, y: 18 });
   const opmHudRef = useRef<HTMLElement | null>(null);
   const studioMainRef = useRef<HTMLElement | null>(null);
-  const [bomOpen, setBomOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState<SectionId>('design');
   const [otdrOpen, setOtdrOpen] = useState(false);
   const [missionsOpen, setMissionsOpen] = useState(false);
   const [activeMissionId, setActiveMissionId] = useState<string | null>(null);
@@ -205,12 +217,15 @@ function StudioWorkspace({
   const [committedSim, setCommittedSim] = useState<SimulationResult | null>(null);
   const [canvasTool, setCanvasTool] = useState<'select' | 'pan'>('select');
   const [toolsOpen, setToolsOpen] = useState(false);
+  const [snapToGrid, setSnapToGrid] = useState(false);
+  /* Read once: a phone does not become a desktop mid-session. */
+  const [coarsePointer] = useState(isCoarsePointer);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [inspectorCollapsed, setInspectorCollapsed] = useState(false);
   const [statusExpanded, setStatusExpanded] = useState(false);
   const [emptyHintDismissed, setEmptyHintDismissed] = useState(false);
 
-  const { screenToFlowPosition, deleteElements, fitView, getNodes, getEdges, zoomIn, zoomOut } = useReactFlow<
+  const { screenToFlowPosition, deleteElements, fitView, getNodes, getEdges, zoomIn, zoomOut, zoomTo } = useReactFlow<
     PonNode,
     PonEdge
   >();
@@ -601,6 +616,45 @@ function StudioWorkspace({
 
   const selectionCount = selection.nodeIds.length + selection.edgeIds.length;
 
+  /* Design → Simulation → Reports → Settings. Leaving Design folds every
+   * design-only affordance so the next screen is clean. `applySection` is the
+   * pure state move; `handleSectionChange` adds the history bookkeeping so the
+   * browser Back button walks the same path. */
+  const applySection = useCallback((section: SectionId) => {
+    setActiveSection(section);
+    setToolsOpen(false);
+    setStatusExpanded(false);
+    setOpmActive(false);
+    setOpmProbe(null);
+    opmProbeRef.current = null;
+    setLinkMode(false);
+    setLinkStartNodeId(null);
+    /* Phones summon the library from its own pill, so only a docked desktop
+     * column is restored here; leaving Design folds the phone sheet away. */
+    if (section === 'design') {
+      if (!isNarrowViewport()) setSidebarCollapsed(false);
+    } else if (isNarrowViewport()) {
+      setSidebarCollapsed(true);
+    }
+  }, []);
+
+  const { push: pushSection } = useSectionHistory(applySection);
+
+  const handleSectionChange = useCallback(
+    (section: SectionId) => {
+      if (section !== activeSection) pushSection(section);
+      applySection(section);
+    },
+    [activeSection, applySection, pushSection],
+  );
+
+  /** Every "get me back to the canvas" affordance moves through the same path. */
+  const goToDesign = useCallback(() => handleSectionChange('design'), [handleSectionChange]);
+
+  /* Design is a canvas, not a document, so its focus target is a hidden heading
+   * that names the screen for assistive tech. */
+  const designHeadingRef = useSectionFocus<HTMLHeadingElement>();
+
   /* The status bar is the third phone sheet, so opening it folds the others. */
   const handleStatusExpandedChange = useCallback((open: boolean) => {
     setStatusExpanded(open);
@@ -613,6 +667,7 @@ function StudioWorkspace({
   /* A warning in the Events list jumps to the component it belongs to. */
   const handleFocusNode = useCallback(
     (nodeId: string) => {
+      goToDesign();
       setSelectedNodeId(nodeId);
       setSelectedEdgeId(null);
       setInspectorCollapsed(false);
@@ -621,7 +676,7 @@ function StudioWorkspace({
       if (isNarrowViewport()) setStatusExpanded(false);
       void fitView({ nodes: [{ id: nodeId }], duration: 320, padding: 2.4, maxZoom: 1.15 });
     },
-    [fitView, setNodes],
+    [fitView, goToDesign, setNodes],
   );
 
   const handleDeleteSelection = useCallback(() => {
@@ -817,21 +872,33 @@ function StudioWorkspace({
   );
 
   /* Only one overlay owns the keyboard at a time: opening one closes the others. */
-  const closeBom = useCallback(() => setBomOpen(false), []);
+  const closeBom = useCallback(() => goToDesign(), [goToDesign]);
+  /** Reports is a section now, not a dialog. */
   const openBom = useCallback(() => {
     setMissionsOpen(false);
     setOtdrOpen(false);
-    setBomOpen(true);
-  }, []);
+    handleSectionChange('reports');
+  }, [handleSectionChange]);
+  /* Reports is a reading screen; Escape is the keyboard's Back to Design. */
+  useEffect(() => {
+    if (activeSection !== 'reports') return;
+    const onEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      if (document.querySelector('[role="dialog"]')) return;
+      event.preventDefault();
+      closeBom();
+    };
+    document.addEventListener('keydown', onEscape);
+    return () => document.removeEventListener('keydown', onEscape);
+  }, [activeSection, closeBom]);
+
   const closeMissions = useCallback(() => setMissionsOpen(false), []);
   const openMissions = useCallback(() => {
-    setBomOpen(false);
     setOtdrOpen(false);
     setMissionsOpen(true);
   }, []);
   const closeOtdr = useCallback(() => setOtdrOpen(false), []);
   const handleOpenOtdr = useCallback(() => {
-    setBomOpen(false);
     setMissionsOpen(false);
     setOtdrOpen(true);
     setOpmActive(false);
@@ -841,7 +908,6 @@ function StudioWorkspace({
     setLinkStartNodeId(null);
   }, []);
   const handleOpenOverview = useCallback(() => {
-    setBomOpen(false);
     setOtdrOpen(false);
     setMissionsOpen(false);
     setOpmActive(false);
@@ -902,13 +968,13 @@ function StudioWorkspace({
       setOpmActive(false);
       setOpmProbe(null);
       opmProbeRef.current = null;
-      setBomOpen(false);
       setOtdrOpen(false);
+      goToDesign();
       window.requestAnimationFrame(() => {
         void fitView({ padding: 0.08, maxZoom: 1.15, duration: 350 });
       });
     },
-    [setNodes, setEdges, fitView],
+    [setNodes, setEdges, fitView, goToDesign],
   );
 
   useEffect(() => {
@@ -1060,242 +1126,289 @@ function StudioWorkspace({
   return (
     <div className={`fiberlab-studio pu-shell ${testing ? 'is-simulating-pulse' : ''}`}>
       <TopBar
-        onPreset={applyPreset}
+        projectName={PRESETS.find((preset) => preset.id === activePresetId)?.name ?? 'FTTH Network Design'}
+        presetEdited={presetEdited}
         onRunTest={runLightTest}
-        onOpenBOM={openBom}
         onOpenOverview={handleOpenOverview}
         testing={testing}
         stale={!settings.autoRun && dirty}
-        activePresetId={activePresetId}
-        presetEdited={presetEdited}
       />
 
       <div className="fiberlab-studio__body pu-body">
-        <Sidebar
-          onQuickAdd={handleQuickAdd}
-          onToggleOpm={handleToggleOpm}
-          onOpenOtdr={handleOpenOtdr}
-          onRunSimulation={runLightTest}
-          onOpenReports={openBom}
-          onOpenSettings={() => setToolsOpen(true)}
-          collapsed={sidebarCollapsed}
-          onToggleCollapse={() => {
-            const next = !sidebarCollapsed;
-            setSidebarCollapsed(next);
-            if (next && isNarrowViewport()) setStatusExpanded(false);
-          }}
-        />
+        <SectionRail active={activeSection} onChange={handleSectionChange} />
 
-        <div className="pu-center">
-          <div className="pu-tabstrip">
-            <span className="pu-doc-tab">
-              <span className="pu-doc-tab-name">
-                {PRESETS.find((preset) => preset.id === activePresetId)?.name ?? 'FTTH Network Design'}
-              </span>
-              {presetEdited && activePresetId ? <span className="pu-doc-tab-edited">Edited</span> : null}
-            </span>
-          </div>
-          <main
-            ref={studioMainRef}
-            className={`fiberlab-studio-main pu-canvas relative min-w-0 flex-1 ${opmActive ? 'opm-probe-mode' : ''}`}
-            onPointerMoveCapture={handleOpmPointerMove}
-            onClickCapture={handleOpmClickCapture}
-            onPointerLeave={handleOpmPointerLeave}
-          >
-            <CanvasToolbar
-              canvasTool={canvasTool}
-              linkMode={linkMode}
-              opmActive={opmActive}
-              selectionCount={selectionCount}
-              activeMissionTitle={activeMissionId ? (getMissionById(activeMissionId)?.title ?? null) : null}
-              settings={settings}
-              toolsOpen={toolsOpen}
-              onToolsOpenChange={setToolsOpen}
-              onSettingsChange={handleSettingsChange}
-              onSelectTool={() => {
-                setCanvasTool('select');
-                if (linkMode) handleToggleLink();
-              }}
-              onPanTool={() => {
-                setCanvasTool('pan');
-                if (linkMode) handleToggleLink();
-              }}
-              onToggleLink={handleToggleLink}
-              onDelete={handleDeleteSelection}
-              onFit={() => void fitView({ padding: 0.16, duration: 350 })}
-              onZoomIn={() => void zoomIn({ duration: 180 })}
-              onZoomOut={() => void zoomOut({ duration: 180 })}
-              onOpenOverview={handleOpenOverview}
+        {activeSection === 'design' ? (
+          <>
+            <h1 ref={designHeadingRef} tabIndex={-1} className="sr-only">
+              Design canvas
+            </h1>
+            <Sidebar
+              onQuickAdd={handleQuickAdd}
               onToggleOpm={handleToggleOpm}
               onOpenOtdr={handleOpenOtdr}
-              onOpenMissions={openMissions}
-              onClear={clearCanvas}
+              collapsed={sidebarCollapsed}
+              onToggleCollapse={() => {
+                const next = !sidebarCollapsed;
+                setSidebarCollapsed(next);
+                if (next && isNarrowViewport()) setStatusExpanded(false);
+              }}
             />
-            {/* Phones have no room for a permanent library column, so the
-                component sheet is summoned from here. */}
-            {sidebarCollapsed ? (
-              <button
-                type="button"
-                className="pu-fab-components"
-                onClick={() => {
-                  setSidebarCollapsed(false);
-                  if (isNarrowViewport()) setStatusExpanded(false);
-                }}
-                aria-label="Open component library"
+
+            <div className="pu-center">
+              <DesignBar
+                activePresetId={activePresetId}
+                presetEdited={presetEdited}
+                stale={!settings.autoRun && dirty}
+                onPreset={applyPreset}
+              />
+              <main
+                ref={studioMainRef}
+                className={`fiberlab-studio-main pu-canvas relative min-w-0 flex-1 ${opmActive ? 'opm-probe-mode' : ''}`}
+                onPointerMoveCapture={handleOpmPointerMove}
+                onClickCapture={handleOpmClickCapture}
+                onPointerLeave={handleOpmPointerLeave}
               >
-                <Plus size={16} aria-hidden="true" /> Components
-              </button>
-            ) : null}
-            <SimulationContext.Provider value={simulation}>
-              <ReactFlow<PonNode, PonEdge>
-                nodes={nodes}
-                edges={flowEdges}
-                nodeTypes={nodeTypes}
-                edgeTypes={edgeTypes}
-                onNodesChange={onNodesChange}
-                onEdgesChange={onEdgesChange}
-                onConnect={handleConnect}
-                onNodeClick={(event, clickedNode) => {
-                  // Clicking a part always brings the panel back, even if it was closed.
-                  setInspectorCollapsed(false);
-                  handleNodeClick(event, clickedNode);
-                }}
-                onEdgeClick={() => setInspectorCollapsed(false)}
-                onSelectionChange={handleSelectionChange}
-                onDelete={handleCanvasDelete}
-                onInit={handleInit}
-                onDragOver={handleDragOver}
-                onDrop={handleDrop}
-                nodesDraggable={!opmActive && canvasTool === 'select'}
-                nodesConnectable={!opmActive}
-                elementsSelectable={!opmActive}
-                selectionOnDrag={!opmActive && canvasTool === 'select'}
-                panOnDrag={canvasTool === 'pan' ? true : [1, 2]}
-                deleteKeyCode={['Backspace', 'Delete']}
-                minZoom={0.2}
-                maxZoom={2.2}
-                fitView
-                proOptions={{ hideAttribution: true }}
-              >
-                <Background variant={BackgroundVariant.Dots} gap={18} size={1.3} color="#E6D5C3" />
-                <Controls position="bottom-right" showInteractive={false} />
-                <MiniMap
-                  position="top-right"
-                  pannable
-                  zoomable
-                  className="!h-[116px] !w-[176px]"
-                  nodeColor={(node) => MINIMAP_COLORS[node.type ?? ''] ?? '#64748B'}
-                  nodeStrokeColor="#475569"
-                  nodeStrokeWidth={1.5}
-                  maskColor="rgba(248,250,252,0.75)"
+                <CanvasToolbar
+                  canvasTool={canvasTool}
+                  linkMode={linkMode}
+                  selectionCount={selectionCount}
+                  toolsOpen={toolsOpen}
+                  onToolsOpenChange={setToolsOpen}
+                  snapToGrid={snapToGrid}
+                  onToggleSnap={() => setSnapToGrid((value) => !value)}
+                  onSelectTool={() => {
+                    setCanvasTool('select');
+                    if (linkMode) handleToggleLink();
+                  }}
+                  onPanTool={() => {
+                    setCanvasTool('pan');
+                    if (linkMode) handleToggleLink();
+                  }}
+                  onToggleLink={handleToggleLink}
+                  onDelete={handleDeleteSelection}
+                  onFit={() => void fitView({ padding: 0.16, duration: 350 })}
+                  onZoomIn={() => void zoomIn({ duration: 180 })}
+                  onZoomOut={() => void zoomOut({ duration: 180 })}
+                  onZoomReset={() => void zoomTo(1, { duration: 200 })}
                 />
-
-                {linkMode ? (
-                  <Panel position="bottom-center" className="pu-link-panel !m-3">
-                    <div
-                      className="link-mode-panel panel flex max-w-[min(420px,calc(100vw-28px))] items-center gap-3 rounded-xl px-3 py-2 shadow-panel"
-                      role="status"
-                      aria-live="polite"
-                    >
-                      <span className="link-mode-panel-icon">
-                        <Link2 size={16} aria-hidden="true" />
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <strong>{linkStartNodeId ? 'Choose a destination' : 'Link nodes'}</strong>
-                        <small>{linkMessage}</small>
-                      </span>
-                      <button type="button" className="btn-ghost !min-h-8 !px-2" onClick={handleToggleLink}>
-                        <X size={14} aria-hidden="true" /> Cancel
-                      </button>
-                    </div>
-                  </Panel>
+                {/* Phones have no room for a permanent library column, so the
+                component sheet is summoned from here. */}
+                {sidebarCollapsed ? (
+                  <button
+                    type="button"
+                    className="pu-fab-components"
+                    onClick={() => {
+                      setSidebarCollapsed(false);
+                      if (isNarrowViewport()) setStatusExpanded(false);
+                    }}
+                    aria-label="Open component library"
+                  >
+                    <Plus size={16} aria-hidden="true" /> Components
+                  </button>
                 ) : null}
+                <SimulationContext.Provider value={simulation}>
+                  <ReactFlow<PonNode, PonEdge>
+                    nodes={nodes}
+                    edges={flowEdges}
+                    snapToGrid={snapToGrid}
+                    snapGrid={[16, 16]}
+                    nodeTypes={nodeTypes}
+                    edgeTypes={edgeTypes}
+                    onNodesChange={onNodesChange}
+                    onEdgesChange={onEdgesChange}
+                    onConnect={handleConnect}
+                    onNodeClick={(event, clickedNode) => {
+                      // Clicking a part always brings the panel back, even if it was closed.
+                      setInspectorCollapsed(false);
+                      handleNodeClick(event, clickedNode);
+                    }}
+                    onEdgeClick={() => setInspectorCollapsed(false)}
+                    onSelectionChange={handleSelectionChange}
+                    onDelete={handleCanvasDelete}
+                    onInit={handleInit}
+                    onDragOver={handleDragOver}
+                    onDrop={handleDrop}
+                    nodesDraggable={!opmActive && canvasTool === 'select'}
+                    nodesConnectable={!opmActive}
+                    elementsSelectable={!opmActive}
+                    selectionOnDrag={!opmActive && canvasTool === 'select'}
+                    /* Select mode pans with middle/right drag on a mouse, but a
+                     * finger drag on empty canvas must pan too (nodes still drag). */
+                    panOnDrag={canvasTool === 'pan' || coarsePointer ? true : [1, 2]}
+                    deleteKeyCode={['Backspace', 'Delete']}
+                    minZoom={0.2}
+                    maxZoom={2.2}
+                    fitView
+                    proOptions={{ hideAttribution: true }}
+                  >
+                    <Background variant={BackgroundVariant.Dots} gap={18} size={1.3} color="#E6D5C3" />
+                    <Controls position="bottom-right" showInteractive={false} />
+                    <MiniMap
+                      position="top-right"
+                      pannable
+                      zoomable
+                      className="!h-[116px] !w-[176px]"
+                      nodeColor={(node) => MINIMAP_COLORS[node.type ?? ''] ?? '#64748B'}
+                      nodeStrokeColor="#475569"
+                      nodeStrokeWidth={1.5}
+                      maskColor="rgba(248,250,252,0.75)"
+                    />
 
-                {nodes.length === 0 && !emptyHintDismissed ? (
-                  <Panel position="top-center" className="pu-empty-panel !m-3">
-                    <div className="panel pu-empty-card shadow-panel">
-                      <span className="pu-empty-icon" aria-hidden="true">
-                        <MousePointer2 size={16} />
-                      </span>
-                      <div className="pu-empty-copy">
-                        <div className="pu-empty-title">
-                          <span className="text-body font-semibold text-[var(--pu-ink)]">The canvas is empty</span>
-                          <button
-                            type="button"
-                            className="pu-empty-dismiss"
-                            onClick={() => setEmptyHintDismissed(true)}
-                            aria-label="Dismiss canvas hint"
-                            title="Dismiss"
-                          >
-                            <X size={13} aria-hidden="true" />
+                    {linkMode ? (
+                      <Panel position="bottom-center" className="pu-link-panel !m-3">
+                        <div
+                          className="link-mode-panel panel flex max-w-[min(420px,calc(100vw-28px))] items-center gap-3 rounded-xl px-3 py-2 shadow-panel"
+                          role="status"
+                          aria-live="polite"
+                        >
+                          <span className="link-mode-panel-icon">
+                            <Link2 size={16} aria-hidden="true" />
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <strong>{linkStartNodeId ? 'Choose a destination' : 'Link nodes'}</strong>
+                            <small>{linkMessage}</small>
+                          </span>
+                          <button type="button" className="btn-ghost !min-h-8 !px-2" onClick={handleToggleLink}>
+                            <X size={14} aria-hidden="true" /> Cancel
                           </button>
                         </div>
-                        <div className="text-label text-[var(--pu-mut)]">
-                          Drag in an OLT, or let a mission walk you through it.
+                      </Panel>
+                    ) : null}
+
+                    {nodes.length === 0 && !emptyHintDismissed ? (
+                      <Panel position="top-center" className="pu-empty-panel !m-3">
+                        <div className="panel pu-empty-card shadow-panel">
+                          <span className="pu-empty-icon" aria-hidden="true">
+                            <MousePointer2 size={16} />
+                          </span>
+                          <div className="pu-empty-copy">
+                            <div className="pu-empty-title">
+                              <span className="text-body font-semibold text-[var(--pu-ink)]">The canvas is empty</span>
+                              <button
+                                type="button"
+                                className="pu-empty-dismiss"
+                                onClick={() => setEmptyHintDismissed(true)}
+                                aria-label="Dismiss canvas hint"
+                                title="Dismiss"
+                              >
+                                <X size={13} aria-hidden="true" />
+                              </button>
+                            </div>
+                            <div className="text-label text-[var(--pu-mut)]">
+                              Drag in an OLT, or let a mission walk you through it.
+                            </div>
+                            <button type="button" className="pu-empty-action" onClick={openMissions}>
+                              <Flag size={13} aria-hidden="true" />
+                              Open the mission
+                            </button>
+                          </div>
                         </div>
-                        <button type="button" className="pu-empty-action" onClick={openMissions}>
-                          <Flag size={13} aria-hidden="true" />
-                          Open the mission
-                        </button>
-                      </div>
-                    </div>
-                  </Panel>
+                      </Panel>
+                    ) : null}
+                  </ReactFlow>
+                </SimulationContext.Provider>
+                {opmActive && opmProbe ? (
+                  <OpmMeterHud
+                    ref={opmHudRef}
+                    target={opmProbe}
+                    position={opmAnchor}
+                    readingDbm={opmReading}
+                    wavelength={meterWavelength}
+                    onWavelengthChange={setMeterWavelength}
+                    onClose={handleToggleOpm}
+                  />
                 ) : null}
-              </ReactFlow>
-            </SimulationContext.Provider>
-            {opmActive && opmProbe ? (
-              <OpmMeterHud
-                ref={opmHudRef}
-                target={opmProbe}
-                position={opmAnchor}
-                readingDbm={opmReading}
-                wavelength={meterWavelength}
-                onWavelengthChange={setMeterWavelength}
-                onClose={handleToggleOpm}
+              </main>
+              <StatusBar
+                summary={summary}
+                simulation={simulation}
+                nodes={nodes}
+                powerBars={powerBars}
+                worstLossDb={worstLossDb}
+                expanded={statusExpanded}
+                onExpandedChange={handleStatusExpandedChange}
+                onOpenReports={openBom}
+                onFocusNode={handleFocusNode}
+              />
+            </div>
+
+            {/* The panel only exists while a component is selected (and not closed),
+            so the canvas keeps the width the rest of the time. */}
+            {(selectedNode || selectedEdge) && !inspectorCollapsed ? (
+              <Inspector
+                key={selectedNode?.id ?? selectedEdge?.id ?? 'selection'}
+                node={selectedNode}
+                edge={selectedEdge}
+                simulation={simulation}
+                onPatchNode={handlePatchNode}
+                onDeleteNode={handleDeleteNode}
+                onDeleteEdge={handleDeleteEdge}
+                onClose={() => setInspectorCollapsed(true)}
               />
             ) : null}
-          </main>
-          <StatusBar
+          </>
+        ) : null}
+
+        {activeSection === 'simulation' ? (
+          <SimulationScreen
             summary={summary}
             simulation={simulation}
             nodes={nodes}
             powerBars={powerBars}
             worstLossDb={worstLossDb}
-            expanded={statusExpanded}
-            onExpandedChange={handleStatusExpandedChange}
-            onOpenReports={openBom}
+            testing={testing}
+            stale={!settings.autoRun && dirty}
+            autoRun={settings.autoRun}
+            onRun={runLightTest}
             onFocusNode={handleFocusNode}
+            onOpenReports={openBom}
           />
-        </div>
+        ) : null}
 
-        {/* The panel only exists while a component is selected (and not closed),
-            so the canvas keeps the width the rest of the time. */}
-        {(selectedNode || selectedEdge) && !inspectorCollapsed ? (
-          <Inspector
-            key={selectedNode?.id ?? selectedEdge?.id ?? 'selection'}
-            node={selectedNode}
-            edge={selectedEdge}
+        {activeSection === 'reports' ? (
+          <BOMModal
+            variant="screen"
+            open
+            onClose={closeBom}
+            nodes={nodes}
+            edges={flowEdges}
             simulation={simulation}
-            onPatchNode={handlePatchNode}
-            onDeleteNode={handleDeleteNode}
-            onDeleteEdge={handleDeleteEdge}
-            onClose={() => setInspectorCollapsed(true)}
+            settings={settings}
+            unitCosts={unitCosts}
+            onUnitCostsChange={handleUnitCostsChange}
+            onResetUnitCosts={resetUnitCosts}
+            costBreakdown={costBreakdown}
+          />
+        ) : null}
+
+        {activeSection === 'settings' ? (
+          <SettingsScreen
+            settings={settings}
+            onSettingsChange={handleSettingsChange}
+            opmActive={opmActive}
+            activeMissionTitle={activeMission?.title ?? null}
+            onToggleOpm={() => {
+              goToDesign();
+              handleToggleOpm();
+            }}
+            onOpenOtdr={() => {
+              goToDesign();
+              handleOpenOtdr();
+            }}
+            onOpenMissions={() => {
+              goToDesign();
+              openMissions();
+            }}
+            onClear={() => {
+              goToDesign();
+              clearCanvas();
+            }}
+            onOpenOverview={handleOpenOverview}
           />
         ) : null}
       </div>
+      <SectionTabBar active={activeSection} onChange={handleSectionChange} />
 
-      <BOMModal
-        open={bomOpen}
-        onClose={closeBom}
-        nodes={nodes}
-        edges={flowEdges}
-        simulation={simulation}
-        settings={settings}
-        unitCosts={unitCosts}
-        onUnitCostsChange={handleUnitCostsChange}
-        onResetUnitCosts={resetUnitCosts}
-        costBreakdown={costBreakdown}
-      />
       <OtdrModal open={otdrOpen} onClose={closeOtdr} nodes={nodes} edges={edges} />
       <MissionDrawer
         open={missionsOpen}

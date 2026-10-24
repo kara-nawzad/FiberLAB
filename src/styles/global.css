@@ -120,13 +120,13 @@
 
   .btn-primary {
     @apply btn text-white shadow-sm;
-    border-color: var(--pu-pri);
-    background: var(--pu-pri);
+    border-color: var(--pu-pri-cta);
+    background: var(--pu-pri-cta);
   }
 
   .btn-primary:hover {
-    border-color: var(--pu-pri-strong);
-    background: var(--pu-pri-strong);
+    border-color: var(--pu-pri-cta-hover);
+    background: var(--pu-pri-cta-hover);
   }
 
   .btn-ghost {

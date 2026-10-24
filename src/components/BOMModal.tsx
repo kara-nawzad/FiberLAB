@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react';
-import { Download, FileJson, Table2, X } from 'lucide-react';
+import { ArrowLeft, Download, FileJson, Table2, X } from 'lucide-react';
 import type { DesignSettings, PonEdge, PonNode, SimulationResult, SplitRatio } from '../types';
 import { SPLIT_RATIOS, SPLITTER_LOSS_DB, STATUS_STYLES } from '../types';
 import { describeStatus, formatDbm } from '../engine/opticalSimulator';
 import type { NetworkCostBreakdown, UnitCostProfile } from '../data/pricingCatalogue';
 import { formatUsd } from '../data/pricingCatalogue';
 import { useDialogA11y } from '../hooks/useDialogA11y';
+import { useSectionFocus } from '../hooks/useSectionFocus';
 import { buildCommercialCsv, buildQuotationExport, connectedSubscriberCount } from '../data/commercialQuoteExports';
 import { PricingSettings } from './PricingSettings';
 
@@ -15,6 +16,8 @@ import { PricingSettings } from './PricingSettings';
 
 interface BOMModalProps {
   open: boolean;
+  /** Dialog overlay (default) or the Reports section of the workbench. */
+  variant?: 'dialog' | 'screen';
   onClose: () => void;
   nodes: PonNode[];
   edges: PonEdge[];
@@ -80,6 +83,7 @@ function CommercialQuotationView({
 
   return (
     <section aria-label="Commercial quotation and CAPEX" data-testid="commercial-quotation">
+      <h2 className="sr-only">Commercial quotation &amp; CAPEX</h2>
       <div className="mb-3 grid grid-cols-2 gap-2 md:grid-cols-4">
         <StatCard
           label="Total Materials Cost"
@@ -176,6 +180,7 @@ function CommercialQuotationView({
 
 export function BOMModal({
   open,
+  variant = 'dialog',
   onClose,
   nodes,
   edges,
@@ -187,7 +192,10 @@ export function BOMModal({
   costBreakdown,
 }: BOMModalProps) {
   const [activeTab, setActiveTab] = useState<'optical' | 'commercial'>('optical');
-  const { dialogRef } = useDialogA11y({ open, onClose });
+  const isDialog = variant === 'dialog';
+  const { dialogRef } = useDialogA11y({ open: isDialog && open, onClose });
+  /* Reports is a section: opening it puts the keyboard on the report title. */
+  const titleRef = useSectionFocus<HTMLHeadingElement>();
   const summary = simulation.summary;
 
   const subscriberRows = useMemo(
@@ -207,76 +215,93 @@ export function BOMModal({
 
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
 
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose();
-      }}
+  /* As the Reports screen the report *is* the page, so it renders <main>;
+   * as an overlay it stays a labelled dialog. Same markup, two landmarks. */
+  const ScreenTag = (isDialog ? 'section' : 'main') as 'section';
+  const TitleTag = (isDialog ? 'h2' : 'h1') as 'h2';
+
+  const body = (
+    <ScreenTag
+      ref={dialogRef}
+      role={isDialog ? 'dialog' : undefined}
+      aria-modal={isDialog ? true : undefined}
+      aria-labelledby="bom-title"
+      aria-describedby="bom-description"
+      tabIndex={isDialog ? -1 : undefined}
+      className={
+        isDialog
+          ? 'panel flex max-h-[88vh] w-full min-w-0 max-w-5xl flex-col overflow-hidden rounded-xl shadow-panel outline-none'
+          : 'pu-screen pu-reports-screen'
+      }
     >
-      <section
-        ref={dialogRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="bom-title"
-        aria-describedby="bom-description"
-        tabIndex={-1}
-        className="panel flex max-h-[88vh] w-full min-w-0 max-w-5xl flex-col overflow-hidden rounded-xl shadow-panel outline-none"
-      >
-        <div className="panel-header">
-          <div className="flex items-center gap-2">
-            <span className="flex h-7 w-7 items-center justify-center rounded-md bg-[var(--pu-pri-soft)] text-[var(--pu-pri)]">
-              <Table2 size={16} />
-            </span>
-            <div>
-              <h2 id="bom-title" className="text-section font-bold leading-tight text-[var(--pu-ink)]">
-                Bill of Materials
-              </h2>
-              <p id="bom-description" className="text-body text-[var(--pu-mut)]">
-                Optical audit &amp; commercial CAPEX quotation
-              </p>
-            </div>
+      {isDialog ? null : (
+        <div className="pu-reports-back">
+          <button type="button" className="pu-btn" onClick={onClose}>
+            <ArrowLeft size={14} aria-hidden="true" /> Back to Design
+          </button>
+        </div>
+      )}
+
+      <div className="panel-header">
+        <div className="flex items-center gap-2">
+          <span className="flex h-7 w-7 items-center justify-center rounded-md bg-[var(--pu-pri-soft)] text-[var(--pu-pri)]">
+            <Table2 size={16} />
+          </span>
+          <div>
+            <TitleTag
+              id="bom-title"
+              ref={isDialog ? undefined : titleRef}
+              tabIndex={isDialog ? undefined : -1}
+              className="text-section font-bold leading-tight text-[var(--pu-ink)]"
+            >
+              Bill of Materials
+            </TitleTag>
+            <p id="bom-description" className="text-body text-[var(--pu-mut)]">
+              Optical audit &amp; commercial CAPEX quotation
+            </p>
           </div>
-          <div className="flex items-center gap-2">
-            <span
-              className="pu-capex-banner"
-              role="region"
-              data-testid="capex-telemetry"
-              aria-label={`Network CAPEX ${formatUsd(costBreakdown.totalCapex)}; ${formatUsd(costBreakdown.costPerHomePassed)} per home passed`}
-            >
-              CAPEX <strong>{formatUsd(costBreakdown.totalCapex, true)}</strong>
-              <span className="pu-capex-detail">{formatUsd(costBreakdown.costPerHomePassed)} / Home Passed</span>
-            </span>
-            <button
-              type="button"
-              className="btn-ghost"
-              onClick={() =>
-                triggerDownload(
-                  `fiberlab-quotation-${timestamp}.csv`,
-                  buildCommercialCsv(nodes, simulation, costBreakdown),
-                  'text/csv;charset=utf-8',
-                )
-              }
-            >
-              <Download size={14} /> Quote CSV
-            </button>
-            <button
-              type="button"
-              className="btn-primary"
-              onClick={() =>
-                triggerDownload(
-                  `fiberlab-quotation-${timestamp}.json`,
-                  JSON.stringify(
-                    buildQuotationExport(nodes, edges, simulation, settings, unitCosts, costBreakdown),
-                    null,
-                    2,
-                  ),
-                  'application/json',
-                )
-              }
-            >
-              <FileJson size={14} /> Quote JSON
-            </button>
+        </div>
+        <div className="flex items-center gap-2">
+          <span
+            className="pu-capex-banner"
+            role="region"
+            data-testid="capex-telemetry"
+            aria-label={`Network CAPEX ${formatUsd(costBreakdown.totalCapex)}; ${formatUsd(costBreakdown.costPerHomePassed)} per home passed`}
+          >
+            CAPEX <strong>{formatUsd(costBreakdown.totalCapex, true)}</strong>
+            <span className="pu-capex-detail">{formatUsd(costBreakdown.costPerHomePassed)} / Home Passed</span>
+          </span>
+          <button
+            type="button"
+            className="btn-ghost"
+            onClick={() =>
+              triggerDownload(
+                `fiberlab-quotation-${timestamp}.csv`,
+                buildCommercialCsv(nodes, simulation, costBreakdown),
+                'text/csv;charset=utf-8',
+              )
+            }
+          >
+            <Download size={14} /> Quote CSV
+          </button>
+          <button
+            type="button"
+            className="btn-primary"
+            onClick={() =>
+              triggerDownload(
+                `fiberlab-quotation-${timestamp}.json`,
+                JSON.stringify(
+                  buildQuotationExport(nodes, edges, simulation, settings, unitCosts, costBreakdown),
+                  null,
+                  2,
+                ),
+                'application/json',
+              )
+            }
+          >
+            <FileJson size={14} /> Quote JSON
+          </button>
+          {isDialog ? (
             <button
               type="button"
               className="btn-ghost h-9 w-9 !p-0"
@@ -286,149 +311,149 @@ export function BOMModal({
             >
               <X size={16} />
             </button>
-          </div>
+          ) : null}
         </div>
+      </div>
 
-        <div
-          role="tablist"
-          aria-label="Bill of materials views"
-          className="flex shrink-0 gap-1 overflow-x-auto border-b border-[var(--pu-line)] px-4 pt-2"
+      <div
+        role="tablist"
+        aria-label="Bill of materials views"
+        className="flex shrink-0 gap-1 overflow-x-auto border-b border-[var(--pu-line)] px-4 pt-2"
+      >
+        <button
+          type="button"
+          role="tab"
+          id="optical-budget-tab"
+          aria-controls="optical-budget-panel"
+          aria-selected={activeTab === 'optical'}
+          className={`bom-tab ${activeTab === 'optical' ? 'is-active' : ''}`}
+          onClick={() => setActiveTab('optical')}
         >
-          <button
-            type="button"
-            role="tab"
-            id="optical-budget-tab"
-            aria-controls="optical-budget-panel"
-            aria-selected={activeTab === 'optical'}
-            className={`bom-tab ${activeTab === 'optical' ? 'is-active' : ''}`}
-            onClick={() => setActiveTab('optical')}
-          >
-            Optical Budget Audit
-          </button>
-          <button
-            type="button"
-            role="tab"
-            id="commercial-quotation-tab"
-            aria-controls="commercial-quotation-panel"
-            aria-selected={activeTab === 'commercial'}
-            className={`bom-tab ${activeTab === 'commercial' ? 'is-active' : ''}`}
-            onClick={() => setActiveTab('commercial')}
-          >
-            Commercial Quotation &amp; CAPEX
-          </button>
-        </div>
-
-        <div
-          role="tabpanel"
-          tabIndex={0}
-          id={activeTab === 'optical' ? 'optical-budget-panel' : 'commercial-quotation-panel'}
-          aria-labelledby={activeTab === 'optical' ? 'optical-budget-tab' : 'commercial-quotation-tab'}
-          className="min-w-0 flex-1 overflow-y-auto px-4 py-4"
+          Optical Budget Audit
+        </button>
+        <button
+          type="button"
+          role="tab"
+          id="commercial-quotation-tab"
+          aria-controls="commercial-quotation-panel"
+          aria-selected={activeTab === 'commercial'}
+          className={`bom-tab ${activeTab === 'commercial' ? 'is-active' : ''}`}
+          onClick={() => setActiveTab('commercial')}
         >
-          {activeTab === 'commercial' ? (
-            <CommercialQuotationView
-              nodes={nodes}
-              simulation={simulation}
-              costBreakdown={costBreakdown}
-              unitCosts={unitCosts}
-              onUnitCostsChange={onUnitCostsChange}
-              onResetUnitCosts={onResetUnitCosts}
-            />
-          ) : (
-            <>
-              {/* ------------------------- Headline metrics ------------------------- */}
-              <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
-                <StatCard
-                  label="Fiber deployed"
-                  value={`${summary.totalFiberKm.toFixed(2)}`}
-                  sub="km of plant on canvas"
-                  tone="text-[var(--pu-pri)]"
-                />
-                <StatCard
-                  label={summary.gatewayCount === 0 ? 'ONTs provisioned' : 'Subscriber endpoints'}
-                  value={`${summary.subscriberCount}`}
-                  sub={`${summary.oltActive}/${summary.oltCount} OLT lasers active`}
-                />
-                <StatCard
-                  label="Reachable"
-                  value={`${summary.byStatus.ONLINE + summary.byStatus.WARNING + summary.byStatus.OVERLOAD}`}
-                  sub={`${summary.byStatus.ONLINE} optimal · ${summary.byStatus.WARNING} marginal · ${summary.byStatus.OVERLOAD} overload`}
-                  tone="text-[var(--pu-ok)]"
-                />
-                <StatCard
-                  label="Offline"
-                  value={`${summary.byStatus.LOS + summary.byStatus.DISCONNECTED}`}
-                  sub={`${summary.byStatus.LOS} LOS · ${summary.byStatus.DISCONNECTED} unwired`}
-                  tone={
-                    summary.byStatus.LOS + summary.byStatus.DISCONNECTED > 0
-                      ? 'text-[var(--pu-bad)]'
-                      : 'text-[var(--pu-ink)]'
-                  }
-                />
-              </div>
+          Commercial Quotation &amp; CAPEX
+        </button>
+      </div>
 
-              {/* Deployed components: the old Components/Topology tabs now live here. */}
-              <div className="mt-3 rounded-lg border border-[var(--pu-line)] bg-white p-3">
-                <div className="eyebrow mb-2">Deployed components</div>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-1 font-mono text-label md:grid-cols-4">
-                  {(
-                    [
-                      ['olt', 'OLT'],
-                      ['splitter', 'Splitters'],
-                      ['fiber', 'Fiber spans'],
-                      ['closure', 'Closures'],
-                      ['odf', 'ODF panels'],
-                      ['nap', 'NAP / FAT'],
-                      ['ont', 'ONTs'],
-                      ['gateway', 'Gateways'],
-                    ] as Array<[PonNode['type'], string]>
-                  ).map(([kind, label]) => {
-                    const count = nodes.filter((node) => node.type === kind).length;
-                    return (
-                      <div key={kind} className="flex items-baseline justify-between gap-2">
-                        <span className="text-[var(--pu-mut)]">{label}</span>
-                        <span className={count === 0 ? 'text-[var(--pu-mut)]' : 'font-semibold text-[var(--pu-ink)]'}>
-                          {count}
-                        </span>
-                      </div>
-                    );
-                  })}
-                  <div className="flex items-baseline justify-between gap-2">
-                    <span className="text-[var(--pu-mut)]">Patch cords</span>
-                    <span className="font-semibold text-[var(--pu-ink)]">{edges.length}</span>
-                  </div>
-                </div>
-              </div>
+      <div
+        role="tabpanel"
+        tabIndex={0}
+        id={activeTab === 'optical' ? 'optical-budget-panel' : 'commercial-quotation-panel'}
+        aria-labelledby={activeTab === 'optical' ? 'optical-budget-tab' : 'commercial-quotation-tab'}
+        className="min-w-0 flex-1 overflow-y-auto px-4 py-4"
+      >
+        {activeTab === 'commercial' ? (
+          <CommercialQuotationView
+            nodes={nodes}
+            simulation={simulation}
+            costBreakdown={costBreakdown}
+            unitCosts={unitCosts}
+            onUnitCostsChange={onUnitCostsChange}
+            onResetUnitCosts={onResetUnitCosts}
+          />
+        ) : (
+          <>
+            {/* ------------------------- Headline metrics ------------------------- */}
+            <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+              <StatCard
+                label="Fiber deployed"
+                value={`${summary.totalFiberKm.toFixed(2)}`}
+                sub="km of plant on canvas"
+                tone="text-[var(--pu-pri)]"
+              />
+              <StatCard
+                label={summary.gatewayCount === 0 ? 'ONTs provisioned' : 'Subscriber endpoints'}
+                value={`${summary.subscriberCount}`}
+                sub={`${summary.oltActive}/${summary.oltCount} OLT lasers active`}
+              />
+              <StatCard
+                label="Reachable"
+                value={`${summary.byStatus.ONLINE + summary.byStatus.WARNING + summary.byStatus.OVERLOAD}`}
+                sub={`${summary.byStatus.ONLINE} optimal · ${summary.byStatus.WARNING} marginal · ${summary.byStatus.OVERLOAD} overload`}
+                tone="text-[var(--pu-ok)]"
+              />
+              <StatCard
+                label="Offline"
+                value={`${summary.byStatus.LOS + summary.byStatus.DISCONNECTED}`}
+                sub={`${summary.byStatus.LOS} LOS · ${summary.byStatus.DISCONNECTED} unwired`}
+                tone={
+                  summary.byStatus.LOS + summary.byStatus.DISCONNECTED > 0
+                    ? 'text-[var(--pu-bad)]'
+                    : 'text-[var(--pu-ink)]'
+                }
+              />
+            </div>
 
-              {/* --------------------------- Passive plant -------------------------- */}
-              <div className="mt-3 grid gap-2 md:grid-cols-2">
-                <div className="rounded-lg border border-[var(--pu-line)] bg-white p-3">
-                  <div className="eyebrow mb-2">Splitters by ratio</div>
-                  {summary.splitterTotal === 0 ? (
-                    <p className="text-body text-[var(--pu-mut)]">No splitters deployed.</p>
-                  ) : (
-                    <div className="flex flex-wrap gap-2">
-                      {SPLIT_RATIOS.filter((ratio: SplitRatio) => summary.splitterCountByRatio[ratio]).map((ratio) => (
-                        <span
-                          key={ratio}
-                          className="rounded border border-[var(--pu-line)] bg-[var(--pu-pri-soft)] px-2 py-1 font-mono text-label text-[var(--pu-pri)]"
-                        >
-                          1:{ratio} × {summary.splitterCountByRatio[ratio]}
-                          <span className="ml-2 text-[var(--pu-mut)]">
-                            −{SPLITTER_LOSS_DB[ratio].toFixed(1)} dB each
-                          </span>
-                        </span>
-                      ))}
+            {/* Deployed components: the old Components/Topology tabs now live here. */}
+            <div className="mt-3 rounded-lg border border-[var(--pu-line)] bg-white p-3">
+              <h2 className="eyebrow mb-2">Deployed components</h2>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1 font-mono text-label md:grid-cols-4">
+                {(
+                  [
+                    ['olt', 'OLT'],
+                    ['splitter', 'Splitters'],
+                    ['fiber', 'Fiber spans'],
+                    ['closure', 'Closures'],
+                    ['odf', 'ODF panels'],
+                    ['nap', 'NAP / FAT'],
+                    ['ont', 'ONTs'],
+                    ['gateway', 'Gateways'],
+                  ] as Array<[PonNode['type'], string]>
+                ).map(([kind, label]) => {
+                  const count = nodes.filter((node) => node.type === kind).length;
+                  return (
+                    <div key={kind} className="flex items-baseline justify-between gap-2">
+                      <span className="text-[var(--pu-mut)]">{label}</span>
+                      <span className={count === 0 ? 'text-[var(--pu-mut)]' : 'font-semibold text-[var(--pu-ink)]'}>
+                        {count}
+                      </span>
                     </div>
-                  )}
-                  <div className="mt-2 border-t border-[var(--pu-line)] pt-2 font-mono text-label text-[var(--pu-mut)]">
-                    Total passive splitters: <span className="text-[var(--pu-ink)]">{summary.splitterTotal}</span>
-                  </div>
+                  );
+                })}
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="text-[var(--pu-mut)]">Patch cords</span>
+                  <span className="font-semibold text-[var(--pu-ink)]">{edges.length}</span>
                 </div>
+              </div>
+            </div>
 
-                <div className="rounded-lg border border-[var(--pu-line)] bg-white p-3">
-                  <div className="eyebrow mb-2">Termination &amp; splicing</div>
-                  <table className="w-full font-mono text-label">
+            {/* --------------------------- Passive plant -------------------------- */}
+            <div className="mt-3 grid gap-2 md:grid-cols-2">
+              <div className="rounded-lg border border-[var(--pu-line)] bg-white p-3">
+                <h2 className="eyebrow mb-2">Splitters by ratio</h2>
+                {summary.splitterTotal === 0 ? (
+                  <p className="text-body text-[var(--pu-mut)]">No splitters deployed.</p>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {SPLIT_RATIOS.filter((ratio: SplitRatio) => summary.splitterCountByRatio[ratio]).map((ratio) => (
+                      <span
+                        key={ratio}
+                        className="rounded border border-[var(--pu-line)] bg-[var(--pu-pri-soft)] px-2 py-1 font-mono text-label text-[var(--pu-pri)]"
+                      >
+                        1:{ratio} × {summary.splitterCountByRatio[ratio]}
+                        <span className="ml-2 text-[var(--pu-mut)]">−{SPLITTER_LOSS_DB[ratio].toFixed(1)} dB each</span>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <div className="mt-2 border-t border-[var(--pu-line)] pt-2 font-mono text-label text-[var(--pu-mut)]">
+                  Total passive splitters: <span className="text-[var(--pu-ink)]">{summary.splitterTotal}</span>
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-[var(--pu-line)] bg-white p-3">
+                <h2 className="eyebrow mb-2">Termination &amp; splicing</h2>
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[320px] font-mono text-label">
                     <tbody className="text-[var(--pu-ink)]">
                       <tr>
                         <td className="py-1 text-[var(--pu-mut)]">Fusion splices</td>
@@ -465,12 +490,14 @@ export function BOMModal({
                   </table>
                 </div>
               </div>
+            </div>
 
-              {/* ----------------------- Per-subscriber budget ---------------------- */}
-              <div className="mt-4">
-                <div className="eyebrow mb-2">Optical budget per subscriber</div>
-                <div className="overflow-hidden rounded-lg border border-[var(--pu-line)]">
-                  <table className="w-full font-mono text-label">
+            {/* ----------------------- Per-subscriber budget ---------------------- */}
+            <div className="mt-4">
+              <h2 className="eyebrow mb-2">Optical budget per subscriber</h2>
+              <div className="overflow-hidden rounded-lg border border-[var(--pu-line)]">
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[860px] font-mono text-label" data-testid="subscriber-budget">
                     <thead>
                       <tr className="bg-[var(--pu-elevated)] text-caption uppercase tracking-label text-[var(--pu-mut)]">
                         <th className="px-2 py-2 text-left font-medium">Subscriber</th>
@@ -564,30 +591,43 @@ export function BOMModal({
                   </table>
                 </div>
               </div>
+            </div>
 
-              {/* -------------------------- Status legend -------------------------- */}
-              <div className="mt-3 flex flex-wrap gap-2">
-                {(Object.keys(STATUS_STYLES) as Array<keyof typeof STATUS_STYLES>).map((key) => (
-                  <div
-                    key={key}
-                    className="flex items-center gap-2 rounded border border-[var(--pu-line)] bg-white px-2 py-1"
-                  >
-                    <span
-                      className="h-2 w-2 rounded-full"
-                      style={{
-                        background: STATUS_STYLES[key].hex,
-                        boxShadow: `0 0 6px ${STATUS_STYLES[key].hex}`,
-                      }}
-                    />
-                    <span className="font-mono text-label text-[var(--pu-ink)]">{STATUS_STYLES[key].label}</span>
-                    <span className="font-mono text-label text-[var(--pu-mut)]">{summary.byStatus[key]}</span>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-        </div>
-      </section>
+            {/* -------------------------- Status legend -------------------------- */}
+            <div className="mt-3 flex flex-wrap gap-2">
+              {(Object.keys(STATUS_STYLES) as Array<keyof typeof STATUS_STYLES>).map((key) => (
+                <div
+                  key={key}
+                  className="flex items-center gap-2 rounded border border-[var(--pu-line)] bg-white px-2 py-1"
+                >
+                  <span
+                    className="h-2 w-2 rounded-full"
+                    style={{
+                      background: STATUS_STYLES[key].hex,
+                      boxShadow: `0 0 6px ${STATUS_STYLES[key].hex}`,
+                    }}
+                  />
+                  <span className="font-mono text-label text-[var(--pu-ink)]">{STATUS_STYLES[key].label}</span>
+                  <span className="font-mono text-label text-[var(--pu-mut)]">{summary.byStatus[key]}</span>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    </ScreenTag>
+  );
+
+  if (!isDialog) return body;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      {body}
     </div>
   );
 }

@@ -1086,13 +1086,13 @@
 }
 
 .landing-button--primary {
-  background: var(--fiber-accent);
+  background: var(--pu-pri-cta);
   color: white;
-  box-shadow: 0 8px 20px rgba(228, 103, 63, 0.18);
+  box-shadow: 0 8px 20px rgba(200, 81, 44, 0.18);
 }
 .landing-button--primary:hover {
-  background: #c8512c;
-  box-shadow: 0 11px 25px rgba(228, 103, 63, 0.23);
+  background: var(--pu-pri-cta-hover);
+  box-shadow: 0 11px 25px rgba(200, 81, 44, 0.23);
 }
 .landing-button--secondary {
   border-color: var(--fiber-hairline);
@@ -2656,7 +2656,7 @@
   border-color: var(--pu-line);
   border-bottom-color: var(--pu-pri);
   background: var(--pu-pri-soft);
-  color: var(--pu-pri);
+  color: var(--pu-pri-text);
 }
 .bom-tab:focus-visible {
   outline: 2px solid var(--pu-pri);
