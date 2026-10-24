@@ -123,7 +123,7 @@ export function TopBar({
           aria-label="Preset Topologies"
         >
           <LayoutGrid size={14} className="pu-mut" />
-          {activePreset ? activePreset.name : 'FTTH Network'}
+          <span className="pu-preset-name">{activePreset ? activePreset.name : 'FTTH Network'}</span>
           <ChevronDown size={14} className="pu-mut" />
         </button>
         {presetOpen ? (
@@ -158,7 +158,7 @@ export function TopBar({
           </div>
         ) : null}
       </div>
-      <div className="pu-health-wrap" style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 8 }}>
+      <div className="pu-health-wrap">
         <span
           className={`pu-health ${health === 'green' ? '' : health}`}
           aria-label={`Network health: ${HEALTH_TEXT[health]}`}
@@ -183,7 +183,7 @@ export function TopBar({
 
       {stale ? <span className="pu-health amber">UNSAVED BUDGET — RUN SIMULATION</span> : null}
 
-      <div className="relative" ref={zoomRef}>
+      <div className="relative pu-zoom" ref={zoomRef}>
         <button
           ref={zoomButtonRef}
           type="button"
@@ -216,10 +216,11 @@ export function TopBar({
 
       <button type="button" className="pu-btn pri" onClick={onRunTest} disabled={testing} aria-label="Run Simulation">
         {testing ? <Loader2 size={14} className="animate-spin" /> : <Play size={14} fill="currentColor" />}
-        Run Simulation
+        <span className="pu-label-full">Run Simulation</span>
+        <span className="pu-label-short">Run</span>
       </button>
       <button type="button" className="pu-btn" onClick={onOpenBOM} aria-label="Bill of Materials">
-        <FileBarChart size={14} /> Reports
+        <FileBarChart size={14} /> <span className="pu-label-full">Reports</span>
       </button>
     </header>
   );

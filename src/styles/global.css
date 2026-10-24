@@ -13,6 +13,16 @@
     height: 100%;
   }
 
+  /* Mobile browsers shrink the viewport as their chrome appears; the shell must
+   * follow it or the bottom panel ends up under the URL bar. */
+  @supports (height: 100dvh) {
+    html,
+    body,
+    #root {
+      height: 100dvh;
+    }
+  }
+
   body {
     @apply bg-noc-950 text-noc-200 antialiased;
     font-family:
@@ -23,6 +33,8 @@
       'Segoe UI',
       sans-serif;
     overscroll-behavior: none;
+    /* Nothing may scroll the page sideways: wide tables scroll in their card. */
+    overflow-x: clip;
   }
 
   h1,
@@ -87,7 +99,7 @@
   }
 
   .panel-header {
-    @apply flex items-center justify-between border-b border-slate-200;
+    @apply flex flex-wrap items-center justify-between gap-y-2 border-b border-slate-200;
     padding: var(--sp-3) var(--shell-pad);
   }
 

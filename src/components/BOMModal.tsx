@@ -195,7 +195,7 @@ export function BOMModal({
         aria-labelledby="bom-title"
         aria-describedby="bom-description"
         tabIndex={-1}
-        className="panel flex max-h-[88vh] w-full max-w-5xl flex-col overflow-hidden rounded-xl shadow-panel outline-none"
+        className="panel flex max-h-[88vh] w-full min-w-0 max-w-5xl flex-col overflow-hidden rounded-xl shadow-panel outline-none"
       >
         <div className="panel-header">
           <div className="flex items-center gap-2">
@@ -257,7 +257,7 @@ export function BOMModal({
         <div
           role="tablist"
           aria-label="Bill of materials views"
-          className="flex shrink-0 gap-1 border-b border-noc-700/60 px-4 pt-2"
+          className="flex shrink-0 gap-1 overflow-x-auto border-b border-noc-700/60 px-4 pt-2"
         >
           <button
             type="button"
@@ -288,7 +288,7 @@ export function BOMModal({
           tabIndex={0}
           id={activeTab === 'optical' ? 'optical-budget-panel' : 'commercial-quotation-panel'}
           aria-labelledby={activeTab === 'optical' ? 'optical-budget-tab' : 'commercial-quotation-tab'}
-          className="flex-1 overflow-y-auto px-4 py-4"
+          className="min-w-0 flex-1 overflow-y-auto px-4 py-4"
         >
           {activeTab === 'commercial' ? (
             <CommercialQuotationView nodes={nodes} simulation={simulation} costBreakdown={costBreakdown} />

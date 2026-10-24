@@ -937,13 +937,17 @@ function StudioWorkspace({
     return () => window.clearTimeout(timer);
   }, [isActive, sidebarCollapsed, inspectorCollapsed, fitView]);
 
-  // Canvas-first on small screens: start with the component library collapsed so
-  // the canvas is usable, and re-collapse it if the window shrinks to that size.
+  // Canvas-first on small screens: start with the component library and the
+  // inspector collapsed so the canvas is usable, then re-collapse them if the
+  // window shrinks to that size. Selecting a node or an edge re-opens the
+  // inspector as an overlay sheet.
   useEffect(() => {
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
     const query = window.matchMedia(NARROW_VIEWPORT_QUERY);
     const sync = () => {
-      if (query.matches) setSidebarCollapsed(true);
+      if (!query.matches) return;
+      setSidebarCollapsed(true);
+      setInspectorCollapsed(true);
     };
     sync();
     query.addEventListener('change', sync);
@@ -1027,7 +1031,9 @@ function StudioWorkspace({
         <div className="pu-center">
           <div className="pu-tabstrip">
             <span className="pu-doc-tab">
-              {PRESETS.find((preset) => preset.id === activePresetId)?.name ?? 'FTTH Network Design'}
+              <span className="pu-doc-tab-name">
+                {PRESETS.find((preset) => preset.id === activePresetId)?.name ?? 'FTTH Network Design'}
+              </span>
               {presetEdited && activePresetId ? <span className="pu-doc-tab-edited">Edited</span> : null}
             </span>
           </div>
@@ -1153,8 +1159,8 @@ function StudioWorkspace({
                 </Panel>
 
                 {nodes.length === 0 ? (
-                  <Panel position="top-center" className="!mt-16">
-                    <div className="panel flex items-center gap-2 rounded-lg px-4 py-3 shadow-panel">
+                  <Panel position="top-center" className="pu-empty-panel !m-3">
+                    <div className="panel flex max-w-[min(360px,calc(100vw-40px))] items-center gap-2 rounded-lg px-4 py-3 shadow-panel">
                       <MousePointer2 size={16} className="text-[#E4673F]" />
                       <div>
                         <div className="text-body font-semibold text-slate-900">The canvas is empty</div>

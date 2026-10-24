@@ -247,7 +247,7 @@ export function BottomPanel({
 
       {!minimized && tab === 'budget' ? (
         <div className="pu-bottom-grid pu-bottom-grid--stack">
-          <div className="pu-card" style={{ maxHeight: 170, overflowY: 'auto' }}>
+          <div className="pu-card pu-card--scroll">
             <table className="pu-data-table">
               <thead className="pu-mut">
                 <tr>

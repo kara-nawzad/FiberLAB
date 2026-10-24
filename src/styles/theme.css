@@ -16,7 +16,9 @@
 
 .fiberlab-app-shell {
   position: relative;
-  width: 100vw;
+  /* 100% (not 100vw) so a desktop scrollbar can never make the shell wider
+   * than the viewport and force a sideways scroll. */
+  width: 100%;
   height: 100vh;
   height: 100dvh;
   overflow: hidden;
@@ -1839,10 +1841,6 @@
   .fiberlab-studio .react-flow__minimap {
     display: none;
   }
-  .fiberlab-studio .react-flow__controls {
-    transform: scale(0.9);
-    transform-origin: bottom right;
-  }
   .link-mode-panel {
     gap: var(--sp-2);
     padding: var(--sp-2);
@@ -1898,8 +1896,11 @@
   .landing-nav-links {
     display: none;
   }
+  .landing-button,
   .landing-button--nav {
-    min-height: 38px;
+    min-height: var(--control-tap);
+  }
+  .landing-button--nav {
     gap: var(--sp-1);
     padding: 0 var(--sp-3);
     font-size: var(--type-small);
@@ -2664,7 +2665,9 @@
 .bom-tab {
   position: relative;
   display: inline-flex;
+  flex: 0 0 auto;
   align-items: center;
+  white-space: nowrap;
   min-height: var(--tab-h);
   margin-bottom: -1px;
   padding: var(--sp-2) var(--sp-3);

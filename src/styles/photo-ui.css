@@ -938,13 +938,9 @@
 }
 
 @media (max-width: 1200px) {
-  .pu-top {
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-  .pu-top::-webkit-scrollbar {
-    display: none;
-  }
+  /* No overflow here: a scrolling header would clip the popovers it owns.
+   * The bar sheds controls at 1024 / 900 / 560 instead (see the responsive
+   * pass at the end of this file). */
   .pu-stats {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -985,6 +981,7 @@
 /* ------------------------------------------------------------------------- */
 
 .pu-doc-tab-edited {
+  flex-shrink: 0;
   margin-left: var(--sp-2);
   padding: 0 var(--sp-1);
   border-radius: var(--r-pill);
@@ -1011,24 +1008,6 @@
 }
 
 /* Comfortable hit areas on touch devices without changing the desktop density. */
-@media (pointer: coarse) {
-  /* Every interactive control reaches the 44px phone target on touch. */
-  .btn,
-  .input,
-  .select,
-  .pu-btn,
-  .pu-select,
-  .pu-sel,
-  .pu-search {
-    min-height: var(--control-tap);
-  }
-  .pu-menu button {
-    min-height: var(--control-tap);
-  }
-  .pu-rail button {
-    min-height: 52px;
-  }
-}
 
 /* ------------------------------------------------------------------------- */
 /* Canvas-first layout for tablets and phones.                                */
@@ -1058,12 +1037,12 @@
   .fiberlab-inspector:not(.is-collapsed) {
     position: absolute;
     top: var(--shell-gap);
-    right: 0;
+    right: var(--shell-gap);
     bottom: var(--shell-gap);
     z-index: 20;
     width: var(--inspector-w);
-    border-left: 1px solid var(--pu-line) !important;
-    border-radius: var(--r-xl) 0 0 var(--r-xl);
+    border: 1px solid var(--pu-line) !important;
+    border-radius: var(--r-xl);
     box-shadow: -14px 0 32px rgba(43, 26, 20, 0.16);
   }
   .pu-toolbar {
@@ -1079,7 +1058,7 @@
   }
   .fiberlab-inspector .btn,
   .fiberlab-inspector .btn-ghost {
-    min-height: 32px;
+    min-height: var(--control-sm);
   }
 }
 
@@ -1406,4 +1385,251 @@
 .pu-top .pu-health,
 .pu-top .pu-capex {
   min-height: var(--control-md);
+}
+/* ------------------------------------------------------------------------- */
+/* Responsive pass — 1920 / 1440 / 1024 / 768 / 390.                          */
+/* Nothing widens the page: the shell clips, cards scroll their own tables,   */
+/* long labels truncate, and every touch target reaches --control-tap.        */
+/* ------------------------------------------------------------------------- */
+
+/* Truncation instead of overflow: document tab, preset name, inspector head. */
+.pu-doc-tab {
+  min-width: 0;
+  max-width: 100%;
+}
+.pu-doc-tab-name,
+.pu-preset-name,
+.pu-insp-head > span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pu-top .pu-select {
+  min-width: 0;
+}
+
+/* Header pills: one rhythm, no inline styles. */
+.pu-health-wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-width: 0;
+  margin-left: var(--sp-2);
+}
+
+/* Scrolling regions: the table scrolls inside the card, never the panel. */
+.pu-card--scroll {
+  max-height: 170px;
+  overflow: auto;
+}
+.pu-data-table th,
+.pu-data-table td {
+  white-space: nowrap;
+}
+
+/* Canvas overlays. */
+.pu-empty-panel {
+  margin-top: calc(var(--sp-8) + var(--sp-6)) !important; /* 56 */
+}
+/* Short label swaps in on phones ("Run" instead of "Run Simulation"). */
+.pu-label-short {
+  display: none;
+}
+/* React Flow's own chrome matches the rest of the controls. */
+.pu-canvas .react-flow__controls-button {
+  width: 34px;
+  height: 34px;
+}
+
+@media (max-width: 1024px) {
+  /* The zoom menu is the first thing to go: React Flow still zooms by pinch,
+   * wheel and the canvas controls. */
+  .pu-zoom {
+    display: none !important;
+  }
+  .pu-top .pu-select {
+    max-width: 220px;
+  }
+  .pu-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  /* Overlay mode: the inspector sheet leaves room for the rail on the left. */
+  .fiberlab-inspector:not(.is-collapsed) {
+    max-width: calc(100% - var(--rail-w) - var(--sp-2) * 2);
+  }
+  /* Below ~900 px the header can no longer hold every control on one line, so
+   * the row scrolls. Its popovers move out of the scroll container as fixed
+   * panels, otherwise the overflow would clip them. */
+  .pu-top {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .pu-top::-webkit-scrollbar {
+    display: none;
+  }
+  .pu-top .pu-menu {
+    position: fixed !important;
+    top: calc(var(--topbar-h) + var(--sp-2)) !important;
+    right: auto !important;
+    left: var(--sp-3) !important;
+    width: min(340px, calc(100vw - var(--sp-6))) !important;
+    min-width: 0 !important;
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+  /* The tool strip stays one row over the canvas: it scrolls instead of
+   * wrapping and eating the canvas height. */
+  .pu-toolbar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .pu-toolbar::-webkit-scrollbar {
+    display: none;
+  }
+  .pu-toolbar .pu-btn {
+    flex: 0 0 auto;
+  }
+  /* A scrolling container would clip its own popover, so it becomes a sheet
+   * anchored under the top bar. */
+  .pu-toolbar .pu-menu {
+    position: fixed !important;
+    top: calc(var(--topbar-h) + var(--sp-2)) !important;
+    left: var(--sp-2) !important;
+    right: var(--sp-2) !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-height: 62vh;
+    overflow-y: auto;
+    border-radius: var(--r-xl);
+  }
+  /* The bottom panel stacks its cards instead of squeezing three columns. */
+  .pu-bottom-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  /* CAPEX repeats in the Bill of Materials, so the header drops it here. */
+  .pu-capex {
+    display: none !important;
+  }
+}
+
+@media (max-width: 640px) {
+  /* Health repeats in the canvas chip, so the header sheds its pill and the
+   * buttons print their short captions. */
+  .pu-health-wrap {
+    display: none !important;
+  }
+  .pu-label-full {
+    display: none;
+  }
+  .pu-label-short {
+    display: inline;
+  }
+  .pu-top {
+    gap: var(--sp-2);
+  }
+  .pu-top .pu-select {
+    max-width: 180px;
+  }
+}
+
+@media (max-width: 560px) {
+  /* Phone: the preset name truncates, the logo drops a step and the buttons
+   * tighten so the whole row fits without scrolling. */
+  .pu-top .pu-select {
+    max-width: 132px;
+  }
+  .pu-logo {
+    font-size: var(--fs-lg);
+  }
+  .pu-top .pu-btn {
+    padding: 0 var(--sp-3);
+  }
+  /* Menus become a full-width sheet: an anchored popover would sit in the
+   * middle of a 390 px screen with its own gutters. */
+  .pu-top .pu-menu,
+  .pu-toolbar .pu-menu {
+    position: fixed !important;
+    top: calc(var(--topbar-h) + var(--sp-2)) !important;
+    right: var(--sp-2) !important;
+    left: var(--sp-2) !important;
+    width: auto !important;
+    max-height: 62vh;
+  }
+
+  /* Touch-sized targets even in a narrow desktop window. */
+  .pu-btabs button,
+  .pu-chips button,
+  .pu-doc-tab,
+  .pu-itabs button,
+  .pu-menu button.pu-switch,
+  .pu-menu-row input.pu-input-sm {
+    min-height: var(--control-tap);
+  }
+  .pu-btabs button,
+  .pu-doc-tab,
+  .pu-itabs button {
+    height: var(--control-tap);
+  }
+  .pu-canvas .react-flow__controls-button {
+    width: var(--control-tap);
+    height: var(--control-tap);
+  }
+  .pu-canvas .react-flow__handle {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+/* Touch sizing sits last so it wins over the narrow-width overrides above. */
+@media (pointer: coarse) {
+  .btn,
+  .btn-ghost,
+  .btn-primary,
+  .btn-danger,
+  .input,
+  .select,
+  .pu-btn,
+  .pu-select,
+  .pu-sel,
+  .pu-search,
+  .pu-menu button,
+  .pu-btabs button,
+  .pu-chips button,
+  .pu-doc-tab,
+  .pu-itabs button,
+  .pu-menu button.pu-switch,
+  .pu-menu-row input.pu-input-sm,
+  .bom-tab,
+  .otdr-segment-control button,
+  .otdr-acquire-button,
+  .fiberlab-inspector .btn,
+  .fiberlab-inspector .btn-ghost {
+    min-height: var(--control-tap);
+  }
+  /* Icon-only buttons are square in the markup; keep them square and large. */
+  button[aria-label] {
+    min-width: var(--control-tap);
+    min-height: var(--control-tap);
+  }
+  .pu-rail button {
+    min-height: 52px;
+  }
+  .pu-btabs button,
+  .pu-doc-tab,
+  .pu-itabs button {
+    height: var(--control-tap);
+  }
+  .pu-canvas .react-flow__controls-button {
+    width: var(--control-tap);
+    height: var(--control-tap);
+  }
+  .pu-canvas .react-flow__handle {
+    width: 20px;
+    height: 20px;
+  }
 }
