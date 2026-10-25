@@ -7,14 +7,15 @@ interface SpliceIntroHeroProps {
 }
 
 /*
- * The hero is deliberately thin: brand eyebrow, headline, one sentence, one
- * primary door, and the scene itself. Everything an engineer needs to read —
- * budgets, tables, missions, quotations — lives in the sections below.
+ * The hero is deliberately thin: brand eyebrow, headline, one sentence, and a
+ * single door into the studio — earned by doing the thing the headline says.
+ * You hold the splice for two and a half seconds, the light crosses the fiber,
+ * the home lights up, and only then does "Launch Studio" appear.
  *
- * The splice scene keeps its small hold-to-fuse flourish: it is a picture you
- * can light up, not a gate. "Launch Studio" is always one click away.
+ * Everything an engineer needs to read — budgets, tables, missions, quotations —
+ * lives in the sections below.
  */
-const HOLD_DURATION_MS = 1100;
+const HOLD_DURATION_MS = 2500;
 
 type ScheduledFrame = { id: number; kind: 'raf' | 'timeout' };
 
@@ -46,14 +47,14 @@ export function SpliceIntroHero({ onLaunchStudio }: SpliceIntroHeroProps) {
     startedAtRef.current = null;
     if (!openedRef.current) {
       setProgress(0);
-      setAnnouncement('Splice held briefly. Press and hold again to complete the fusion.');
+      setAnnouncement('Splice released early. Press and hold again to splice the fiber.');
     }
   }, [cancelFrame]);
 
   const begin = useCallback(() => {
     if (openedRef.current || startedAtRef.current !== null) return;
     startedAtRef.current = performance.now();
-    setAnnouncement('Fusion started. Keep holding.');
+    setAnnouncement('Splicing started. Keep holding for two and a half seconds.');
 
     const advance = (now: number) => {
       if (startedAtRef.current === null || openedRef.current) return;
@@ -65,7 +66,7 @@ export function SpliceIntroHero({ onLaunchStudio }: SpliceIntroHeroProps) {
         startedAtRef.current = null;
         setProgress(1);
         setFused(true);
-        setAnnouncement('Splice complete. The light now crosses the joint.');
+        setAnnouncement('Splice complete. The light crosses the fiber and the home is lit. Launch Studio is ready.');
         if (typeof navigator !== 'undefined' && 'vibrate' in navigator) navigator.vibrate?.(18);
         frameRef.current = null;
         return;
@@ -77,6 +78,15 @@ export function SpliceIntroHero({ onLaunchStudio }: SpliceIntroHeroProps) {
   }, []);
 
   useEffect(() => () => cancelFrame(), [cancelFrame]);
+
+  const holding = progress > 0 && !fused;
+  // The label teaches the gesture before it counts: a tap reads "keep holding",
+  // and the percentage only appears once the hold is genuinely under way.
+  const spliceLabel = !holding
+    ? 'HOLD TO SPLICE'
+    : progress < 0.08
+      ? 'KEEP HOLDING'
+      : `SPLICING ${Math.round(progress * 100)}%`;
 
   return (
     <section className={`splice-hero${fused ? ' is-fused' : ''}`} aria-labelledby="splice-hero-title">
@@ -97,46 +107,56 @@ export function SpliceIntroHero({ onLaunchStudio }: SpliceIntroHeroProps) {
         <p className="splice-hero-lede">Build a fiber-to-the-home network and simulate its optical performance.</p>
 
         <div className="splice-hero-actions">
-          <button type="button" className="landing-button landing-button--primary" onClick={onLaunchStudio}>
-            Launch Studio <ArrowRight size={16} aria-hidden="true" />
-          </button>
+          {fused ? (
+            <>
+              <button type="button" className="landing-button landing-button--primary" onClick={onLaunchStudio}>
+                Launch Studio <ArrowRight size={18} aria-hidden="true" />
+              </button>
+              <span className="splice-fuse is-complete">
+                <span className="splice-fuse-content">
+                  <Check size={18} aria-hidden="true" />
+                  SPLICE COMPLETE
+                </span>
+              </span>
+            </>
+          ) : (
+            <button
+              type="button"
+              className={`splice-fuse${holding ? ' is-holding' : ''}`}
+              onPointerDown={(event) => {
+                if (event.button > 0) return;
+                event.preventDefault();
+                event.currentTarget.setPointerCapture?.(event.pointerId);
+                begin();
+              }}
+              onPointerUp={release}
+              onPointerCancel={release}
+              onPointerLeave={release}
+              onContextMenu={(event) => event.preventDefault()}
+              onKeyDown={(event) => {
+                if ((event.key === ' ' || event.key === 'Enter') && !event.repeat) {
+                  event.preventDefault();
+                  begin();
+                }
+              }}
+              onKeyUp={(event) => {
+                if (event.key === ' ' || event.key === 'Enter') {
+                  event.preventDefault();
+                  release();
+                }
+              }}
+              aria-label="Press and hold to splice the fiber"
+              title="Hold for two and a half seconds to splice the fiber"
+            >
+              <span className="splice-fuse-progress" style={{ transform: `scaleX(${progress})` }} aria-hidden="true" />
+              <span className="splice-fuse-content">
+                <Radio size={18} aria-hidden="true" />
+                {spliceLabel}
+              </span>
+            </button>
+          )}
         </div>
 
-        <button
-          type="button"
-          className={`splice-fuse${fused ? ' is-complete' : ''}`}
-          onPointerDown={(event) => {
-            if (event.button > 0) return;
-            event.preventDefault();
-            event.currentTarget.setPointerCapture?.(event.pointerId);
-            begin();
-          }}
-          onPointerUp={release}
-          onPointerCancel={release}
-          onPointerLeave={release}
-          onContextMenu={(event) => event.preventDefault()}
-          onKeyDown={(event) => {
-            if ((event.key === ' ' || event.key === 'Enter') && !event.repeat) {
-              event.preventDefault();
-              begin();
-            }
-          }}
-          onKeyUp={(event) => {
-            if (event.key === ' ' || event.key === 'Enter') {
-              event.preventDefault();
-              release();
-            }
-          }}
-          aria-label={fused ? 'Splice fused' : 'Press and hold to fuse the splice'}
-          aria-pressed={fused}
-          title="Hold to light the splice on the scene"
-        >
-          <span className="splice-fuse-progress" style={{ transform: `scaleX(${progress})` }} aria-hidden="true" />
-          <span className="splice-fuse-content">
-            {fused ? <Check size={15} aria-hidden="true" /> : <Radio size={15} aria-hidden="true" />}
-            {fused ? 'SPLICE FUSED' : progress > 0 ? 'KEEP HOLDING' : 'HOLD TO FUSE'}
-          </span>
-        </button>
         <span className="sr-only" aria-live="polite">
           {announcement}
         </span>

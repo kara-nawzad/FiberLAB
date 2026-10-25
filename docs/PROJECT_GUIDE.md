@@ -15,7 +15,7 @@ FiberLAB is a browser-based, Tinkercad-style workspace for drawing GPON and XGS-
 
 The current app already includes:
 
-- A warm, single-message landing hero — headline, one sentence, one **Launch Studio** door — over an SVG fiber scene with an optional hold-to-fuse flourish, followed by a responsive living photonic waveguide, wavelength/launch-power controls, capabilities, and GPON reference thresholds.
+- A warm, single-message landing hero — headline, one sentence, and one earned **Launch Studio** door — over an SVG fiber scene whose lit home and fiber run stay visible before and after the splice, followed by a responsive living photonic waveguide, wavelength/launch-power controls, capabilities, and GPON reference thresholds.
 - A persistent, in-place transition between the overview and studio so canvas edits and selections survive navigation.
 - A drag-and-drop topology canvas.
 - Eight graph element types: **OLT**, **ODF**, **splitter**, **fiber span**, **dome splice closure**, **NAP/FAT**, **ONT/ONU**, and **Wi-Fi 6 gateway**.
@@ -99,7 +99,7 @@ The existing interactive waveguide is preserved below the introductory hero. Its
 
 ### 3.1 Starting state
 
-The app opens on the warm landing hero: the **Splice the fiber. Light the home.** headline, one sentence of scope, and a single **Launch Studio** primary action over the fibre scene. Holding the optional **HOLD TO FUSE** pill plays the fusion animation as a flourish only — it never gates the studio. Every optical reading (budget tables, the simulator-backed receive power, quotations) lives in the engineering sections below the hero rather than in it. Below the hero, one slider drives the 1490 nm waveguide demo at +5.0 dBm with the per-branch 1:4 PLC readout, and model caveats sit behind a **Model scope & assumptions** disclosure. Studio opens on an **empty canvas** with a short dismissible mission hint; the TopBar exposes all three presets, including **MODERN 10G XGS-PON SUBURB**, and the landing quick-load buttons load the standard or failing-link scenario directly.
+The app opens on the warm landing hero: the **Splice the fiber. Light the home.** headline, one sentence of scope, and one action — the **HOLD TO SPLICE** pill. Pressing and holding for 2.5 s fills the pill with a live percentage, releases a travelling light pulse along the fiber, and lights the windows of the home in the scene; the **Launch Studio** button then appears beside a **SPLICE COMPLETE** chip. Releasing early cancels and resets the hold, so the studio is always one deliberate gesture away and never a trap. Every optical reading (budget tables, the simulator-backed receive power, quotations) lives in the engineering sections below the hero rather than in it. Below the hero, one slider drives the 1490 nm waveguide demo at +5.0 dBm with the per-branch 1:4 PLC readout, and model caveats sit behind a **Model scope & assumptions** disclosure. Studio opens on an **empty canvas** with a short dismissible mission hint; the TopBar exposes all three presets, including **MODERN 10G XGS-PON SUBURB**, and the landing quick-load buttons load the standard or failing-link scenario directly.
 
 ### 3.2 Place and connect components
 

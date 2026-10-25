@@ -2,24 +2,30 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SpliceIntroHero } from '../SpliceIntroHero';
 
+const HOLD_BUTTON = /Press and hold to splice the fiber/i;
+
 /**
- * A completed hold. requestAnimationFrame is swapped for a timeout that reports
- * a timestamp well past HOLD_DURATION_MS, so one frame is enough to finish the
- * fusion without waiting out the real animation.
+ * Drive the hold with synthetic frames: each requestAnimationFrame becomes a
+ * timeout whose timestamp jumps by the next offset in `offsets`. A 6000 ms jump
+ * is well past the 2500 ms hold, so a single frame completes the splice.
  */
-async function holdToFuse() {
-  const holdButton = screen.getByRole('button', { name: /Press and hold to fuse the splice/i });
+async function holdFor(offsets: number[]) {
+  const holdButton = screen.getByRole('button', { name: HOLD_BUTTON });
   const originalRaf = window.requestAnimationFrame;
+  let frames = 0;
   Object.defineProperty(window, 'requestAnimationFrame', {
     configurable: true,
-    value: (callback: FrameRequestCallback) => window.setTimeout(() => callback(performance.now() + 4000), 1),
+    value: (callback: FrameRequestCallback) =>
+      window.setTimeout(() => callback(performance.now() + (offsets[Math.min(frames++, offsets.length - 1)] ?? 0)), 1),
   });
 
   try {
     fireEvent.keyDown(holdButton, { key: ' ' });
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(1);
-    });
+    for (let frame = 0; frame < offsets.length; frame += 1) {
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1);
+      });
+    }
   } finally {
     if (originalRaf) {
       Object.defineProperty(window, 'requestAnimationFrame', { configurable: true, value: originalRaf });
@@ -38,21 +44,20 @@ const renderHero = (overrides: Partial<Parameters<typeof SpliceIntroHero>[0]> = 
 afterEach(() => vi.useRealTimers());
 
 describe('SpliceIntroHero', () => {
-  it('says one thing and offers one door into the studio', () => {
-    const { onLaunchStudio } = renderHero();
+  it('offers only the splice, and holds the studio door back until it lands', () => {
+    renderHero();
 
     expect(screen.getByRole('heading', { name: /Splice the fiber/i })).toBeInTheDocument();
     expect(
       screen.getByText('Build a fiber-to-the-home network and simulate its optical performance.'),
     ).toBeInTheDocument();
 
-    const launch = screen.getByRole('button', { name: /Launch Studio/i });
-    fireEvent.click(launch);
-    expect(onLaunchStudio).toHaveBeenCalledOnce();
-
-    // Exactly one primary action: no second studio door, no mission door.
-    expect(screen.queryByRole('button', { name: /Launch Interactive Studio/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /Explore Guided Missions/i })).not.toBeInTheDocument();
+    const hold = screen.getByRole('button', { name: HOLD_BUTTON });
+    expect(hold).toHaveTextContent('HOLD TO SPLICE');
+    // The studio is earned, not handed out: no door, no second action.
+    expect(screen.queryByRole('button', { name: /Launch Studio/i })).not.toBeInTheDocument();
+    expect(screen.queryByText('SPLICE COMPLETE')).not.toBeInTheDocument();
+    expect(screen.getAllByRole('button')).toHaveLength(1);
   });
 
   it('keeps every optical reading out of the hero', () => {
@@ -65,48 +70,60 @@ describe('SpliceIntroHero', () => {
     expect(screen.queryByText('Launch power')).not.toBeInTheDocument();
   });
 
-  it('fuses on a completed hold and never navigates on its own', async () => {
+  it('counts the hold up on the pill, then reveals Launch Studio', async () => {
     vi.useFakeTimers();
     const { onLaunchStudio } = renderHero();
 
-    await holdToFuse();
+    await holdFor([1200]);
 
-    expect(screen.getByText('SPLICE FUSED')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Splice fused/i })).toHaveAttribute('aria-pressed', 'true');
-    // The primary door never moves: it is there before and after the flourish.
-    expect(screen.getByRole('button', { name: /Launch Studio/i })).toBeInTheDocument();
-
-    // Fusion alone must not steal the choice.
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(2000);
-    });
+    const percent = screen.getByText(/SPLICING \d+%/);
+    const value = Number(percent.textContent?.replace(/\D/g, ''));
+    expect(value).toBeGreaterThan(30);
+    expect(value).toBeLessThan(70);
+    // The fill tracks the same number the label shows.
+    const progressFill = document.querySelector('.splice-fuse-progress') as HTMLElement;
+    const fill = Number(progressFill.style.transform.replace(/[^0-9.]/g, ''));
+    expect(fill).toBeCloseTo(value / 100, 1);
     expect(onLaunchStudio).not.toHaveBeenCalled();
   });
 
-  it('cancels the fusion when the hold is released early', () => {
+  it('completes the splice on a full hold and only then offers the studio', async () => {
+    vi.useFakeTimers();
     const { onLaunchStudio } = renderHero();
 
-    const pill = screen.getByRole('button', { name: /Press and hold to fuse the splice/i });
-    fireEvent.keyDown(pill, { key: ' ' });
-    fireEvent.keyUp(pill, { key: ' ' });
+    await holdFor([6000]);
 
-    expect(screen.getByText('HOLD TO FUSE')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Press and hold to fuse the splice/i })).toHaveAttribute(
-      'aria-pressed',
-      'false',
-    );
-    expect(screen.queryByText('SPLICE FUSED')).not.toBeInTheDocument();
+    expect(screen.getByText('SPLICE COMPLETE')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: HOLD_BUTTON })).not.toBeInTheDocument();
+
+    const launch = screen.getByRole('button', { name: /Launch Studio/i });
+    fireEvent.click(launch);
+    expect(onLaunchStudio).toHaveBeenCalledOnce();
+  });
+
+  it('cancels and resets the hold when it is released early', async () => {
+    vi.useFakeTimers();
+    const { onLaunchStudio } = renderHero();
+
+    await holdFor([1200]);
+    fireEvent.keyUp(screen.getByRole('button', { name: HOLD_BUTTON }), { key: ' ' });
+
+    expect(screen.getByText('HOLD TO SPLICE')).toBeInTheDocument();
+    const progressFill = document.querySelector('.splice-fuse-progress') as HTMLElement;
+    expect(progressFill.style.transform).toBe('scaleX(0)');
+    expect(screen.queryByText('SPLICE COMPLETE')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Launch Studio/i })).not.toBeInTheDocument();
     expect(onLaunchStudio).not.toHaveBeenCalled();
   });
 
-  it('announces the fusion to assistive technology', async () => {
+  it('announces the splice to assistive technology', async () => {
     vi.useFakeTimers();
     renderHero();
 
-    const pill = screen.getByRole('button', { name: /Press and hold to fuse the splice/i });
+    const pill = screen.getByRole('button', { name: HOLD_BUTTON });
     fireEvent.keyDown(pill, { key: ' ' });
-    expect(screen.getByText('Fusion started. Keep holding.')).toBeInTheDocument();
+    expect(screen.getByText(/Splicing started/i)).toBeInTheDocument();
     fireEvent.keyUp(pill, { key: ' ' });
-    expect(screen.getByText('Splice held briefly. Press and hold again to complete the fusion.')).toBeInTheDocument();
+    expect(screen.getByText(/Splice released early/i)).toBeInTheDocument();
   });
 });

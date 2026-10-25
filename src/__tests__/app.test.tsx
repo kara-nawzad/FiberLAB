@@ -25,6 +25,30 @@ function enterStudioFromNav() {
   fireEvent.click(within(nav).getByRole('button', { name: /^Launch Studio$/i }));
 }
 
+/**
+ * Earn the hero's studio door: hold the splice with one synthetic frame whose
+ * timestamp is past the 2.5 s hold, then wait for the door to appear.
+ */
+async function spliceHero() {
+  const holdButton = await screen.findByRole('button', { name: /Press and hold to splice the fiber/i });
+  const originalRaf = window.requestAnimationFrame;
+  Object.defineProperty(window, 'requestAnimationFrame', {
+    configurable: true,
+    value: (callback: FrameRequestCallback) =>
+      window.setTimeout(() => callback(performance.now() + 6000), 1) as unknown as number,
+  });
+  try {
+    fireEvent.keyDown(holdButton, { key: ' ' });
+    await screen.findByText('SPLICE COMPLETE');
+  } finally {
+    if (originalRaf) {
+      Object.defineProperty(window, 'requestAnimationFrame', { configurable: true, value: originalRaf });
+    } else {
+      Reflect.deleteProperty(window, 'requestAnimationFrame');
+    }
+  }
+}
+
 async function renderStudio() {
   const result = render(<App />);
   enterStudioFromNav();
@@ -87,7 +111,7 @@ function getCanvasNodeByText(text: string | RegExp): HTMLElement {
  * reaches the ONT node, and proves the BOM modal reports the same plant.
  */
 describe('FiberLAB application shell', () => {
-  it('introduces the lab in one screen and hands the whole workbench to one door', async () => {
+  it('introduces the lab in one screen and earns the studio door by splicing', async () => {
     render(<App />);
 
     const hero = await screen.findByRole('region', { name: /Splice the fiber/i });
@@ -103,9 +127,13 @@ describe('FiberLAB application shell', () => {
     expect(within(hero).queryByText(/Splitter 1:4/)).not.toBeInTheDocument();
     expect(within(hero).queryByRole('button', { name: /Explore Guided Missions/i })).not.toBeInTheDocument();
 
-    // One primary action, plus the optional hold-to-fuse flourish on the scene.
-    expect(within(hero).getByRole('button', { name: /^Launch Studio$/i })).toBeInTheDocument();
-    expect(within(hero).getAllByRole('button')).toHaveLength(2);
+    // One action, and it is the splice: the studio door is earned.
+    expect(within(hero).getByRole('button', { name: /Press and hold to splice the fiber/i })).toHaveTextContent(
+      'HOLD TO SPLICE',
+    );
+    expect(within(hero).queryByRole('button', { name: /^Launch Studio$/i })).not.toBeInTheDocument();
+
+    await spliceHero();
 
     fireEvent.click(within(hero).getByRole('button', { name: /^Launch Studio$/i }));
     expect(await screen.findByRole('button', { name: 'Run Simulation' })).toBeInTheDocument();

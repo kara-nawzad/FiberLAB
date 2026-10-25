@@ -385,16 +385,17 @@
   position: absolute;
   z-index: -2;
   inset: 0 0 0 auto;
-  width: 46%;
+  width: 50%;
   overflow: hidden;
-  /* The photograph becomes a quiet backdrop: slightly smaller, a little
-   * desaturated, and lifted toward the cream so the headline always wins. */
   background: #f0d9c9;
 }
 
+/* The illustration is drawn at full strength: crisper contrast, no fade. The
+ * cream wash below — not an opacity reduction — is what keeps the headline
+ * legible on the left. */
 .splice-hero-scene .splice-hero-svg {
-  opacity: 0.88;
-  filter: saturate(0.9) contrast(0.96);
+  opacity: 1;
+  filter: saturate(1.06) contrast(1.08);
 }
 
 .splice-hero-svg,
@@ -417,24 +418,29 @@
       90deg,
       var(--fiber-ground) 0%,
       rgba(255, 244, 230, 0.99) 10%,
-      rgba(255, 244, 230, 0.9) 34%,
-      rgba(255, 244, 230, 0.42) 70%,
-      rgba(255, 244, 230, 0.12) 100%
+      rgba(255, 244, 230, 0.9) 32%,
+      rgba(255, 244, 230, 0.4) 55%,
+      rgba(255, 244, 230, 0.07) 76%,
+      rgba(255, 244, 230, 0) 100%
     ),
-    linear-gradient(0deg, rgba(255, 244, 230, 0.55) 0%, rgba(255, 244, 230, 0.08) 34%, transparent 60%);
+    linear-gradient(0deg, rgba(255, 244, 230, 0.26) 0%, transparent 20%);
 }
 
+/* The home is recognisable before and after the splice: the windows and the
+ * frame carry their own warm glass, at 0.8 before and full strength after. */
 .splice-hero-scene .hh {
-  opacity: 0;
-  filter: drop-shadow(0 0 3px rgba(255, 176, 32, 0.46));
+  opacity: 0.68;
+  filter: drop-shadow(0 0 3px rgba(255, 176, 32, 0.4));
   transition:
-    opacity 700ms ease,
-    filter 900ms ease;
+    opacity 800ms ease,
+    filter 800ms ease;
 }
 
+/* The light crosses the fiber first (see .pl), then the home lights up. */
 .splice-hero-scene.is-done .hh {
-  opacity: 0.96;
-  filter: drop-shadow(0 0 8px rgba(255, 176, 32, 0.82));
+  opacity: 1;
+  filter: drop-shadow(0 0 10px rgba(255, 176, 32, 0.92));
+  transition-delay: 900ms;
 }
 
 .splice-hero-scene .pl {
@@ -448,8 +454,8 @@
 
 .splice-hero-scene.is-done .pl {
   opacity: 1;
-  animation: splice-ray 850ms linear infinite;
-  filter: drop-shadow(0 0 4px rgba(255, 176, 32, 0.8));
+  animation: splice-ray 700ms linear infinite;
+  filter: drop-shadow(0 0 4px rgba(255, 176, 32, 0.85));
 }
 
 .splice-hero-scene .sk {
@@ -467,11 +473,11 @@
   opacity: 0;
 }
 .splice-hero-scene .dim {
-  opacity: 0.52;
+  opacity: 0.24;
   transition: opacity 900ms ease;
 }
 .splice-hero-scene.is-done .dim {
-  opacity: 0.08;
+  opacity: 0.04;
 }
 
 @keyframes splice-ray {
@@ -742,42 +748,48 @@
   margin-top: var(--sp-8);
 }
 
-/* Optional flourish: press and hold to fuse the fibre on the scene. The Launch
- * button above does the same job in one click, so this never gates the studio. */
+/* The hero's two controls are deliberately large: the studio button and the
+ * hold-to-splice pill share one height so the pair reads as one row. */
+.splice-hero-actions .landing-button {
+  min-height: 58px;
+  gap: var(--sp-2);
+  padding: 0 calc(var(--sp-6) + var(--sp-1));
+  font-size: var(--fs-md);
+}
+
+/* Hold to splice: this is the hero's action, not a flourish. Press and hold
+ * for HOLD_DURATION_MS; a warm fill climbs across the pill while the label
+ * counts up, then the scene's light crosses the fiber. */
 .splice-fuse {
-  position: absolute;
-  right: clamp(20px, 5vw, 64px);
-  bottom: clamp(24px, 8vh, 72px);
-  z-index: 2;
+  position: relative;
   display: inline-flex;
-  min-height: var(--control-lg);
+  min-height: 58px;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  padding: 0 var(--sp-4);
-  border: 1px solid rgba(43, 26, 20, 0.62);
+  padding: 0 calc(var(--sp-6) + var(--sp-1));
+  border: 1px solid transparent;
   border-radius: var(--r-pill);
-  background: rgba(43, 26, 20, 0.84);
+  background: var(--pu-pri-cta);
   color: #fffaf2;
   cursor: pointer;
   touch-action: none;
   user-select: none;
-  backdrop-filter: blur(6px);
+  box-shadow: 0 10px 26px rgba(200, 81, 44, 0.24);
   transition:
-    border-color 170ms ease,
     background 170ms ease,
     box-shadow 170ms ease,
-    transform 170ms ease;
+    transform 140ms ease;
 }
 
 .splice-fuse:hover {
-  border-color: var(--fiber-coral);
-  background: #2b1a14;
-  box-shadow: 0 8px 24px rgba(43, 26, 20, 0.22);
+  background: var(--pu-pri-cta-hover);
+  box-shadow: 0 13px 30px rgba(200, 81, 44, 0.3);
 }
 
-.splice-fuse:active {
-  transform: scale(0.99);
+.splice-fuse:active,
+.splice-fuse.is-holding {
+  transform: scale(0.995);
 }
 
 .splice-fuse:focus-visible {
@@ -785,12 +797,13 @@
   outline-offset: 3px;
 }
 
+/* Progress is unmistakable: a cream fill that grows with the hold. */
 .splice-fuse-progress {
   position: absolute;
   inset: 0;
   transform: scaleX(0);
   transform-origin: left center;
-  background: linear-gradient(90deg, rgba(228, 103, 63, 0.18), rgba(228, 103, 63, 0.62));
+  background: linear-gradient(90deg, rgba(255, 244, 230, 0.34), rgba(255, 244, 230, 0.66));
   pointer-events: none;
 }
 
@@ -800,34 +813,53 @@
   align-items: center;
   gap: var(--sp-2);
   font-family: 'JetBrains Mono', ui-monospace, monospace;
-  font-size: var(--type-caption);
+  font-size: var(--fs-md);
   font-weight: var(--fw-bold);
   letter-spacing: var(--tracking-label);
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
 .splice-fuse-content svg {
-  color: #ffbb70;
+  color: #ffd9bd;
 }
 
-/* Fused: the pill settles into a calm confirmation. */
+/* Completed: the pill settles into a calm status chip beside the studio door. */
 .splice-fuse.is-complete {
-  border-color: #6fd3a4;
-  background: #0b6045;
-  box-shadow: 0 8px 24px rgba(11, 96, 69, 0.26);
+  border-color: #b7e6cd;
+  background: #eaf8f1;
+  color: #075e40;
+  box-shadow: 0 8px 20px rgba(11, 96, 69, 0.12);
+  cursor: default;
+  touch-action: auto;
 }
 
 .splice-fuse.is-complete .splice-fuse-content svg {
-  color: #a9f0c9;
+  color: #0b6045;
 }
 
-.splice-fuse.is-complete .splice-fuse-progress {
-  background: linear-gradient(90deg, rgba(111, 211, 164, 0.24), rgba(111, 211, 164, 0.6));
+/* A short, calm entrance for whichever control the hero is offering. */
+.splice-hero-actions > * {
+  animation: splice-action-in 300ms ease-out backwards;
+}
+
+@keyframes splice-action-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .splice-fuse {
     transition: none;
+  }
+  .splice-hero-actions > * {
+    animation: none;
   }
 }
 
@@ -1653,26 +1685,21 @@
     font-size: var(--type-display);
   }
   .splice-hero-scene {
-    width: 50%;
+    width: 52%;
   }
+  /* Same rule as desktop: readable copy on the left, a crisp home on the right. */
   .splice-hero-scene-wash {
     background: linear-gradient(
       90deg,
       var(--fiber-ground) 0%,
       rgba(255, 244, 230, 0.99) 12%,
-      rgba(255, 244, 230, 0.9) 46%,
-      rgba(255, 244, 230, 0.46) 80%,
-      rgba(255, 244, 230, 0.16) 100%
+      rgba(255, 244, 230, 0.9) 44%,
+      rgba(255, 244, 230, 0.38) 68%,
+      rgba(255, 244, 230, 0.06) 100%
     );
   }
-  /* Keep a single clear line under the copy for the optional fusion pill. */
   .splice-hero-content {
     min-height: 540px;
-    padding-bottom: calc(var(--sp-6) + var(--control-lg));
-  }
-  .splice-fuse {
-    right: var(--page-gutter);
-    bottom: var(--sp-4);
   }
   .landing-hero {
     grid-template-columns: 1fr;
@@ -1734,14 +1761,16 @@
   }
   .splice-hero-scene {
     width: 100%;
-    opacity: 0.62;
   }
+  /* The copy needs a scrim on a phone, but the home sits low-right behind the
+   * actions, so the wash thins out below the headline instead of covering it. */
   .splice-hero-scene-wash {
     background: linear-gradient(
       180deg,
-      rgba(255, 244, 230, 0.96) 0%,
-      rgba(255, 244, 230, 0.86) 42%,
-      rgba(255, 244, 230, 0.94) 100%
+      rgba(255, 244, 230, 0.97) 0%,
+      rgba(255, 244, 230, 0.9) 38%,
+      rgba(255, 244, 230, 0.64) 66%,
+      rgba(255, 244, 230, 0.5) 100%
     );
   }
   .landing-nav-wrap {
@@ -1794,20 +1823,17 @@
     font-size: max(var(--fs-sm), 15px);
     line-height: 1.55;
   }
-  /* One full-width primary action is the clearest thing on a phone. */
+  /* Full-width controls are the clearest thing on a phone, and they keep the
+   * 58 px targets above the 44 px floor. */
   .splice-hero-actions {
     width: 100%;
+    flex-direction: column;
+    align-items: stretch;
     margin-top: var(--sp-6);
   }
-  .splice-hero-actions .landing-button {
-    width: 100%;
-  }
-  /* The scene is a quiet backdrop at this width; the fusion pill joins the
-   * column below the primary action. */
+  .splice-hero-actions .landing-button,
   .splice-fuse {
-    position: static;
-    align-self: flex-start;
-    margin-top: var(--sp-4);
+    width: 100%;
   }
   .landing-hero {
     gap: var(--sp-6);
