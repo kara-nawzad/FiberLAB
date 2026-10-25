@@ -991,8 +991,8 @@ button.pu-logo {
   display: flex;
   gap: var(--sp-3);
   align-items: center;
-  margin: 0 var(--shell-pad) var(--sp-3);
-  padding: var(--card-pad);
+  margin: 0 var(--shell-pad) var(--sp-4);
+  padding: var(--sp-3);
   border: 1px solid var(--pu-line);
   border-radius: var(--r-xl);
   background: #ffffff;
@@ -1150,17 +1150,18 @@ button.pu-logo {
   line-height: var(--leading-snug);
 }
 .pu-insp-summary {
-  margin: 0 0 var(--sp-2);
-  padding: var(--sp-2);
+  margin: 0 0 var(--sp-4);
+  padding: var(--sp-3);
   border: 1px solid #f0d1b1;
   border-radius: var(--r-md);
   background: #fff0df;
   color: var(--pu-ink);
-  font-size: var(--type-small);
-  line-height: var(--leading-snug);
+  font-size: var(--type-body);
+  line-height: 1.55;
 }
 .pu-adv {
-  margin-top: var(--sp-2);
+  margin-top: var(--sp-4);
+  padding-top: var(--sp-1);
   border-top: 1px solid var(--pu-line);
 }
 .pu-adv-head {
@@ -1209,7 +1210,7 @@ button.pu-logo {
 }
 .pu-insp-foot {
   flex: 0 0 auto;
-  padding: var(--sp-2) var(--shell-pad);
+  padding: var(--sp-3) var(--shell-pad);
   border-top: 1px solid var(--pu-line);
   background: var(--pu-panel);
 }
@@ -2244,44 +2245,52 @@ button.pu-logo {
   /* Clears the floating tool strip above the canvas, even at touch sizes. */
   margin-top: calc(var(--control-tap) + var(--sp-3) + var(--sp-2)) !important; /* 64 */
 }
-/* Empty canvas: a compact "start here" chip with the mission shortcut. It is
- * a nudge, not furniture — one short stack in the top-centre of the canvas. */
+/* Empty canvas: a single-line chip — what is missing, the mission shortcut, and
+ * a dismiss. It is a nudge, not furniture. */
 .pu-empty-card {
   display: flex;
-  max-width: min(300px, calc(100vw - var(--sp-8) - var(--sp-1)));
-  align-items: flex-start;
-  gap: var(--sp-2);
-  padding: var(--sp-2) var(--sp-3) var(--sp-2) var(--sp-2);
+  max-width: min(520px, calc(100vw - var(--sp-8) - var(--sp-1)));
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-1) var(--sp-2);
+  padding: var(--sp-1) var(--sp-2) var(--sp-1) var(--sp-1);
   border-radius: var(--r-md);
 }
 .pu-empty-icon {
   display: grid;
-  place-items: center;
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   flex-shrink: 0;
+  place-items: center;
   border-radius: var(--r-sm);
   background: var(--pu-pri-soft);
   color: var(--pu-pri);
 }
+/* One line, always: the sentence ellipsizes rather than growing the chip. */
 .pu-empty-copy {
-  display: grid;
-  gap: 2px;
+  display: block;
   min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  font-size: var(--type-body);
+  line-height: var(--leading-snug);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .pu-empty-title {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--sp-1);
+  margin-right: var(--sp-2);
+  color: var(--pu-ink);
+  font-weight: var(--fw-semibold);
+}
+.pu-empty-hint {
+  color: var(--pu-mut);
 }
 .pu-empty-dismiss {
   display: grid;
-  place-items: center;
   width: 24px;
   height: 24px;
   flex: 0 0 auto;
-  margin: -2px -4px 0 0;
+  place-items: center;
   border: 0;
   border-radius: var(--r-sm);
   background: transparent;
@@ -2297,11 +2306,10 @@ button.pu-logo {
 }
 .pu-empty-action {
   display: inline-flex;
-  justify-self: start;
+  flex: 0 0 auto;
   align-items: center;
   gap: var(--sp-1);
   min-height: 26px;
-  margin-top: 2px;
   padding: 0 var(--sp-2);
   border: 1px solid var(--pu-line);
   border-radius: var(--r-sm);
@@ -2316,6 +2324,13 @@ button.pu-logo {
 .pu-empty-action:focus-visible {
   outline: 2px solid var(--pu-pri);
   outline-offset: 2px;
+}
+@media (max-width: 640px) {
+  /* Phones: keep the title and both actions, drop the sentence so the chip
+   * stays one row above the canvas. */
+  .pu-empty-hint {
+    display: none;
+  }
 }
 /* Short label swaps in on phones ("Run" instead of "Run Simulation"). */
 .pu-label-short {
@@ -2644,7 +2659,7 @@ button.pu-logo {
     z-index: 46;
     width: auto;
     max-width: none;
-    height: 56vh;
+    height: 64vh;
     max-height: 92vh;
     border: 1px solid var(--pu-line) !important;
     border-radius: var(--r-2xl) var(--r-2xl) 0 0;

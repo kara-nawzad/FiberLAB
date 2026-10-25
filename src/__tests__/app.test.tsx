@@ -27,7 +27,7 @@ function enterStudioFromNav() {
 
 /**
  * Earn the hero's studio door: hold the splice with one synthetic frame whose
- * timestamp is past the 2.5 s hold, then wait for the door to appear.
+ * timestamp is past the 2 s hold, then wait for the door to appear.
  */
 async function spliceHero() {
   const holdButton = await screen.findByRole('button', { name: /Press and hold to splice the fiber/i });

@@ -161,7 +161,7 @@
   }
 
   .metric {
-    @apply border border-slate-200 bg-slate-50 px-3 py-2;
+    @apply border border-slate-200 bg-slate-50 px-3 py-2.5;
     border-radius: var(--r-md);
   }
 

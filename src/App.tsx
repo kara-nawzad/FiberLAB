@@ -1261,7 +1261,7 @@ function StudioWorkspace({ onOpenOverview, landingCommand, isActive = true }: St
                     fitView
                     proOptions={{ hideAttribution: true }}
                   >
-                    <Background variant={BackgroundVariant.Dots} gap={18} size={1.3} color="#E6D5C3" />
+                    <Background variant={BackgroundVariant.Dots} gap={17} size={1.6} color="#DCC4AC" />
                     <Controls position="bottom-right" showInteractive={false} />
                     <MiniMap
                       position="top-right"
@@ -1299,29 +1299,25 @@ function StudioWorkspace({ onOpenOverview, landingCommand, isActive = true }: St
                       <Panel position="top-center" className="pu-empty-panel !m-3">
                         <div className="panel pu-empty-card shadow-panel">
                           <span className="pu-empty-icon" aria-hidden="true">
-                            <MousePointer2 size={16} />
+                            <MousePointer2 size={13} />
                           </span>
-                          <div className="pu-empty-copy">
-                            <div className="pu-empty-title">
-                              <span className="text-body font-semibold text-[var(--pu-ink)]">The canvas is empty</span>
-                              <button
-                                type="button"
-                                className="pu-empty-dismiss"
-                                onClick={() => setEmptyHintDismissed(true)}
-                                aria-label="Dismiss canvas hint"
-                                title="Dismiss"
-                              >
-                                <X size={13} aria-hidden="true" />
-                              </button>
-                            </div>
-                            <div className="text-body leading-snug text-[var(--pu-mut)]">
-                              Drag in an OLT, or let a mission walk you through it.
-                            </div>
-                            <button type="button" className="pu-empty-action" onClick={openMissions}>
-                              <Flag size={13} aria-hidden="true" />
-                              Open the mission
-                            </button>
-                          </div>
+                          <span className="pu-empty-copy">
+                            <span className="pu-empty-title">The canvas is empty</span>
+                            <span className="pu-empty-hint">Drag in an OLT, or let a mission walk you through it.</span>
+                          </span>
+                          <button type="button" className="pu-empty-action" onClick={openMissions}>
+                            <Flag size={12} aria-hidden="true" />
+                            Open the mission
+                          </button>
+                          <button
+                            type="button"
+                            className="pu-empty-dismiss"
+                            onClick={() => setEmptyHintDismissed(true)}
+                            aria-label="Dismiss canvas hint"
+                            title="Dismiss"
+                          >
+                            <X size={13} aria-hidden="true" />
+                          </button>
                         </div>
                       </Panel>
                     ) : null}

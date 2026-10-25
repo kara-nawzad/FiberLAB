@@ -9,13 +9,13 @@ interface SpliceIntroHeroProps {
 /*
  * The hero is deliberately thin: brand eyebrow, headline, one sentence, and a
  * single door into the studio — earned by doing the thing the headline says.
- * You hold the splice for two and a half seconds, the light crosses the fiber,
- * the home lights up, and only then does "Launch Studio" appear.
+ * You hold the splice for two seconds, the light crosses the fiber, the dark
+ * home lights up, and only then does "Launch Studio" appear.
  *
  * Everything an engineer needs to read — budgets, tables, missions, quotations —
  * lives in the sections below.
  */
-const HOLD_DURATION_MS = 2500;
+const HOLD_DURATION_MS = 2000;
 
 type ScheduledFrame = { id: number; kind: 'raf' | 'timeout' };
 
@@ -54,7 +54,7 @@ export function SpliceIntroHero({ onLaunchStudio }: SpliceIntroHeroProps) {
   const begin = useCallback(() => {
     if (openedRef.current || startedAtRef.current !== null) return;
     startedAtRef.current = performance.now();
-    setAnnouncement('Splicing started. Keep holding for two and a half seconds.');
+    setAnnouncement('Splicing started. Keep holding for two seconds.');
 
     const advance = (now: number) => {
       if (startedAtRef.current === null || openedRef.current) return;
@@ -146,7 +146,7 @@ export function SpliceIntroHero({ onLaunchStudio }: SpliceIntroHeroProps) {
                 }
               }}
               aria-label="Press and hold to splice the fiber"
-              title="Hold for two and a half seconds to splice the fiber"
+              title="Hold for two seconds to splice the fiber"
             >
               <span className="splice-fuse-progress" style={{ transform: `scaleX(${progress})` }} aria-hidden="true" />
               <span className="splice-fuse-content">
