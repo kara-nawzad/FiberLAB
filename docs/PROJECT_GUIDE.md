@@ -510,8 +510,8 @@ The app is a client-side React/TypeScript application. There is no backend servi
 | `src/styles/global.css`                                     | Tailwind layers, application-wide styles, and mission keyframes.                                                              |
 | `src/styles/photo-ui.css`                                   | Photo-inspired studio UI overrides, loaded last.                                                                              |
 | `src/styles/theme.css`                                      | Warm responsive landing and studio theme, including modal and hardware treatments.                                            |
-| `public/favicon.svg`                                        | Scalable browser-tab icon: the brand tile plus the same light-pulse mark the in-app wordmark uses.                            |
-| `public/apple-touch-icon.png`                               | 180 × 180 iOS home-screen icon in the same tile and mark.                                                                     |
+| `public/favicon.svg`                                        | Scalable browser-tab icon: the coral F on the hero's cream tile, matching the phone top-bar mark.                             |
+| `public/apple-touch-icon.png`                               | 180 × 180 iOS home-screen icon: the same cream tile and coral F.                                                              |
 | `public/og-image.png`                                       | 1200 × 630 social card used by the absolute Open Graph/Twitter metadata in `index.html`.                                      |
 | `public/404.html`                                           | Standalone branded not-found page for the static host.                                                                        |
 | `src/hooks/useDialogA11y.ts`                                | Dialog focus trap, Escape/backdrop close and focus restore for the overlays.                                                  |

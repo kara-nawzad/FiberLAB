@@ -142,7 +142,6 @@ type LandingCommand = LandingCommandInput & { requestId: number };
 interface StudioWorkspaceProps {
   onOpenOverview: () => void;
   landingCommand: LandingCommand | null;
-  isActive?: boolean;
 }
 
 /** Matches the canvas-first breakpoint in photo-ui.css. */
@@ -213,7 +212,7 @@ function initialTopology(): { nodes: PonNode[]; edges: PonEdge[] } {
  * Studio workspace — canvas, drag & drop, selection and simulation wiring.
  * ========================================================================== */
 
-function StudioWorkspace({ onOpenOverview, landingCommand, isActive = true }: StudioWorkspaceProps) {
+function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProps) {
   const seeded = useMemo(initialTopology, []);
   const [nodes, setNodes, onNodesChange] = useNodesState<PonNode>(seeded.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState<PonEdge>(seeded.edges);
@@ -1072,13 +1071,12 @@ function StudioWorkspace({ onOpenOverview, landingCommand, isActive = true }: St
     void instance.fitView({ padding: 0.08, maxZoom: 1.15 });
   }, []);
 
-  useEffect(() => {
-    if (!isActive) return;
-    const timer = window.setTimeout(() => {
-      void fitView({ padding: 0.08, maxZoom: 1.15, duration: 200 });
-    }, 60);
-    return () => window.clearTimeout(timer);
-  }, [isActive, sidebarCollapsed, inspectorCollapsed, fitView]);
+  /* The viewport is never re-fitted automatically. Dropping a component,
+   * selecting a part, opening the inspector or expanding the status bar all
+   * used to re-run fitView, which yanked the drawing and read as an unwanted
+   * zoom on every click. The view now only moves when the user asks: the
+   * initial mount, a preset or mission load, Fit view, Zoom to 100%, or a
+   * jump from the events list. */
 
   // Canvas-first on small screens: start with the component library and the
   // inspector collapsed so the canvas is usable, then re-collapse them if the
@@ -1258,6 +1256,10 @@ function StudioWorkspace({ onOpenOverview, landingCommand, isActive = true }: St
                     deleteKeyCode={['Backspace', 'Delete']}
                     minZoom={0.2}
                     maxZoom={2.2}
+                    /* A second tap on a part (or a double click on the canvas)
+                     * must not zoom: pinch and the zoom controls remain the only
+                     * ways in and out. */
+                    zoomOnDoubleClick={false}
                     fitView
                     proOptions={{ hideAttribution: true }}
                   >
@@ -1492,11 +1494,7 @@ export default function App() {
           className={`studio-viewport ${viewMode === 'studio' ? 'is-active' : 'is-staged'}`}
           aria-hidden={viewMode !== 'studio'}
         >
-          <StudioWorkspace
-            onOpenOverview={returnToOverview}
-            landingCommand={landingCommand}
-            isActive={viewMode === 'studio'}
-          />
+          <StudioWorkspace onOpenOverview={returnToOverview} landingCommand={landingCommand} />
         </div>
         <div
           ref={landingViewportRef}

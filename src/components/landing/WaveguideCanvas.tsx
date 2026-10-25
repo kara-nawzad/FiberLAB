@@ -50,11 +50,15 @@ const PORTS = [
   { port: '04', startY: 197, endY: 267 },
 ] as const;
 
+/* Compact geometry: each branch stops a few px above its pigtail card, so no
+ * curve ever runs underneath a card's text. */
+const MOBILE_PORT_OUT_Y = 269;
+const MOBILE_CARD_H = 58;
 const MOBILE_PORTS = [
-  { port: '01', startX: 132, endX: 84, endY: 357 },
-  { port: '02', startX: 159, endX: 270, endY: 357 },
-  { port: '03', startX: 201, endX: 84, endY: 455 },
-  { port: '04', startX: 228, endX: 270, endY: 455 },
+  { port: '01', startX: 132, endX: 94, cardY: 316 },
+  { port: '02', startX: 159, endX: 256, cardY: 316 },
+  { port: '03', startX: 201, endX: 94, cardY: 414 },
+  { port: '04', startX: 228, endX: 256, cardY: 414 },
 ] as const;
 
 function DesktopWaveguide({
@@ -304,11 +308,12 @@ function MobileWaveguide({
         −{PLC_1X4_INSERTION_LOSS_DB.toFixed(2)} dB
       </text>
 
-      {MOBILE_PORTS.map(({ port, startX, endX, endY }, index) => {
-        const startY = 269;
-        const path = `M ${startX} ${startY} C ${startX} ${startY + 28}, ${endX} ${endY - 30}, ${endX} ${endY - 16}`;
+      {MOBILE_PORTS.map(({ port, startX, endX, cardY }, index) => {
+        /* The curve lands 6 px above the card it feeds. */
+        const path = `M ${startX} ${MOBILE_PORT_OUT_Y} C ${startX} ${MOBILE_PORT_OUT_Y + 26}, ${endX} ${
+          cardY - 34
+        }, ${endX} ${cardY - 6}`;
         const x = index % 2 === 0 ? 14 : 186;
-        const y = index < 2 ? 335 : 433;
         return (
           <g key={port}>
             <path d={path} fill="none" stroke={rayColor} strokeWidth="1.6" opacity="0.72" />
@@ -320,13 +325,13 @@ function MobileWaveguide({
               strokeWidth="0.8"
               strokeLinecap="round"
             />
-            <rect x={x} y={y} width="160" height="58" rx="9" fill="#fffaF2" stroke="#d8bfa0" />
-            <text x={x + 11} y={y + 20} fill="#85695a" fontFamily="ui-monospace, monospace" fontSize="9">
+            <rect x={x} y={cardY} width="160" height={MOBILE_CARD_H} rx="9" fill="#fffaF2" stroke="#d8bfa0" />
+            <text x={x + 11} y={cardY + 21} fill="#85695a" fontFamily="ui-monospace, monospace" fontSize="9">
               PIGTAIL {port}
             </text>
             <text
               x={x + 11}
-              y={y + 41}
+              y={cardY + 43}
               fill="#2b1a14"
               fontFamily="ui-monospace, monospace"
               fontSize="12"

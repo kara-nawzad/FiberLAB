@@ -1,15 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="FiberLAB">
   <title>FiberLAB</title>
-  <!-- The tab mark is the in-app logo mark: the brand tile in --pu-pri with the
-       same "light pulse" glyph the wordmark carries (lucide Activity geometry,
-       scaled to the tile and thickened so it stays legible at 16 px). -->
-  <rect width="64" height="64" rx="14" fill="#e4673f" />
-  <path
-    d="M53 32h-9.6l-7.2 21.6L21.8 10.4l-7.2 21.6H5"
-    fill="none"
-    stroke="#fff4e6"
-    stroke-width="5"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-  />
+  <!-- The tab mark is the brand's "F" on the hero's creamy tile: a warm cream
+       field with the coral initial, so the icon still reads at 16 px. -->
+  <rect width="64" height="64" rx="14" fill="#fff4e6" />
+  <rect x="19" y="15" width="9" height="34" rx="2.5" fill="#e4673f" />
+  <rect x="19" y="15" width="28" height="9" rx="2.5" fill="#e4673f" />
+  <rect x="19" y="28.5" width="21" height="8" rx="2.5" fill="#e4673f" />
 </svg>
