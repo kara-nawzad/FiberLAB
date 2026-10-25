@@ -2256,43 +2256,44 @@ button.pu-logo {
   /* Clears the floating tool strip above the canvas, even at touch sizes. */
   margin-top: calc(var(--control-tap) + var(--sp-3) + var(--sp-2)) !important; /* 64 */
 }
-/* Empty canvas: a short "start here" card with the mission shortcut. */
+/* Empty canvas: a compact "start here" chip with the mission shortcut. It is
+ * a nudge, not furniture — one short stack in the top-centre of the canvas. */
 .pu-empty-card {
   display: flex;
-  max-width: min(380px, calc(100vw - var(--sp-8) - var(--sp-1)));
+  max-width: min(300px, calc(100vw - var(--sp-8) - var(--sp-1)));
   align-items: flex-start;
   gap: var(--sp-2);
-  padding: var(--sp-3) var(--sp-4);
-  border-radius: var(--r-lg);
+  padding: var(--sp-2) var(--sp-3) var(--sp-2) var(--sp-2);
+  border-radius: var(--r-md);
 }
 .pu-empty-icon {
   display: grid;
   place-items: center;
-  width: var(--sp-8);
-  height: var(--sp-8);
+  width: 24px;
+  height: 24px;
   flex-shrink: 0;
-  border-radius: var(--r-md);
+  border-radius: var(--r-sm);
   background: var(--pu-pri-soft);
   color: var(--pu-pri);
 }
 .pu-empty-copy {
   display: grid;
-  gap: var(--sp-1);
+  gap: 2px;
   min-width: 0;
 }
 .pu-empty-title {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--sp-2);
+  gap: var(--sp-1);
 }
 .pu-empty-dismiss {
   display: grid;
   place-items: center;
-  width: var(--control-sm);
-  height: var(--control-sm);
+  width: 24px;
+  height: 24px;
   flex: 0 0 auto;
-  margin: calc(var(--sp-2) * -1) calc(var(--sp-2) * -1) 0 0;
+  margin: -2px -4px 0 0;
   border: 0;
   border-radius: var(--r-sm);
   background: transparent;
@@ -2311,14 +2312,14 @@ button.pu-logo {
   justify-self: start;
   align-items: center;
   gap: var(--sp-1);
-  min-height: var(--control-sm);
-  margin-top: var(--sp-1);
-  padding: 0 var(--sp-3);
+  min-height: 26px;
+  margin-top: 2px;
+  padding: 0 var(--sp-2);
   border: 1px solid var(--pu-line);
-  border-radius: var(--r-md);
+  border-radius: var(--r-sm);
   background: var(--pu-panel);
   color: var(--pu-pri);
-  font-size: var(--type-body);
+  font-size: var(--type-small);
   font-weight: var(--fw-semibold);
 }
 .pu-empty-action:hover {

@@ -1335,7 +1335,7 @@ function StudioWorkspace({
                                 <X size={13} aria-hidden="true" />
                               </button>
                             </div>
-                            <div className="text-label text-[var(--pu-mut)]">
+                            <div className="text-body leading-snug text-[var(--pu-mut)]">
                               Drag in an OLT, or let a mission walk you through it.
                             </div>
                             <button type="button" className="pu-empty-action" onClick={openMissions}>
