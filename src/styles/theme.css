@@ -192,7 +192,8 @@
 .fiberlab-studio .react-flow__edge-path.optical-edge.is-live {
   stroke-dasharray: 10 6;
   animation: optical-flow 1.15s linear infinite;
-  filter: drop-shadow(0 0 3px rgba(228, 103, 63, 0.42)) drop-shadow(0 1px 4px rgba(228, 103, 63, 0.16));
+  /* Cobalt halo matched to the live stroke (#2563EB), not the brand orange. */
+  filter: drop-shadow(0 0 3px rgba(37, 99, 235, 0.4)) drop-shadow(0 1px 4px rgba(37, 99, 235, 0.16));
 }
 
 .fiberlab-studio .react-flow__edge-path.optical-edge.is-degraded {
@@ -717,71 +718,76 @@
 }
 
 .splice-hero-lede {
-  max-width: 510px;
-  margin: var(--sp-6) 0 0;
+  max-width: 470px;
+  margin: var(--sp-5) 0 0;
   color: #705443;
   font-size: var(--fs-md);
   font-weight: var(--fw-medium);
-  line-height: 1.75;
+  line-height: 1.6;
 }
 
+/* One quiet instrument strip instead of a card: source, what is measured,
+ * the number and its status on a single line. */
 .splice-live-readout {
-  width: min(490px, 100%);
-  margin-top: var(--sp-8);
-  padding: var(--sp-4) var(--sp-4) var(--sp-3);
+  display: inline-flex;
+  max-width: 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2) var(--sp-3);
+  margin-top: var(--sp-6);
+  padding: var(--sp-2) var(--sp-3);
   border: 1px solid rgba(238, 216, 191, 0.9);
-  border-radius: var(--r-2xl);
+  border-radius: var(--r-pill);
   background: rgba(255, 250, 242, 0.83);
-  box-shadow: 0 12px 30px rgba(43, 26, 20, 0.055);
+  box-shadow: 0 6px 18px rgba(43, 26, 20, 0.05);
   backdrop-filter: blur(13px);
 }
 
-.splice-live-readout-label,
-.splice-live-value-wrap {
-  display: flex;
-  align-items: center;
-}
-
-.splice-live-readout-label {
-  min-width: 0;
-  gap: var(--sp-2);
-}
 .splice-live-icon {
   display: grid;
-  width: 33px;
-  height: 33px;
+  width: 26px;
+  height: 26px;
   flex: 0 0 auto;
   place-items: center;
   border: 1px solid #f1d2ae;
-  border-radius: var(--r-lg);
+  border-radius: var(--r-md);
   background: #fff0df;
   color: var(--fiber-coral);
 }
-.splice-live-readout-label small,
-.splice-live-readout-label strong {
-  display: block;
+
+.splice-live-meta {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  line-height: 1.25;
 }
-.splice-live-readout-label small {
+
+.splice-live-eyebrow {
   color: var(--fiber-muted);
   font-family: 'JetBrains Mono', ui-monospace, monospace;
   font-size: var(--type-caption);
   font-weight: var(--fw-semibold);
   letter-spacing: var(--tracking-eyebrow);
+  white-space: nowrap;
 }
-.splice-live-readout-label strong {
-  margin-top: var(--sp-1);
+
+.splice-live-label {
   color: var(--fiber-ink);
-  font-size: var(--fs-2xs);
+  font-size: var(--type-small);
   font-weight: var(--fw-bold);
 }
+
 .splice-live-value-wrap {
+  display: inline-flex;
+  align-items: center;
   gap: var(--sp-2);
-  margin: calc(var(--sp-8) + var(--sp-2)) 0 0 calc(var(--sp-8) + var(--sp-2));
+  margin-left: auto;
 }
+
 .splice-live-value {
   color: var(--fiber-ink);
   font-family: 'JetBrains Mono', ui-monospace, monospace;
-  font-size: var(--type-metric);
+  font-size: var(--type-metric-sm);
   font-weight: var(--fw-bold);
   line-height: var(--leading-none);
   letter-spacing: var(--tracking-display);
@@ -835,19 +841,66 @@
   color: var(--fiber-muted);
 }
 
-.splice-live-readout > p {
-  margin: var(--sp-2) 0 0 calc(var(--sp-8) + var(--sp-2));
-  color: var(--fiber-muted);
-  font-size: var(--type-small);
-  line-height: 1.45;
-}
-
 .splice-hero-actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--sp-2);
   margin-top: var(--sp-6);
+}
+
+.splice-hero-actions.is-revealed {
+  animation: splice-doors-in 320ms ease-out both;
+}
+
+@keyframes splice-doors-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* The fusion confirmation, moved off the hold button's corner and onto the
+ * readout card as a device-status chip. */
+.splice-fused-seal {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  padding: 4px 10px;
+  border-radius: var(--r-pill);
+  background: #0b6045;
+  color: #d9fbe9;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: var(--type-caption);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--tracking-label);
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(11, 96, 69, 0.28);
+  animation: splice-seal-pop 260ms ease-out both;
+}
+
+@keyframes splice-seal-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.86);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .splice-hero-actions.is-revealed,
+  .splice-fused-seal {
+    animation: none;
+  }
 }
 
 /* Optional flourish: press and hold to fuse the fibre on the scene. The Launch
@@ -893,11 +946,6 @@
   outline-offset: 3px;
 }
 
-.splice-fuse.is-complete {
-  border-color: var(--fiber-green);
-  background: #0b6045;
-}
-
 .splice-fuse-progress {
   position: absolute;
   inset: 0;
@@ -921,10 +969,6 @@
 
 .splice-fuse-content svg {
   color: #ffbb70;
-}
-
-.splice-fuse.is-complete .splice-fuse-content svg {
-  color: #bbf7d0;
 }
 
 /* ------------------------ Preserved live waveguide exhibit */
@@ -1899,22 +1943,9 @@
     margin-top: var(--sp-4);
   }
   .splice-live-readout {
-    width: min(410px, 100%);
-    margin-top: var(--sp-6);
-    padding: var(--sp-3);
-  }
-  .splice-live-readout-label strong {
-    font-size: var(--type-small);
-  }
-  .splice-live-value-wrap {
-    margin-top: var(--sp-3);
-    margin-left: calc(var(--sp-8) + var(--sp-2));
+    margin-top: var(--sp-5);
   }
   .splice-live-status {
-    font-size: var(--type-caption);
-  }
-  .splice-live-readout > p {
-    margin-left: calc(var(--sp-8) + var(--sp-2));
     font-size: var(--type-caption);
   }
   .landing-hero {

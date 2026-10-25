@@ -64,12 +64,6 @@
   overflow: hidden;
   background: var(--pu-bg);
 }
-.pu-tabstrip {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-2);
-  min-height: var(--panel-head-h);
-}
 .pu-doc-tab {
   display: inline-flex;
   align-items: center;
@@ -1455,6 +1449,31 @@ button.pu-logo {
   color: var(--pu-fiber);
   font-size: var(--fs-2xs);
 }
+/* Multi-mode glass keeps its aqua TIA-598 jacket cue on the canvas pill. */
+.hw-fiber.is-multimode {
+  border-color: #06b6d4;
+  background: #ecfeff;
+}
+.hw-fiber.is-multimode span {
+  color: #0e7490;
+}
+.hw-fiber .fiber-profile-tag {
+  display: inline-block;
+  margin-right: var(--sp-1);
+  padding: 0 var(--sp-1);
+  border-radius: var(--r-sm);
+  background: #06b6d4;
+  color: #ffffff;
+  font-size: var(--fs-2xs);
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.04em;
+  vertical-align: middle;
+}
+.hw-fiber.is-over-reach {
+  border-color: var(--pu-warn);
+  background: var(--pu-warn-soft);
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.18);
+}
 
 @media (max-width: 1024px) {
   .pu-tool .th {
@@ -1708,22 +1727,6 @@ button.pu-logo {
 }
 
 /* Canvas "More tools" menu: same control rhythm as the panels. */
-.pu-menu-links {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-2);
-  padding: var(--sp-2) var(--sp-3);
-  color: var(--pu-mut);
-  font-size: var(--type-small);
-}
-.pu-menu-links a {
-  color: var(--pu-pri-text);
-  font-weight: var(--fw-semibold);
-  text-decoration: none;
-}
-.pu-menu-links a:hover {
-  text-decoration: underline;
-}
 .pu-menu-row {
   display: flex;
   align-items: center;
@@ -2106,8 +2109,7 @@ button.pu-logo {
   border-bottom: 1px solid var(--pu-line);
   background: var(--pu-panel);
 }
-.pu-reports-screen > div:last-child,
-.pu-reports-screen .pu-reports-scroll {
+.pu-reports-screen > div:last-child {
   overflow-y: auto;
 }
 
@@ -2235,7 +2237,6 @@ button.pu-logo {
   min-width: 0;
   max-width: 100%;
 }
-.pu-doc-tab-name,
 .pu-preset-name,
 .pu-insp-head > span:first-child {
   min-width: 0;
@@ -2959,5 +2960,148 @@ button.pu-logo {
     .pu-sb-detail {
       max-height: calc(100dvh - var(--topbar-h) - var(--tabbar-h) - var(--sp-4));
     }
+  }
+}
+
+/* ==========================================================================
+ * Crash recovery screen (ErrorBoundary). Branded, calm, one clear action.
+ * ========================================================================== */
+.fl-crash {
+  display: grid;
+  min-height: 100%;
+  padding: var(--sp-6) var(--sp-4);
+  place-items: center;
+  background: radial-gradient(120% 90% at 50% 0%, #fffaf2 0%, #fff4e6 55%, #f7e6d0 100%);
+  color: var(--pu-ink);
+  font-family: Manrope, system-ui, sans-serif;
+}
+.fl-crash-card {
+  display: flex;
+  width: min(560px, 100%);
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  padding: var(--sp-8) var(--sp-6);
+  border: 1px solid var(--pu-line);
+  border-radius: var(--r-2xl);
+  background: var(--pu-panel);
+  box-shadow: 0 24px 60px rgba(43, 26, 20, 0.14);
+}
+.fl-crash-mark {
+  display: inline-flex;
+  color: var(--pu-pri);
+}
+.fl-crash-eyebrow {
+  color: var(--pu-pri-text);
+  font-size: var(--type-caption);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+}
+.fl-crash-title {
+  font-family: Sora, Manrope, sans-serif;
+  font-size: var(--type-section-title);
+  font-weight: var(--fw-black);
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--leading-tight);
+}
+.fl-crash-title b {
+  color: var(--pu-pri);
+}
+.fl-crash-copy {
+  color: var(--pu-mut);
+  font-size: var(--type-body);
+  line-height: var(--leading-relaxed);
+}
+.fl-crash-detail {
+  width: 100%;
+  max-height: 120px;
+  margin: 0;
+  overflow: auto;
+  padding: var(--sp-3);
+  border: 1px solid var(--pu-line);
+  border-radius: var(--r-md);
+  background: var(--pu-elevated);
+  color: var(--pu-ink);
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: var(--type-small);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.fl-crash-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin-top: var(--sp-1);
+}
+.fl-crash-actions a.pu-btn {
+  text-decoration: none;
+}
+@media (max-width: 560px) {
+  .fl-crash-card {
+    padding: var(--sp-6) var(--sp-4);
+  }
+  .fl-crash-actions {
+    width: 100%;
+  }
+  .fl-crash-actions .pu-btn {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+}
+
+/* Suspense fallback for the deferred overlays (OTDR, reports, missions). The
+   block keeps the panel footprint so the canvas does not jump while the chunk
+   downloads, and it is never focusable or clickable itself. */
+.pu-overlay-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  padding: var(--sp-4);
+  color: var(--pu-mut);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: var(--type-small);
+  font-weight: var(--fw-semibold);
+  background: var(--pu-panel);
+}
+.pu-overlay-loading.is-screen {
+  min-height: 60vh;
+  border-radius: var(--r-lg);
+  border: 1px solid var(--pu-line);
+}
+.pu-overlay-loading.is-dialog {
+  position: fixed;
+  inset: auto 0 0 0;
+  margin: 0 auto;
+  max-width: 560px;
+  border: 1px solid var(--pu-line);
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+  box-shadow: 0 -12px 32px rgba(16, 24, 40, 0.18);
+  z-index: 60;
+}
+@media (min-width: 901px) {
+  .pu-overlay-loading.is-dialog {
+    inset: 12vh auto auto 50%;
+    transform: translateX(-50%);
+    border-radius: var(--r-lg);
+  }
+}
+.pu-overlay-spinner {
+  width: var(--sp-4);
+  height: var(--sp-4);
+  border-radius: 50%;
+  border: 2px solid var(--pu-line);
+  border-top-color: var(--pu-pri);
+  animation: pu-overlay-spin 0.8s linear infinite;
+}
+@keyframes pu-overlay-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pu-overlay-spinner {
+    animation: none;
   }
 }

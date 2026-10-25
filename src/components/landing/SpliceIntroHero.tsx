@@ -20,11 +20,14 @@ const STATUS_LABELS: Record<OntStatus, string> = {
   DISCONNECTED: 'DISCONNECTED',
 };
 
-/* The fusion flourish: a short hold on the fibre scene lights the splice and
- * opens the studio. It is never required — the Launch button beside it does the
- * same thing in one click — so the hold stays a small piece of theatre. */
+/*
+ * The fusion is the first act of the page: hold the splice, watch the light
+ * cross the joint, and only then do the two studio doors appear. Nothing
+ * navigates on its own — the hold hands the student a choice instead of taking
+ * one away. The navigation bar, the capability cards and the footer keep their
+ * own one-click doors, so the hold is a ritual, never a wall.
+ */
 const HOLD_DURATION_MS = 1100;
-const OPEN_DELAY_MS = 420;
 
 type ScheduledFrame = { id: number; kind: 'raf' | 'timeout' };
 
@@ -48,7 +51,7 @@ export function SpliceIntroHero({
   const frameRef = useRef<ScheduledFrame | null>(null);
   const openedRef = useRef(false);
   const startedAtRef = useRef<number | null>(null);
-  const launchTimerRef = useRef<number | null>(null);
+  const primaryActionRef = useRef<HTMLButtonElement | null>(null);
 
   /* "Weakest home" means the lowest receive power across every subscriber —
    * ONTs and Wi-Fi gateways alike — so a gateway-only network still reports. */
@@ -92,10 +95,10 @@ export function SpliceIntroHero({
       if (nextProgress >= 1) {
         openedRef.current = true;
         startedAtRef.current = null;
+        setProgress(1);
         setFused(true);
-        setAnnouncement('Fusion complete. Opening the optical engineering studio.');
+        setAnnouncement('Splice fused. Launch the studio or explore the guided missions.');
         if (typeof navigator !== 'undefined' && 'vibrate' in navigator) navigator.vibrate?.(18);
-        launchTimerRef.current = window.setTimeout(onLaunchStudio, OPEN_DELAY_MS);
         frameRef.current = null;
         return;
       }
@@ -103,15 +106,18 @@ export function SpliceIntroHero({
     };
 
     frameRef.current = scheduleFrame(advance);
-  }, [onLaunchStudio]);
+  }, []);
 
-  useEffect(
-    () => () => {
-      cancelFrame();
-      if (launchTimerRef.current !== null) window.clearTimeout(launchTimerRef.current);
-    },
-    [cancelFrame],
-  );
+  useEffect(() => () => cancelFrame(), [cancelFrame]);
+
+  /* The control the student was holding disappears when the splice lands, so
+   * hand the keyboard to the primary door instead of dropping focus back to the
+   * top of the document. */
+  useEffect(() => {
+    if (!fused) return;
+    const timer = window.setTimeout(() => primaryActionRef.current?.focus({ preventScroll: true }), 80);
+    return () => window.clearTimeout(timer);
+  }, [fused]);
 
   const readingLabel =
     reading?.rxPowerDbm === null || reading?.rxPowerDbm === undefined ? '— —' : formatDbm(reading.rxPowerDbm);
@@ -135,77 +141,83 @@ export function SpliceIntroHero({
           <em>Light the home.</em>
         </h1>
         <p className="splice-hero-lede">
-          Build a fiber-to-the-home network in your browser, then watch the light budget decide which homes come online.
-          Drag in an OLT, a splitter and a few subscribers — the physics handles the rest.
+          Draw a fiber-to-the-home network and watch the light budget decide which homes come online.
         </p>
 
-        <div className="splice-hero-actions">
-          <button type="button" className="landing-button landing-button--primary" onClick={onLaunchStudio}>
-            Launch Interactive Studio <ArrowRight size={16} aria-hidden="true" />
-          </button>
-          <button type="button" className="landing-button landing-button--secondary" onClick={onExploreMissions}>
-            Explore Guided Missions (5 Scenarios) <ArrowDownRight size={16} aria-hidden="true" />
-          </button>
-        </div>
+        {fused ? (
+          <div className="splice-hero-actions is-revealed" role="group" aria-label="Studio doors">
+            <button
+              ref={primaryActionRef}
+              type="button"
+              className="landing-button landing-button--primary"
+              onClick={onLaunchStudio}
+            >
+              Launch Interactive Studio <ArrowRight size={16} aria-hidden="true" />
+            </button>
+            <button type="button" className="landing-button landing-button--secondary" onClick={onExploreMissions}>
+              Explore Guided Missions (5 Scenarios) <ArrowDownRight size={16} aria-hidden="true" />
+            </button>
+          </div>
+        ) : null}
 
-        <button
-          type="button"
-          className={`splice-fuse${fused ? ' is-complete' : ''}`}
-          onPointerDown={(event) => {
-            if (event.button > 0) return;
-            event.preventDefault();
-            event.currentTarget.setPointerCapture?.(event.pointerId);
-            begin();
-          }}
-          onPointerUp={release}
-          onPointerCancel={release}
-          onPointerLeave={release}
-          onContextMenu={(event) => event.preventDefault()}
-          onKeyDown={(event) => {
-            if ((event.key === ' ' || event.key === 'Enter') && !event.repeat) {
+        {fused ? null : (
+          <button
+            type="button"
+            className="splice-fuse"
+            onPointerDown={(event) => {
+              if (event.button > 0) return;
               event.preventDefault();
+              event.currentTarget.setPointerCapture?.(event.pointerId);
               begin();
-            }
-          }}
-          onKeyUp={(event) => {
-            if (event.key === ' ' || event.key === 'Enter') {
-              event.preventDefault();
-              release();
-            }
-          }}
-          aria-label={
-            fused ? 'Fiber fused — opening the studio' : 'Press and hold to fuse the splice and open the studio'
-          }
-          aria-pressed={fused}
-          title="Optional: hold to fuse the fibre and jump into the studio"
-        >
-          <span className="splice-fuse-progress" style={{ transform: `scaleX(${progress})` }} aria-hidden="true" />
-          <span className="splice-fuse-content">
-            {fused ? <Check size={15} aria-hidden="true" /> : <Radio size={15} aria-hidden="true" />}
-            {fused ? 'FIBER FUSED' : progress > 0 ? 'KEEP HOLDING' : 'HOLD TO FUSE THE SPLICE'}
-          </span>
-        </button>
+            }}
+            onPointerUp={release}
+            onPointerCancel={release}
+            onPointerLeave={release}
+            onContextMenu={(event) => event.preventDefault()}
+            onKeyDown={(event) => {
+              if ((event.key === ' ' || event.key === 'Enter') && !event.repeat) {
+                event.preventDefault();
+                begin();
+              }
+            }}
+            onKeyUp={(event) => {
+              if (event.key === ' ' || event.key === 'Enter') {
+                event.preventDefault();
+                release();
+              }
+            }}
+            aria-label="Press and hold to fuse the splice and unlock the studio"
+            title="Hold to fuse the fibre; the studio doors appear when the splice is live"
+          >
+            <span className="splice-fuse-progress" style={{ transform: `scaleX(${progress})` }} aria-hidden="true" />
+            <span className="splice-fuse-content">
+              <Radio size={15} aria-hidden="true" />
+              {progress > 0 ? 'KEEP HOLDING' : 'HOLD TO FUSE THE SPLICE'}
+            </span>
+          </button>
+        )}
         <span className="sr-only" aria-live="polite">
           {announcement}
         </span>
 
+        {/* One compact strip: source, what is measured, the number and its
+            status. The longer explanation stays for screen readers only, so the
+            hero keeps a single quiet line here instead of a card. */}
         <div className="splice-live-readout" aria-label="Current studio simulation readout">
-          <div className="splice-live-readout-label">
-            <span className="splice-live-icon">
-              <Radio size={16} aria-hidden="true" />
-            </span>
-            <span>
-              <small>
-                {simulationIsReference
-                  ? 'REFERENCE 1:32 TREE'
-                  : simulationStale
-                    ? 'LAST COMMITTED RUN'
-                    : 'LIVE STUDIO SIMULATION'}
-              </small>
-              <strong>Weakest home · receive power</strong>
-            </span>
-          </div>
-          <div className="splice-live-value-wrap">
+          <span className="splice-live-icon" aria-hidden="true">
+            <Radio size={14} />
+          </span>
+          <span className="splice-live-meta">
+            <small className="splice-live-eyebrow">
+              {simulationIsReference
+                ? 'REFERENCE 1:32 TREE'
+                : simulationStale
+                  ? 'LAST COMMITTED RUN'
+                  : 'LIVE SIMULATION'}
+            </small>
+            <strong className="splice-live-label">Weakest home</strong>
+          </span>
+          <span className="splice-live-value-wrap">
             <strong className="splice-live-value" aria-live="polite">
               {readingLabel}
             </strong>
@@ -213,14 +225,19 @@ export function SpliceIntroHero({
               <i aria-hidden="true" />
               {readingStatus}
             </span>
-          </div>
-          <p>
+          </span>
+          {fused ? (
+            <span className="splice-fused-seal" role="status">
+              <Check size={12} aria-hidden="true" /> FUSED!
+            </span>
+          ) : null}
+          <span className="sr-only">
             {simulationIsReference
               ? 'Sample reading from the reference tree — the studio opens on an empty canvas.'
               : simulationStale
                 ? 'Auto is off. Run a studio test to refresh the committed reading.'
                 : 'Readouts come from the active React Flow network and optical simulator.'}
-          </p>
+          </span>
         </div>
       </div>
     </section>

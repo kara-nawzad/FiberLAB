@@ -4,7 +4,7 @@
  * deliberately kept separate from the optical calculation model.
  */
 
-export type HardwareKind = 'olt' | 'splitter' | 'fiber' | 'closure' | 'ont' | 'odf' | 'nap' | 'gateway';
+export type HardwareKind = 'olt' | 'splitter' | 'fiber' | 'closure' | 'ont' | 'odf' | 'nap' | 'gateway' | 'attenuator';
 
 export interface HardwareProfile {
   id: string;
@@ -417,6 +417,12 @@ const thumbs: Record<string, string> = {
   'fiber-distribution': thumbnailFrame(
     `<circle cx="47" cy="27" r="11" fill="#26364a" stroke="#c1ccd8" stroke-width="3"/><circle cx="47" cy="9" r="7" fill="#667487" stroke="#c1ccd8" stroke-width="2"/><path d="M47 16V19" stroke="#c1ccd8" stroke-width="5"/><circle cx="42" cy="25" r="2" fill="#60a5fa"/><circle cx="51" cy="25" r="2" fill="#f59e0b"/><circle cx="47" cy="31" r="2" fill="#34d399"/><path d="M65 28H87" stroke="#c1ccd8" stroke-width="7"/><path d="M66 28H86" stroke="#38bdf8" stroke-width="2"/>`,
   ),
+  'fiber-multimode': thumbnailFrame(
+    `<path d="M10 22C26 10 62 10 78 22" fill="none" stroke="#06b6d4" stroke-width="7" stroke-linecap="round"/><path d="M10 42C26 54 62 54 78 42" fill="none" stroke="#06b6d4" stroke-width="7" stroke-linecap="round"/><rect x="4" y="17" width="9" height="9" rx="2" fill="#f1f5f9"/><rect x="4" y="38" width="9" height="9" rx="2" fill="#f1f5f9"/><rect x="80" y="17" width="11" height="9" rx="2" fill="#1d4fd0"/><rect x="80" y="38" width="11" height="9" rx="2" fill="#1d4fd0"/>`,
+  ),
+  attenuator: thumbnailFrame(
+    `<rect x="8" y="28" width="26" height="9" rx="4" fill="#1d4fd0"/><rect x="34" y="21" width="8" height="23" rx="2" fill="#e2e8f0"/><rect x="42" y="18" width="18" height="29" rx="4" fill="#e0a41c" stroke="#9a6a05"/><rect x="60" y="26" width="22" height="13" rx="4" fill="#e0a41c" stroke="#9a6a05"/><rect x="82" y="29" width="8" height="7" rx="1.5" fill="#e5e7eb"/>`,
+  ),
   'fiber-drop': thumbnailFrame(
     `<rect x="10" y="22" width="76" height="21" rx="10" fill="#263445" stroke="#c1ccd8" stroke-width="2"/><circle cx="24" cy="32" r="5" fill="#e2e8f0" stroke="#fff" stroke-width="2"/><circle cx="72" cy="32" r="5" fill="#e2e8f0" stroke="#fff" stroke-width="2"/><circle cx="43" cy="32" r="3.5" fill="#60a5fa"/><circle cx="53" cy="32" r="3.5" fill="#f472b6"/>`,
   ),
@@ -433,6 +439,48 @@ const thumbs: Record<string, string> = {
     `<path d="M12 28L23 19H73L84 28V45H12Z" fill="#e2e8f0" stroke="#64748b" stroke-width="2"/><rect x="20" y="31" width="17" height="9" rx="2" fill="#166534" stroke="#4ade80"/><circle cx="48" cy="34" r="2.5" fill="#22c55e"/><circle cx="56" cy="34" r="2.5" fill="#38bdf8"/><rect x="65" y="30" width="11" height="9" rx="1.5" fill="#182536" stroke="#d7b46a"/>`,
   ),
 };
+
+const multimodeHero = heroFrame(
+  'MULTI-MODE · OM3 / OM4 · 50/125 µm',
+  `
+  <g filter="url(#shadow)">
+    <circle cx="120" cy="140" r="46" fill="#0b2b33" stroke="#67e8f9" stroke-width="4"/>
+    <circle cx="120" cy="140" r="34" fill="#0e7490" opacity=".55" stroke="#22d3ee" stroke-width="2"/>
+    <circle cx="120" cy="140" r="12.5" fill="#7dd3fc" stroke="#e0f2fe" stroke-width="2"/>
+    <circle cx="106" cy="126" r="0" fill="none"/>
+    ${Array.from({ length: 12 }, (_, index) => {
+      const angle = (index / 12) * Math.PI * 2;
+      return `<circle cx="${(120 + Math.cos(angle) * 22).toFixed(1)}" cy="${(140 + Math.sin(angle) * 22).toFixed(1)}" r="2.6" fill="#a5f3fc"/>`;
+    }).join('')}
+    <path d="M70 198H170" stroke="#38bdf8" stroke-width="1.4"/>
+    <text x="120" y="218" text-anchor="middle" fill="#c0cfdf" font-family="ui-monospace,monospace" font-size="9">50 µm CORE · AQUA JACKET</text>
+    <path d="M186 140H212" stroke="#38bdf8" stroke-width="2" stroke-dasharray="4 4"/>
+    <path d="M212 104C212 90 230 84 246 84H428C446 84 456 96 456 112V168C456 184 444 194 428 194H246C230 194 212 184 212 168Z" fill="#0b2b33" stroke="#22d3ee" stroke-width="3"/>
+    <path d="M232 122C254 100 272 100 294 122M232 158C254 180 272 180 294 158" fill="none" stroke="#67e8f9" stroke-width="4"/>
+    <path d="M316 122C338 100 356 100 378 122M316 158C338 180 356 180 378 158" fill="none" stroke="#22d3ee" stroke-width="4"/>
+    <path d="M232 140H440" stroke="#164e63" stroke-width="2"/>
+    <text x="336" y="218" text-anchor="middle" fill="#c0cfdf" font-family="ui-monospace,monospace" font-size="9">850 nm · 3.0 dB/km · 550 m REACH</text>
+    <text x="336" y="230" text-anchor="middle" fill="#7f97a8" font-family="ui-monospace,monospace" font-size="7.5">1300 nm · 1.0 dB/km · NOT FOR GPON PON PLANT</text>
+  </g>`,
+);
+
+const attenuatorHero = heroFrame(
+  'INLINE ATTENUATOR · FIXED PAD',
+  `
+  <g filter="url(#shadow)">
+    <path d="M48 135H124" stroke="#1d4fd0" stroke-width="14" stroke-linecap="round"/>
+    <rect x="112" y="108" width="52" height="54" rx="8" fill="#e2e8f0" stroke="#94a3b8" stroke-width="2"/>
+    <rect x="168" y="98" width="80" height="74" rx="12" fill="#e0a41c" stroke="#9a6a05" stroke-width="3"/>
+    <rect x="180" y="112" width="56" height="46" rx="6" fill="#fef3c7"/>
+    <text x="208" y="146" text-anchor="middle" fill="#78350f" font-family="ui-monospace,monospace" font-size="22" font-weight="700">dB</text>
+    <rect x="252" y="112" width="92" height="46" rx="10" fill="#e0a41c" stroke="#9a6a05" stroke-width="3"/>
+    <rect x="344" y="122" width="34" height="26" rx="4" fill="#f1f5f9" stroke="#94a3b8" stroke-width="2"/>
+    <circle cx="361" cy="135" r="6" fill="#cbd5e1" stroke="#64748b"/>
+    <path d="M380 135H456" stroke="#1d4fd0" stroke-width="14" stroke-linecap="round"/>
+    <text x="252" y="212" text-anchor="middle" fill="#c0cfdf" font-family="ui-monospace,monospace" font-size="9">1 · 2 · 3 · 5 · 10 · 15 dB</text>
+    <text x="252" y="236" text-anchor="middle" fill="#7f97a8" font-family="ui-monospace,monospace" font-size="7.5">USE WHEN P_RX WOULD EXCEED THE −8 dBm OVERLOAD LIMIT</text>
+  </g>`,
+);
 
 export const HARDWARE_CATALOGUE: Record<string, HardwareProfile> = {
   'olt-standard': {
@@ -699,6 +747,61 @@ export const HARDWARE_CATALOGUE: Record<string, HardwareProfile> = {
     description:
       'The integrated gateway terminates the PON and presents optical health, a configured SSID, and an illustrative per-split line-rate estimate alongside common Wi-Fi, Ethernet, and voice interfaces.',
   },
+  'fiber-multimode': {
+    id: 'fiber-multimode',
+    kind: 'fiber',
+    modelName: 'Indoor/OSP multi-mode OM3/OM4 duplex cable (reference)',
+    vendorCategory: '50/125 µm Multi-Mode Fiber',
+    thumbnailSvg: toDataUri(thumbs['fiber-multimode']),
+    heroSvg: toDataUri(multimodeHero),
+    physicalPorts: [
+      'Two 50 µm graded-index cores in a 125 µm cladding, typically terminated as an LC or SC duplex pair.',
+      'Aqua jacket identifies OM3/OM4 (OM4 is often violet in some plants); confirm the jacket print before splicing.',
+      'Connector polish, polarity, and harness length are product-specific.',
+    ],
+    fieldNotes: [
+      'Multi-mode is short-reach glass: keep gigabit spans under 550 m and check the link budget at 850 nm, not 1550 nm.',
+      'Never splice multi-mode into the GPON feeder or distribution plant; PON optics expect 9/125 µm single-mode.',
+      'Use a mandrel or mode conditioner when testing 850 nm links, and match launch conditions to the standard.',
+    ],
+    datasheetSnippet: {
+      operatingTemp: 'Indoor/riser and ruggedized outdoor variants have different ratings; confirm the exact cable.',
+      wavelengths:
+        '850 nm ≈ 3.0 dB/km and 1300 nm ≈ 1.0 dB/km reference coefficients. 1310/1490/1550 nm are single-mode PON windows and are not valid choices here.',
+      standards: [
+        'ISO/IEC 11801 OM3 / OM4 (TIA-492AAAC / TIA-492AAAD).',
+        'IEEE 802.3 1000BASE-SX / 10GBASE-SR reach tables depend on the installed grade.',
+      ],
+    },
+    description:
+      'Multi-mode cable carries a large-diameter 50 µm core that accepts many propagation modes. It is cheap and easy to terminate for short in-building links, but modal dispersion limits gigabit transmission to roughly 550 m — the reach flag FiberLAB raises when an OM3/OM4 span grows past it.',
+  },
+  'attenuator-pad': {
+    id: 'attenuator-pad',
+    kind: 'attenuator',
+    modelName: 'Fixed inline SC/APC attenuator pad (reference)',
+    vendorCategory: 'Passive Optical Attenuator',
+    thumbnailSvg: toDataUri(thumbs.attenuator),
+    heroSvg: toDataUri(attenuatorHero),
+    physicalPorts: [
+      'Male SC/APC ferrule on one end, female SC/APC adapter on the other, in a single inline barrel.',
+      'Fixed pad values in this reference catalogue: 1, 2, 3, 5, 10 and 15 dB.',
+      'Some plants use a selectable or variable pad instead; verify the marked value with a power meter.',
+    ],
+    fieldNotes: [
+      'Add a pad when the measured received power sits above the −8 dBm overload limit, usually on very short PON drops.',
+      'Never solve a weak signal with a pad: check cleaning, bend radius, splices, and split ratio first.',
+      'Label the pad value at the enclosure and record it in the as-built, because it silently changes the link budget.',
+    ],
+    datasheetSnippet: {
+      operatingTemp: 'Barrel and ferrule ratings vary by SKU; confirm the vendor specification.',
+      wavelengths:
+        'Fixed absorptive or air-gap pads are broadly flat across 1260–1650 nm; the model treats the pad as wavelength-independent.',
+      standards: ['IEC 61753-051-3 style passive attenuator reference.', 'SC/APC connector geometry per IEC 61754-4.'],
+    },
+    description:
+      'An inline fixed attenuator is a purely passive through-element that removes a known amount of optical power. FiberLAB subtracts its pad value from the link budget and draws it as one OTDR reflection-free event.',
+  },
   'ont-indoor': {
     id: 'ont-indoor',
     kind: 'ont',
@@ -746,7 +849,14 @@ export function getHardwareProfileForNode(kind: string, subType?: string): Hardw
     profileId = 'splitter-plc';
   } else if (kind === 'fiber') {
     const cableType = subType?.toLowerCase();
-    profileId = cableType === 'feeder' ? 'fiber-feeder' : cableType === 'drop' ? 'fiber-drop' : 'fiber-distribution';
+    profileId =
+      cableType === 'om3' || cableType === 'om4'
+        ? 'fiber-multimode'
+        : cableType === 'feeder'
+          ? 'fiber-feeder'
+          : cableType === 'drop'
+            ? 'fiber-drop'
+            : 'fiber-distribution';
   } else if (kind === 'closure') {
     profileId = 'closure-dome';
   } else if (kind === 'ont') {
@@ -757,6 +867,8 @@ export function getHardwareProfileForNode(kind: string, subType?: string): Hardw
     profileId = 'nap-fat-1x8';
   } else if (kind === 'gateway') {
     profileId = 'wifi6-gateway';
+  } else if (kind === 'attenuator') {
+    profileId = 'attenuator-pad';
   } else {
     throw new RangeError(`No hardware profile is defined for component kind "${kind}".`);
   }

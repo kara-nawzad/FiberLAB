@@ -17,6 +17,8 @@ import {
 } from 'lucide-react';
 import type {
   CableType,
+  AttenuatorNodeData,
+  FiberProfile,
   GatewayTelemetry,
   OltClass,
   PonEdge,
@@ -30,15 +32,21 @@ import type {
 import { splitterBranchPortCount } from '../types';
 import {
   ATTENUATION_DB_PER_KM,
+  ATTENUATOR_VALUES_DB,
   CABLE_SPECS,
   CLOSURE_SPLICE_LOSS_MAX_DB,
   CLOSURE_SPLICE_LOSS_MIN_DB,
   CONNECTOR_LOSS_DB,
   DEFAULT_ODF_THROUGH_PORT_LOSS_DB,
   DIRTY_CONNECTOR_PENALTY_DB,
+  FIBER_PROFILES,
+  FIBER_PROFILE_SPECS,
+  isMultiModeProfile,
   MACRO_BEND_PENALTY_DB,
   MAX_BRANCH_PORTS,
   NAP_OUTPUT_PORTS,
+  MODAL_DISPERSION_LIMIT_KM,
+  MODAL_DISPERSION_WARNING,
   NAP_SPLIT_LOSS_DB,
   NAP_SPLIT_RATIO,
   ODF_INPUT_PORTS,
@@ -54,11 +62,13 @@ import {
   WAVELENGTH_LABEL,
 } from '../types';
 import {
+  computeAttenuatorLoss,
   computeClosureSpliceLoss,
   computeFiberLoss,
   computeSplitterLoss,
   describeStatus,
   formatDbm,
+  isAttenuatorNode,
   isClosureNode,
   isFiberNode,
   isGatewayNode,
@@ -67,6 +77,7 @@ import {
   isOltNode,
   isOntNode,
   isSplitterNode,
+  wavelengthsForProfile,
 } from '../engine/opticalSimulator';
 import { getHardwareProfileForNode } from '../data/componentCatalogue';
 import { FieldHardwareCard } from './FieldHardwareCard';
@@ -374,6 +385,7 @@ export function Inspector({
       return `OSP dome · ${node.data.activeSpliceChannels.filter(Boolean).length}/12 tray channels`;
     if (isOdfNode(node)) return `2 matched pairs · ${node.data.throughPortLossDb.toFixed(2)} dB through`;
     if (isNapNode(node)) return `Fixed 1:${NAP_SPLIT_RATIO} · ${node.data.splitLossDb.toFixed(2)} dB split`;
+    if (isAttenuatorNode(node)) return `Inline pad · ${computeAttenuatorLoss(node.data).toFixed(0)} dB fixed`;
     if (isGatewayNode(node)) return `${node.data.ssid} · GPON / XGS-PON`;
     return `Subscriber · ${node.data.subscriber}`;
   }, [node, edge]);
@@ -393,9 +405,13 @@ export function Inspector({
       };
     }
     if (isFiberNode(node)) {
+      const profile = FIBER_PROFILE_SPECS[node.data.fiberProfile ?? 'singlemode'];
       return {
-        profile: getHardwareProfileForNode('fiber', node.data.cableType),
-        configurationLabel: `${CABLE_SPECS[node.data.cableType].label} · ${node.data.lengthKm.toFixed(3)} km`,
+        profile: getHardwareProfileForNode(
+          'fiber',
+          isMultiModeProfile(node.data.fiberProfile) ? node.data.fiberProfile : node.data.cableType,
+        ),
+        configurationLabel: `${profile.short} · ${CABLE_SPECS[node.data.cableType].label} · ${node.data.lengthKm.toFixed(3)} km`,
       };
     }
     if (isClosureNode(node)) {
@@ -414,6 +430,12 @@ export function Inspector({
       return {
         profile: getHardwareProfileForNode('nap'),
         configurationLabel: `Outdoor fixed 1:8 · ${node.data.splitLossDb.toFixed(2)} dB reference`,
+      };
+    }
+    if (isAttenuatorNode(node)) {
+      return {
+        profile: getHardwareProfileForNode('attenuator'),
+        configurationLabel: `Fixed ${computeAttenuatorLoss(node.data).toFixed(0)} dB pad · ${node.data.polish}`,
       };
     }
     if (isGatewayNode(node)) {
@@ -437,7 +459,12 @@ export function Inspector({
       return `Passive glass waveguide that divides light 1:${node.data.ratio} without power, adding ${SPLITTER_LOSS_DB[node.data.ratio].toFixed(1)} dB insertion loss to each output.`;
     }
     if (isFiberNode(node)) {
-      return 'Single-mode optical cable span. Loss scales with distance (km × dB/km) plus fusion splices and SC/APC connectors.';
+      return isMultiModeProfile(node.data.fiberProfile)
+        ? 'Multi-mode 50/125 µm span. Modal dispersion limits gigabit transmission to about 550 m, and 850 nm glass loses roughly ten times more per kilometre than single-mode.'
+        : 'Single-mode optical cable span. Loss scales with distance (km × dB/km) plus fusion splices and SC/APC connectors.';
+    }
+    if (isAttenuatorNode(node)) {
+      return 'Fixed inline attenuator pad: it removes a known amount of light so an ONT that sits very close to the OLT does not overload its receiver.';
     }
     if (isClosureNode(node)) {
       return 'Weatherproof outside-plant splice dome where feeder fibers are fusion-spliced to distribution branches.';
@@ -784,6 +811,29 @@ export function Inspector({
 
         {node && isFiberNode(node) && showProperties ? (
           <>
+            <Row label="Fibre profile">
+              <select
+                className="select"
+                aria-label="Fibre profile"
+                value={node.data.fiberProfile ?? 'singlemode'}
+                onChange={(event) => {
+                  const fiberProfile = event.target.value as FiberProfile;
+                  onPatchNode(node.id, {
+                    fiberProfile,
+                    // The profile owns the valid windows, so move to its first
+                    // one and drop any override that was set for the old glass.
+                    wavelength: wavelengthsForProfile(fiberProfile)[0],
+                    attenuationOverrideDbPerKm: null,
+                  });
+                }}
+              >
+                {FIBER_PROFILES.map((profile) => (
+                  <option key={profile} value={profile}>
+                    {FIBER_PROFILE_SPECS[profile].label} · {FIBER_PROFILE_SPECS[profile].coreCladding}
+                  </option>
+                ))}
+              </select>
+            </Row>
             <Row label="Cable preset">
               <select
                 className="select"
@@ -825,6 +875,18 @@ export function Inspector({
                 value={`${computeFiberLoss(node.data).attenuationDbPerKm.toFixed(2)} dB/km`}
               />
             </div>
+            {isMultiModeProfile(node.data.fiberProfile) && node.data.lengthKm > MODAL_DISPERSION_LIMIT_KM ? (
+              <p
+                className="mb-3 rounded-md border px-2 py-2 text-body leading-relaxed"
+                style={{
+                  borderColor: 'var(--pu-warn)',
+                  background: 'var(--pu-warn-soft)',
+                  color: 'var(--pu-warn-text)',
+                }}
+              >
+                {MODAL_DISPERSION_WARNING}
+              </p>
+            ) : null}
             <Advanced open={advancedOpen} onToggle={() => setAdvancedOpen((open) => !open)}>
               <SliderRow
                 label="Span length"
@@ -847,21 +909,11 @@ export function Inspector({
                     });
                   }}
                 >
-                  <option value={1270}>
-                    {WAVELENGTH_LABEL[1270]} — {ATTENUATION_DB_PER_KM[1270].toFixed(2)} dB/km
-                  </option>
-                  <option value={1310}>
-                    {WAVELENGTH_LABEL[1310]} — {ATTENUATION_DB_PER_KM[1310].toFixed(2)} dB/km
-                  </option>
-                  <option value={1490}>
-                    {WAVELENGTH_LABEL[1490]} — {ATTENUATION_DB_PER_KM[1490].toFixed(2)} dB/km
-                  </option>
-                  <option value={1550}>
-                    {WAVELENGTH_LABEL[1550]} — {ATTENUATION_DB_PER_KM[1550].toFixed(2)} dB/km
-                  </option>
-                  <option value={1577}>
-                    {WAVELENGTH_LABEL[1577]} — {ATTENUATION_DB_PER_KM[1577].toFixed(2)} dB/km
-                  </option>
+                  {wavelengthsForProfile(node.data.fiberProfile).map((wavelength) => (
+                    <option key={wavelength} value={wavelength}>
+                      {WAVELENGTH_LABEL[wavelength]} — {ATTENUATION_DB_PER_KM[wavelength].toFixed(2)} dB/km
+                    </option>
+                  ))}
                 </select>
               </Row>
               <Row label="Attenuation coefficient (dB/km)">
@@ -1015,6 +1067,57 @@ export function Inspector({
                 weather rating depend on the exact product and installation.
               </p>
               <PortNote>1 × feeder gland input (`in`) → 8 × outdoor SC/APC drop ports (`out-0` .. `out-7`)</PortNote>
+            </Advanced>
+          </>
+        ) : null}
+
+        {node && isAttenuatorNode(node) && showProperties ? (
+          <>
+            <Row label="Pad value">
+              <select
+                className="select"
+                aria-label="Pad value"
+                value={computeAttenuatorLoss(node.data)}
+                onChange={(event) => onPatchNode(node.id, { attenuationDb: Number(event.target.value) })}
+              >
+                {ATTENUATOR_VALUES_DB.map((value) => (
+                  <option key={value} value={value}>
+                    {value} dB fixed
+                  </option>
+                ))}
+              </select>
+            </Row>
+            <Row label="Connector polish">
+              <select
+                className="select"
+                aria-label="Attenuator polish"
+                value={node.data.polish}
+                onChange={(event) =>
+                  onPatchNode(node.id, { polish: event.target.value as AttenuatorNodeData['polish'] })
+                }
+              >
+                <option value="SC/APC">SC/APC (green, angled)</option>
+                <option value="SC/UPC">SC/UPC (blue, flat)</option>
+              </select>
+            </Row>
+            <div className="mb-3 grid grid-cols-2 gap-2">
+              <Metric
+                label="Insertion loss"
+                value={`${computeAttenuatorLoss(node.data).toFixed(0)} dB`}
+                accent="#b45309"
+              />
+              <Metric label="Overload limit" value={formatDbm(ONT_THRESHOLDS.overloadDbm)} accent="#b45309" />
+            </div>
+            <div className="mb-3 rounded-md border border-amber-300 bg-amber-50 px-2 py-2 text-body leading-relaxed text-amber-900">
+              Add a pad only when the receiver would sit above the overload limit. The pad is wavelength-independent and
+              adds no reflection to the OTDR trace.
+            </div>
+            <Advanced open={advancedOpen} onToggle={() => setAdvancedOpen((open) => !open)}>
+              <p className="text-body leading-relaxed text-slate-500">
+                Inline SC/APC barrel: the graph stays a straight through-path, so the pad simply subtracts a known
+                number of decibels between the plant and the subscriber.
+              </p>
+              <PortNote>1 × input (`in`) → 1 × output (`out`)</PortNote>
             </Advanced>
           </>
         ) : null}

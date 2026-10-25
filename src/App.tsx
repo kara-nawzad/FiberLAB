@@ -1,4 +1,6 @@
 import {
+  lazy,
+  Suspense,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -45,6 +47,7 @@ import {
   splitterBranchPortCount,
 } from './types';
 import {
+  createAttenuatorNode,
   createClosureNode,
   createFiberNode,
   createGatewayNode,
@@ -58,6 +61,7 @@ import {
 } from './engine/factories';
 import { buildPreset, PRESETS } from './engine/presets';
 import {
+  isAttenuatorNode,
   isClosureNode,
   isFiberNode,
   isNapNode,
@@ -76,12 +80,12 @@ import {
   type OpticalProbeTarget,
 } from './engine/opticalProbe';
 import { OpmMeterHud } from './components/OpmMeterHud';
-import { OtdrModal } from './components/OtdrModal';
+
 import { nodeTypes } from './components/nodes';
 import { OpticalEdge } from './components/OpticalEdge';
 import { Sidebar, DND_MIME, type ToolboxPayload } from './components/Sidebar';
 import { Inspector } from './components/Inspector';
-import { BOMModal } from './components/BOMModal';
+
 import { TopBar } from './components/TopBar';
 import { DesignBar } from './components/DesignBar';
 import { SectionRail, SectionTabBar, type SectionId } from './components/SectionNav';
@@ -91,7 +95,7 @@ import { SimulationScreen } from './components/SimulationScreen';
 import { SettingsScreen } from './components/SettingsScreen';
 import { CanvasToolbar } from './components/CanvasToolbar';
 import { StatusBar } from './components/StatusBar';
-import { MissionDrawer } from './components/MissionDrawer';
+
 import { LandingView } from './components/landing/LandingView';
 import { getMissionById, type Mission } from './engine/missions';
 import {
@@ -102,6 +106,33 @@ import {
 } from './data/pricingCatalogue';
 
 const edgeTypes = { optical: OpticalEdge };
+
+/* -------------------------------------------------------------------------- *
+ * Deferred overlays.
+ *
+ * The OTDR analyser, the report screen and the mission drawer are large and are
+ * only needed on demand, so each ships as its own chunk and is fetched the first
+ * time the student opens it. The rest of the workbench stays in the entry chunk.
+ * -------------------------------------------------------------------------- */
+const BOMModal = lazy(() => import('./components/BOMModal').then((module) => ({ default: module.BOMModal })));
+const OtdrModal = lazy(() => import('./components/OtdrModal').then((module) => ({ default: module.OtdrModal })));
+const MissionDrawer = lazy(() =>
+  import('./components/MissionDrawer').then((module) => ({ default: module.MissionDrawer })),
+);
+
+/**
+ * Per-overlay suspense fallback. It keeps the same footprint as the panel it
+ * replaces so the canvas does not jump, and announces itself once for screen
+ * readers without stealing focus from whatever opened it.
+ */
+function OverlayLoading({ label, variant }: { label: string; variant: 'screen' | 'dialog' }) {
+  return (
+    <div className={`pu-overlay-loading is-${variant}`} role="status" aria-live="polite">
+      <span className="pu-overlay-spinner" aria-hidden="true" />
+      <span>{label}</span>
+    </div>
+  );
+}
 
 type LandingCommandInput =
   { kind: 'preset'; presetId: string } | { kind: 'mission'; missionId: string } | { kind: 'missions' };
@@ -137,6 +168,7 @@ const MINIMAP_COLORS: Record<string, string> = {
   odf: '#0F766E',
   nap: '#EA580C',
   gateway: '#2563EB',
+  attenuator: '#D97706',
 };
 
 function resolveProbeTarget(target: EventTarget | null): OpticalProbeTarget | null {
@@ -474,7 +506,11 @@ function StudioWorkspace({
       } else if (kind === 'splitter') {
         node = createSplitterNode(payload.ratio ?? 8, { position: centered });
       } else if (kind === 'fiber') {
-        node = createFiberNode(payload.cableType ?? 'distribution', { position: centered });
+        node = createFiberNode(
+          payload.cableType ?? 'distribution',
+          { position: centered },
+          payload.fiberProfile ?? 'singlemode',
+        );
       } else if (kind === 'closure') {
         node = createClosureNode({ position: centered });
       } else if (kind === 'odf') {
@@ -483,6 +519,8 @@ function StudioWorkspace({
         node = createNapNode({ position: centered });
       } else if (kind === 'gateway') {
         node = createGatewayNode({ position: centered });
+      } else if (kind === 'attenuator') {
+        node = createAttenuatorNode(payload.attenuationDb, { position: centered });
       } else {
         node = createOntNode({ position: centered });
       }
@@ -571,7 +609,10 @@ function StudioWorkspace({
 
         let filtered = currentEdges;
         // Subscriber terminals and NAP/FAT each have one optical input.
-        if (targetNode && (isSubscriberEndpointNode(targetNode) || isNapNode(targetNode))) {
+        if (
+          targetNode &&
+          (isSubscriberEndpointNode(targetNode) || isNapNode(targetNode) || isAttenuatorNode(targetNode))
+        ) {
           filtered = filtered.filter((edge) => edge.target !== target);
         }
         // Multi-input hardware replaces only the patch on the selected port.
@@ -580,7 +621,7 @@ function StudioWorkspace({
           filtered = filtered.filter((edge) => edge.target !== target || edge.targetHandle !== targetHandle);
         }
         // An OLT port or a cable span has a single output.
-        if (sourceNode && (isOltNode(sourceNode) || isFiberNode(sourceNode))) {
+        if (sourceNode && (isOltNode(sourceNode) || isFiberNode(sourceNode) || isAttenuatorNode(sourceNode))) {
           filtered = filtered.filter((edge) => edge.source !== source);
         }
         // Each physical output on a passive branching/patch component is single-cord.
@@ -1366,19 +1407,20 @@ function StudioWorkspace({
         ) : null}
 
         {activeSection === 'reports' ? (
-          <BOMModal
-            variant="screen"
-            open
-            onClose={closeBom}
-            nodes={nodes}
-            edges={flowEdges}
-            simulation={simulation}
-            settings={settings}
-            unitCosts={unitCosts}
-            onUnitCostsChange={handleUnitCostsChange}
-            onResetUnitCosts={resetUnitCosts}
-            costBreakdown={costBreakdown}
-          />
+          <Suspense fallback={<OverlayLoading label="Loading the bill of materials…" variant="screen" />}>
+            <BOMModal
+              open
+              onClose={closeBom}
+              nodes={nodes}
+              edges={flowEdges}
+              simulation={simulation}
+              settings={settings}
+              unitCosts={unitCosts}
+              onUnitCostsChange={handleUnitCostsChange}
+              onResetUnitCosts={resetUnitCosts}
+              costBreakdown={costBreakdown}
+            />
+          </Suspense>
         ) : null}
 
         {activeSection === 'settings' ? (
@@ -1409,17 +1451,25 @@ function StudioWorkspace({
       </div>
       <SectionTabBar active={activeSection} onChange={handleSectionChange} />
 
-      <OtdrModal open={otdrOpen} onClose={closeOtdr} nodes={nodes} edges={edges} />
-      <MissionDrawer
-        open={missionsOpen}
-        activeMissionId={activeMissionId}
-        nodes={nodes}
-        edges={edges}
-        simulation={simulation}
-        costBreakdown={costBreakdown}
-        onClose={closeMissions}
-        onStartMission={startMission}
-      />
+      {otdrOpen ? (
+        <Suspense fallback={<OverlayLoading label="Loading the OTDR trace analyser…" variant="dialog" />}>
+          <OtdrModal open onClose={closeOtdr} nodes={nodes} edges={edges} />
+        </Suspense>
+      ) : null}
+      {missionsOpen ? (
+        <Suspense fallback={<OverlayLoading label="Loading the mission brief…" variant="dialog" />}>
+          <MissionDrawer
+            open
+            activeMissionId={activeMissionId}
+            nodes={nodes}
+            edges={edges}
+            simulation={simulation}
+            costBreakdown={costBreakdown}
+            onClose={closeMissions}
+            onStartMission={startMission}
+          />
+        </Suspense>
+      ) : null}
     </div>
   );
 }

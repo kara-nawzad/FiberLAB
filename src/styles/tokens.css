@@ -105,7 +105,6 @@
   --tabbar-h: 52px; /* phone section tab bar: 44 px targets + 4 px padding */
   --tab-h: 40px; /* every tab button, all three tab bars */
   --card-pad: var(--sp-3); /* inner padding of every card/stat/tile */
-  --bottom-max-h: 44vh; /* bottom panel never eats more than this share */
   --toolbar-gutter: 208px; /* reserved for the minimap next to the toolbar */
 
   /* Landing / overview page container */
@@ -157,7 +156,6 @@
     --canvas-min-w: 320px; /* the wider rail takes its share from the canvas floor */
     --shell-gap: var(--sp-2);
     --shell-pad: var(--sp-3); /* compact panels get one narrower gutter everywhere */
-    --bottom-max-h: 40vh;
   }
 }
 
@@ -166,7 +164,6 @@
     --library-w: min(280px, calc(100vw - var(--rail-w) - var(--sp-3) * 2));
     --inspector-w: min(320px, calc(100vw - var(--rail-w) - var(--sp-3) * 2));
     --canvas-min-w: 0;
-    --bottom-max-h: 44vh; /* stacked cards need the room */
   }
 }
 
@@ -174,6 +171,5 @@
   :root {
     --topbar-h: 52px;
     --shell-gap: var(--sp-2);
-    --bottom-max-h: 40vh;
   }
 }

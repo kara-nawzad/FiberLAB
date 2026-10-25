@@ -23,10 +23,19 @@ export const splitterOutputY = (ports: number): number[] => (ports === 2 ? [48, 
 
 export const artDataUri = (svg: string): string => `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 
+/** Inline SC/APC attenuator barrel — a short extension cord with a fixed pad. */
+export const ATTENUATOR_ART =
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130 56" width="130" height="56" style="display:block;overflow:visible"><defs><linearGradient id="padBody" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f4c752"/><stop offset=".45" stop-color="#e0a41c"/><stop offset="1" stop-color="#9a6a05"/></linearGradient><linearGradient id="padFer" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#b9c2d4"/></linearGradient><filter id="padSh" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#141a2e" flood-opacity=".35"/></filter></defs><g filter="url(#padSh)"><path d="M6 28 C18 28 22 22 34 22" fill="none" stroke="#1d4fd0" stroke-width="7" stroke-linecap="round"/><path d="M96 34 C108 34 112 28 124 28" fill="none" stroke="#1d4fd0" stroke-width="7" stroke-linecap="round"/><rect x="30" y="14" width="24" height="28" rx="5" fill="#1f2937"/><rect x="62" y="12" width="20" height="32" rx="6" fill="#e2e8f0"/><rect x="66" y="16" width="12" height="24" rx="4" fill="url(#padBody)"/><text x="72" y="32" font-size="9" font-weight="800" fill="#3f2a02" text-anchor="middle" font-family="sans-serif">dB</text><rect x="76" y="18" width="22" height="20" rx="5" fill="url(#padBody)"/><rect x="96" y="22" width="10" height="12" rx="2" fill="url(#padFer)"/></g></svg>';
+
+/** Multi-mode (OM3/OM4) duplex patch cord with the aqua 50/125 µm jacket. */
+export const MULTIMODE_FIBER_ART =
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130 56" width="130" height="56" style="display:block;overflow:visible"><defs><linearGradient id="aqua" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#67e8f9"/><stop offset=".5" stop-color="#06b6d4"/><stop offset="1" stop-color="#0e7490"/></linearGradient><linearGradient id="mmFer" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#b9c2d4"/></linearGradient><filter id="mmSh" x="-20%" y="-20%" width="140%" height="160%"><feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#141a2e" flood-opacity=".35"/></filter></defs><g filter="url(#mmSh)"><path d="M14 16 C40 4 78 4 100 16" fill="none" stroke="#0e7490" stroke-width="9" stroke-linecap="round"/><path d="M14 16 C40 4 78 4 100 16" fill="none" stroke="url(#aqua)" stroke-width="7" stroke-linecap="round"/><path d="M14 40 C40 52 78 52 100 40" fill="none" stroke="#0e7490" stroke-width="9" stroke-linecap="round"/><path d="M14 40 C40 52 78 52 100 40" fill="none" stroke="url(#aqua)" stroke-width="7" stroke-linecap="round"/><rect x="4" y="11" width="14" height="10" rx="3" fill="#f1f5f9"/><rect x="4" y="35" width="14" height="10" rx="3" fill="#f1f5f9"/><rect x="98" y="11" width="16" height="10" rx="3" fill="#1d4fd0"/><rect x="98" y="35" width="16" height="10" rx="3" fill="#1d4fd0"/><rect x="114" y="12" width="12" height="8" rx="2" fill="url(#mmFer)"/><rect x="114" y="36" width="12" height="8" rx="2" fill="url(#mmFer)"/></g></svg>';
+
 export function artForNode(type: string | undefined, ratio?: number): string | null {
   if (type === 'olt') return artDataUri(OLT_ART);
   if (type === 'ont' || type === 'gateway') return artDataUri(ONU_ART);
   if (type === 'fiber') return artDataUri(FIBER_ART);
+  if (type === 'attenuator') return artDataUri(ATTENUATOR_ART);
   if (type === 'splitter') return artDataUri(SPLITTER_ART[ratio ?? 8] ?? SPLITTER_ART[8]);
   return null;
 }

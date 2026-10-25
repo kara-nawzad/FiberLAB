@@ -10,13 +10,19 @@ import type { NetworkCostBreakdown, UnitCostProfile } from './data/pricingCatalo
  * between elements are purely patch-cord / patch-panel relationships.
  * ========================================================================== */
 
-/** Supported PON and diagnostic wavelengths. The OPM retains its original three calibration choices. */
-export type Wavelength = 1270 | 1310 | 1490 | 1550 | 1577;
+/**
+ * Supported wavelengths. 1270/1310/1490/1550/1577 are the single-mode PON and
+ * diagnostic windows; 850/1300 belong to the multi-mode (OM3/OM4) profile that a
+ * fibre span can carry. The OPM keeps its original three calibration choices.
+ */
+export type Wavelength = 850 | 1270 | 1300 | 1310 | 1490 | 1550 | 1577;
 export type MeterWavelength = 1310 | 1490 | 1550;
 export type PonStandard = 'GPON' | 'XGS-PON';
 
 /** Educational reference attenuation values, not calibrated fiber specifications. */
 export const ATTENUATION_DB_PER_KM: Record<Wavelength, number> = {
+  850: 3.0, // OM3/OM4 first window (10GBASE-SR class)
+  1300: 1.0, // OM3/OM4 legacy window
   1270: 0.35,
   1310: 0.35,
   1490: 0.25,
@@ -25,6 +31,8 @@ export const ATTENUATION_DB_PER_KM: Record<Wavelength, number> = {
 };
 
 export const WAVELENGTH_LABEL: Record<Wavelength, string> = {
+  850: '850 nm (multi-mode, 3.0 dB/km)',
+  1300: '1300 nm (multi-mode, 1.0 dB/km)',
   1270: '1270 nm (XGS-PON upstream)',
   1310: '1310 nm (GPON upstream)',
   1490: '1490 nm (GPON downstream)',
@@ -145,6 +153,71 @@ export const OLT_CLASS_SPECS: Record<OltClass, OltClassSpec> = {
  * -------------------------------------------------------------------------- */
 
 export type CableType = 'feeder' | 'distribution' | 'drop';
+
+/* -------------------------------------------------------------------------- *
+ * Glass profile — orthogonal to the cable's role in the topology.
+ *
+ * A span's cableType says *where* it sits (feeder / distribution / drop); its
+ * fibreProfile says *what glass* it is. Multi-mode is therefore a profile of an
+ * existing span rather than a fourth cable role, so pricing, BOM and the
+ * inspector keep working unchanged.
+ * -------------------------------------------------------------------------- */
+
+export type FiberProfile = 'singlemode' | 'om3' | 'om4';
+
+export interface FiberProfileSpec {
+  label: string;
+  short: string;
+  /** Core / cladding, shown next to the profile in the library and inspector. */
+  coreCladding: string;
+  /** TIA-598 style jacket colour. */
+  jacketHex: string;
+  /** Wavelengths this glass may carry — constrains the inspector's select. */
+  wavelengths: Wavelength[];
+  /** Gigabit reach before modal dispersion dominates; `null` for single-mode. */
+  maxReachKm: number | null;
+}
+
+/** 550 m gigabit reach limit for 50/125 µm multi-mode (OM3/OM4). */
+export const MODAL_DISPERSION_LIMIT_KM = 0.55;
+
+/** The warning FiberLAB shows whenever a multi-mode span passes that reach. */
+export const MODAL_DISPERSION_WARNING =
+  '⚠️ MODAL DISPERSION LIMIT: Multi-mode span exceeds 550m reach for gigabit transmission.';
+
+export const FIBER_PROFILE_SPECS: Record<FiberProfile, FiberProfileSpec> = {
+  singlemode: {
+    label: 'Single-mode (G.657.A1)',
+    short: 'SM',
+    coreCladding: '9/125 µm',
+    jacketHex: '#facc15',
+    wavelengths: [1270, 1310, 1490, 1550, 1577],
+    maxReachKm: null,
+  },
+  om3: {
+    label: 'Multi-mode OM3',
+    short: 'OM3',
+    coreCladding: '50/125 µm',
+    jacketHex: '#06b6d4',
+    wavelengths: [850, 1300],
+    maxReachKm: MODAL_DISPERSION_LIMIT_KM,
+  },
+  om4: {
+    label: 'Multi-mode OM4',
+    short: 'OM4',
+    coreCladding: '50/125 µm',
+    jacketHex: '#06b6d4',
+    wavelengths: [850, 1300],
+    maxReachKm: MODAL_DISPERSION_LIMIT_KM,
+  },
+};
+
+export const FIBER_PROFILES: FiberProfile[] = ['singlemode', 'om3', 'om4'];
+
+/** True when this span's glass is multi-mode. */
+export function isMultiModeProfile(profile: FiberProfile | undefined): boolean {
+  return profile === 'om3' || profile === 'om4';
+}
 
 export interface CableSpec {
   label: string;
@@ -334,6 +407,8 @@ export interface SplitterNodeData extends Record<string, unknown> {
 export interface FiberNodeData extends Record<string, unknown> {
   kind: 'fiber';
   cableType: CableType;
+  /** Glass type; absent on legacy documents and read as single-mode. */
+  fiberProfile?: FiberProfile;
   lengthKm: number;
   splices: number;
   connectors: number;
@@ -373,6 +448,34 @@ export interface NapNodeData extends Record<string, unknown> {
   splitLossDb: number;
 }
 
+/**
+ * Fixed optical attenuator pad — an inline SC/APC male-to-female barrel the
+ * technician inserts when a subscriber sits too close to the OLT and the
+ * receiver would otherwise saturate (P_rx above the −8 dBm overload limit).
+ */
+export interface AttenuatorNodeData extends Record<string, unknown> {
+  kind: 'attenuator';
+  /** Fixed pad value in dB; one of ATTENUATOR_VALUES_DB. */
+  attenuationDb: number;
+  /** Connector polish of the inline barrel. */
+  polish: 'SC/APC' | 'SC/UPC';
+}
+
+/** Selectable fixed pad values, in dB. */
+export const ATTENUATOR_VALUES_DB = [1, 2, 3, 5, 10, 15] as const;
+export type AttenuatorValueDb = (typeof ATTENUATOR_VALUES_DB)[number];
+export const DEFAULT_ATTENUATOR_DB: AttenuatorValueDb = 5;
+
+/** Clamp any stored value to the catalogue. */
+export function normaliseAttenuatorDb(value: number | undefined): number {
+  if (!Number.isFinite(value)) return DEFAULT_ATTENUATOR_DB;
+  const numeric = Number(value);
+  return ATTENUATOR_VALUES_DB.reduce(
+    (best, candidate) => (Math.abs(candidate - numeric) < Math.abs(best - numeric) ? candidate : best),
+    DEFAULT_ATTENUATOR_DB as number,
+  );
+}
+
 export interface GatewayNodeData extends Record<string, unknown> {
   kind: 'gateway';
   serial: string;
@@ -392,7 +495,8 @@ export type AnyNodeData =
   | OntNodeData
   | OdfNodeData
   | NapNodeData
-  | GatewayNodeData;
+  | GatewayNodeData
+  | AttenuatorNodeData;
 
 export type OltNode = Node<OltNodeData, 'olt'>;
 export type SplitterNode = Node<SplitterNodeData, 'splitter'>;
@@ -402,8 +506,10 @@ export type OntNode = Node<OntNodeData, 'ont'>;
 export type OdfNode = Node<OdfNodeData, 'odf'>;
 export type NapNode = Node<NapNodeData, 'nap'>;
 export type GatewayNode = Node<GatewayNodeData, 'gateway'>;
+export type AttenuatorNode = Node<AttenuatorNodeData, 'attenuator'>;
 export type SubscriberEndpointNode = OntNode | GatewayNode;
-export type PonNode = OltNode | SplitterNode | FiberNode | ClosureNode | OntNode | OdfNode | NapNode | GatewayNode;
+export type PonNode =
+  OltNode | SplitterNode | FiberNode | ClosureNode | OntNode | OdfNode | NapNode | GatewayNode | AttenuatorNode;
 
 /** Edge payload — carries the optical state produced by the simulator. */
 export interface FiberEdgeData extends Record<string, unknown> {
@@ -426,7 +532,7 @@ export type PonEdge = Edge<FiberEdgeData>;
 
 export interface LossSegment {
   nodeId: string | null;
-  component: 'fiber' | 'splitter' | 'splice' | 'connector' | 'fault' | 'margin' | 'olt' | 'odf' | 'nap';
+  component: 'fiber' | 'splitter' | 'splice' | 'connector' | 'fault' | 'margin' | 'olt' | 'odf' | 'nap' | 'attenuator';
   label: string;
   lossDb: number;
 }
@@ -524,6 +630,16 @@ export interface NetworkSummary {
   /** True when every subscriber endpoint sits inside the optimal window. */
   allOptimal: boolean;
   hasFault: boolean;
+  /** Multi-mode spans longer than the 550 m gigabit reach, in canvas order. */
+  modalDispersionWarnings: ModalDispersionWarning[];
+}
+
+export interface ModalDispersionWarning {
+  nodeId: string;
+  fiberProfile: FiberProfile;
+  lengthKm: number;
+  /** The fixed educational sentence shown in the UI. */
+  message: string;
 }
 
 export interface SimulationResult {

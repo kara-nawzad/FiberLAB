@@ -1,9 +1,11 @@
 import type {
+  AttenuatorNodeData,
   ClosureNodeData,
   DesignSettings,
   EdgeTelemetry,
   FiberNodeData,
   GatewayTelemetry,
+  ModalDispersionWarning,
   LossSegment,
   NetworkSummary,
   OltNodeData,
@@ -15,8 +17,10 @@ import type {
   PonNode,
   PonStandard,
   SimulationResult,
+  FiberProfile,
   SplitRatio,
   SplitterNodeData,
+  Wavelength,
 } from '../types';
 import {
   ATTENUATION_DB_PER_KM,
@@ -25,6 +29,8 @@ import {
   CLOSURE_SPLICE_LOSS_MIN_DB,
   CONNECTOR_LOSS_DB,
   CABLE_SPECS,
+  isMultiModeProfile,
+  normaliseAttenuatorDb,
   DEFAULT_ODF_THROUGH_PORT_LOSS_DB,
   DIRTY_CONNECTOR_PENALTY_DB,
   MACRO_BEND_PENALTY_DB,
@@ -32,6 +38,8 @@ import {
   NAP_SPLIT_LOSS_DB,
   NAP_SPLIT_RATIO,
   ONT_THRESHOLDS,
+  MODAL_DISPERSION_LIMIT_KM,
+  MODAL_DISPERSION_WARNING,
   PON_STANDARD_SPECS,
   SPLITTER_LOSS_DB,
   SPLICE_LOSS_DB,
@@ -90,6 +98,10 @@ export function isNapNode(node: PonNode): node is Extract<PonNode, { type: 'nap'
   return node.type === 'nap';
 }
 
+export function isAttenuatorNode(node: PonNode): node is Extract<PonNode, { type: 'attenuator' }> {
+  return node.type === 'attenuator';
+}
+
 export function isGatewayNode(node: PonNode): node is Extract<PonNode, { type: 'gateway' }> {
   return node.type === 'gateway';
 }
@@ -102,12 +114,60 @@ export function isSubscriberEndpointNode(node: PonNode): node is Extract<PonNode
  * Elementary loss models
  * -------------------------------------------------------------------------- */
 
-/** Effective attenuation coefficient for a fiber span, in dB/km. */
+/**
+ * Effective attenuation coefficient for a fiber span, in dB/km.
+ *
+ * Multi-mode glass owns its own coefficient set (850 nm 3.0 dB/km, 1300 nm
+ * 1.0 dB/km) because the single-mode table is silica-loss driven and an order of
+ * magnitude lower. The override, when the technician sets one, still wins.
+ */
 export function fiberAttenuationDbPerKm(data: FiberNodeData): number {
   if (data.attenuationOverrideDbPerKm !== null && data.attenuationOverrideDbPerKm > 0) {
     return data.attenuationOverrideDbPerKm;
   }
-  return ATTENUATION_DB_PER_KM[data.wavelength];
+  return ATTENUATION_DB_PER_KM[resolveFiberWavelength(data)];
+}
+
+const SINGLEMODE_WAVELENGTHS: Wavelength[] = [1270, 1310, 1490, 1550, 1577];
+const MULTIMODE_WAVELENGTHS: Wavelength[] = [850, 1300];
+
+/** Wavelengths a span may carry, given its glass. */
+export function wavelengthsForProfile(profile: FiberProfile | undefined): Wavelength[] {
+  return isMultiModeProfile(profile) ? MULTIMODE_WAVELENGTHS : SINGLEMODE_WAVELENGTHS;
+}
+
+/**
+ * The wavelength a simulation should meter this span at. Multi-mode spans are
+ * pinned to their first window (850 nm) unless the document already stores the
+ * 1300 nm legacy window, so a toggled profile can never leave a stale 1550 nm
+ * value in the attenuation lookup.
+ */
+export function resolveFiberWavelength(data: FiberNodeData): Wavelength {
+  const allowed = wavelengthsForProfile(data.fiberProfile);
+  return allowed.includes(data.wavelength) ? data.wavelength : allowed[0];
+}
+
+/** Fixed insertion loss of an inline attenuator pad, in dB. */
+export function computeAttenuatorLoss(data: AttenuatorNodeData): number {
+  return normaliseAttenuatorDb(data.attenuationDb);
+}
+
+/** Multi-mode spans that exceed the 550 m gigabit reach, in canvas order. */
+export function findModalDispersionWarnings(nodes: PonNode[]): ModalDispersionWarning[] {
+  const warnings: ModalDispersionWarning[] = [];
+  for (const node of nodes) {
+    if (!isFiberNode(node)) continue;
+    const profile = node.data.fiberProfile;
+    if (!isMultiModeProfile(profile)) continue;
+    if (Math.max(0, node.data.lengthKm) <= MODAL_DISPERSION_LIMIT_KM) continue;
+    warnings.push({
+      nodeId: node.id,
+      fiberProfile: profile as FiberProfile,
+      lengthKm: round3(Math.max(0, node.data.lengthKm)),
+      message: MODAL_DISPERSION_WARNING,
+    });
+  }
+  return warnings;
 }
 
 export interface FiberLossBreakdown {
@@ -411,6 +471,15 @@ export function simulateTopology(
         label: `Outdoor NAP/FAT internal 1:${NAP_SPLIT_RATIO} · ${napLossDb.toFixed(2)} dB reference split loss`,
         lossDb: napLossDb,
       });
+    } else if (isAttenuatorNode(node)) {
+      const padLossDb = computeAttenuatorLoss(node.data);
+      nextState.lossDb += padLossDb;
+      nextState.segments.push({
+        nodeId: node.id,
+        component: 'attenuator',
+        label: `Inline attenuator pad · ${padLossDb.toFixed(0)} dB (${node.data.polish})`,
+        lossDb: padLossDb,
+      });
     }
 
     let nextEdges = outgoing.get(node.id) ?? [];
@@ -670,6 +739,7 @@ function summarise(
     }
   }
 
+  const modalDispersionWarnings = findModalDispersionWarnings(nodes);
   const upstreamDeltaDb = Object.values(oltTelemetry).reduce((max, entry) => Math.max(max, entry.upstreamDeltaDb), 0);
   const upstreamDynamicRangeWarning = upstreamDeltaDb > UPSTREAM_DYNAMIC_RANGE_MAX_DB;
 
@@ -693,6 +763,7 @@ function summarise(
     upstreamDynamicRangeWarning,
     allOptimal: subscriberCount > 0 && byStatus.ONLINE === subscriberCount,
     hasFault: byStatus.LOS > 0 || byStatus.DISCONNECTED > 0 || (subscriberCount > 0 && liveCount < subscriberCount),
+    modalDispersionWarnings,
   };
 }
 

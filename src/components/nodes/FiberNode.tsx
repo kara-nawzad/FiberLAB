@@ -1,6 +1,7 @@
 import { Handle, Position, type NodeProps } from '@xyflow/react';
 import { AlertTriangle } from 'lucide-react';
 import type { FiberNode as FiberFlowNode } from '../../types';
+import { FIBER_PROFILE_SPECS, MODAL_DISPERSION_LIMIT_KM, isMultiModeProfile } from '../../types';
 import { computeFiberLoss } from '../../engine/opticalSimulator';
 import { useSimulation } from '../../context/SimulationContext';
 
@@ -14,18 +15,22 @@ export function FiberNode({ data, selected }: NodeProps<FiberFlowNode>) {
   const blindFaultMode = Boolean(simulation?.blindFaultMode);
   const loss = computeFiberLoss(data);
   const faulted = !blindFaultMode && (loss.macroBendLossDb > 0 || loss.dirtyConnectorLossDb > 0);
+  const multiMode = isMultiModeProfile(data.fiberProfile);
+  const profile = FIBER_PROFILE_SPECS[data.fiberProfile ?? 'singlemode'];
+  const overReach = multiMode && data.lengthKm > MODAL_DISPERSION_LIMIT_KM;
 
   return (
     <div
-      className="hw-fiber"
+      className={`hw-fiber${multiMode ? ' is-multimode' : ''}${overReach ? ' is-over-reach' : ''}`}
       style={selected ? { borderColor: 'var(--pu-pri)', boxShadow: '0 0 0 3px var(--pu-pri-soft)' } : undefined}
-      title={`${data.cableType} cable · ${data.splices} splice · ${data.connectors} conn · ${loss.attenuationDbPerKm.toFixed(2)} dB/km @ ${data.wavelength} nm`}
+      title={`${profile.short} ${data.cableType} cable · ${data.splices} splice · ${data.connectors} conn · ${loss.attenuationDbPerKm.toFixed(2)} dB/km @ ${data.wavelength} nm`}
     >
+      {multiMode ? <span className="fiber-profile-tag">{profile.short}</span> : null}
       {faulted ? (
         <AlertTriangle
           size={12}
           className="fiber-fault-badge"
-          style={{ display: 'inline', marginRight: 4, color: '#B36B00' }}
+          style={{ display: 'inline', marginRight: 4, color: 'var(--pu-warn-text)' }}
         />
       ) : null}
       {data.lengthKm.toFixed(1)} km

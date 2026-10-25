@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="FiberLAB">
+  <title>FiberLAB</title>
+  <rect width="64" height="64" rx="15" fill="#e4673f"/>
+  <!-- Fiber strand: a launch port, the light pulse through the core, and a
+       receive port. The pulse is the same mark the in-app wordmark uses. -->
+  <path d="M12 44h10l6-24 6 24h18" fill="none" stroke="#fff4e6" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="12" cy="44" r="3.1" fill="#fff4e6"/>
+  <circle cx="52" cy="44" r="3.1" fill="#fff4e6"/>
+</svg>
