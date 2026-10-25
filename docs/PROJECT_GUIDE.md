@@ -15,7 +15,7 @@ FiberLAB is a browser-based, Tinkercad-style workspace for drawing GPON and XGS-
 
 The current app already includes:
 
-- A warm, hold-to-splice landing hero with an SVG fiber scene and a simulator-backed readout, plus a responsive living photonic waveguide, wavelength/launch-power controls, capabilities, and GPON reference thresholds.
+- A warm, single-message landing hero — headline, one sentence, and one earned **Launch Studio** door — over an SVG fiber scene whose lit home and fiber run stay visible before and after the splice, followed by a responsive living photonic waveguide, wavelength/launch-power controls, capabilities, and GPON reference thresholds.
 - A persistent, in-place transition between the overview and studio so canvas edits and selections survive navigation.
 - A drag-and-drop topology canvas.
 - Eight graph element types: **OLT**, **ODF**, **splitter**, **fiber span**, **dome splice closure**, **NAP/FAT**, **ONT/ONU**, and **Wi-Fi 6 gateway**.
@@ -99,7 +99,7 @@ The existing interactive waveguide is preserved below the introductory hero. Its
 
 ### 3.1 Starting state
 
-The app opens on the warm landing hero. **Launch Interactive Studio** is the primary action; holding the optional **HOLD TO FUSE THE SPLICE** pill on the fibre scene plays the fusion animation and opens Studio too. The receive-power panel reports the weakest subscriber (ONT or gateway) in the current simulator result and marks the last committed reading when Auto is off and edits are stale. Below the hero, one slider drives the 1490 nm waveguide demo at +5.0 dBm with the per-branch 1:4 PLC readout, and model caveats sit behind a **Model scope & assumptions** disclosure. Studio opens on an **empty canvas** with a short dismissible mission hint; the TopBar exposes all three presets, including **MODERN 10G XGS-PON SUBURB**, and the landing quick-load buttons load the standard or failing-link scenario directly.
+The app opens on the warm landing hero: the **Splice the fiber. Light the home.** headline, one sentence of scope, and one action — the **HOLD TO SPLICE** pill. Pressing and holding for 2 s fills the pill with a live percentage, releases a travelling light pulse along the fiber, and only then lights the windows of the still-dark home in the scene; the **Launch Studio** button then appears beside a **SPLICE COMPLETE** chip. Releasing early cancels and resets the hold, so the studio is always one deliberate gesture away and never a trap. Every optical reading (budget tables, the simulator-backed receive power, quotations) lives in the engineering sections below the hero rather than in it. Below the hero, one slider drives the 1490 nm waveguide demo at +5.0 dBm with the per-branch 1:4 PLC readout, and model caveats sit behind a **Model scope & assumptions** disclosure. Studio opens on a **white canvas with a warm dot grid** and a single-line, dismissible mission chip; the TopBar exposes all three presets, including **MODERN 10G XGS-PON SUBURB**, and the landing quick-load buttons load the standard or failing-link scenario directly.
 
 ### 3.2 Place and connect components
 
@@ -206,7 +206,7 @@ JSON export is implemented; **JSON import and automatic project saving are not c
 
 ### 3.6 Practice field missions
 
-Open **Missions** on the Settings screen (the button reports the active mission), or choose **Explore Guided Missions** on the landing page to launch a scenario. Starting one loads a fresh copy of its existing preset, applies the mission setup, turns on Auto, restores the mission's safety-margin target, clears selection, and fits the graph. Objective progress is evaluated from the live simulation and graph state; hints are available in the drawer and a completion summary appears when every objective is met.
+Open **Missions** on the Settings screen (the button reports the active mission), or use **Open the mission** on the empty-canvas hint, to launch a scenario. Starting one loads a fresh copy of its existing preset, applies the mission setup, turns on Auto, restores the mission's safety-margin target, clears selection, and fits the graph. Objective progress is evaluated from the live simulation and graph state; hints are available in the drawer and a completion summary appears when every objective is met.
 
 - **The Marginal Villa:** starts from the Standard 1:32 tree with one marginal subscriber. Bring all three connected ONTs into the ONLINE window, preserve exactly 2.0 dB safety margin, and keep OLT launch power at or below +5.0 dBm.
 - **Diagnose the Silent ONT:** starts from the Failing Long-Distance Link with `olt-b` laser switched off. Re-enable an OLT source, restore an optical path to Dukan Ridge — Tower 7, and bring that target ONT into the ONLINE window.
@@ -510,7 +510,8 @@ The app is a client-side React/TypeScript application. There is no backend servi
 | `src/styles/global.css`                                     | Tailwind layers, application-wide styles, and mission keyframes.                                                              |
 | `src/styles/photo-ui.css`                                   | Photo-inspired studio UI overrides, loaded last.                                                                              |
 | `src/styles/theme.css`                                      | Warm responsive landing and studio theme, including modal and hardware treatments.                                            |
-| `public/favicon.svg`                                        | Scalable browser-tab icon (orange tile, fiber mark, port dots).                                                               |
+| `public/favicon.svg`                                        | Scalable browser-tab icon: the brand tile plus the same light-pulse mark the in-app wordmark uses.                            |
+| `public/apple-touch-icon.png`                               | 180 × 180 iOS home-screen icon in the same tile and mark.                                                                     |
 | `public/og-image.png`                                       | 1200 × 630 social card used by the absolute Open Graph/Twitter metadata in `index.html`.                                      |
 | `public/404.html`                                           | Standalone branded not-found page for the static host.                                                                        |
 | `src/hooks/useDialogA11y.ts`                                | Dialog focus trap, Escape/backdrop close and focus restore for the overlays.                                                  |
@@ -553,7 +554,7 @@ The app is a client-side React/TypeScript application. There is no backend servi
 | `src/components/nodes/ODFNode.tsx`                          | ODF React Flow node.                                                                                                          |
 | `src/components/nodes/OLTNode.tsx`                          | OLT React Flow node.                                                                                                          |
 | `src/components/nodes/ONTNode.tsx`                          | ONT React Flow node.                                                                                                          |
-| `src/components/nodes/SplitterNode.tsx`                     | PLC splitter React Flow node.                                                                                                 |
+| `src/components/nodes/SplitterNode.tsx`                     | PLC splitter React Flow node: cassette centred on the port axis, one handle per branch, no canvas notes.                      |
 | `src/components/nodes/index.ts`                             | Live `nodeTypes` registry consumed by `App.tsx`.                                                                              |
 
 `App.tsx` calculates the optical simulation from the current node graph and separately calculates `NetworkCostBreakdown` from the same nodes/edges plus local rates. Optical telemetry is shared through `SimulationContext`, decorates optical edges, and feeds optical displays; the CAPEX result feeds the Reports banner, the BOM, exports, and mission objectives. The OPM independently invokes the pure probe engine, and the OTDR modal invokes the pure route analyzer at its selected source, branch, wavelength, and pulse width. This keeps all three calculations decoupled from presentation.

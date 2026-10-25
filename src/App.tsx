@@ -27,7 +27,7 @@ import {
   type OnSelectionChangeParams,
   type ReactFlowInstance,
 } from '@xyflow/react';
-import { Flag, Link2, MousePointer2, Plus, X } from 'lucide-react';
+import { Flag, Link2, Plus, X } from 'lucide-react';
 import type {
   AnyNodeData,
   DesignSettings,
@@ -141,7 +141,6 @@ type LandingCommand = LandingCommandInput & { requestId: number };
 
 interface StudioWorkspaceProps {
   onOpenOverview: () => void;
-  onSimulationChange: (simulation: SimulationResult, stale: boolean, reference?: boolean) => void;
   landingCommand: LandingCommand | null;
   isActive?: boolean;
 }
@@ -214,12 +213,7 @@ function initialTopology(): { nodes: PonNode[]; edges: PonEdge[] } {
  * Studio workspace — canvas, drag & drop, selection and simulation wiring.
  * ========================================================================== */
 
-function StudioWorkspace({
-  onOpenOverview,
-  onSimulationChange,
-  landingCommand,
-  isActive = true,
-}: StudioWorkspaceProps) {
+function StudioWorkspace({ onOpenOverview, landingCommand, isActive = true }: StudioWorkspaceProps) {
   const seeded = useMemo(initialTopology, []);
   const [nodes, setNodes, onNodesChange] = useNodesState<PonNode>(seeded.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState<PonEdge>(seeded.edges);
@@ -266,14 +260,6 @@ function StudioWorkspace({
 
   const liveSimulation = useMemo(() => simulateTopology(nodes, edges, settings, 0), [nodes, edges, settings]);
 
-  /* The overview page always shows a reading. Until the user builds something in
-   * the (now blank) workbench it previews the reference 1:32 tree. */
-  const canvasIsEmpty = nodes.length === 0;
-  const referenceSimulation = useMemo(() => {
-    const preset = buildPreset('standard-1x32');
-    return preset ? simulateTopology(preset.nodes, preset.edges, DEFAULT_SETTINGS, 0) : null;
-  }, []);
-
   const activeMission = useMemo(
     () => (activeMissionId ? (getMissionById(activeMissionId) ?? null) : null),
     [activeMissionId],
@@ -285,7 +271,6 @@ function StudioWorkspace({
     return blindFaultMode ? { ...base, blindFaultMode: true } : base;
   }, [settings.autoRun, liveSimulation, committedSim, blindFaultMode]);
 
-  const simulationStale = !settings.autoRun && dirty;
   const costBreakdown = useMemo(() => calculateNetworkCost(nodes, edges, unitCosts), [nodes, edges, unitCosts]);
   const opmSimulation = useMemo(
     () => (opmActive ? simulateAtMeterWavelength(nodes, edges, settings, meterWavelength) : null),
@@ -293,12 +278,6 @@ function StudioWorkspace({
   );
   const opmReading =
     opmActive && opmProbe && opmSimulation ? readOpticalPowerAtProbe(opmProbe, nodes, edges, opmSimulation) : null;
-
-  const landingSimulation = canvasIsEmpty && referenceSimulation ? referenceSimulation : simulation;
-
-  useEffect(() => {
-    onSimulationChange(landingSimulation, simulationStale, canvasIsEmpty);
-  }, [landingSimulation, simulationStale, canvasIsEmpty, onSimulationChange]);
 
   const highlightedEdgeIds = useMemo(() => {
     const ids = new Set<string>();
@@ -1282,7 +1261,7 @@ function StudioWorkspace({
                     fitView
                     proOptions={{ hideAttribution: true }}
                   >
-                    <Background variant={BackgroundVariant.Dots} gap={18} size={1.3} color="#E6D5C3" />
+                    <Background variant={BackgroundVariant.Dots} gap={17} size={1.6} color="#DCC4AC" />
                     <Controls position="bottom-right" showInteractive={false} />
                     <MiniMap
                       position="top-right"
@@ -1317,32 +1296,23 @@ function StudioWorkspace({
                     ) : null}
 
                     {nodes.length === 0 && !emptyHintDismissed ? (
-                      <Panel position="top-center" className="pu-empty-panel !m-3">
-                        <div className="panel pu-empty-card shadow-panel">
-                          <span className="pu-empty-icon" aria-hidden="true">
-                            <MousePointer2 size={16} />
-                          </span>
-                          <div className="pu-empty-copy">
-                            <div className="pu-empty-title">
-                              <span className="text-body font-semibold text-[var(--pu-ink)]">The canvas is empty</span>
-                              <button
-                                type="button"
-                                className="pu-empty-dismiss"
-                                onClick={() => setEmptyHintDismissed(true)}
-                                aria-label="Dismiss canvas hint"
-                                title="Dismiss"
-                              >
-                                <X size={13} aria-hidden="true" />
-                              </button>
-                            </div>
-                            <div className="text-body leading-snug text-[var(--pu-mut)]">
-                              Drag in an OLT, or let a mission walk you through it.
-                            </div>
-                            <button type="button" className="pu-empty-action" onClick={openMissions}>
-                              <Flag size={13} aria-hidden="true" />
-                              Open the mission
-                            </button>
-                          </div>
+                      <Panel position="top-center" className="pu-empty-panel !m-2">
+                        <div className="pu-empty-note">
+                          <span className="pu-empty-title">The canvas is empty</span>
+                          <span className="pu-empty-hint">Drag in an OLT, or let a mission walk you through it.</span>
+                          <button type="button" className="pu-empty-action" onClick={openMissions}>
+                            <Flag size={11} aria-hidden="true" />
+                            Open the mission
+                          </button>
+                          <button
+                            type="button"
+                            className="pu-empty-dismiss"
+                            onClick={() => setEmptyHintDismissed(true)}
+                            aria-label="Dismiss canvas hint"
+                            title="Dismiss"
+                          >
+                            <X size={12} aria-hidden="true" />
+                          </button>
                         </div>
                       </Panel>
                     ) : null}
@@ -1477,11 +1447,6 @@ function StudioWorkspace({
 export default function App() {
   const [viewMode, setViewMode] = useState<'landing' | 'studio'>('landing');
   const [landingCommand, setLandingCommand] = useState<LandingCommand | null>(null);
-  const [landingSnapshot, setLandingSnapshot] = useState<{
-    simulation: SimulationResult;
-    stale: boolean;
-    reference: boolean;
-  } | null>(null);
   const commandSequence = useRef(0);
   const hasEnteredStudio = useRef(false);
   const studioViewportRef = useRef<HTMLDivElement>(null);
@@ -1492,19 +1457,12 @@ export default function App() {
     landingViewportRef.current?.toggleAttribute('inert', viewMode !== 'landing');
   }, [viewMode]);
 
-  const updateLandingSimulation = useCallback(
-    (simulation: SimulationResult, stale: boolean, reference?: boolean) =>
-      setLandingSnapshot({ simulation, stale, reference: Boolean(reference) }),
-    [],
-  );
-
   const sendLandingCommand = useCallback((command: LandingCommandInput) => {
     const requestId = ++commandSequence.current;
     setLandingCommand({ ...command, requestId } as LandingCommand);
     setViewMode('studio');
   }, []);
   const launchStudio = useCallback(() => setViewMode('studio'), []);
-  const openMissions = useCallback(() => sendLandingCommand({ kind: 'missions' }), [sendLandingCommand]);
   const loadPreset = useCallback(
     (presetId: string) => sendLandingCommand({ kind: 'preset', presetId }),
     [sendLandingCommand],
@@ -1536,7 +1494,6 @@ export default function App() {
         >
           <StudioWorkspace
             onOpenOverview={returnToOverview}
-            onSimulationChange={updateLandingSimulation}
             landingCommand={landingCommand}
             isActive={viewMode === 'studio'}
           />
@@ -1547,11 +1504,7 @@ export default function App() {
           aria-hidden={viewMode !== 'landing'}
         >
           <LandingView
-            simulation={landingSnapshot?.simulation ?? null}
-            simulationStale={landingSnapshot?.stale ?? false}
-            simulationIsReference={landingSnapshot?.reference ?? false}
             onLaunchStudio={launchStudio}
-            onExploreMissions={openMissions}
             onLoadPreset={loadPreset}
             onStartVillaMission={startVillaMission}
           />

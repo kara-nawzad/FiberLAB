@@ -161,11 +161,11 @@
   }
 
   .metric {
-    @apply border border-slate-200 bg-slate-50 px-3 py-2;
+    @apply border border-slate-200 bg-slate-50 px-3 py-3;
     border-radius: var(--r-md);
   }
 
-  /* caption sits 4px above its value, in every metric box */
+  /* caption sits 6px above its value, in every metric box */
   .metric > :first-child {
     margin-bottom: var(--sp-1);
   }
@@ -306,8 +306,11 @@
 /* Range inputs -------------------------------------------------------------- */
 
 input[type='range'] {
+  /* Full width: the knob's half-thumb overhang stays inside the panel gutter,
+   * and no margin can round the track into a horizontal scrollbar. */
   width: 100%;
   height: 4px;
+  margin: var(--sp-1) 0;
   border-radius: var(--r-pill);
   appearance: none;
   background: #eed8bf;

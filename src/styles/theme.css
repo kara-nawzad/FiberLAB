@@ -142,15 +142,15 @@
   background: #ffffff;
 }
 
-/* React Flow stays the real interactive canvas; its ground stays pure white. */
-.fiberlab-studio .react-flow,
-.fiberlab-studio .react-flow__pane,
-.fiberlab-studio .react-flow__viewport {
+/* React Flow stays the real interactive canvas; its ground stays pure white.
+ * Only the container is painted: the pane and viewport sit above the background
+ * layer (z-index 1 / 2 vs -1), so giving them a fill hid the dot grid. */
+.fiberlab-studio .react-flow {
   background-color: #ffffff;
 }
 
 .fiberlab-studio .react-flow__background pattern circle {
-  fill: #e6d5c3;
+  fill: #dcc4ac;
 }
 
 .fiberlab-studio .react-flow__handle {
@@ -375,8 +375,8 @@
 .splice-hero-frame {
   position: relative;
   isolation: isolate;
-  min-height: 680px;
-  height: min(900px, 100dvh);
+  min-height: 600px;
+  height: min(760px, 100dvh);
   overflow: hidden;
   background: var(--fiber-ground);
 }
@@ -385,9 +385,17 @@
   position: absolute;
   z-index: -2;
   inset: 0 0 0 auto;
-  width: 54%;
+  width: 50%;
   overflow: hidden;
-  background: #e9cbb8;
+  background: #f0d9c9;
+}
+
+/* The illustration is drawn at full strength: crisper contrast, no fade. The
+ * cream wash below — not an opacity reduction — is what keeps the headline
+ * legible on the left. */
+.splice-hero-scene .splice-hero-svg {
+  opacity: 1;
+  filter: saturate(1.06) contrast(1.08);
 }
 
 .splice-hero-svg,
@@ -409,25 +417,30 @@
     linear-gradient(
       90deg,
       var(--fiber-ground) 0%,
-      rgba(255, 244, 230, 0.96) 8%,
-      rgba(255, 244, 230, 0.78) 31%,
-      rgba(255, 244, 230, 0.18) 67%,
-      rgba(43, 26, 20, 0.08) 100%
+      rgba(255, 244, 230, 0.99) 10%,
+      rgba(255, 244, 230, 0.9) 32%,
+      rgba(255, 244, 230, 0.4) 55%,
+      rgba(255, 244, 230, 0.07) 76%,
+      rgba(255, 244, 230, 0) 100%
     ),
-    linear-gradient(0deg, rgba(255, 244, 230, 0.44) 0%, transparent 28%);
+    linear-gradient(0deg, rgba(255, 244, 230, 0.26) 0%, transparent 20%);
 }
 
+/* Before the splice the home is dark glass: the house reads by its frame and
+ * silhouette, not by light. It only receives light once the splice lands. */
 .splice-hero-scene .hh {
   opacity: 0;
-  filter: drop-shadow(0 0 3px rgba(255, 176, 32, 0.46));
+  filter: drop-shadow(0 0 0 rgba(255, 176, 32, 0));
   transition:
-    opacity 700ms ease,
-    filter 900ms ease;
+    opacity 650ms ease,
+    filter 650ms ease;
 }
 
+/* The light crosses the fiber first (see .pl), then the home lights up. */
 .splice-hero-scene.is-done .hh {
-  opacity: 0.96;
-  filter: drop-shadow(0 0 8px rgba(255, 176, 32, 0.82));
+  opacity: 1;
+  filter: drop-shadow(0 0 10px rgba(255, 176, 32, 0.92));
+  transition-delay: 700ms;
 }
 
 .splice-hero-scene .pl {
@@ -441,8 +454,8 @@
 
 .splice-hero-scene.is-done .pl {
   opacity: 1;
-  animation: splice-ray 850ms linear infinite;
-  filter: drop-shadow(0 0 4px rgba(255, 176, 32, 0.8));
+  animation: splice-ray 700ms linear infinite;
+  filter: drop-shadow(0 0 4px rgba(255, 176, 32, 0.85));
 }
 
 .splice-hero-scene .sk {
@@ -460,11 +473,11 @@
   opacity: 0;
 }
 .splice-hero-scene .dim {
-  opacity: 0.52;
+  opacity: 0.24;
   transition: opacity 900ms ease;
 }
 .splice-hero-scene.is-done .dim {
-  opacity: 0.08;
+  opacity: 0.04;
 }
 
 @keyframes splice-ray {
@@ -673,19 +686,20 @@
   display: flex;
   width: min(calc(100% - var(--page-gutter) * 2), var(--page-max));
   height: 100%;
-  min-height: 680px;
+  min-height: 600px;
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
   margin: 0 auto;
-  padding: calc(var(--sp-8) * 3 + var(--sp-6)) 0 calc(var(--sp-8) + var(--sp-2));
+  /* Clears the fixed navigation bar without the old 120 px of dead air. */
+  padding: calc(var(--sp-8) * 2 + var(--sp-6)) 0 calc(var(--sp-6) + var(--sp-2));
 }
 
 .splice-hero-eyebrow {
   display: flex;
   align-items: center;
   gap: var(--sp-2);
-  margin: 0 0 var(--sp-6);
+  margin: 0 0 var(--sp-4);
   color: var(--fiber-muted);
   font-family: 'JetBrains Mono', ui-monospace, monospace;
   font-size: var(--type-small);
@@ -702,7 +716,7 @@
 }
 
 .splice-hero-content h1 {
-  max-width: 770px;
+  max-width: 700px;
   margin: 0;
   color: var(--fiber-ink);
   font-family: Sora, Manrope, sans-serif;
@@ -718,227 +732,64 @@
 }
 
 .splice-hero-lede {
-  max-width: 470px;
-  margin: var(--sp-5) 0 0;
+  max-width: 430px;
+  margin: var(--sp-4) 0 0;
   color: #705443;
   font-size: var(--fs-md);
   font-weight: var(--fw-medium);
   line-height: 1.6;
 }
 
-/* One quiet instrument strip instead of a card: source, what is measured,
- * the number and its status on a single line. */
-.splice-live-readout {
-  display: inline-flex;
-  max-width: 100%;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--sp-2) var(--sp-3);
-  margin-top: var(--sp-6);
-  padding: var(--sp-2) var(--sp-3);
-  border: 1px solid rgba(238, 216, 191, 0.9);
-  border-radius: var(--r-pill);
-  background: rgba(255, 250, 242, 0.83);
-  box-shadow: 0 6px 18px rgba(43, 26, 20, 0.05);
-  backdrop-filter: blur(13px);
-}
-
-.splice-live-icon {
-  display: grid;
-  width: 26px;
-  height: 26px;
-  flex: 0 0 auto;
-  place-items: center;
-  border: 1px solid #f1d2ae;
-  border-radius: var(--r-md);
-  background: #fff0df;
-  color: var(--fiber-coral);
-}
-
-.splice-live-meta {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  line-height: 1.25;
-}
-
-.splice-live-eyebrow {
-  color: var(--fiber-muted);
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
-  font-size: var(--type-caption);
-  font-weight: var(--fw-semibold);
-  letter-spacing: var(--tracking-eyebrow);
-  white-space: nowrap;
-}
-
-.splice-live-label {
-  color: var(--fiber-ink);
-  font-size: var(--type-small);
-  font-weight: var(--fw-bold);
-}
-
-.splice-live-value-wrap {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sp-2);
-  margin-left: auto;
-}
-
-.splice-live-value {
-  color: var(--fiber-ink);
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
-  font-size: var(--type-metric-sm);
-  font-weight: var(--fw-bold);
-  line-height: var(--leading-none);
-  letter-spacing: var(--tracking-display);
-  font-variant-numeric: tabular-nums;
-}
-
-.splice-live-status {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sp-1);
-  padding: var(--sp-1) var(--sp-2);
-  border: 1px solid var(--fiber-hairline);
-  border-radius: var(--r-pill);
-  color: var(--fiber-muted);
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
-  font-size: var(--type-caption);
-  font-weight: var(--fw-bold);
-  letter-spacing: var(--tracking-label);
-}
-
-.splice-live-status i {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: currentColor;
-}
-.splice-live-status.is-online {
-  border-color: #a7dec4;
-  background: #eaf8f1;
-  color: #075e40;
-}
-.splice-live-status.is-warning {
-  border-color: #f4d496;
-  background: #fff5e2;
-  color: #754300;
-}
-.splice-live-status.is-overload {
-  border-color: #f2d9ae;
-  background: #fef3dc;
-  color: #8a5a00;
-}
-.splice-live-status.is-los {
-  border-color: #efaf9d;
-  background: #fff0ea;
-  color: #8f252a;
-}
-.splice-live-status.is-disconnected,
-.splice-live-status.is-idle {
-  border-color: var(--fiber-hairline);
-  background: #f8eddf;
-  color: var(--fiber-muted);
-}
-
 .splice-hero-actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  gap: var(--sp-3);
+  margin-top: var(--sp-8);
+}
+
+/* The hero's two controls are deliberately large: the studio button and the
+ * hold-to-splice pill share one height so the pair reads as one row. */
+.splice-hero-actions .landing-button {
+  min-height: 58px;
   gap: var(--sp-2);
-  margin-top: var(--sp-6);
+  padding: 0 calc(var(--sp-6) + var(--sp-1));
+  font-size: var(--fs-md);
 }
 
-.splice-hero-actions.is-revealed {
-  animation: splice-doors-in 320ms ease-out both;
-}
-
-@keyframes splice-doors-in {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* The fusion confirmation, moved off the hold button's corner and onto the
- * readout card as a device-status chip. */
-.splice-fused-seal {
-  display: inline-flex;
-  flex: 0 0 auto;
-  align-items: center;
-  gap: 6px;
-  margin-left: auto;
-  padding: 4px 10px;
-  border-radius: var(--r-pill);
-  background: #0b6045;
-  color: #d9fbe9;
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
-  font-size: var(--type-caption);
-  font-weight: var(--fw-bold);
-  letter-spacing: var(--tracking-label);
-  white-space: nowrap;
-  box-shadow: 0 2px 8px rgba(11, 96, 69, 0.28);
-  animation: splice-seal-pop 260ms ease-out both;
-}
-
-@keyframes splice-seal-pop {
-  from {
-    opacity: 0;
-    transform: scale(0.86);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .splice-hero-actions.is-revealed,
-  .splice-fused-seal {
-    animation: none;
-  }
-}
-
-/* Optional flourish: press and hold to fuse the fibre on the scene. The Launch
- * button above does the same job in one click, so this never gates the studio. */
+/* Hold to splice: this is the hero's action, not a flourish. Press and hold
+ * for HOLD_DURATION_MS; a warm fill climbs across the pill while the label
+ * counts up, then the scene's light crosses the fiber. */
 .splice-fuse {
-  position: absolute;
-  right: clamp(20px, 5vw, 64px);
-  bottom: clamp(24px, 8vh, 72px);
-  z-index: 2;
+  position: relative;
   display: inline-flex;
-  min-height: var(--control-lg);
+  min-height: 58px;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  padding: 0 var(--sp-4);
-  border: 1px solid rgba(43, 26, 20, 0.62);
+  padding: 0 calc(var(--sp-6) + var(--sp-1));
+  border: 1px solid transparent;
   border-radius: var(--r-pill);
-  background: rgba(43, 26, 20, 0.84);
+  background: var(--pu-pri-cta);
   color: #fffaf2;
   cursor: pointer;
   touch-action: none;
   user-select: none;
-  backdrop-filter: blur(6px);
+  box-shadow: 0 10px 26px rgba(200, 81, 44, 0.24);
   transition:
-    border-color 170ms ease,
     background 170ms ease,
     box-shadow 170ms ease,
-    transform 170ms ease;
+    transform 140ms ease;
 }
 
 .splice-fuse:hover {
-  border-color: var(--fiber-coral);
-  background: #2b1a14;
-  box-shadow: 0 8px 24px rgba(43, 26, 20, 0.22);
+  background: var(--pu-pri-cta-hover);
+  box-shadow: 0 13px 30px rgba(200, 81, 44, 0.3);
 }
 
-.splice-fuse:active {
-  transform: scale(0.99);
+.splice-fuse:active,
+.splice-fuse.is-holding {
+  transform: scale(0.995);
 }
 
 .splice-fuse:focus-visible {
@@ -946,12 +797,13 @@
   outline-offset: 3px;
 }
 
+/* Progress is unmistakable: a cream fill that grows with the hold. */
 .splice-fuse-progress {
   position: absolute;
   inset: 0;
   transform: scaleX(0);
   transform-origin: left center;
-  background: linear-gradient(90deg, rgba(228, 103, 63, 0.18), rgba(228, 103, 63, 0.62));
+  background: linear-gradient(90deg, rgba(255, 244, 230, 0.34), rgba(255, 244, 230, 0.66));
   pointer-events: none;
 }
 
@@ -961,14 +813,54 @@
   align-items: center;
   gap: var(--sp-2);
   font-family: 'JetBrains Mono', ui-monospace, monospace;
-  font-size: var(--type-caption);
+  font-size: var(--fs-md);
   font-weight: var(--fw-bold);
   letter-spacing: var(--tracking-label);
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
 .splice-fuse-content svg {
-  color: #ffbb70;
+  color: #ffd9bd;
+}
+
+/* Completed: the pill settles into a calm status chip beside the studio door. */
+.splice-fuse.is-complete {
+  border-color: #b7e6cd;
+  background: #eaf8f1;
+  color: #075e40;
+  box-shadow: 0 8px 20px rgba(11, 96, 69, 0.12);
+  cursor: default;
+  touch-action: auto;
+}
+
+.splice-fuse.is-complete .splice-fuse-content svg {
+  color: #0b6045;
+}
+
+/* A short, calm entrance for whichever control the hero is offering. */
+.splice-hero-actions > * {
+  animation: splice-action-in 300ms ease-out backwards;
+}
+
+@keyframes splice-action-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .splice-fuse {
+    transition: none;
+  }
+  .splice-hero-actions > * {
+    animation: none;
+  }
 }
 
 /* ------------------------ Preserved live waveguide exhibit */
@@ -1138,16 +1030,6 @@
   background: var(--pu-pri-cta-hover);
   box-shadow: 0 11px 25px rgba(200, 81, 44, 0.23);
 }
-.landing-button--secondary {
-  border-color: var(--fiber-hairline);
-  background: #fffaf2;
-  color: #5a4133;
-}
-.landing-button--secondary:hover {
-  border-color: var(--fiber-strong);
-  background: #fff1df;
-}
-
 .landing-quickload,
 .landing-alt-quickload {
   display: inline-flex;
@@ -1795,34 +1677,29 @@
 
 @media (max-width: 900px) {
   .splice-hero-frame {
-    min-height: 660px;
-    height: min(790px, 100dvh);
+    min-height: 540px;
+    height: min(660px, 100dvh);
   }
   .splice-hero-content h1 {
     max-width: 620px;
     font-size: var(--type-display);
   }
   .splice-hero-scene {
-    width: 58%;
+    width: 52%;
   }
+  /* Same rule as desktop: readable copy on the left, a crisp home on the right. */
   .splice-hero-scene-wash {
     background: linear-gradient(
       90deg,
       var(--fiber-ground) 0%,
-      rgba(255, 244, 230, 0.97) 10%,
-      rgba(255, 244, 230, 0.8) 44%,
-      rgba(255, 244, 230, 0.28) 78%,
-      rgba(43, 26, 20, 0.05) 100%
+      rgba(255, 244, 230, 0.99) 12%,
+      rgba(255, 244, 230, 0.9) 44%,
+      rgba(255, 244, 230, 0.38) 68%,
+      rgba(255, 244, 230, 0.06) 100%
     );
   }
-  /* Reserve the strip the fusion pill floats in, so the reading never sits
-   * underneath it at tablet widths. */
   .splice-hero-content {
-    padding-bottom: calc(var(--sp-8) + var(--control-lg) + var(--sp-6));
-  }
-  .splice-fuse {
-    right: var(--page-gutter);
-    bottom: var(--sp-4);
+    min-height: 540px;
   }
   .landing-hero {
     grid-template-columns: 1fr;
@@ -1876,23 +1753,25 @@
     padding-left: var(--sp-1);
   }
 
+  /* Phone: the hero is content-sized instead of a fixed tall stage, so there
+   * is no dead space above or below the message. */
   .splice-hero-frame {
-    min-height: 730px;
-    height: min(820px, 100dvh);
+    height: auto;
+    min-height: 0;
   }
   .splice-hero-scene {
     width: 100%;
-    opacity: 0.94;
   }
+  /* The copy needs a scrim on a phone, but the home sits low-right behind the
+   * actions, so the wash thins out below the headline instead of covering it. */
   .splice-hero-scene-wash {
-    background:
-      linear-gradient(
-        90deg,
-        rgba(255, 244, 230, 0.98) 0%,
-        rgba(255, 244, 230, 0.88) 35%,
-        rgba(255, 244, 230, 0.54) 100%
-      ),
-      linear-gradient(0deg, var(--fiber-ground) 0%, rgba(255, 244, 230, 0.05) 32%, rgba(255, 244, 230, 0.36) 100%);
+    background: linear-gradient(
+      180deg,
+      rgba(255, 244, 230, 0.97) 0%,
+      rgba(255, 244, 230, 0.9) 38%,
+      rgba(255, 244, 230, 0.64) 66%,
+      rgba(255, 244, 230, 0.5) 100%
+    );
   }
   .landing-nav-wrap {
     top: 12px;
@@ -1921,9 +1800,15 @@
     padding: 0 var(--sp-3);
     font-size: var(--type-small);
   }
+  .splice-hero-content {
+    width: min(calc(100% - var(--page-gutter) * 2), var(--page-max));
+    height: auto;
+    min-height: 0;
+    padding: calc(var(--sp-8) * 2 + var(--sp-4)) 0 var(--sp-8);
+  }
   .splice-hero-eyebrow {
     max-width: 290px;
-    margin-bottom: var(--sp-4);
+    margin-bottom: var(--sp-3);
     font-size: var(--type-caption);
     line-height: 1.5;
   }
@@ -1934,19 +1819,21 @@
   .splice-hero-lede {
     max-width: 410px;
     margin-top: var(--sp-3);
-    font-size: var(--fs-sm);
+    /* Never below 15 px on a phone. */
+    font-size: max(var(--fs-sm), 15px);
+    line-height: 1.55;
   }
-  /* The scene is a backdrop at this width; the fusion pill joins the column. */
+  /* Full-width controls are the clearest thing on a phone, and they keep the
+   * 58 px targets above the 44 px floor. */
+  .splice-hero-actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    margin-top: var(--sp-6);
+  }
+  .splice-hero-actions .landing-button,
   .splice-fuse {
-    position: static;
-    align-self: flex-start;
-    margin-top: var(--sp-4);
-  }
-  .splice-live-readout {
-    margin-top: var(--sp-5);
-  }
-  .splice-live-status {
-    font-size: var(--type-caption);
+    width: 100%;
   }
   .landing-hero {
     gap: var(--sp-6);
@@ -2064,17 +1951,13 @@
   .pu-capex-detail {
     display: none;
   }
-  .splice-hero-frame {
-    min-height: 750px;
+  /* Narrow phones: let the headline use the full column and keep the sentence
+   * at the 15 px floor. */
+  .splice-hero-content h1 {
+    max-width: 100%;
   }
-  .splice-hero-content {
-    min-height: 750px;
-  }
-  .splice-live-value-wrap {
-    gap: var(--sp-1);
-  }
-  .splice-live-status {
-    padding: var(--sp-1);
+  .splice-hero-lede {
+    font-size: 15px;
   }
 }
 
@@ -2447,15 +2330,19 @@
 
 .fiber-fault-control {
   display: flex;
-  align-items: center;
-  gap: var(--sp-2);
-  padding: var(--sp-2);
+  align-items: flex-start;
+  gap: var(--sp-3);
+  padding: var(--sp-3);
   border: 1px solid #e7d3bd;
   border-radius: var(--r-md);
   background: #fffaf2;
 }
+.fiber-fault-control > svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
 .fiber-fault-control + .fiber-fault-control {
-  margin-top: var(--sp-1);
+  margin-top: var(--sp-2);
 }
 .fiber-fault-control.is-active {
   border-color: #e9a76a;
@@ -2469,22 +2356,23 @@
   display: block;
   color: #483126;
   font:
-    var(--fw-bold) var(--type-small)/1.3 'Manrope',
+    var(--fw-bold) 14px/1.35 'Manrope',
     sans-serif;
 }
 .fiber-fault-control-copy small {
   display: block;
   margin-top: var(--sp-1);
-  color: #8a6c56;
+  color: #7f6353;
   font:
-    var(--fw-medium) var(--type-caption)/1.35 'Manrope',
+    var(--fw-medium) var(--type-body)/1.5 'Manrope',
     sans-serif;
 }
 .fiber-fault-switch {
   position: relative;
-  width: 34px;
-  height: 19px;
+  width: 38px;
+  height: 21px;
   flex: 0 0 auto;
+  margin-top: 1px;
   border: 1px solid #c5b19e;
   border-radius: var(--r-pill);
   background: #e8ddd0;
@@ -2501,15 +2389,15 @@
   position: absolute;
   left: 2px;
   top: 2px;
-  width: 13px;
-  height: 13px;
+  width: 15px;
+  height: 15px;
   border-radius: 50%;
   background: white;
   box-shadow: 0 1px 3px rgba(43, 26, 20, 0.24);
   transition: transform 0.16s ease;
 }
 .fiber-fault-switch[aria-checked='true'] > span {
-  transform: translateX(15px);
+  transform: translateX(17px);
 }
 .fiber-fault-badge {
   gap: var(--sp-1);

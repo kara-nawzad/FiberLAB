@@ -106,7 +106,7 @@ type InspectorTab = 'properties' | 'optical' | 'info';
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="mb-2">
+    <div className="mb-5">
       <label className="field-label">{label}</label>
       {children}
     </div>
@@ -142,10 +142,12 @@ function SliderRow({
   onChange: (value: number) => void;
 }) {
   return (
-    <div className="mb-3">
-      <div className="mb-1 flex items-baseline justify-between">
-        <label className="text-label font-medium text-noc-300">{label}</label>
-        <span className="font-mono text-label font-semibold text-[var(--pu-pri)]">
+    <div className="mb-5">
+      {/* Label on its own line, value right-aligned and never wrapped: at panel
+       * widths a shared row pushed both into three cramped lines. */}
+      <div className="mb-2 flex items-baseline justify-between gap-3">
+        <label className="min-w-0 text-label font-medium leading-snug text-noc-300">{label}</label>
+        <span className="shrink-0 font-mono text-label font-semibold tabular-nums text-[var(--pu-pri)]">
           {value.toFixed(step < 1 ? 2 : 0)} {unit}
         </span>
       </div>
@@ -210,7 +212,7 @@ function Advanced({ open, onToggle, children }: { open: boolean; onToggle: () =>
       >
         <ChevronRight size={14} className="pu-adv-chevron" aria-hidden="true" />
         <span className="pu-adv-label">Advanced</span>
-        <span className="pu-adv-hint">loss tables &amp; detailed values</span>
+        <span className="pu-adv-hint">loss tables &amp; details</span>
       </button>
       <div className="pu-adv-body" hidden={!open}>
         {open ? children : null}
@@ -301,7 +303,7 @@ function SegmentTable({ telemetry }: { telemetry: SubscriberOpticalTelemetry }) 
 function StatusBanner({ status, detail }: { status: SubscriberOpticalTelemetry['status']; detail: string }) {
   return (
     <div
-      className="mb-3 flex items-center gap-2 rounded-md border px-2 py-2"
+      className="mb-4 flex items-center gap-2 rounded-md border px-3 py-3"
       style={{ borderColor: `${STATUS_STYLES[status].hex}66`, background: `${STATUS_STYLES[status].hex}14` }}
     >
       <span
@@ -597,7 +599,7 @@ export function Inspector({
         ))}
       </div>
 
-      <div className="fiberlab-inspector-content flex-1 overflow-y-auto px-3 py-2">
+      <div className="fiberlab-inspector-content flex-1 overflow-y-auto">
         {beginnerSummary ? <p className="pu-insp-summary">{beginnerSummary}</p> : null}
 
         {hardwareInfo && showInfo ? (
@@ -650,7 +652,7 @@ export function Inspector({
                   <option value={1490}>{WAVELENGTH_LABEL[1490]}</option>
                 </select>
               ) : (
-                <div className="rounded-md border border-[var(--pu-line)] bg-[var(--pu-pri-soft)] px-2 py-2 font-mono text-label text-[var(--pu-ink)]">
+                <div className="rounded-md border border-[var(--pu-line)] bg-[var(--pu-pri-soft)] px-3 py-3 font-mono text-label text-[var(--pu-ink)]">
                   Downstream 1577 nm · {ATTENUATION_DB_PER_KM[1577].toFixed(2)} dB/km
                   <br />
                   Upstream 1270 nm · {ATTENUATION_DB_PER_KM[1270].toFixed(2)} dB/km (not simulated)
@@ -677,7 +679,7 @@ export function Inspector({
                 ))}
               </select>
             </Row>
-            <div className="mb-3 flex items-center justify-between rounded-md border border-slate-200 bg-slate-50 px-2 py-2">
+            <div className="mb-4 flex items-center justify-between rounded-md border border-slate-200 bg-slate-50 px-3 py-3">
               <div>
                 <div className="text-label font-medium text-slate-800">Laser transmitter</div>
                 <div className="font-mono text-label text-slate-500">
@@ -710,7 +712,7 @@ export function Inspector({
                 unit="dBm"
                 onChange={(value) => onPatchNode(node.id, { txPowerDbm: value })}
               />
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-4">
                 <Metric
                   label="Class budget"
                   value={`${OLT_CLASS_SPECS[node.data.oltClass].linkBudgetDb.toFixed(0)} dB`}
@@ -720,7 +722,7 @@ export function Inspector({
                   value={`${OLT_CLASS_SPECS[node.data.oltClass].rxSensitivityDbm.toFixed(0)} dBm`}
                 />
               </div>
-              <div className="mt-2 rounded-md border border-slate-200 bg-slate-50 px-2 py-2 text-body leading-relaxed text-slate-600">
+              <div className="mt-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-3 text-body leading-relaxed text-slate-600">
                 Nominal PON line rate: {PON_STANDARD_SPECS[node.data.ponStandard ?? 'GPON'].downstreamGbps.toFixed(3)}{' '}
                 Gbps downstream / {PON_STANDARD_SPECS[node.data.ponStandard ?? 'GPON'].upstreamGbps.toFixed(3)} Gbps
                 upstream. These are shared line rates, not guaranteed subscriber throughput.
@@ -748,7 +750,7 @@ export function Inspector({
                 ))}
               </select>
             </Row>
-            <div className="mb-3 grid grid-cols-2 gap-2">
+            <div className="mb-4 grid grid-cols-2 gap-4">
               <Metric
                 label="Insertion loss"
                 value={`${SPLITTER_LOSS_DB[node.data.ratio].toFixed(1)} dB`}
@@ -769,7 +771,7 @@ export function Inspector({
                 unit="dB"
                 onChange={(value) => onPatchNode(node.id, { excessLossDb: value })}
               />
-              <div className="mb-3 overflow-hidden rounded-md border border-slate-200">
+              <div className="mb-4 overflow-hidden rounded-md border border-slate-200">
                 <table className="w-full font-mono text-label">
                   <thead>
                     <tr className="bg-slate-100 text-slate-600">
@@ -868,7 +870,7 @@ export function Inspector({
                 onChange={(event) => onPatchNode(node.id, { lengthKm: Math.max(0, Number(event.target.value) || 0) })}
               />
             </Row>
-            <div className="mb-3 grid grid-cols-2 gap-2">
+            <div className="mb-4 grid grid-cols-2 gap-4">
               <Metric label="Span total loss" value={`${computeFiberLoss(node.data).totalDb.toFixed(2)} dB`} />
               <Metric
                 label="Attenuation"
@@ -877,7 +879,7 @@ export function Inspector({
             </div>
             {isMultiModeProfile(node.data.fiberProfile) && node.data.lengthKm > MODAL_DISPERSION_LIMIT_KM ? (
               <p
-                className="mb-3 rounded-md border px-2 py-2 text-body leading-relaxed"
+                className="mb-4 rounded-md border px-3 py-3 text-body leading-relaxed"
                 style={{
                   borderColor: 'var(--pu-warn)',
                   background: 'var(--pu-warn-soft)',
@@ -961,8 +963,8 @@ export function Inspector({
                 unit={`× ${CONNECTOR_LOSS_DB} dB`}
                 onChange={(value) => onPatchNode(node.id, { connectors: value })}
               />
-              <div className="mb-3">
-                <div className="field-label">Field fault injection · learning allowances</div>
+              <div className="mb-5">
+                <div className="field-label mb-2">Field fault injection · learning allowances</div>
                 <FaultToggle
                   label="Macro-bend fault (<15 mm)"
                   description="Pinched cable / tight bend"
@@ -977,12 +979,12 @@ export function Inspector({
                   active={Boolean(node.data.dirtyConnectorActive)}
                   onChange={(dirtyConnectorActive) => onPatchNode(node.id, { dirtyConnectorActive })}
                 />
-                <p className="mt-2 text-body leading-relaxed text-noc-500">
+                <p className="mt-3 text-body leading-relaxed text-noc-500">
                   The +3.50 dB bend and +2.00 dB contamination penalties are simplified training values, not universal
                   field measurements.
                 </p>
               </div>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-4">
                 <Metric label="Cable loss" value={`${computeFiberLoss(node.data).cableDb.toFixed(2)} dB`} />
                 <Metric label="Span total" value={`${computeFiberLoss(node.data).totalDb.toFixed(2)} dB`} />
               </div>
@@ -1010,7 +1012,7 @@ export function Inspector({
                 unit="dB per active branch"
                 onChange={(spliceLossDb) => onPatchNode(node.id, { spliceLossDb })}
               />
-              <div className="mb-3 rounded-md border border-slate-200 bg-slate-50 px-2 py-2 text-body leading-relaxed text-slate-700">
+              <div className="mb-4 rounded-md border border-slate-200 bg-slate-50 px-3 py-3 text-body leading-relaxed text-slate-700">
                 The closure passes one modeled fiber per active branch and adds one adjustable fusion-splice allowance.
                 Tray occupancy is strand-level reference data, not a measured splice-loss value.
               </div>
@@ -1030,12 +1032,12 @@ export function Inspector({
               unit="dB per pair"
               onChange={(throughPortLossDb) => onPatchNode(node.id, { throughPortLossDb })}
             />
-            <div className="mb-3 rounded-md border border-[var(--pu-line)] bg-[var(--pu-pri-soft)] px-2 py-2 text-body leading-relaxed text-[var(--pu-ink)]">
+            <div className="mb-4 rounded-md border border-[var(--pu-line)] bg-[var(--pu-pri-soft)] px-3 py-3 text-body leading-relaxed text-[var(--pu-ink)]">
               Two matched independent through-pairs: input 1 → output 1, input 2 → output 2. Patch cords remain graph
               edges.
             </div>
             <Advanced open={advancedOpen} onToggle={() => setAdvancedOpen((open) => !open)}>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-4">
                 <Metric label="Optical inputs" value={ODF_INPUT_PORTS} />
                 <Metric label="Matched outputs" value={ODF_OUTPUT_PORTS} />
               </div>
@@ -1050,15 +1052,15 @@ export function Inspector({
 
         {node && isNapNode(node) && showProperties ? (
           <>
-            <div className="mb-3 grid grid-cols-2 gap-2">
+            <div className="mb-4 grid grid-cols-2 gap-4">
               <Metric label="Split ratio" value={`1:${NAP_SPLIT_RATIO}`} accent="#c2410c" />
               <Metric label="Branch insertion loss" value={`${node.data.splitLossDb.toFixed(2)} dB`} accent="#c2410c" />
             </div>
-            <div className="mb-3 rounded-md border border-orange-300 bg-orange-50 px-2 py-2 text-body leading-relaxed text-orange-900">
+            <div className="mb-4 rounded-md border border-orange-300 bg-orange-50 px-3 py-3 text-body leading-relaxed text-orange-900">
               Outdoor NAP/FAT model: one feeder input, eight drop outputs, and an internal fixed 1:8 split.
             </div>
             <Advanced open={advancedOpen} onToggle={() => setAdvancedOpen((open) => !open)}>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-4">
                 <Metric label="Optical inputs" value={1} />
                 <Metric label="Drop outputs" value={NAP_OUTPUT_PORTS} />
               </div>
@@ -1100,7 +1102,7 @@ export function Inspector({
                 <option value="SC/UPC">SC/UPC (blue, flat)</option>
               </select>
             </Row>
-            <div className="mb-3 grid grid-cols-2 gap-2">
+            <div className="mb-4 grid grid-cols-2 gap-4">
               <Metric
                 label="Insertion loss"
                 value={`${computeAttenuatorLoss(node.data).toFixed(0)} dB`}
@@ -1108,7 +1110,7 @@ export function Inspector({
               />
               <Metric label="Overload limit" value={formatDbm(ONT_THRESHOLDS.overloadDbm)} accent="#b45309" />
             </div>
-            <div className="mb-3 rounded-md border border-amber-300 bg-amber-50 px-2 py-2 text-body leading-relaxed text-amber-900">
+            <div className="mb-4 rounded-md border border-amber-300 bg-amber-50 px-3 py-3 text-body leading-relaxed text-amber-900">
               Add a pad only when the receiver would sit above the overload limit. The pad is wavelength-independent and
               adds no reflection to the OTDR trace.
             </div>
@@ -1140,7 +1142,7 @@ export function Inspector({
                 onChange={(event) => onPatchNode(node.id, { serial: event.target.value })}
               />
             </Row>
-            <div className="mb-3 grid grid-cols-2 gap-2">
+            <div className="mb-4 grid grid-cols-2 gap-4">
               <Metric label="Rx power" value={formatDbm(telemetry?.rxPowerDbm ?? null)} />
               <Metric
                 label="Link margin"
@@ -1179,7 +1181,7 @@ export function Inspector({
                 onChange={(event) => onPatchNode(node.id, { ssid: event.target.value })}
               />
             </Row>
-            <div className="mb-3 grid grid-cols-2 gap-2">
+            <div className="mb-4 grid grid-cols-2 gap-4">
               <Metric label="Optical Rx" value={formatDbm(telemetry?.rxPowerDbm ?? null)} />
               <Metric label="PON standard" value={gatewayTelemetry?.ponStandard ?? 'No active link'} />
             </div>
@@ -1195,13 +1197,13 @@ export function Inspector({
 
         {!node && edge && showProperties ? (
           <>
-            <div className="mb-3 rounded-md border border-slate-200 bg-slate-50 p-2 font-mono text-label text-slate-600">
+            <div className="mb-4 rounded-md border border-slate-200 bg-slate-50 p-2 font-mono text-label text-slate-600">
               <div className="mb-1 font-semibold text-slate-800">Patch cord</div>
               <div className="break-all">
                 {edge.source} → {edge.target}
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-4">
               <Metric label="Power at far end" value={formatDbm(simulation.edgeTelemetry[edge.id]?.powerDbm ?? null)} />
               <Metric label="State" value={(simulation.edgeTelemetry[edge.id]?.edgeState ?? 'idle').toUpperCase()} />
             </div>
@@ -1218,7 +1220,7 @@ export function Inspector({
         {showOptical ? (
           <div className="pu-optical">
             {node && isOltNode(node) ? (
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-4">
                 <Metric label="Tx launch power" value={`${node.data.txPowerDbm.toFixed(1)} dBm`} />
                 <Metric label="Laser" value={node.data.laserOn ? 'Emitting' : 'Disabled'} />
                 <Metric
@@ -1238,7 +1240,7 @@ export function Inspector({
             ) : null}
 
             {node && isSplitterNode(node) ? (
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-4">
                 <Metric label="Split ratio" value={`1:${node.data.ratio}`} />
                 <Metric
                   label="Insertion loss"
@@ -1254,7 +1256,7 @@ export function Inspector({
 
             {node && isFiberNode(node) ? (
               <>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-4">
                   <Metric label="Span length" value={`${node.data.lengthKm.toFixed(2)} km`} />
                   <Metric label="Cable loss" value={`${computeFiberLoss(node.data).cableDb.toFixed(2)} dB`} />
                   <Metric
@@ -1270,7 +1272,7 @@ export function Inspector({
                   <Metric label="SC/APC connectors" value={`${node.data.connectors} × ${CONNECTOR_LOSS_DB} dB`} />
                 </div>
                 {node.data.macroBendActive || node.data.dirtyConnectorActive ? (
-                  <div className="mt-2 rounded-md border border-amber-300 bg-amber-50 p-2 text-body leading-relaxed text-amber-900">
+                  <div className="mt-3 rounded-md border border-amber-300 bg-amber-50 p-2 text-body leading-relaxed text-amber-900">
                     Field faults active:
                     {node.data.macroBendActive ? ` macro-bend +${MACRO_BEND_PENALTY_DB.toFixed(2)} dB.` : ''}
                     {node.data.dirtyConnectorActive
@@ -1282,7 +1284,7 @@ export function Inspector({
             ) : null}
 
             {node && isClosureNode(node) ? (
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-4">
                 <Metric label="Active branches" value={node.data.activeSpliceChannels.filter(Boolean).length} />
                 <Metric
                   label="Splice allowance"
@@ -1298,7 +1300,7 @@ export function Inspector({
             ) : null}
 
             {node && isOdfNode(node) ? (
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-4">
                 <Metric
                   label="Through-port loss"
                   value={`${node.data.throughPortLossDb.toFixed(2)} dB`}
@@ -1311,7 +1313,7 @@ export function Inspector({
             ) : null}
 
             {node && isNapNode(node) ? (
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-4">
                 <Metric label="Split ratio" value={`1:${NAP_SPLIT_RATIO}`} />
                 <Metric label="Branch loss" value={`${node.data.splitLossDb.toFixed(2)} dB`} accent="var(--pu-pri)" />
                 <Metric label="Drop outputs" value={NAP_OUTPUT_PORTS} />
@@ -1322,7 +1324,7 @@ export function Inspector({
             {node && isOntNode(node) && telemetry ? (
               <>
                 <StatusBanner status={telemetry.status} detail={describeStatus(telemetry.status)} />
-                <div className="mb-3 grid grid-cols-2 gap-2">
+                <div className="mb-4 grid grid-cols-2 gap-4">
                   <Metric
                     label="Rx power"
                     value={formatDbm(telemetry.rxPowerDbm)}
@@ -1343,7 +1345,7 @@ export function Inspector({
                 </div>
                 <div className="eyebrow mb-2">Link budget breakdown</div>
                 <SegmentTable telemetry={telemetry} />
-                <div className="mt-2 rounded-md border border-noc-700/60 bg-noc-950/50 p-2 font-mono text-label leading-relaxed text-noc-400">
+                <div className="mt-3 rounded-md border border-noc-700/60 bg-noc-950/50 p-2 font-mono text-label leading-relaxed text-noc-400">
                   <div className="mb-1 text-noc-300">P_rx = P_tx − ΣL − margin</div>
                   <div>
                     P_rx ={' '}
@@ -1356,7 +1358,7 @@ export function Inspector({
                   </div>
                 </div>
                 {telemetry.candidatePaths.length > 1 ? (
-                  <div className="mt-2 rounded-md border border-noc-700/60 bg-noc-950/50 p-2 font-mono text-label text-noc-400">
+                  <div className="mt-3 rounded-md border border-noc-700/60 bg-noc-950/50 p-2 font-mono text-label text-noc-400">
                     {telemetry.candidatePaths.length} OLT paths reach this ONT — showing the best (
                     {formatDbm(telemetry.rxPowerDbm)}).
                   </div>
@@ -1376,7 +1378,7 @@ export function Inspector({
                   status={telemetry.status}
                   detail={`${describeStatus(telemetry.status, gatewayTelemetry.ponStandard ?? undefined)} · SSID ${node.data.ssid}`}
                 />
-                <div className="mb-3 grid grid-cols-2 gap-2">
+                <div className="mb-4 grid grid-cols-2 gap-4">
                   <Metric
                     label="Optical Rx"
                     value={formatDbm(telemetry.rxPowerDbm)}
@@ -1422,7 +1424,7 @@ export function Inspector({
                 </p>
                 <div className="eyebrow mb-2">Optical path &amp; service audit</div>
                 <SegmentTable telemetry={telemetry} />
-                <div className="mt-2 rounded-md border border-amber-300 bg-amber-50 p-2 text-body leading-relaxed text-amber-900">
+                <div className="mt-3 rounded-md border border-amber-300 bg-amber-50 p-2 text-body leading-relaxed text-amber-900">
                   Speed estimate divides the nominal shared PON line rate by the modeled cumulative split ratio. It does
                   not model contention, protocol overhead, Wi-Fi conditions, a service plan, or a measured speed test.
                 </div>
@@ -1438,7 +1440,7 @@ export function Inspector({
 
             {!node && edge ? (
               <>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-4">
                   <Metric
                     label="Power at far end"
                     value={formatDbm(simulation.edgeTelemetry[edge.id]?.powerDbm ?? null)}

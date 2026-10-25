@@ -16,30 +16,30 @@ if (typeof window !== 'undefined' && !window.PointerEvent) {
 }
 
 /**
- * The two hero doors are earned by holding the splice, so the suite enters the
- * workbench the way a returning engineer does: the always-available navigation
- * button. The gated hero path has its own tests (landing test below and
- * SpliceIntroHero.test.tsx).
+ * The hero carries the same "Launch Studio" label as the fixed navigation, so
+ * the suite enters the workbench through the nav, which is always reachable.
+ * The hero's own door gets its own test below.
  */
 function enterStudioFromNav() {
-  fireEvent.click(screen.getByRole('button', { name: /^Launch Studio$/i }));
+  const nav = screen.getByRole('navigation', { name: /FiberLAB overview navigation/i });
+  fireEvent.click(within(nav).getByRole('button', { name: /^Launch Studio$/i }));
 }
 
 /**
- * Complete the hero fusion with one synthetic frame: requestAnimationFrame is
- * replaced by a timeout that reports a timestamp past the hold duration.
+ * Earn the hero's studio door: hold the splice with one synthetic frame whose
+ * timestamp is past the 2 s hold, then wait for the door to appear.
  */
-async function fuseHeroSplice() {
-  const holdButton = await screen.findByRole('button', { name: /Press and hold to fuse the splice/i });
+async function spliceHero() {
+  const holdButton = await screen.findByRole('button', { name: /Press and hold to splice the fiber/i });
   const originalRaf = window.requestAnimationFrame;
   Object.defineProperty(window, 'requestAnimationFrame', {
     configurable: true,
     value: (callback: FrameRequestCallback) =>
-      window.setTimeout(() => callback(performance.now() + 4000), 1) as unknown as number,
+      window.setTimeout(() => callback(performance.now() + 6000), 1) as unknown as number,
   });
   try {
     fireEvent.keyDown(holdButton, { key: ' ' });
-    await screen.findByRole('button', { name: /Launch Interactive Studio/i });
+    await screen.findByText('SPLICE COMPLETE');
   } finally {
     if (originalRaf) {
       Object.defineProperty(window, 'requestAnimationFrame', { configurable: true, value: originalRaf });
@@ -111,49 +111,40 @@ function getCanvasNodeByText(text: string | RegExp): HTMLElement {
  * reaches the ONT node, and proves the BOM modal reports the same plant.
  */
 describe('FiberLAB application shell', () => {
-  it('presents the living waveguide and routes the guided-mission CTA into the studio', async () => {
+  it('introduces the lab in one screen and earns the studio door by splicing', async () => {
     render(<App />);
 
-    expect(await screen.findByRole('heading', { name: /Splice the fiber/i })).toBeInTheDocument();
-    expect(await screen.findByText('-24.30 dBm')).toBeInTheDocument();
+    const hero = await screen.findByRole('region', { name: /Splice the fiber/i });
+    expect(within(hero).getByRole('heading', { name: /Splice the fiber/i })).toBeInTheDocument();
+    expect(
+      within(hero).getByText('Build a fiber-to-the-home network and simulate its optical performance.'),
+    ).toBeInTheDocument();
 
-    // One interactive control, and the reference numbers an engineer will check.
-    const launchSlider = screen.getByLabelText(/Laser launch power/i);
-    expect(launchSlider).toHaveValue('5');
-    fireEvent.change(launchSlider, { target: { value: '6.4' } });
-    expect(launchSlider).toHaveValue('6.4');
-    expect(screen.getByText('0.25 dB/km')).toBeInTheDocument();
-    expect(screen.getByText('Splitter 1:4')).toBeInTheDocument();
-    expect(screen.getAllByText('−7.20 dB').length).toBeGreaterThan(0);
+    // The optical readout that used to live here belongs to the engineering
+    // sections below the hero now, so nothing competes with the headline.
+    expect(within(hero).queryByText(/dBm/)).not.toBeInTheDocument();
+    expect(within(hero).queryByText('Weakest home')).not.toBeInTheDocument();
+    expect(within(hero).queryByText(/Splitter 1:4/)).not.toBeInTheDocument();
+    expect(within(hero).queryByRole('button', { name: /Explore Guided Missions/i })).not.toBeInTheDocument();
 
-    // The hero offers the hold control first; the doors arrive with the fusion.
-    expect(screen.queryByRole('button', { name: /Explore Guided Missions \(5 Scenarios\)/i })).not.toBeInTheDocument();
-    await fuseHeroSplice();
-    expect(await screen.findByText('FUSED!')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /Explore Guided Missions \(5 Scenarios\)/i }));
-    expect(await screen.findByRole('dialog', { name: 'Field missions' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /The Marginal Villa/ })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Diagnose the Silent ONT/ })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Rescue the Unpatched Subscriber/ })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /The Budget Crunch: Cost vs. Performance/ })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Field missions' })).toHaveFocus();
+    // One action, and it is the splice: the studio door is earned.
+    expect(within(hero).getByRole('button', { name: /Press and hold to splice the fiber/i })).toHaveTextContent(
+      'HOLD TO SPLICE',
+    );
+    expect(within(hero).queryByRole('button', { name: /^Launch Studio$/i })).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /Rescue the Unpatched Subscriber/ }));
-    fireEvent.click(screen.getByRole('button', { name: 'Start mission' }));
-    expect(await screen.findByText('0/3 complete')).toBeInTheDocument();
+    await spliceHero();
 
-    fireEvent.keyDown(document, { key: 'Escape' });
-    expect(screen.queryByRole('dialog', { name: 'Field missions' })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Overview & Physics' })).toHaveFocus();
+    fireEvent.click(within(hero).getByRole('button', { name: /^Launch Studio$/i }));
+    expect(await screen.findByRole('button', { name: 'Run Simulation' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /Splice the fiber/i })).not.toBeInTheDocument();
 
-    // The ⋯ menu is canvas-only; the mission state is reported in Settings.
+    // The ⋯ menu is canvas-only; guided missions stay one row away in Settings.
     openMoreTools();
     expect(screen.getByRole('button', { name: 'Fit view to screen' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Missions/ })).not.toBeInTheDocument();
     openSection('Settings');
-    expect(
-      screen.getByRole('button', { name: 'Missions, active: Rescue the Unpatched Subscriber' }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Missions' })).toBeInTheDocument();
   });
 
   it('quick-loads a preset and preserves the mounted studio state across the overview toggle', async () => {
@@ -241,7 +232,7 @@ describe('FiberLAB application shell', () => {
 
   it('drags a toolbox component onto the React Flow canvas', async () => {
     const { container } = render(<App />);
-    fireEvent.click(screen.getByRole('button', { name: 'Launch Studio' }));
+    enterStudioFromNav();
     fireEvent.click(await screen.findByRole('button', { name: /Preset Topologies/i }));
     fireEvent.click(await screen.findByRole('button', { name: /Standard 1:32 GPON Tree/i }));
     await waitFor(() => expect(screen.getAllByText('Al-Sulaymaniyah — Unit 12').length).toBeGreaterThan(0));
@@ -364,7 +355,7 @@ describe('FiberLAB application shell', () => {
 
   it('connects and disconnects node pairs in Link nodes mode and deletes a selected span', async () => {
     render(<App />);
-    fireEvent.click(screen.getByRole('button', { name: 'Launch Studio' }));
+    enterStudioFromNav();
     fireEvent.click(await screen.findByRole('button', { name: /Preset Topologies/i }));
     fireEvent.click(await screen.findByRole('button', { name: /Standard 1:32 GPON Tree/i }));
     await waitFor(() => expect(screen.getAllByText('Al-Sulaymaniyah — Unit 12').length).toBeGreaterThan(0));
@@ -698,10 +689,18 @@ describe('FiberLAB application shell', () => {
     expect(oltNode).toHaveTextContent('ONU Rx (max)');
     expect(oltNode).toHaveTextContent('PON Status');
 
-    // Realistic PLC Splitter hardware card
+    // Realistic PLC Splitter hardware card. The canvas shows the part and its
+    // ratio only — measurements live in the Inspector that a click opens.
     const splitterNode = getCanvasNodeByText('PLC Splitter 1:8').querySelector('.hw-spl');
     expect(splitterNode).not.toBeNull();
-    expect(splitterNode).toHaveTextContent('Insertion Loss 10.5 dB');
+    expect(splitterNode).toHaveTextContent('PLC Splitter 1:8');
+    expect(splitterNode?.querySelectorAll('small')).toHaveLength(0);
+
+    // The dotted ground is part of the canvas: React Flow's background layer
+    // draws the dot pattern, and no stylesheet may paint over it.
+    const dotPattern = document.querySelector('.react-flow__background pattern circle');
+    expect(dotPattern).not.toBeNull();
+    expect(dotPattern).toHaveClass('react-flow__background-pattern', 'dots');
 
     // Floating canvas sub-toolbar
     const canvasToolbar = screen.getByRole('toolbar', { name: 'Canvas workbench tools' });
@@ -1003,9 +1002,22 @@ describe('FiberLAB application shell', () => {
     await waitFor(() => expect(screen.getAllByText('Dukan Ridge — Tower 7').length).toBeGreaterThan(0));
 
     const splitter = getCanvasNodeByText('PLC Splitter 1:32');
-    expect(splitter.querySelectorAll('.react-flow__handle[data-handleid^="out-"]')).toHaveLength(16);
-    expect(within(splitter).getByText(/rest trunked/i)).toBeInTheDocument();
+    const outputs = splitter.querySelectorAll<HTMLElement>('.react-flow__handle[data-handleid^="out-"]');
+    expect(outputs).toHaveLength(16);
 
+    // Every port sits on one axis: the input lines up with the middle of the
+    // branch fan, which is also where the cassette's own stub is drawn.
+    const input = splitter.querySelector<HTMLElement>('.react-flow__handle[data-handleid="in"]') as HTMLElement;
+    const tops = Array.from(outputs).map((handle) => parseFloat(handle.style.top));
+    const inputTop = parseFloat(input.style.top);
+    expect(inputTop).toBeCloseTo((Math.min(...tops) + Math.max(...tops)) / 2, 1);
+    // Symmetric fan, one even step at a time.
+    const steps = tops.slice(1).map((top, index) => top - tops[index]);
+    expect(new Set(steps.map((step) => step.toFixed(2))).size).toBe(1);
+    expect(Math.min(...steps)).toBeGreaterThanOrEqual(15);
+
+    // The trunking explanation is the Inspector's job, not the canvas's.
+    expect(within(splitter).queryByText(/rest trunked/i)).not.toBeInTheDocument();
     fireEvent.click(splitter);
     expandAdvanced();
     expect(screen.getByText(/remaining fan-out stays a ribbon trunk/i)).toBeInTheDocument();

@@ -1,34 +1,31 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { DEFAULT_SETTINGS } from '../../../types';
-import { simulateTopology } from '../../../engine/opticalSimulator';
-import { buildPreset } from '../../../engine/presets';
 import { SpliceIntroHero } from '../SpliceIntroHero';
 
-const standardSimulation = () => {
-  const topology = buildPreset('standard-1x32');
-  if (!topology) throw new Error('The standard reference topology is missing.');
-  return simulateTopology(topology.nodes, topology.edges, DEFAULT_SETTINGS);
-};
+const HOLD_BUTTON = /Press and hold to splice the fiber/i;
 
 /**
- * A completed hold. requestAnimationFrame is swapped for a timeout that reports
- * a timestamp well past HOLD_DURATION_MS, so one frame is enough to finish the
- * fusion without waiting out the real animation.
+ * Drive the hold with synthetic frames: each requestAnimationFrame becomes a
+ * timeout whose timestamp jumps by the next offset in `offsets`. A 6000 ms jump
+ * is well past the 2500 ms hold, so a single frame completes the splice.
  */
-async function holdToFuse() {
-  const holdButton = screen.getByRole('button', { name: /Press and hold to fuse the splice/i });
+async function holdFor(offsets: number[]) {
+  const holdButton = screen.getByRole('button', { name: HOLD_BUTTON });
   const originalRaf = window.requestAnimationFrame;
+  let frames = 0;
   Object.defineProperty(window, 'requestAnimationFrame', {
     configurable: true,
-    value: (callback: FrameRequestCallback) => window.setTimeout(() => callback(performance.now() + 4000), 1),
+    value: (callback: FrameRequestCallback) =>
+      window.setTimeout(() => callback(performance.now() + (offsets[Math.min(frames++, offsets.length - 1)] ?? 0)), 1),
   });
 
   try {
     fireEvent.keyDown(holdButton, { key: ' ' });
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(1);
-    });
+    for (let frame = 0; frame < offsets.length; frame += 1) {
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1);
+      });
+    }
   } finally {
     if (originalRaf) {
       Object.defineProperty(window, 'requestAnimationFrame', { configurable: true, value: originalRaf });
@@ -40,99 +37,126 @@ async function holdToFuse() {
 
 const renderHero = (overrides: Partial<Parameters<typeof SpliceIntroHero>[0]> = {}) => {
   const onLaunchStudio = vi.fn();
-  const onExploreMissions = vi.fn();
-  render(
-    <SpliceIntroHero
-      simulation={standardSimulation()}
-      simulationStale={false}
-      onLaunchStudio={onLaunchStudio}
-      onExploreMissions={onExploreMissions}
-      {...overrides}
-    />,
-  );
-  return { onLaunchStudio, onExploreMissions };
+  render(<SpliceIntroHero onLaunchStudio={onLaunchStudio} {...overrides} />);
+  return { onLaunchStudio };
 };
 
 afterEach(() => vi.useRealTimers());
 
 describe('SpliceIntroHero', () => {
-  it('shows simulator-backed receive power and holds the two doors back until the splice lands', async () => {
-    vi.useFakeTimers();
-    const { onLaunchStudio, onExploreMissions } = renderHero();
+  it('offers only the splice, and holds the studio door back until it lands', () => {
+    renderHero();
 
     expect(screen.getByRole('heading', { name: /Splice the fiber/i })).toBeInTheDocument();
-    // The weakest home, not the first ONLINE entry: -24.30 dBm / MARGINAL.
-    expect(screen.getByText('-24.30 dBm')).toBeInTheDocument();
-    expect(screen.getByText('MARGINAL')).toBeInTheDocument();
+    expect(
+      screen.getByText('Build a fiber-to-the-home network and simulate its optical performance.'),
+    ).toBeInTheDocument();
 
-    // Only the hold control is offered at first, with an instruction in the
-    // action row's slot instead of the two studio doors.
-    expect(screen.queryByRole('button', { name: /Launch Interactive Studio/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /Explore Guided Missions/i })).not.toBeInTheDocument();
-    // The compact readout strip still names its source and what it measures.
-    expect(screen.getByText('LIVE SIMULATION')).toBeInTheDocument();
-    expect(screen.getByText('Weakest home')).toBeInTheDocument();
-
-    await holdToFuse();
-
-    fireEvent.click(screen.getByRole('button', { name: /Launch Interactive Studio/i }));
-    expect(onLaunchStudio).toHaveBeenCalledOnce();
-
-    fireEvent.click(screen.getByRole('button', { name: /Explore Guided Missions/i }));
-    expect(onExploreMissions).toHaveBeenCalledOnce();
+    const hold = screen.getByRole('button', { name: HOLD_BUTTON });
+    expect(hold).toHaveTextContent('HOLD TO SPLICE');
+    // The studio is earned, not handed out: no door, no second action.
+    expect(screen.queryByRole('button', { name: /Launch Studio/i })).not.toBeInTheDocument();
+    expect(screen.queryByText('SPLICE COMPLETE')).not.toBeInTheDocument();
+    expect(screen.getAllByRole('button')).toHaveLength(1);
   });
 
-  it('fuses on a completed hold, reveals both doors, and never navigates on its own', async () => {
+  it('keeps every optical reading out of the hero', () => {
+    renderHero();
+
+    expect(screen.queryByText(/Weakest home/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/dBm/)).not.toBeInTheDocument();
+    expect(screen.queryByText('LIVE SIMULATION')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Splitter 1:4/)).not.toBeInTheDocument();
+    expect(screen.queryByText('Launch power')).not.toBeInTheDocument();
+  });
+
+  it('counts the hold up on the pill, then reveals Launch Studio', async () => {
     vi.useFakeTimers();
-    const { onLaunchStudio, onExploreMissions } = renderHero();
-
-    await holdToFuse();
-
-    // The hold control is gone, its confirmation moved to the readout card,
-    // and both doors are on offer.
-    expect(screen.queryByRole('button', { name: /Press and hold to fuse the splice/i })).not.toBeInTheDocument();
-    expect(screen.getByText('FUSED!')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Launch Interactive Studio/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Explore Guided Missions/i })).toBeInTheDocument();
-
-    // Fusion alone must not steal the choice.
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(2000);
-    });
-    expect(onLaunchStudio).not.toHaveBeenCalled();
-    expect(onExploreMissions).not.toHaveBeenCalled();
-  });
-
-  it('cancels the fusion when the hold is released early', () => {
     const { onLaunchStudio } = renderHero();
 
-    const holdButton = screen.getByRole('button', { name: /Press and hold to fuse the splice/i });
-    fireEvent.keyDown(holdButton, { key: ' ' });
-    fireEvent.keyUp(holdButton, { key: ' ' });
+    await holdFor([1200]);
 
+    const percent = screen.getByText(/SPLICING \d+%/);
+    const value = Number(percent.textContent?.replace(/\D/g, ''));
+    expect(value).toBeGreaterThan(30);
+    expect(value).toBeLessThan(70);
+    // The fill tracks the same number the label shows.
+    const progressFill = document.querySelector('.splice-fuse-progress') as HTMLElement;
+    const fill = Number(progressFill.style.transform.replace(/[^0-9.]/g, ''));
+    expect(fill).toBeCloseTo(value / 100, 1);
     expect(onLaunchStudio).not.toHaveBeenCalled();
-    expect(screen.getByText('HOLD TO FUSE THE SPLICE')).toBeInTheDocument();
-    // A cancelled hold keeps the doors away.
-    expect(screen.queryByRole('button', { name: /Launch Interactive Studio/i })).not.toBeInTheDocument();
-    expect(screen.queryByText('FUSED!')).not.toBeInTheDocument();
   });
 
-  it('reads gateway-only networks instead of falling back to an empty state', () => {
-    const topology = buildPreset('modern-10g-xgs-pon-suburb');
-    if (!topology) throw new Error('The XGS-PON reference topology is missing.');
-    const simulation = simulateTopology(topology.nodes, topology.edges, DEFAULT_SETTINGS);
+  it('completes the splice on a full hold and only then offers the studio', async () => {
+    vi.useFakeTimers();
+    const { onLaunchStudio } = renderHero();
 
-    renderHero({ simulation });
+    await holdFor([6000]);
 
-    expect(screen.getByText('-12.45 dBm')).toBeInTheDocument();
-    expect(screen.getByText('ONLINE')).toBeInTheDocument();
-    expect(screen.queryByText('NO SIMULATED PATH')).not.toBeInTheDocument();
+    expect(screen.getByText('SPLICE COMPLETE')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: HOLD_BUTTON })).not.toBeInTheDocument();
+
+    const launch = screen.getByRole('button', { name: /Launch Studio/i });
+    fireEvent.click(launch);
+    expect(onLaunchStudio).toHaveBeenCalledOnce();
   });
 
-  it('labels a reference-tree reading as a sample', () => {
-    renderHero({ simulationIsReference: true });
+  it('never opens the studio from the release that completed the splice', async () => {
+    vi.useFakeTimers();
+    const { onLaunchStudio } = renderHero();
 
-    expect(screen.getByText('REFERENCE 1:32 TREE')).toBeInTheDocument();
-    expect(screen.getByText(/Sample reading from the reference tree/i)).toBeInTheDocument();
+    const pill = screen.getByRole('button', { name: HOLD_BUTTON });
+    const originalRaf = window.requestAnimationFrame;
+    Object.defineProperty(window, 'requestAnimationFrame', {
+      configurable: true,
+      value: (callback: FrameRequestCallback) => window.setTimeout(() => callback(performance.now() + 6000), 1),
+    });
+    try {
+      fireEvent.pointerDown(pill, { button: 0, pointerId: 1 });
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1);
+      });
+    } finally {
+      if (originalRaf)
+        Object.defineProperty(window, 'requestAnimationFrame', { configurable: true, value: originalRaf });
+      else Reflect.deleteProperty(window, 'requestAnimationFrame');
+    }
+
+    // The splice landed while the pointer was still down; the button that
+    // appears under it must ignore the click the release produces.
+    expect(screen.getByText('SPLICE COMPLETE')).toBeInTheDocument();
+    const launch = screen.getByRole('button', { name: /Launch Studio/i });
+    fireEvent.click(launch);
+    expect(onLaunchStudio).not.toHaveBeenCalled();
+
+    // A deliberate second click is the only way in.
+    fireEvent.click(launch);
+    expect(onLaunchStudio).toHaveBeenCalledOnce();
+  });
+
+  it('cancels and resets the hold when it is released early', async () => {
+    vi.useFakeTimers();
+    const { onLaunchStudio } = renderHero();
+
+    await holdFor([1200]);
+    fireEvent.keyUp(screen.getByRole('button', { name: HOLD_BUTTON }), { key: ' ' });
+
+    expect(screen.getByText('HOLD TO SPLICE')).toBeInTheDocument();
+    const progressFill = document.querySelector('.splice-fuse-progress') as HTMLElement;
+    expect(progressFill.style.transform).toBe('scaleX(0)');
+    expect(screen.queryByText('SPLICE COMPLETE')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Launch Studio/i })).not.toBeInTheDocument();
+    expect(onLaunchStudio).not.toHaveBeenCalled();
+  });
+
+  it('announces the splice to assistive technology', async () => {
+    vi.useFakeTimers();
+    renderHero();
+
+    const pill = screen.getByRole('button', { name: HOLD_BUTTON });
+    fireEvent.keyDown(pill, { key: ' ' });
+    expect(screen.getByText(/Splicing started/i)).toBeInTheDocument();
+    fireEvent.keyUp(pill, { key: ' ' });
+    expect(screen.getByText(/Splice released early/i)).toBeInTheDocument();
   });
 });

@@ -1,9 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="FiberLAB">
   <title>FiberLAB</title>
-  <rect width="64" height="64" rx="15" fill="#e4673f"/>
-  <!-- Fiber strand: a launch port, the light pulse through the core, and a
-       receive port. The pulse is the same mark the in-app wordmark uses. -->
-  <path d="M12 44h10l6-24 6 24h18" fill="none" stroke="#fff4e6" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="12" cy="44" r="3.1" fill="#fff4e6"/>
-  <circle cx="52" cy="44" r="3.1" fill="#fff4e6"/>
+  <!-- The tab mark is the in-app logo mark: the brand tile in --pu-pri with the
+       same "light pulse" glyph the wordmark carries (lucide Activity geometry,
+       scaled to the tile and thickened so it stays legible at 16 px). -->
+  <rect width="64" height="64" rx="14" fill="#e4673f" />
+  <path
+    d="M53 32h-9.6l-7.2 21.6L21.8 10.4l-7.2 21.6H5"
+    fill="none"
+    stroke="#fff4e6"
+    stroke-width="5"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
 </svg>
