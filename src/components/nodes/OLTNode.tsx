@@ -56,7 +56,7 @@ export function OLTNode({ id, data, selected }: NodeProps<OltFlowNode>) {
               padding: '4px 6px',
               borderRadius: 6,
               background: 'var(--pu-warn-soft)',
-              color: '#B36B00',
+              color: 'var(--pu-warn-text)',
               fontSize: 'var(--fs-xs)',
               fontWeight: 'var(--fw-semibold)',
             }}

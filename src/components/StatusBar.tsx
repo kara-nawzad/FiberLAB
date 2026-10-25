@@ -41,7 +41,12 @@ const barWidth = (value: number | null): number =>
 function deriveStatus(summary: NetworkSummary): { tone: Tone; label: string } {
   if (summary.subscriberCount === 0) return { tone: 'idle', label: 'No subscribers' };
   if (summary.byStatus.LOS > 0 || summary.byStatus.DISCONNECTED > 0) return { tone: 'bad', label: 'Fail' };
-  if (summary.byStatus.WARNING > 0 || summary.byStatus.OVERLOAD > 0 || summary.upstreamDynamicRangeWarning)
+  if (
+    summary.byStatus.WARNING > 0 ||
+    summary.byStatus.OVERLOAD > 0 ||
+    summary.upstreamDynamicRangeWarning ||
+    summary.modalDispersionWarnings.length > 0
+  )
     return { tone: 'warn', label: 'Marginal' };
   return { tone: 'ok', label: 'OK' };
 }
@@ -104,6 +109,15 @@ export function StatusBar({
           detail: 'Dirty connector ferrule loss injected',
           nodeId: node.id,
         });
+    }
+    for (const warning of summary.modalDispersionWarnings) {
+      list.push({
+        key: `${warning.nodeId}-modal`,
+        tone: 'warn',
+        title: `${warning.lengthKm.toFixed(2)} km ${warning.fiberProfile.toUpperCase()} span`,
+        detail: 'Exceeds the 550 m modal-dispersion reach for gigabit transmission',
+        nodeId: warning.nodeId,
+      });
     }
     if (summary.upstreamDynamicRangeWarning) {
       list.push({

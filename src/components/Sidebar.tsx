@@ -1,9 +1,16 @@
 import { useCallback, useMemo, useRef, useState, type DragEvent, type PointerEvent, type ReactNode } from 'react';
 import { Activity, ChevronRight, Clock, Gauge, PanelLeftClose, Search } from 'lucide-react';
-import type { CableType, SplitRatio } from '../types';
-import { CABLE_SPECS, SPLIT_RATIOS, SPLITTER_LOSS_DB } from '../types';
+import type { CableType, FiberProfile, SplitRatio } from '../types';
+import {
+  ATTENUATOR_VALUES_DB,
+  CABLE_SPECS,
+  DEFAULT_ATTENUATOR_DB,
+  FIBER_PROFILE_SPECS,
+  SPLIT_RATIOS,
+  SPLITTER_LOSS_DB,
+} from '../types';
 import { getHardwareProfileForNode } from '../data/componentCatalogue';
-import { artDataUri, FIBER_ART, OLT_ART, ONU_ART, SPLITTER_ART } from '../data/hardwareArtwork';
+import { artDataUri, FIBER_ART, MULTIMODE_FIBER_ART, OLT_ART, ONU_ART, SPLITTER_ART } from '../data/hardwareArtwork';
 
 /* ========================================================================== *
  * Left side: icon rail (Design / Simulation / Reports / Settings) +
@@ -15,9 +22,13 @@ import { artDataUri, FIBER_ART, OLT_ART, ONU_ART, SPLITTER_ART } from '../data/h
 export const DND_MIME = 'application/x-ftth-component';
 
 export interface ToolboxPayload {
-  component: 'olt' | 'splitter' | 'fiber' | 'closure' | 'ont' | 'odf' | 'nap' | 'gateway';
+  component: 'olt' | 'splitter' | 'fiber' | 'closure' | 'ont' | 'odf' | 'nap' | 'gateway' | 'attenuator';
   ratio?: SplitRatio;
   cableType?: CableType;
+  /** Multi-mode glass for a fiber payload; omitted means single-mode. */
+  fiberProfile?: FiberProfile;
+  /** Fixed pad value for an attenuator payload. */
+  attenuationDb?: number;
 }
 
 interface SidebarProps {
@@ -99,7 +110,9 @@ function ToolItem({
 
 export function Sidebar({ onQuickAdd, onToggleOpm, onOpenOtdr, collapsed = false, onToggleCollapse }: SidebarProps) {
   const [ratioDraft, setRatioDraft] = useState<SplitRatio>(8);
-  const [cableDraft, setCableDraft] = useState<CableType>('distribution');
+  // Keyed by card id rather than CableType: the fiber selector now spans the
+  // three single-mode roles plus the two multi-mode profiles.
+  const [cableDraft, setCableDraft] = useState<string>('fiber-distribution');
   const [searchQuery, setSearchQuery] = useState('');
   const [openSection, setOpenSection] = useState<SectionId | null>('headend');
   const [recent, setRecent] = useState<string[]>([]);
@@ -119,6 +132,7 @@ export function Sidebar({ onQuickAdd, onToggleOpm, onOpenOtdr, collapsed = false
     const odf = getHardwareProfileForNode('odf');
     const nap = getHardwareProfileForNode('nap');
     const gateway = getHardwareProfileForNode('gateway');
+    const attenuator = getHardwareProfileForNode('attenuator');
 
     return [
       {
@@ -146,15 +160,26 @@ export function Sidebar({ onQuickAdd, onToggleOpm, onOpenOtdr, collapsed = false
       {
         id: 'fiber',
         label: 'Fiber Cables',
-        items: (Object.keys(CABLE_SPECS) as CableType[]).map((cable) => ({
-          id: `fiber-${cable}`,
-          title: 'Fiber Cable',
-          subtitle: `${CABLE_SPECS[cable].label} · single mode (G.657.A1)`,
-          keywords: `fiber cable span ${CABLE_SPECS[cable].label} ${cable} single mode g657 aerial duct`,
-          variantLabel: CABLE_SPECS[cable].short,
-          thumbnail: art(FIBER_ART, 'Fiber cable illustration'),
-          payload: { component: 'fiber', cableType: cable },
-        })),
+        items: [
+          ...(Object.keys(CABLE_SPECS) as CableType[]).map((cable) => ({
+            id: `fiber-${cable}`,
+            title: 'Fiber Cable',
+            subtitle: `${CABLE_SPECS[cable].label} · single mode (G.657.A1)`,
+            keywords: `fiber cable span ${CABLE_SPECS[cable].label} ${cable} single mode g657 aerial duct`,
+            variantLabel: CABLE_SPECS[cable].short,
+            thumbnail: art(FIBER_ART, 'Fiber cable illustration'),
+            payload: { component: 'fiber' as const, cableType: cable },
+          })),
+          ...(['om3', 'om4'] as FiberProfile[]).map((profile) => ({
+            id: `fiber-${profile}`,
+            title: `Multi-mode ${FIBER_PROFILE_SPECS[profile].short}`,
+            subtitle: `${FIBER_PROFILE_SPECS[profile].coreCladding} · 850 nm · 550 m reach`,
+            keywords: `fiber multi-mode multimode ${profile} om3 om4 850 1300 50/125 aqua indoor patch short reach`,
+            variantLabel: FIBER_PROFILE_SPECS[profile].short,
+            thumbnail: art(MULTIMODE_FIBER_ART, 'Multi-mode fiber cable illustration'),
+            payload: { component: 'fiber' as const, cableType: 'drop' as CableType, fiberProfile: profile },
+          })),
+        ],
       },
       {
         id: 'splitters',
@@ -189,6 +214,15 @@ export function Sidebar({ onQuickAdd, onToggleOpm, onOpenOtdr, collapsed = false
             keywords: 'outdoor nap fat access box 1:8 drop terminal distribution',
             thumbnail: thumb(nap),
             payload: { component: 'nap' },
+          },
+          {
+            id: 'attenuator',
+            title: 'Attenuator Pad',
+            subtitle: `Inline SC/APC · ${DEFAULT_ATTENUATOR_DB} dB default`,
+            keywords: `attenuator pad inline fixed ${ATTENUATOR_VALUES_DB.join(' ')} db overload saturation barrel`,
+            variantLabel: `${DEFAULT_ATTENUATOR_DB} dB`,
+            thumbnail: thumb(attenuator),
+            payload: { component: 'attenuator', attenuationDb: DEFAULT_ATTENUATOR_DB },
           },
         ],
       },
@@ -402,7 +436,7 @@ export function Sidebar({ onQuickAdd, onToggleOpm, onOpenOtdr, collapsed = false
             {sections.map((section) => {
               const isOpen = openSection === section.id;
               const isVariantSection = section.id === 'splitters' || section.id === 'fiber';
-              const activeVariant = section.id === 'splitters' ? `splitter-${ratioDraft}` : `fiber-${cableDraft}`;
+              const activeVariant = section.id === 'splitters' ? `splitter-${ratioDraft}` : cableDraft;
               const activeItem = section.items.find((item) => item.id === activeVariant) ?? section.items[0] ?? null;
 
               return (
@@ -441,13 +475,13 @@ export function Sidebar({ onQuickAdd, onToggleOpm, onOpenOtdr, collapsed = false
                                 aria-label={
                                   section.id === 'splitters'
                                     ? `Splitter ratio ${item.variantLabel}`
-                                    : `Cable type ${item.subtitle.split(' · ')[0]}`
+                                    : `Cable type ${item.payload?.fiberProfile ? `multi-mode ${item.variantLabel}` : item.subtitle.split(' · ')[0]}`
                                 }
                                 title={item.subtitle}
                                 onClick={() => {
                                   if (section.id === 'splitters')
                                     setRatioDraft(Number(item.payload?.ratio) as SplitRatio);
-                                  else setCableDraft(item.payload?.cableType as CableType);
+                                  else setCableDraft(item.id);
                                 }}
                               >
                                 {item.variantLabel}

@@ -12,6 +12,8 @@ export interface UnitCostProfile {
   oltPortModule: number;
   ontTerminal: number;
   wifi6Gateway: number;
+  /** Fixed inline attenuator pad. */
+  attenuatorPad: number;
 }
 
 /** Nested, partial overrides are convenient for a local market-rate edit. */
@@ -38,6 +40,7 @@ export const DEFAULT_UNIT_COSTS: UnitCostProfile = {
   oltPortModule: 240,
   ontTerminal: 55,
   wifi6Gateway: 85,
+  attenuatorPad: 15,
 };
 
 export type CostCategory = 'Cables' | 'Passives' | 'Active Gear' | 'Labor & Splicing';
@@ -104,6 +107,7 @@ export function resolveUnitCosts(overrides: PartialUnitCostProfile = {}): UnitCo
     oltPortModule: sanitizedRate(overrides.oltPortModule, DEFAULT_UNIT_COSTS.oltPortModule),
     ontTerminal: sanitizedRate(overrides.ontTerminal, DEFAULT_UNIT_COSTS.ontTerminal),
     wifi6Gateway: sanitizedRate(overrides.wifi6Gateway, DEFAULT_UNIT_COSTS.wifi6Gateway),
+    attenuatorPad: sanitizedRate(overrides.attenuatorPad, DEFAULT_UNIT_COSTS.attenuatorPad),
   };
 }
 
@@ -171,6 +175,9 @@ export function calculateNetworkCost(
 
   const napCount = nodes.filter((node) => node.type === 'nap').length;
   addLineItem('Passives', 'Outdoor NAP/FAT with internal 1:8 splitter (reference)', napCount, 'each', costs.napFat);
+
+  const attenuatorCount = nodes.filter((node) => node.type === 'attenuator').length;
+  addLineItem('Passives', 'Inline fixed attenuator pad (reference)', attenuatorCount, 'each', costs.attenuatorPad);
 
   const oltCount = nodes.filter((node) => node.type === 'olt').length;
   addLineItem('Active Gear', 'OLT PON port module (C+ reference)', oltCount, 'each', costs.oltPortModule);

@@ -1,11 +1,10 @@
 import { useMemo, useState } from 'react';
-import { ArrowLeft, Download, FileJson, Table2, X } from 'lucide-react';
+import { ArrowLeft, Download, FileJson, Table2 } from 'lucide-react';
 import type { DesignSettings, PonEdge, PonNode, SimulationResult, SplitRatio } from '../types';
 import { SPLIT_RATIOS, SPLITTER_LOSS_DB, STATUS_STYLES } from '../types';
 import { describeStatus, formatDbm } from '../engine/opticalSimulator';
 import type { NetworkCostBreakdown, UnitCostProfile } from '../data/pricingCatalogue';
 import { formatUsd } from '../data/pricingCatalogue';
-import { useDialogA11y } from '../hooks/useDialogA11y';
 import { useSectionFocus } from '../hooks/useSectionFocus';
 import { buildCommercialCsv, buildQuotationExport, connectedSubscriberCount } from '../data/commercialQuoteExports';
 import { PricingSettings } from './PricingSettings';
@@ -16,8 +15,6 @@ import { PricingSettings } from './PricingSettings';
 
 interface BOMModalProps {
   open: boolean;
-  /** Dialog overlay (default) or the Reports section of the workbench. */
-  variant?: 'dialog' | 'screen';
   onClose: () => void;
   nodes: PonNode[];
   edges: PonEdge[];
@@ -180,7 +177,6 @@ function CommercialQuotationView({
 
 export function BOMModal({
   open,
-  variant = 'dialog',
   onClose,
   nodes,
   edges,
@@ -192,8 +188,6 @@ export function BOMModal({
   costBreakdown,
 }: BOMModalProps) {
   const [activeTab, setActiveTab] = useState<'optical' | 'commercial'>('optical');
-  const isDialog = variant === 'dialog';
-  const { dialogRef } = useDialogA11y({ open: isDialog && open, onClose });
   /* Reports is a section: opening it puts the keyboard on the report title. */
   const titleRef = useSectionFocus<HTMLHeadingElement>();
   const summary = simulation.summary;
@@ -215,32 +209,15 @@ export function BOMModal({
 
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
 
-  /* As the Reports screen the report *is* the page, so it renders <main>;
-   * as an overlay it stays a labelled dialog. Same markup, two landmarks. */
-  const ScreenTag = (isDialog ? 'section' : 'main') as 'section';
-  const TitleTag = (isDialog ? 'h2' : 'h1') as 'h2';
-
-  const body = (
-    <ScreenTag
-      ref={dialogRef}
-      role={isDialog ? 'dialog' : undefined}
-      aria-modal={isDialog ? true : undefined}
-      aria-labelledby="bom-title"
-      aria-describedby="bom-description"
-      tabIndex={isDialog ? -1 : undefined}
-      className={
-        isDialog
-          ? 'panel flex max-h-[88vh] w-full min-w-0 max-w-5xl flex-col overflow-hidden rounded-xl shadow-panel outline-none'
-          : 'pu-screen pu-reports-screen'
-      }
-    >
-      {isDialog ? null : (
-        <div className="pu-reports-back">
-          <button type="button" className="pu-btn" onClick={onClose}>
-            <ArrowLeft size={14} aria-hidden="true" /> Back to Design
-          </button>
-        </div>
-      )}
+  /* Reports is a section screen, so the report *is* the page: <main> with an
+   * <h1> title, over <h2> section headings. */
+  return (
+    <main className="pu-screen pu-reports-screen" aria-labelledby="bom-title" aria-describedby="bom-description">
+      <div className="pu-reports-back">
+        <button type="button" className="pu-btn" onClick={onClose}>
+          <ArrowLeft size={14} aria-hidden="true" /> Back to Design
+        </button>
+      </div>
 
       <div className="panel-header">
         <div className="flex items-center gap-2">
@@ -248,14 +225,14 @@ export function BOMModal({
             <Table2 size={16} />
           </span>
           <div>
-            <TitleTag
+            <h1
               id="bom-title"
-              ref={isDialog ? undefined : titleRef}
-              tabIndex={isDialog ? undefined : -1}
+              ref={titleRef}
+              tabIndex={-1}
               className="text-section font-bold leading-tight text-[var(--pu-ink)]"
             >
               Bill of Materials
-            </TitleTag>
+            </h1>
             <p id="bom-description" className="text-body text-[var(--pu-mut)]">
               Optical audit &amp; commercial CAPEX quotation
             </p>
@@ -301,17 +278,6 @@ export function BOMModal({
           >
             <FileJson size={14} /> Quote JSON
           </button>
-          {isDialog ? (
-            <button
-              type="button"
-              className="btn-ghost h-9 w-9 !p-0"
-              onClick={onClose}
-              aria-label="Close bill of materials"
-              title="Close"
-            >
-              <X size={16} />
-            </button>
-          ) : null}
         </div>
       </div>
 
@@ -396,7 +362,7 @@ export function BOMModal({
             {/* Deployed components: the old Components/Topology tabs now live here. */}
             <div className="mt-3 rounded-lg border border-[var(--pu-line)] bg-white p-3">
               <h2 className="eyebrow mb-2">Deployed components</h2>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-1 font-mono text-label md:grid-cols-4">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1 font-mono text-label md:grid-cols-3">
                 {(
                   [
                     ['olt', 'OLT'],
@@ -407,6 +373,7 @@ export function BOMModal({
                     ['nap', 'NAP / FAT'],
                     ['ont', 'ONTs'],
                     ['gateway', 'Gateways'],
+                    ['attenuator', 'Attenuator pads'],
                   ] as Array<[PonNode['type'], string]>
                 ).map(([kind, label]) => {
                   const count = nodes.filter((node) => node.type === kind).length;
@@ -615,20 +582,7 @@ export function BOMModal({
           </>
         )}
       </div>
-    </ScreenTag>
-  );
-
-  if (!isDialog) return body;
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose();
-      }}
-    >
-      {body}
-    </div>
+    </main>
   );
 }
 

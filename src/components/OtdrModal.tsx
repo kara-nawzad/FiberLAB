@@ -84,6 +84,8 @@ function eventLabel(type: OtdrEvent['type']): string {
       return 'ODF through-port';
     case 'nap':
       return 'NAP/FAT split';
+    case 'attenuator':
+      return 'Attenuator pad';
     case 'connector':
       return 'Connector';
     case 'fault_bend':
@@ -107,6 +109,8 @@ function markerColor(type: OtdrEvent['type']): string {
       return '#2dd4bf';
     case 'nap':
       return '#fb7185';
+    case 'attenuator':
+      return '#fbbf24';
     case 'connector':
       return '#c4b5fd';
     case 'fault_bend':
@@ -203,6 +207,9 @@ function OtdrMarker({ event, trace }: { event: OtdrEvent; trace: OtdrAnalysisRes
       ) : null}
       {event.type === 'odf' ? (
         <rect x={x - 4.5} y={y - 4.5} width={9} height={9} rx={1} fill={color} stroke="#134e4a" strokeWidth={1} />
+      ) : null}
+      {event.type === 'attenuator' ? (
+        <rect x={x - 3.2} y={y - 3.2} width={6.4} height={6.4} rx={1} fill={color} />
       ) : null}
       {event.type === 'nap' ? (
         <path

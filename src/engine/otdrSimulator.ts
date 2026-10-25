@@ -13,11 +13,22 @@ import {
   SPLICE_LOSS_DB,
   SPLITTER_LOSS_DB,
 } from '../types';
+import { computeAttenuatorLoss, resolveFiberWavelength } from './opticalSimulator';
 
 /** A discrete reflection or loss transition detected on the OTDR trace. */
 export interface OtdrEvent {
   id: string;
-  type: 'launch' | 'fiber_span' | 'splice' | 'splitter' | 'odf' | 'nap' | 'connector' | 'fault_bend' | 'end_of_fiber';
+  type:
+    | 'launch'
+    | 'fiber_span'
+    | 'splice'
+    | 'splitter'
+    | 'odf'
+    | 'nap'
+    | 'attenuator'
+    | 'connector'
+    | 'fault_bend'
+    | 'end_of_fiber';
   distanceKm: number;
   /** Signed trace step: losses are negative, reflective peaks are positive. */
   relativeLossDb: number;
@@ -62,7 +73,10 @@ interface FiberRange {
   attenuationDbPerKm: number;
 }
 
-type PointEventType = Extract<OtdrEvent['type'], 'splice' | 'splitter' | 'odf' | 'nap' | 'connector' | 'fault_bend'>;
+type PointEventType = Extract<
+  OtdrEvent['type'],
+  'splice' | 'splitter' | 'odf' | 'nap' | 'attenuator' | 'connector' | 'fault_bend'
+>;
 
 interface PointLoss {
   id: string;
@@ -76,7 +90,15 @@ interface PointLoss {
 }
 
 function isSupportedWavelength(value: number): value is Wavelength {
-  return value === 1270 || value === 1310 || value === 1490 || value === 1550 || value === 1577;
+  return (
+    value === 850 ||
+    value === 1300 ||
+    value === 1270 ||
+    value === 1310 ||
+    value === 1490 ||
+    value === 1550 ||
+    value === 1577
+  );
 }
 
 function attenuationAt(wavelengthNm: number): number {
@@ -270,10 +292,14 @@ export function generateOtdrTrace(
     if (node.type === 'fiber') {
       const lengthKm = Number.isFinite(node.data.lengthKm) ? Math.max(0, node.data.lengthKm) : 0;
       const configuredAttenuation = node.data.attenuationOverrideDbPerKm;
+      // Multi-mode spans keep their own 850/1300 nm coefficient; single-mode
+      // spans keep tracking the instrument wavelength exactly as before.
       const alpha =
         typeof configuredAttenuation === 'number' && Number.isFinite(configuredAttenuation) && configuredAttenuation > 0
           ? configuredAttenuation
-          : attenuationAt(measuredWavelengthNm);
+          : node.data.fiberProfile === 'om3' || node.data.fiberProfile === 'om4'
+            ? ATTENUATION_DB_PER_KM[resolveFiberWavelength(node.data)]
+            : attenuationAt(measuredWavelengthNm);
       const spanStartKm = distanceKm;
       const spanEndKm = spanStartKm + lengthKm;
       fiberRanges.push({ startKm: spanStartKm, endKm: spanEndKm, attenuationDbPerKm: alpha });
@@ -403,6 +429,23 @@ export function generateOtdrTrace(
         order: pointOrder++,
       });
       addEvent('odf', `${node.id}:odf`, distanceKm, -lossDb, description, 'PASS');
+      continue;
+    }
+
+    if (node.type === 'attenuator') {
+      const lossDb = computeAttenuatorLoss(node.data);
+      cumulativeLossDb += lossDb;
+      const description = `Inline attenuator pad · ${lossDb.toFixed(0)} dB fixed loss (${node.data.polish})`;
+      pointLosses.push({
+        id: `${node.id}:attenuator`,
+        type: 'attenuator',
+        distanceKm,
+        lossDb,
+        description,
+        passFail: 'PASS',
+        order: pointOrder++,
+      });
+      addEvent('attenuator', `${node.id}:attenuator`, distanceKm, -lossDb, description, 'PASS');
       continue;
     }
 

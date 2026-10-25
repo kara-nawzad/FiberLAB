@@ -1,6 +1,6 @@
 # FiberLAB
 
-A warm, hold-to-splice introduction leads into a responsive photonic waveguide and an FTTH/PON studio with field diagnostics, live CAPEX, and an interactive OTDR trace analyzer. Design a GPON or XGS-PON network from an OLT through an ODF rack, fiber spans, dome closure, and 1:8 outdoor NAP/FAT to ONTs or Wi-Fi 6 home gateways. Probe ports and patch cords with the virtual OPM, inspect branch backscatter with the OTDR, inject separate training faults, and balance optical quality against a commercial planning quotation. Optical readings come from the simulator; component losses, speed estimates, trace events, and USD prices are educational references—not calibrated instrument results, guaranteed throughput, or vendor quotes.
+A warm, hold-to-splice introduction leads into a responsive photonic waveguide and an FTTH/PON studio with field diagnostics, live CAPEX, and an interactive OTDR trace analyzer. Design a GPON or XGS-PON network from an OLT through an ODF rack, fiber spans, dome closure, and 1:8 outdoor NAP/FAT to ONTs or Wi-Fi 6 home gateways — with single-mode or multi-mode (OM3/OM4) glass, and inline attenuator pads where a short drop would overload the receiver. Probe ports and patch cords with the virtual OPM, inspect branch backscatter with the OTDR, inject separate training faults, and balance optical quality against a commercial planning quotation. Optical readings come from the simulator; component losses, speed estimates, trace events, and USD prices are educational references—not calibrated instrument results, guaranteed throughput, or vendor quotes.
 
 Built with React 18 + Vite + TypeScript, `@xyflow/react` v12 for the graph canvas,
 Tailwind CSS for styling and `lucide-react` for iconography. The warm visual system uses the Google Font families `Sora`, `Manrope`, and `JetBrains Mono` with local system fallbacks.
@@ -10,6 +10,11 @@ and roadmap for field-style learning and licensed component photography, see
 [`PROJECT_GUIDE.md`](./docs/PROJECT_GUIDE.md).
 
 **Live demo:** [https://kara-nawzad.github.io/FiberLAB/](https://kara-nawzad.github.io/FiberLAB/)
+
+Multi-mode spans longer than 550 m raise the modal-dispersion reach flag
+(`⚠️ MODAL DISPERSION LIMIT: Multi-mode span exceeds 550m reach for gigabit transmission.`).
+The flag is advisory: the loss equation stays `length × coefficient`, so OM3/OM4
+spans are never given an artificial dB penalty.
 
 ---
 
@@ -22,7 +27,7 @@ repository's `.nvmrc` selects Node 22.
 npm ci
 npm run dev        # http://localhost:5173
 npm run build      # tsc --noEmit && vite build
-npm run test       # 111 tests: optical engine, upstream dynamic range, OPM, OTDR, equipment, CAPEX, missions, overlays, splitter ports, and app interactions
+npm run test       # 136 tests: optical engine, upstream dynamic range, OPM, OTDR, multi-mode/attenuator, equipment, CAPEX, missions, overlays, splitter ports, error boundary, and app interactions
 npm run typecheck  # strict TypeScript, no emit
 npm run lint       # ESLint checks for source and configuration files
 npm run format:check  # verify Prettier formatting
@@ -39,17 +44,18 @@ transceiver and terminates at each reachable ONT or Wi-Fi gateway:
 P_rx = P_tx − (L_fiber + L_splitters + L_ODF + L_NAP + L_splices + L_connectors + L_field_faults + L_closure + Safety_Margin)
 ```
 
-| Term             | Model                                                                                                                                                                            |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `L_fiber`        | `length_km × α` — reference values: 0.35 dB/km @ 1270/1310 nm, 0.25 dB/km @ 1490 nm, 0.20 dB/km @ 1550 nm, and 0.22 dB/km @ 1577 nm; a manual per-span override takes precedence |
-| `L_splitters`    | Catalogue insertion loss: 1:2 = 3.7, 1:4 = 7.2, 1:8 = 10.5, 1:16 = 13.8, 1:32 = 17.5, 1:64 = 20.8 dB (+ optional excess loss)                                                    |
-| `L_ODF`          | 0.50 dB per modeled matched adapter through-pair; the two ODF pairs are isolated and do not cross-connect                                                                        |
-| `L_NAP`          | Fixed 10.5 dB per connected branch for the NAP's internal 1:8 split (one modeled split stage)                                                                                    |
-| `L_splices`      | `count × 0.1 dB` for fusion splices counted on cable spans                                                                                                                       |
-| `L_connectors`   | `count × 0.5 dB` (SC/APC)                                                                                                                                                        |
-| `L_field_faults` | Separate training allowances: +3.50 dB macro-bend and +2.00 dB dirty SC/APC ferrule                                                                                              |
-| `L_closure`      | One adjustable 0.05–0.10 dB through-splice allowance per active closure output branch                                                                                            |
-| `Safety_Margin`  | Global, default 2.0 dB                                                                                                                                                           |
+| Term             | Model                                                                                                                                                                                                                                                                                      |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `L_fiber`        | `length_km × α` — single-mode reference values: 0.35 dB/km @ 1270/1310 nm, 0.25 dB/km @ 1490 nm, 0.20 dB/km @ 1550 nm, and 0.22 dB/km @ 1577 nm. Multi-mode (OM3/OM4) spans use their own windows: 3.0 dB/km @ 850 nm and 1.0 dB/km @ 1300 nm. A manual per-span override takes precedence |
+| `L_splitters`    | Catalogue insertion loss: 1:2 = 3.7, 1:4 = 7.2, 1:8 = 10.5, 1:16 = 13.8, 1:32 = 17.5, 1:64 = 20.8 dB (+ optional excess loss)                                                                                                                                                              |
+| `L_ODF`          | 0.50 dB per modeled matched adapter through-pair; the two ODF pairs are isolated and do not cross-connect                                                                                                                                                                                  |
+| `L_NAP`          | Fixed 10.5 dB per connected branch for the NAP's internal 1:8 split (one modeled split stage)                                                                                                                                                                                              |
+| `L_splices`      | `count × 0.1 dB` for fusion splices counted on cable spans                                                                                                                                                                                                                                 |
+| `L_connectors`   | `count × 0.5 dB` (SC/APC)                                                                                                                                                                                                                                                                  |
+| `L_field_faults` | Separate training allowances: +3.50 dB macro-bend and +2.00 dB dirty SC/APC ferrule                                                                                                                                                                                                        |
+| `L_closure`      | One adjustable 0.05–0.10 dB through-splice allowance per active closure output branch                                                                                                                                                                                                      |
+| `L_attenuator`   | Fixed inline pad value (1, 2, 3, 5, 10 or 15 dB; 5 dB default), wavelength-independent                                                                                                                                                                                                     |
+| `Safety_Margin`  | Global, default 2.0 dB                                                                                                                                                                                                                                                                     |
 
 ### ONT classification (ITU-T G.984 GPON)
 
@@ -125,7 +131,7 @@ Open **OTDR Trace** in the TopBar to pulse a selected OLT output or fiber-span s
 - **Status bar** — one slim always-visible row under the canvas (total loss, total distance, subscribers OK, coloured network status) that expands into just two tabs: Optical Budget and Events. Clicking an event selects and frames the affected component, and deployed counts moved into the Bill of Materials.
 - **Left toolbox** — draggable or double-click quick-add OLT / ODF / splitter (1:2 … 1:64) / cable (feeder, distribution, drop) / FOSC-style dome closure / 1:8 NAP/FAT / ONT / Wi-Fi 6 gateway.
 - **Canvas** — dotted grid, pan/zoom, minimap, compact hardware thumbnails, softly glowing animated optical edges, handle-drag connections, Link nodes mode, and an OPM probe cursor/HUD for port and patch-cord power. Faulted fiber spans mark their outgoing patch cord with a warning glyph.
-- **Right inspector** — appears only while a component is selected, opens on **Properties** with the essentials and one **Advanced** disclosure, and keeps **Optical Power** telemetry and the **Info** Field Hardware Card for all eight component kinds. It carries the GPON/XGS-PON OLT selector, five fiber/OTDR wavelengths, gateway service telemetry with a clearly marked TEST-NET IP placeholder, fiber fault toggles, a 12-color closure splice tray, and a confirm-to-remove action. Phones show it as a half/full-height bottom sheet. The SVGs are representative illustrations, not product photos or exact vendor models.
+- **Right inspector** — appears only while a component is selected, opens on **Properties** with the essentials and one **Advanced** disclosure, and keeps **Optical Power** telemetry and the **Info** Field Hardware Card for all nine component kinds. It carries the GPON/XGS-PON OLT selector, profile-scoped fiber/OTDR wavelengths (including the OM3/OM4 850/1300 nm windows), the attenuator pad selector, gateway service telemetry with a clearly marked TEST-NET IP placeholder, fiber fault toggles, a 12-color closure splice tray, and a confirm-to-remove action. Phones show it as a half/full-height bottom sheet. The SVGs are representative illustrations, not product photos or exact vendor models.
 - **BOM modal** — an Optical Budget Audit (including per-subscriber `Upstream Δ` differentials) and Commercial Quotation & CAPEX view, with material/labor/project/subscriber metrics, detailed quote lines, gateway SSID/IP/PON-rate fields, and JSON / combined CSV export.
 - **Mission drawer** — five scenarios: “The Marginal Villa,” “Diagnose the Silent ONT,” “Rescue the Unpatched Subscriber,” “The Budget Crunch: Cost vs. Performance,” and “Blind Fault: The Cut in the Trunk,” each with live objectives, hints, and completion recap. Budget Crunch requires three ONLINE homes, CAPEX below $1,600, and at least 2 dB global safety margin; Blind Fault hides visual fault badges on the canvas so learners diagnose a distribution break with the OPM and OTDR.
 
@@ -164,12 +170,18 @@ fixed allowances, not universal measured values.
 ├── docs/
 │   ├── PROJECT_GUIDE.md           Architecture, operation, and learning-model guide
 │   └── design/                    Archived self-contained mock and workbench references
+├── public/
+│   ├── favicon.svg                Browser-tab icon
+│   ├── og-image.png               1200 × 630 social card
+│   └── 404.html                   Standalone branded not-found page
 ├── src/
 │   ├── assets/                    Bundled cursor and splice-hero SVG assets
 │   ├── components/
 │   │   ├── hardware/HardwareArt.tsx
 │   │   ├── landing/               LandingNav, LandingView, hero, waveguide, and splice UI
-│   │   └── nodes/                 React Flow node renderers and NodePrimitives
+│   │   ├── nodes/                 React Flow node renderers and NodePrimitives
+│   │   └── ErrorBoundary.tsx      Branded crash screen around the whole app
+│   ├── hooks/                     useDialogA11y, useSectionFocus, useSectionHistory
 │   ├── context/SimulationContext.ts
 │   ├── data/                      Catalogues, hardwareArtwork, pricing, and data tests
 │   ├── engine/                    Pure simulation, opticalPhysics, presets, missions, and engine tests

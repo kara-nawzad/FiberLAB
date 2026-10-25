@@ -1,10 +1,12 @@
 import type { DesignSettings, MeterWavelength, PonEdge, PonNode, SimulationResult } from '../types';
 import {
+  computeAttenuatorLoss,
   computeClosureSpliceLoss,
   computeFiberLoss,
   computeNapLoss,
   computeOdfLoss,
   computeSplitterLoss,
+  isAttenuatorNode,
   isClosureNode,
   isFiberNode,
   isNapNode,
@@ -81,6 +83,9 @@ function outputPowerAtUnpatchedPort(
   if (isSplitterNode(node)) return incomingPower - computeSplitterLoss(node.data);
   if (isOdfNode(node)) return incomingPower - computeOdfLoss(node.data.throughPortLossDb);
   if (isNapNode(node)) return incomingPower - computeNapLoss(node.data.splitLossDb);
+  // An attenuator pad is a straight through-element: the probe reads the input
+  // power minus the fixed pad value, so a technician can verify the pad live.
+  if (isAttenuatorNode(node)) return incomingPower - computeAttenuatorLoss(node.data);
   if (isClosureNode(node)) {
     const match = /^out-(\d+)$/.exec(handleId ?? 'out-0');
     const channelIndex = match ? Number(match[1]) : 0;

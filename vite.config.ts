@@ -17,4 +17,23 @@ export default defineConfig({
     strictPort: true,
     allowedHosts: true,
   },
+  build: {
+    rollupOptions: {
+      output: {
+        /**
+         * Three vendor families change on their own cadence and are cached
+         * independently of the application code: React itself, the React Flow
+         * canvas engine, and the icon set (which is by far the largest leaf
+         * dependency after React Flow). Everything else stays in the app chunk.
+         */
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return undefined;
+          if (id.includes('@xyflow') || id.includes('d3-')) return 'flow';
+          if (id.includes('/react-dom/') || id.includes('/react/') || id.includes('/scheduler/')) return 'react';
+          if (id.includes('lucide-react')) return 'icons';
+          return 'vendor';
+        },
+      },
+    },
+  },
 });

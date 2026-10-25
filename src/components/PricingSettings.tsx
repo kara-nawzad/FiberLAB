@@ -135,6 +135,12 @@ export function PricingSettings({ unitCosts, onChange, onReset }: PricingSetting
             onChange={(wifi6Gateway) => onChange({ ...unitCosts, wifi6Gateway })}
           />
           <RateInput
+            label="Inline attenuator pad"
+            unit="/ each"
+            value={unitCosts.attenuatorPad}
+            onChange={(attenuatorPad) => onChange({ ...unitCosts, attenuatorPad })}
+          />
+          <RateInput
             label="Fusion splice labor"
             unit="/ splice"
             value={unitCosts.laborPerSplice}

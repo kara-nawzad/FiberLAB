@@ -1,7 +1,9 @@
 import type {
+  AttenuatorNodeData,
   CableType,
   ClosureNodeData,
   FiberNodeData,
+  FiberProfile,
   GatewayNodeData,
   NapNodeData,
   OdfNodeData,
@@ -15,6 +17,7 @@ import type {
 import {
   CABLE_SPECS,
   CLOSURE_OUTPUT_PORTS,
+  DEFAULT_ATTENUATOR_DB,
   DEFAULT_CLOSURE_SPLICE_LOSS_DB,
   DEFAULT_ODF_THROUGH_PORT_LOSS_DB,
   NAP_SPLIT_LOSS_DB,
@@ -50,6 +53,7 @@ export const NODE_SIZES: Record<string, { width: number; height: number }> = {
   odf: { width: 208, height: 132 },
   nap: { width: 208, height: 156 },
   gateway: { width: 224, height: 164 },
+  attenuator: { width: 184, height: 128 },
 };
 
 let ontSequence = 0;
@@ -87,15 +91,23 @@ export function createSplitterNode(ratio: SplitRatio = 8, placement: NodePlaceme
   };
 }
 
-export function createFiberNode(cableType: CableType = 'distribution', placement: NodePlacement = {}): PonNode {
+export function createFiberNode(
+  cableType: CableType = 'distribution',
+  placement: NodePlacement = {},
+  fiberProfile: FiberProfile = 'singlemode',
+): PonNode {
   const spec = CABLE_SPECS[cableType];
+  const multiMode = fiberProfile !== 'singlemode';
   const data: FiberNodeData = {
     kind: 'fiber',
     cableType,
+    fiberProfile,
     lengthKm: spec.defaultLengthKm,
     splices: spec.defaultSplices,
     connectors: spec.defaultConnectors,
-    wavelength: 1490,
+    // Multi-mode spans are born on their 850 nm window so their coefficient is
+    // never taken from the single-mode table.
+    wavelength: multiMode ? 850 : 1490,
     attenuationOverrideDbPerKm: null,
   };
   return {
@@ -157,6 +169,23 @@ export function createNapNode(placement: NodePlacement = {}): PonNode {
   return {
     id: placement.id ?? nextId('nap'),
     type: 'nap',
+    position: placement.position ?? { x: 0, y: 0 },
+    data,
+  };
+}
+
+export function createAttenuatorNode(
+  attenuationDb: number = DEFAULT_ATTENUATOR_DB,
+  placement: NodePlacement = {},
+): PonNode {
+  const data: AttenuatorNodeData = {
+    kind: 'attenuator',
+    attenuationDb,
+    polish: 'SC/APC',
+  };
+  return {
+    id: placement.id ?? nextId('attenuator'),
+    type: 'attenuator',
     position: placement.position ?? { x: 0, y: 0 },
     data,
   };

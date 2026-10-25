@@ -43,7 +43,7 @@ export function SplitterNode({ id, data, selected }: NodeProps<SplitterFlowNode>
         </small>
         {trunked ? <small className="hw-label-note">{portCount} branch ports · rest trunked</small> : null}
         {data.excessLossDb > 0 ? (
-          <small style={{ color: '#B36B00' }}>+{data.excessLossDb.toFixed(1)} dB excess</small>
+          <small style={{ color: 'var(--pu-warn-text)' }}>+{data.excessLossDb.toFixed(1)} dB excess</small>
         ) : null}
       </div>
 

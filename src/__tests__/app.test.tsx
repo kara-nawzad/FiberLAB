@@ -15,9 +15,43 @@ if (typeof window !== 'undefined' && !window.PointerEvent) {
   (window as unknown as { PointerEvent: unknown }).PointerEvent = PointerEventShim;
 }
 
+/**
+ * The two hero doors are earned by holding the splice, so the suite enters the
+ * workbench the way a returning engineer does: the always-available navigation
+ * button. The gated hero path has its own tests (landing test below and
+ * SpliceIntroHero.test.tsx).
+ */
+function enterStudioFromNav() {
+  fireEvent.click(screen.getByRole('button', { name: /^Launch Studio$/i }));
+}
+
+/**
+ * Complete the hero fusion with one synthetic frame: requestAnimationFrame is
+ * replaced by a timeout that reports a timestamp past the hold duration.
+ */
+async function fuseHeroSplice() {
+  const holdButton = await screen.findByRole('button', { name: /Press and hold to fuse the splice/i });
+  const originalRaf = window.requestAnimationFrame;
+  Object.defineProperty(window, 'requestAnimationFrame', {
+    configurable: true,
+    value: (callback: FrameRequestCallback) =>
+      window.setTimeout(() => callback(performance.now() + 4000), 1) as unknown as number,
+  });
+  try {
+    fireEvent.keyDown(holdButton, { key: ' ' });
+    await screen.findByRole('button', { name: /Launch Interactive Studio/i });
+  } finally {
+    if (originalRaf) {
+      Object.defineProperty(window, 'requestAnimationFrame', { configurable: true, value: originalRaf });
+    } else {
+      Reflect.deleteProperty(window, 'requestAnimationFrame');
+    }
+  }
+}
+
 async function renderStudio() {
   const result = render(<App />);
-  fireEvent.click(await screen.findByRole('button', { name: /Launch Interactive Studio/i }));
+  enterStudioFromNav();
   await screen.findByRole('button', { name: 'Run Simulation' });
   // The workbench opens on an empty canvas, so load the reference tree the
   // assertions below are written against.
@@ -92,6 +126,10 @@ describe('FiberLAB application shell', () => {
     expect(screen.getByText('Splitter 1:4')).toBeInTheDocument();
     expect(screen.getAllByText('−7.20 dB').length).toBeGreaterThan(0);
 
+    // The hero offers the hold control first; the doors arrive with the fusion.
+    expect(screen.queryByRole('button', { name: /Explore Guided Missions \(5 Scenarios\)/i })).not.toBeInTheDocument();
+    await fuseHeroSplice();
+    expect(await screen.findByText('FUSED!')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Explore Guided Missions \(5 Scenarios\)/i }));
     expect(await screen.findByRole('dialog', { name: 'Field missions' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /The Marginal Villa/ })).toBeInTheDocument();
@@ -130,14 +168,14 @@ describe('FiberLAB application shell', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Overview & Physics' }));
     expect(await screen.findByRole('heading', { name: /Splice the fiber/i })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /Launch Interactive Studio/i }));
+    enterStudioFromNav();
     await waitFor(() => expect(screen.getAllByText('Dukan Ridge — Tower 7').length).toBeGreaterThan(0));
     expect(screen.getByRole('region', { name: 'Field hardware reference' })).toBeInTheDocument();
   });
 
   it('opens the workbench on an empty canvas with a friendly mission hint', async () => {
     render(<App />);
-    fireEvent.click(await screen.findByRole('button', { name: /Launch Interactive Studio/i }));
+    enterStudioFromNav();
     await screen.findByRole('button', { name: 'Run Simulation' });
 
     expect(await screen.findByText('The canvas is empty')).toBeInTheDocument();
@@ -194,8 +232,11 @@ describe('FiberLAB application shell', () => {
       });
       thumbnails += images.length;
     }
-    // OLT + ODF, one cable card, one splitter card, closure + NAP, ONT + gateway.
-    expect(thumbnails).toBe(8);
+    // OLT + ODF, four cable cards (three single-mode + OM3 + OM4 = five in the
+    // fiber section), one splitter card, closure + NAP + attenuator, ONT +
+    // gateway. The multi-mode cards and the attenuator pad are deliberate
+    // additions in the component-ecosystem task, so the library grew by two.
+    expect(thumbnails).toBe(9);
   });
 
   it('drags a toolbox component onto the React Flow canvas', async () => {
@@ -412,8 +453,11 @@ describe('FiberLAB application shell', () => {
     expect(screen.queryByTestId('capex-telemetry')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Close inspector' }));
     openSection('Reports');
-    expect(screen.getByTestId('capex-telemetry')).toHaveTextContent('CAPEX $3,747');
-    expect(screen.getByTestId('capex-telemetry')).toHaveTextContent('$1,249.00 / Home Passed');
+    // Reports is a lazily loaded chunk now, so the first paint may be the
+    // suspense fallback while the module downloads.
+    const capexAfterOpen = await screen.findByTestId('capex-telemetry');
+    expect(capexAfterOpen).toHaveTextContent('CAPEX $3,747');
+    expect(capexAfterOpen).toHaveTextContent('$1,249.00 / Home Passed');
     openSection('Design');
   });
 
@@ -437,7 +481,7 @@ describe('FiberLAB application shell', () => {
   it('edits local USD pricing in the Bill of Materials without changing optical status', async () => {
     await renderStudio();
     openSection('Reports');
-    const capexBadge = screen.getByTestId('capex-telemetry');
+    const capexBadge = await screen.findByTestId('capex-telemetry');
     expect(capexBadge).toHaveTextContent('$3,747');
     fireEvent.click(screen.getByRole('tab', { name: 'Commercial Quotation & CAPEX' }));
     fireEvent.click(screen.getByText('Local unit pricing'));
@@ -538,14 +582,15 @@ describe('FiberLAB application shell', () => {
     expect(screen.queryByTestId('capex-telemetry')).not.toBeInTheDocument();
     fireEvent.keyDown(document, { key: 'Escape' });
     openSection('Reports');
-    expect(screen.getByTestId('capex-telemetry')).toHaveTextContent('$3,747');
+    expect(await screen.findByTestId('capex-telemetry')).toHaveTextContent('$3,747');
     openSection('Design');
   });
 
   it('acquires an interactive OTDR trace from the studio and lists terminal Fresnel events', async () => {
     await renderStudio();
     useSettingsAction('OTDR Trace');
-    expect(screen.getByRole('dialog', { name: 'OTDR Trace Analyzer' })).toBeInTheDocument();
+    // The analyser arrives in its own chunk; wait for the dialog itself.
+    expect(await screen.findByRole('dialog', { name: 'OTDR Trace Analyzer' })).toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: 'OTDR source node' })).toHaveValue('olt-a');
     expect(screen.getByRole('combobox', { name: 'OTDR target subscriber' })).toHaveValue('ont-a1');
 
@@ -910,7 +955,7 @@ describe('FiberLAB application shell', () => {
 
   it('marks a keyboard-deleted element as an edit and clears the selection', async () => {
     const { container } = render(<App />);
-    fireEvent.click(await screen.findByRole('button', { name: /Launch Interactive Studio/i }));
+    enterStudioFromNav();
     await screen.findByRole('button', { name: 'Run Simulation' });
     fireEvent.click(screen.getByRole('button', { name: /Preset Topologies/i }));
     fireEvent.click(await screen.findByRole('button', { name: /Standard 1:32 GPON Tree/i }));
@@ -1032,8 +1077,9 @@ describe('FiberLAB application shell', () => {
     fireEvent.change(screen.getByLabelText('Search components'), { target: { value: 'closure' } });
 
     const results = screen.getByRole('group', { name: 'Search results' });
-    // The category name is part of the index, so both parts in it are labelled.
-    expect(within(results).getAllByText('Splices & Closures')).toHaveLength(2);
+    // The category name is part of the index, so a hit is labelled once per
+    // match. The section now holds closure, NAP/FAT and the attenuator pad.
+    expect(within(results).getAllByText('Splices & Closures')).toHaveLength(3);
     expect(within(results).getByRole('button', { name: /Dome Splice Closure/i })).toBeInTheDocument();
     // The accordion steps aside while a query is active.
     expect(screen.queryByRole('group', { name: 'Component categories' })).not.toBeInTheDocument();
@@ -1090,5 +1136,35 @@ describe('FiberLAB application shell', () => {
 
     fireEvent.click(cards[0]);
     await waitFor(() => expect(container.querySelectorAll('.react-flow__node').length).toBe(before + 1));
+  });
+
+  it('adds the multi-mode span and the attenuator pad from the component library', async () => {
+    const { container } = await renderStudio();
+    const before = container.querySelectorAll('.react-flow__node').length;
+
+    openLibraryCategory('Fiber Cables');
+    const cableSelector = screen.getByRole('group', { name: 'Cable type' });
+    const om4 = within(cableSelector).getByRole('button', { name: 'Cable type multi-mode OM4' });
+    fireEvent.click(om4);
+    expect(om4).toHaveAttribute('aria-pressed', 'true');
+
+    const library = screen.getByLabelText('Search components').closest('aside') as HTMLElement;
+    const cableCard = library.querySelectorAll('.pu-acc-body .pu-tool');
+    expect(cableCard).toHaveLength(1);
+    expect(cableCard[0]).toHaveTextContent('Multi-mode OM4');
+    fireEvent.click(cableCard[0]);
+    await waitFor(() => expect(container.querySelectorAll('.react-flow__node').length).toBe(before + 1));
+
+    // The canvas pill carries the OM4 tag, and the inspector exposes the glass.
+    expect(container.querySelector('.hw-fiber.is-multimode')).not.toBeNull();
+    expect(screen.getByLabelText('Fibre profile')).toHaveValue('om4');
+
+    openLibraryCategory('Splices & Closures');
+    fireEvent.click(within(library).getByRole('button', { name: /Attenuator Pad/i }));
+    await waitFor(() => expect(container.querySelectorAll('.react-flow__node').length).toBe(before + 2));
+
+    expect(screen.getByLabelText('Pad value')).toHaveValue('5');
+    expect(screen.getByRole('combobox', { name: 'Attenuator polish' })).toHaveValue('SC/APC');
+    expect(screen.getByText('Inline pad · 5 dB fixed')).toBeInTheDocument();
   });
 });
