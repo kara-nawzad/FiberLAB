@@ -101,6 +101,39 @@ describe('SpliceIntroHero', () => {
     expect(onLaunchStudio).toHaveBeenCalledOnce();
   });
 
+  it('never opens the studio from the release that completed the splice', async () => {
+    vi.useFakeTimers();
+    const { onLaunchStudio } = renderHero();
+
+    const pill = screen.getByRole('button', { name: HOLD_BUTTON });
+    const originalRaf = window.requestAnimationFrame;
+    Object.defineProperty(window, 'requestAnimationFrame', {
+      configurable: true,
+      value: (callback: FrameRequestCallback) => window.setTimeout(() => callback(performance.now() + 6000), 1),
+    });
+    try {
+      fireEvent.pointerDown(pill, { button: 0, pointerId: 1 });
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1);
+      });
+    } finally {
+      if (originalRaf)
+        Object.defineProperty(window, 'requestAnimationFrame', { configurable: true, value: originalRaf });
+      else Reflect.deleteProperty(window, 'requestAnimationFrame');
+    }
+
+    // The splice landed while the pointer was still down; the button that
+    // appears under it must ignore the click the release produces.
+    expect(screen.getByText('SPLICE COMPLETE')).toBeInTheDocument();
+    const launch = screen.getByRole('button', { name: /Launch Studio/i });
+    fireEvent.click(launch);
+    expect(onLaunchStudio).not.toHaveBeenCalled();
+
+    // A deliberate second click is the only way in.
+    fireEvent.click(launch);
+    expect(onLaunchStudio).toHaveBeenCalledOnce();
+  });
+
   it('cancels and resets the hold when it is released early', async () => {
     vi.useFakeTimers();
     const { onLaunchStudio } = renderHero();

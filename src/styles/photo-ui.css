@@ -967,12 +967,21 @@ button.pu-logo {
 
 /* Inspector (right panel) restyle */
 .fiberlab-inspector {
+  /* One gutter for every part of the panel — title, card, tabs, body, footer —
+   * so nothing ever sits against the panel edge. */
+  --insp-pad: var(--sp-6);
   background: var(--pu-panel) !important;
   border-left: 1px solid var(--pu-line) !important;
   width: var(--inspector-w);
   flex-shrink: 0;
   min-height: 0;
   overflow: hidden;
+}
+
+@media (max-width: 1024px) {
+  .fiberlab-inspector {
+    --insp-pad: var(--sp-4);
+  }
 }
 .fiberlab-inspector.is-collapsed {
   width: var(--inspector-w-collapsed) !important;
@@ -983,7 +992,7 @@ button.pu-logo {
   justify-content: space-between;
   gap: var(--sp-2);
   min-height: var(--panel-head-h);
-  padding: 0 var(--shell-pad);
+  padding: 0 var(--insp-pad);
   font-size: var(--type-panel-title);
   font-weight: var(--fw-bold);
   color: var(--pu-ink);
@@ -992,7 +1001,7 @@ button.pu-logo {
   display: flex;
   gap: var(--sp-3);
   align-items: center;
-  margin: 0 var(--shell-pad) var(--sp-4);
+  margin: 0 var(--insp-pad) var(--sp-4);
   padding: var(--sp-3);
   border: 1px solid var(--pu-line);
   border-radius: var(--r-xl);
@@ -1048,7 +1057,7 @@ button.pu-logo {
   display: flex;
   align-items: center;
   gap: var(--sp-4);
-  padding: 0 var(--shell-pad);
+  padding: 0 var(--insp-pad);
   border-bottom: 1px solid var(--pu-line);
 }
 .pu-itabs button {
@@ -1235,7 +1244,7 @@ button.pu-logo {
 }
 .pu-insp-foot {
   flex: 0 0 auto;
-  padding: var(--sp-3) var(--shell-pad);
+  padding: var(--sp-3) var(--insp-pad);
   border-top: 1px solid var(--pu-line);
   background: var(--pu-panel);
 }
@@ -1731,7 +1740,7 @@ button.pu-logo {
  * sideways — anything that does not fit wraps instead of raising a horizontal
  * scrollbar across the bottom of the panel. */
 .fiberlab-inspector-content {
-  padding: var(--sp-3) var(--shell-pad) var(--sp-5);
+  padding: var(--sp-4) var(--insp-pad) var(--sp-8);
   overflow-x: hidden;
 }
 

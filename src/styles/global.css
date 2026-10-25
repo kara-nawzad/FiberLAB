@@ -161,11 +161,11 @@
   }
 
   .metric {
-    @apply border border-slate-200 bg-slate-50 px-3 py-2.5;
+    @apply border border-slate-200 bg-slate-50 px-3 py-3;
     border-radius: var(--r-md);
   }
 
-  /* caption sits 4px above its value, in every metric box */
+  /* caption sits 6px above its value, in every metric box */
   .metric > :first-child {
     margin-bottom: var(--sp-1);
   }

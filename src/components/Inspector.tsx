@@ -106,7 +106,7 @@ type InspectorTab = 'properties' | 'optical' | 'info';
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="mb-4">
+    <div className="mb-5">
       <label className="field-label">{label}</label>
       {children}
     </div>
@@ -712,7 +712,7 @@ export function Inspector({
                 unit="dBm"
                 onChange={(value) => onPatchNode(node.id, { txPowerDbm: value })}
               />
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-4">
                 <Metric
                   label="Class budget"
                   value={`${OLT_CLASS_SPECS[node.data.oltClass].linkBudgetDb.toFixed(0)} dB`}
@@ -750,7 +750,7 @@ export function Inspector({
                 ))}
               </select>
             </Row>
-            <div className="mb-4 grid grid-cols-2 gap-3">
+            <div className="mb-4 grid grid-cols-2 gap-4">
               <Metric
                 label="Insertion loss"
                 value={`${SPLITTER_LOSS_DB[node.data.ratio].toFixed(1)} dB`}
@@ -870,7 +870,7 @@ export function Inspector({
                 onChange={(event) => onPatchNode(node.id, { lengthKm: Math.max(0, Number(event.target.value) || 0) })}
               />
             </Row>
-            <div className="mb-4 grid grid-cols-2 gap-3">
+            <div className="mb-4 grid grid-cols-2 gap-4">
               <Metric label="Span total loss" value={`${computeFiberLoss(node.data).totalDb.toFixed(2)} dB`} />
               <Metric
                 label="Attenuation"
@@ -963,7 +963,7 @@ export function Inspector({
                 unit={`× ${CONNECTOR_LOSS_DB} dB`}
                 onChange={(value) => onPatchNode(node.id, { connectors: value })}
               />
-              <div className="mb-4">
+              <div className="mb-5">
                 <div className="field-label mb-2">Field fault injection · learning allowances</div>
                 <FaultToggle
                   label="Macro-bend fault (<15 mm)"
@@ -984,7 +984,7 @@ export function Inspector({
                   field measurements.
                 </p>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-4">
                 <Metric label="Cable loss" value={`${computeFiberLoss(node.data).cableDb.toFixed(2)} dB`} />
                 <Metric label="Span total" value={`${computeFiberLoss(node.data).totalDb.toFixed(2)} dB`} />
               </div>
@@ -1037,7 +1037,7 @@ export function Inspector({
               edges.
             </div>
             <Advanced open={advancedOpen} onToggle={() => setAdvancedOpen((open) => !open)}>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-4">
                 <Metric label="Optical inputs" value={ODF_INPUT_PORTS} />
                 <Metric label="Matched outputs" value={ODF_OUTPUT_PORTS} />
               </div>
@@ -1052,7 +1052,7 @@ export function Inspector({
 
         {node && isNapNode(node) && showProperties ? (
           <>
-            <div className="mb-4 grid grid-cols-2 gap-3">
+            <div className="mb-4 grid grid-cols-2 gap-4">
               <Metric label="Split ratio" value={`1:${NAP_SPLIT_RATIO}`} accent="#c2410c" />
               <Metric label="Branch insertion loss" value={`${node.data.splitLossDb.toFixed(2)} dB`} accent="#c2410c" />
             </div>
@@ -1060,7 +1060,7 @@ export function Inspector({
               Outdoor NAP/FAT model: one feeder input, eight drop outputs, and an internal fixed 1:8 split.
             </div>
             <Advanced open={advancedOpen} onToggle={() => setAdvancedOpen((open) => !open)}>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-4">
                 <Metric label="Optical inputs" value={1} />
                 <Metric label="Drop outputs" value={NAP_OUTPUT_PORTS} />
               </div>
@@ -1102,7 +1102,7 @@ export function Inspector({
                 <option value="SC/UPC">SC/UPC (blue, flat)</option>
               </select>
             </Row>
-            <div className="mb-4 grid grid-cols-2 gap-3">
+            <div className="mb-4 grid grid-cols-2 gap-4">
               <Metric
                 label="Insertion loss"
                 value={`${computeAttenuatorLoss(node.data).toFixed(0)} dB`}
@@ -1142,7 +1142,7 @@ export function Inspector({
                 onChange={(event) => onPatchNode(node.id, { serial: event.target.value })}
               />
             </Row>
-            <div className="mb-4 grid grid-cols-2 gap-3">
+            <div className="mb-4 grid grid-cols-2 gap-4">
               <Metric label="Rx power" value={formatDbm(telemetry?.rxPowerDbm ?? null)} />
               <Metric
                 label="Link margin"
@@ -1181,7 +1181,7 @@ export function Inspector({
                 onChange={(event) => onPatchNode(node.id, { ssid: event.target.value })}
               />
             </Row>
-            <div className="mb-4 grid grid-cols-2 gap-3">
+            <div className="mb-4 grid grid-cols-2 gap-4">
               <Metric label="Optical Rx" value={formatDbm(telemetry?.rxPowerDbm ?? null)} />
               <Metric label="PON standard" value={gatewayTelemetry?.ponStandard ?? 'No active link'} />
             </div>
@@ -1203,7 +1203,7 @@ export function Inspector({
                 {edge.source} → {edge.target}
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-4">
               <Metric label="Power at far end" value={formatDbm(simulation.edgeTelemetry[edge.id]?.powerDbm ?? null)} />
               <Metric label="State" value={(simulation.edgeTelemetry[edge.id]?.edgeState ?? 'idle').toUpperCase()} />
             </div>
@@ -1220,7 +1220,7 @@ export function Inspector({
         {showOptical ? (
           <div className="pu-optical">
             {node && isOltNode(node) ? (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-4">
                 <Metric label="Tx launch power" value={`${node.data.txPowerDbm.toFixed(1)} dBm`} />
                 <Metric label="Laser" value={node.data.laserOn ? 'Emitting' : 'Disabled'} />
                 <Metric
@@ -1240,7 +1240,7 @@ export function Inspector({
             ) : null}
 
             {node && isSplitterNode(node) ? (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-4">
                 <Metric label="Split ratio" value={`1:${node.data.ratio}`} />
                 <Metric
                   label="Insertion loss"
@@ -1256,7 +1256,7 @@ export function Inspector({
 
             {node && isFiberNode(node) ? (
               <>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-4">
                   <Metric label="Span length" value={`${node.data.lengthKm.toFixed(2)} km`} />
                   <Metric label="Cable loss" value={`${computeFiberLoss(node.data).cableDb.toFixed(2)} dB`} />
                   <Metric
@@ -1284,7 +1284,7 @@ export function Inspector({
             ) : null}
 
             {node && isClosureNode(node) ? (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-4">
                 <Metric label="Active branches" value={node.data.activeSpliceChannels.filter(Boolean).length} />
                 <Metric
                   label="Splice allowance"
@@ -1300,7 +1300,7 @@ export function Inspector({
             ) : null}
 
             {node && isOdfNode(node) ? (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-4">
                 <Metric
                   label="Through-port loss"
                   value={`${node.data.throughPortLossDb.toFixed(2)} dB`}
@@ -1313,7 +1313,7 @@ export function Inspector({
             ) : null}
 
             {node && isNapNode(node) ? (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-4">
                 <Metric label="Split ratio" value={`1:${NAP_SPLIT_RATIO}`} />
                 <Metric label="Branch loss" value={`${node.data.splitLossDb.toFixed(2)} dB`} accent="var(--pu-pri)" />
                 <Metric label="Drop outputs" value={NAP_OUTPUT_PORTS} />
@@ -1324,7 +1324,7 @@ export function Inspector({
             {node && isOntNode(node) && telemetry ? (
               <>
                 <StatusBanner status={telemetry.status} detail={describeStatus(telemetry.status)} />
-                <div className="mb-4 grid grid-cols-2 gap-3">
+                <div className="mb-4 grid grid-cols-2 gap-4">
                   <Metric
                     label="Rx power"
                     value={formatDbm(telemetry.rxPowerDbm)}
@@ -1378,7 +1378,7 @@ export function Inspector({
                   status={telemetry.status}
                   detail={`${describeStatus(telemetry.status, gatewayTelemetry.ponStandard ?? undefined)} · SSID ${node.data.ssid}`}
                 />
-                <div className="mb-4 grid grid-cols-2 gap-3">
+                <div className="mb-4 grid grid-cols-2 gap-4">
                   <Metric
                     label="Optical Rx"
                     value={formatDbm(telemetry.rxPowerDbm)}
@@ -1440,7 +1440,7 @@ export function Inspector({
 
             {!node && edge ? (
               <>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-4">
                   <Metric
                     label="Power at far end"
                     value={formatDbm(simulation.edgeTelemetry[edge.id]?.powerDbm ?? null)}

@@ -33,6 +33,10 @@ export function SpliceIntroHero({ onLaunchStudio }: SpliceIntroHeroProps) {
   const frameRef = useRef<ScheduledFrame | null>(null);
   const openedRef = useRef(false);
   const startedAtRef = useRef<number | null>(null);
+  const holdingPointerRef = useRef(false);
+  const keyboardHoldRef = useRef(false);
+  const swallowClickRef = useRef(false);
+  const launchRef = useRef<HTMLButtonElement | null>(null);
 
   const cancelFrame = useCallback(() => {
     const frame = frameRef.current;
@@ -45,6 +49,7 @@ export function SpliceIntroHero({ onLaunchStudio }: SpliceIntroHeroProps) {
   const release = useCallback(() => {
     cancelFrame();
     startedAtRef.current = null;
+    holdingPointerRef.current = false;
     if (!openedRef.current) {
       setProgress(0);
       setAnnouncement('Splice released early. Press and hold again to splice the fiber.');
@@ -64,8 +69,17 @@ export function SpliceIntroHero({ onLaunchStudio }: SpliceIntroHeroProps) {
       if (nextProgress >= 1) {
         openedRef.current = true;
         startedAtRef.current = null;
+        /* A finger or mouse still down at the moment the splice lands would
+         * otherwise "click" the Launch Studio button that appears under it.
+         * Swallow exactly one click in that case, so the studio only ever opens
+         * when the visitor clicks the button themselves. */
+        swallowClickRef.current = holdingPointerRef.current;
         setProgress(1);
         setFused(true);
+        if (keyboardHoldRef.current) {
+          keyboardHoldRef.current = false;
+          window.setTimeout(() => launchRef.current?.focus({ preventScroll: true }), 0);
+        }
         setAnnouncement('Splice complete. The light crosses the fiber and the home is lit. Launch Studio is ready.');
         if (typeof navigator !== 'undefined' && 'vibrate' in navigator) navigator.vibrate?.(18);
         frameRef.current = null;
@@ -109,15 +123,29 @@ export function SpliceIntroHero({ onLaunchStudio }: SpliceIntroHeroProps) {
         <div className="splice-hero-actions">
           {fused ? (
             <>
-              <button type="button" className="landing-button landing-button--primary" onClick={onLaunchStudio}>
-                Launch Studio <ArrowRight size={18} aria-hidden="true" />
-              </button>
+              {/* The completed chip keeps the pill's slot, so a finger that is
+               * still down when the splice lands releases onto an inert chip
+               * rather than the studio button. */}
               <span className="splice-fuse is-complete">
                 <span className="splice-fuse-content">
                   <Check size={18} aria-hidden="true" />
                   SPLICE COMPLETE
                 </span>
               </span>
+              <button
+                ref={launchRef}
+                type="button"
+                className="landing-button landing-button--primary"
+                onClick={() => {
+                  if (swallowClickRef.current) {
+                    swallowClickRef.current = false;
+                    return;
+                  }
+                  onLaunchStudio();
+                }}
+              >
+                Launch Studio <ArrowRight size={18} aria-hidden="true" />
+              </button>
             </>
           ) : (
             <button
@@ -126,6 +154,7 @@ export function SpliceIntroHero({ onLaunchStudio }: SpliceIntroHeroProps) {
               onPointerDown={(event) => {
                 if (event.button > 0) return;
                 event.preventDefault();
+                holdingPointerRef.current = true;
                 event.currentTarget.setPointerCapture?.(event.pointerId);
                 begin();
               }}
@@ -136,6 +165,7 @@ export function SpliceIntroHero({ onLaunchStudio }: SpliceIntroHeroProps) {
               onKeyDown={(event) => {
                 if ((event.key === ' ' || event.key === 'Enter') && !event.repeat) {
                   event.preventDefault();
+                  keyboardHoldRef.current = true;
                   begin();
                 }
               }}
