@@ -696,6 +696,12 @@ describe('FiberLAB application shell', () => {
     expect(splitterNode).toHaveTextContent('PLC Splitter 1:8');
     expect(splitterNode?.querySelectorAll('small')).toHaveLength(0);
 
+    // The dotted ground is part of the canvas: React Flow's background layer
+    // draws the dot pattern, and no stylesheet may paint over it.
+    const dotPattern = document.querySelector('.react-flow__background pattern circle');
+    expect(dotPattern).not.toBeNull();
+    expect(dotPattern).toHaveClass('react-flow__background-pattern', 'dots');
+
     // Floating canvas sub-toolbar
     const canvasToolbar = screen.getByRole('toolbar', { name: 'Canvas workbench tools' });
     expect(within(canvasToolbar).getByRole('button', { name: 'Select' })).toBeInTheDocument();
