@@ -306,8 +306,11 @@
 /* Range inputs -------------------------------------------------------------- */
 
 input[type='range'] {
-  width: 100%;
+  /* Inset by the thumb radius so the knob never spills over a panel border at
+   * either end of the track. */
+  width: calc(100% - 16px);
   height: 4px;
+  margin: var(--sp-1) var(--sp-2);
   border-radius: var(--r-pill);
   appearance: none;
   background: #eed8bf;
