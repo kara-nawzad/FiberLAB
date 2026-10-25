@@ -16,37 +16,13 @@ if (typeof window !== 'undefined' && !window.PointerEvent) {
 }
 
 /**
- * The two hero doors are earned by holding the splice, so the suite enters the
- * workbench the way a returning engineer does: the always-available navigation
- * button. The gated hero path has its own tests (landing test below and
- * SpliceIntroHero.test.tsx).
+ * The hero carries the same "Launch Studio" label as the fixed navigation, so
+ * the suite enters the workbench through the nav, which is always reachable.
+ * The hero's own door gets its own test below.
  */
 function enterStudioFromNav() {
-  fireEvent.click(screen.getByRole('button', { name: /^Launch Studio$/i }));
-}
-
-/**
- * Complete the hero fusion with one synthetic frame: requestAnimationFrame is
- * replaced by a timeout that reports a timestamp past the hold duration.
- */
-async function fuseHeroSplice() {
-  const holdButton = await screen.findByRole('button', { name: /Press and hold to fuse the splice/i });
-  const originalRaf = window.requestAnimationFrame;
-  Object.defineProperty(window, 'requestAnimationFrame', {
-    configurable: true,
-    value: (callback: FrameRequestCallback) =>
-      window.setTimeout(() => callback(performance.now() + 4000), 1) as unknown as number,
-  });
-  try {
-    fireEvent.keyDown(holdButton, { key: ' ' });
-    await screen.findByRole('button', { name: /Launch Interactive Studio/i });
-  } finally {
-    if (originalRaf) {
-      Object.defineProperty(window, 'requestAnimationFrame', { configurable: true, value: originalRaf });
-    } else {
-      Reflect.deleteProperty(window, 'requestAnimationFrame');
-    }
-  }
+  const nav = screen.getByRole('navigation', { name: /FiberLAB overview navigation/i });
+  fireEvent.click(within(nav).getByRole('button', { name: /^Launch Studio$/i }));
 }
 
 async function renderStudio() {
@@ -111,49 +87,36 @@ function getCanvasNodeByText(text: string | RegExp): HTMLElement {
  * reaches the ONT node, and proves the BOM modal reports the same plant.
  */
 describe('FiberLAB application shell', () => {
-  it('presents the living waveguide and routes the guided-mission CTA into the studio', async () => {
+  it('introduces the lab in one screen and hands the whole workbench to one door', async () => {
     render(<App />);
 
-    expect(await screen.findByRole('heading', { name: /Splice the fiber/i })).toBeInTheDocument();
-    expect(await screen.findByText('-24.30 dBm')).toBeInTheDocument();
+    const hero = await screen.findByRole('region', { name: /Splice the fiber/i });
+    expect(within(hero).getByRole('heading', { name: /Splice the fiber/i })).toBeInTheDocument();
+    expect(
+      within(hero).getByText('Build a fiber-to-the-home network and simulate its optical performance.'),
+    ).toBeInTheDocument();
 
-    // One interactive control, and the reference numbers an engineer will check.
-    const launchSlider = screen.getByLabelText(/Laser launch power/i);
-    expect(launchSlider).toHaveValue('5');
-    fireEvent.change(launchSlider, { target: { value: '6.4' } });
-    expect(launchSlider).toHaveValue('6.4');
-    expect(screen.getByText('0.25 dB/km')).toBeInTheDocument();
-    expect(screen.getByText('Splitter 1:4')).toBeInTheDocument();
-    expect(screen.getAllByText('−7.20 dB').length).toBeGreaterThan(0);
+    // The optical readout that used to live here belongs to the engineering
+    // sections below the hero now, so nothing competes with the headline.
+    expect(within(hero).queryByText(/dBm/)).not.toBeInTheDocument();
+    expect(within(hero).queryByText('Weakest home')).not.toBeInTheDocument();
+    expect(within(hero).queryByText(/Splitter 1:4/)).not.toBeInTheDocument();
+    expect(within(hero).queryByRole('button', { name: /Explore Guided Missions/i })).not.toBeInTheDocument();
 
-    // The hero offers the hold control first; the doors arrive with the fusion.
-    expect(screen.queryByRole('button', { name: /Explore Guided Missions \(5 Scenarios\)/i })).not.toBeInTheDocument();
-    await fuseHeroSplice();
-    expect(await screen.findByText('FUSED!')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /Explore Guided Missions \(5 Scenarios\)/i }));
-    expect(await screen.findByRole('dialog', { name: 'Field missions' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /The Marginal Villa/ })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Diagnose the Silent ONT/ })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Rescue the Unpatched Subscriber/ })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /The Budget Crunch: Cost vs. Performance/ })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Field missions' })).toHaveFocus();
+    // One primary action, plus the optional hold-to-fuse flourish on the scene.
+    expect(within(hero).getByRole('button', { name: /^Launch Studio$/i })).toBeInTheDocument();
+    expect(within(hero).getAllByRole('button')).toHaveLength(2);
 
-    fireEvent.click(screen.getByRole('button', { name: /Rescue the Unpatched Subscriber/ }));
-    fireEvent.click(screen.getByRole('button', { name: 'Start mission' }));
-    expect(await screen.findByText('0/3 complete')).toBeInTheDocument();
+    fireEvent.click(within(hero).getByRole('button', { name: /^Launch Studio$/i }));
+    expect(await screen.findByRole('button', { name: 'Run Simulation' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /Splice the fiber/i })).not.toBeInTheDocument();
 
-    fireEvent.keyDown(document, { key: 'Escape' });
-    expect(screen.queryByRole('dialog', { name: 'Field missions' })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Overview & Physics' })).toHaveFocus();
-
-    // The ⋯ menu is canvas-only; the mission state is reported in Settings.
+    // The ⋯ menu is canvas-only; guided missions stay one row away in Settings.
     openMoreTools();
     expect(screen.getByRole('button', { name: 'Fit view to screen' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Missions/ })).not.toBeInTheDocument();
     openSection('Settings');
-    expect(
-      screen.getByRole('button', { name: 'Missions, active: Rescue the Unpatched Subscriber' }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Missions' })).toBeInTheDocument();
   });
 
   it('quick-loads a preset and preserves the mounted studio state across the overview toggle', async () => {
@@ -241,7 +204,7 @@ describe('FiberLAB application shell', () => {
 
   it('drags a toolbox component onto the React Flow canvas', async () => {
     const { container } = render(<App />);
-    fireEvent.click(screen.getByRole('button', { name: 'Launch Studio' }));
+    enterStudioFromNav();
     fireEvent.click(await screen.findByRole('button', { name: /Preset Topologies/i }));
     fireEvent.click(await screen.findByRole('button', { name: /Standard 1:32 GPON Tree/i }));
     await waitFor(() => expect(screen.getAllByText('Al-Sulaymaniyah — Unit 12').length).toBeGreaterThan(0));
@@ -364,7 +327,7 @@ describe('FiberLAB application shell', () => {
 
   it('connects and disconnects node pairs in Link nodes mode and deletes a selected span', async () => {
     render(<App />);
-    fireEvent.click(screen.getByRole('button', { name: 'Launch Studio' }));
+    enterStudioFromNav();
     fireEvent.click(await screen.findByRole('button', { name: /Preset Topologies/i }));
     fireEvent.click(await screen.findByRole('button', { name: /Standard 1:32 GPON Tree/i }));
     await waitFor(() => expect(screen.getAllByText('Al-Sulaymaniyah — Unit 12').length).toBeGreaterThan(0));

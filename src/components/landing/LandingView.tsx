@@ -1,5 +1,4 @@
 import { ArrowUpRight } from 'lucide-react';
-import type { SimulationResult } from '../../types';
 import { LandingNav } from './LandingNav';
 import { PhotonicHero } from './PhotonicHero';
 import { PillarsGrid } from './PillarsGrid';
@@ -7,24 +6,12 @@ import { SpecsStrip } from './SpecsStrip';
 import { SpliceIntroHero } from './SpliceIntroHero';
 
 export interface LandingViewProps {
-  simulation: SimulationResult | null;
-  simulationStale: boolean;
-  simulationIsReference?: boolean;
   onLaunchStudio: () => void;
-  onExploreMissions: () => void;
   onLoadPreset: (presetId: string) => void;
   onStartVillaMission: () => void;
 }
 
-export function LandingView({
-  simulation,
-  simulationStale,
-  simulationIsReference = false,
-  onLaunchStudio,
-  onExploreMissions,
-  onLoadPreset,
-  onStartVillaMission,
-}: LandingViewProps) {
+export function LandingView({ onLaunchStudio, onLoadPreset, onStartVillaMission }: LandingViewProps) {
   return (
     <div className="landing-page">
       <main>
@@ -32,13 +19,7 @@ export function LandingView({
           <div className="landing-nav-wrap">
             <LandingNav onLaunchStudio={onLaunchStudio} onLoadPreset={onLoadPreset} />
           </div>
-          <SpliceIntroHero
-            simulation={simulation}
-            simulationStale={simulationStale}
-            simulationIsReference={simulationIsReference}
-            onLaunchStudio={onLaunchStudio}
-            onExploreMissions={onExploreMissions}
-          />
+          <SpliceIntroHero onLaunchStudio={onLaunchStudio} />
         </div>
 
         <div className="landing-content">
