@@ -2287,10 +2287,12 @@ button.pu-logo {
  * dotted canvas stays the loudest thing on screen. */
 .pu-empty-note {
   display: inline-flex;
-  max-width: min(560px, calc(100vw - var(--sp-8)));
-  flex-wrap: wrap;
+  max-width: min(560px, calc(100vw - var(--sp-6)));
+  flex-wrap: nowrap;
   align-items: center;
   gap: 0 var(--sp-2);
+  overflow: hidden;
+  white-space: nowrap;
   padding: 0 var(--sp-1);
   color: var(--pu-mut);
   font-size: var(--type-small);
@@ -2782,8 +2784,12 @@ button.pu-logo {
     align-items: center;
     justify-content: center;
     border-radius: var(--r-md);
-    background: var(--pu-pri-soft);
-    color: var(--pu-pri);
+    background: var(--pu-pri);
+    color: #fff4e6;
+    font-family: Sora, Manrope, sans-serif;
+    font-size: var(--fs-lg);
+    font-weight: var(--fw-black);
+    line-height: 1;
   }
   .pu-zoom {
     display: none;

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useReactFlow, useStore } from '@xyflow/react';
-import { Activity, ChevronDown, Loader2, Play } from 'lucide-react';
+import { ChevronDown, Loader2, Play } from 'lucide-react';
 
 /* ========================================================================== *
  * Top bar — four things only: the logo, the project (with an edited marker),
@@ -61,8 +61,10 @@ export function TopBar({ projectName, presetEdited = false, stale, testing, onRu
         <span className="pu-logo-full">
           Fiber<b>LAB</b>
         </span>
+        {/* Phone mark: the brand's F on the coral tile, carried by the tab icon
+         * and the touch icon too. */}
         <span className="pu-logo-mark" aria-hidden="true">
-          <Activity size={18} />
+          F
         </span>
       </button>
       <span className="pu-sep" aria-hidden="true" />
