@@ -96,7 +96,7 @@
   --topbar-h: 56px;
   --rail-w: 84px; /* fits the longest rail label on one line */
   --library-w: clamp(200px, 17vw, 240px);
-  --inspector-w: clamp(300px, 22vw, 352px); /* the inspector carries forms: it needs room */
+  --inspector-w: clamp(320px, 24vw, 384px); /* the inspector carries forms: it needs room */
   --inspector-w-collapsed: 44px;
   --shell-gap: var(--sp-4); /* 16 — gap between canvas, tabstrip, bottom panel */
   --shell-pad: var(--panel-pad); /* 16 — side padding of every panel */
@@ -144,7 +144,7 @@
     --topbar-h: 52px;
     --rail-w: 84px;
     --library-w: 208px;
-    --inspector-w: 304px;
+    --inspector-w: 320px;
   }
 }
 
@@ -152,7 +152,7 @@
   :root {
     --rail-w: 84px;
     --library-w: 184px;
-    --inspector-w: 288px;
+    --inspector-w: 300px;
     --canvas-min-w: 320px; /* the wider rail takes its share from the canvas floor */
     --shell-gap: var(--sp-2);
     --shell-pad: var(--sp-3); /* compact panels get one narrower gutter everywhere */

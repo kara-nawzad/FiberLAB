@@ -1727,9 +1727,12 @@ button.pu-logo {
   overflow: hidden;
 }
 
-/* Inspector body: same gutter as every other panel. */
+/* Inspector body: same gutter as every other panel. The body never scrolls
+ * sideways — anything that does not fit wraps instead of raising a horizontal
+ * scrollbar across the bottom of the panel. */
 .fiberlab-inspector-content {
-  padding: var(--sp-3) 0 0;
+  padding: var(--sp-3) var(--shell-pad) var(--sp-5);
+  overflow-x: hidden;
 }
 
 /* Link-mode banner: anchored above the canvas footer, so it can never collide

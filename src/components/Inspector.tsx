@@ -212,7 +212,7 @@ function Advanced({ open, onToggle, children }: { open: boolean; onToggle: () =>
       >
         <ChevronRight size={14} className="pu-adv-chevron" aria-hidden="true" />
         <span className="pu-adv-label">Advanced</span>
-        <span className="pu-adv-hint">loss tables &amp; detailed values</span>
+        <span className="pu-adv-hint">loss tables &amp; details</span>
       </button>
       <div className="pu-adv-body" hidden={!open}>
         {open ? children : null}
@@ -599,7 +599,7 @@ export function Inspector({
         ))}
       </div>
 
-      <div className="fiberlab-inspector-content flex-1 overflow-y-auto px-4 pt-3 pb-5">
+      <div className="fiberlab-inspector-content flex-1 overflow-y-auto">
         {beginnerSummary ? <p className="pu-insp-summary">{beginnerSummary}</p> : null}
 
         {hardwareInfo && showInfo ? (

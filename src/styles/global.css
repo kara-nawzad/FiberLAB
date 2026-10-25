@@ -306,11 +306,11 @@
 /* Range inputs -------------------------------------------------------------- */
 
 input[type='range'] {
-  /* Inset by the thumb radius so the knob never spills over a panel border at
-   * either end of the track. */
-  width: calc(100% - 16px);
+  /* Full width: the knob's half-thumb overhang stays inside the panel gutter,
+   * and no margin can round the track into a horizontal scrollbar. */
+  width: 100%;
   height: 4px;
-  margin: var(--sp-1) var(--sp-2);
+  margin: var(--sp-1) 0;
   border-radius: var(--r-pill);
   appearance: none;
   background: #eed8bf;
