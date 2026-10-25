@@ -963,8 +963,8 @@ export function Inspector({
                 unit={`× ${CONNECTOR_LOSS_DB} dB`}
                 onChange={(value) => onPatchNode(node.id, { connectors: value })}
               />
-              <div className="mb-3">
-                <div className="field-label">Field fault injection · learning allowances</div>
+              <div className="mb-4">
+                <div className="field-label mb-2">Field fault injection · learning allowances</div>
                 <FaultToggle
                   label="Macro-bend fault (<15 mm)"
                   description="Pinched cable / tight bend"
@@ -979,7 +979,7 @@ export function Inspector({
                   active={Boolean(node.data.dirtyConnectorActive)}
                   onChange={(dirtyConnectorActive) => onPatchNode(node.id, { dirtyConnectorActive })}
                 />
-                <p className="mt-2 text-body leading-relaxed text-noc-500">
+                <p className="mt-3 text-body leading-relaxed text-noc-500">
                   The +3.50 dB bend and +2.00 dB contamination penalties are simplified training values, not universal
                   field measurements.
                 </p>

@@ -2330,15 +2330,19 @@
 
 .fiber-fault-control {
   display: flex;
-  align-items: center;
-  gap: var(--sp-2);
-  padding: var(--sp-2);
+  align-items: flex-start;
+  gap: var(--sp-3);
+  padding: var(--sp-3);
   border: 1px solid #e7d3bd;
   border-radius: var(--r-md);
   background: #fffaf2;
 }
+.fiber-fault-control > svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
 .fiber-fault-control + .fiber-fault-control {
-  margin-top: var(--sp-1);
+  margin-top: var(--sp-2);
 }
 .fiber-fault-control.is-active {
   border-color: #e9a76a;
@@ -2352,22 +2356,23 @@
   display: block;
   color: #483126;
   font:
-    var(--fw-bold) var(--type-small)/1.3 'Manrope',
+    var(--fw-bold) 14px/1.35 'Manrope',
     sans-serif;
 }
 .fiber-fault-control-copy small {
   display: block;
   margin-top: var(--sp-1);
-  color: #8a6c56;
+  color: #7f6353;
   font:
-    var(--fw-medium) var(--type-caption)/1.35 'Manrope',
+    var(--fw-medium) var(--type-body)/1.5 'Manrope',
     sans-serif;
 }
 .fiber-fault-switch {
   position: relative;
-  width: 34px;
-  height: 19px;
+  width: 38px;
+  height: 21px;
   flex: 0 0 auto;
+  margin-top: 1px;
   border: 1px solid #c5b19e;
   border-radius: var(--r-pill);
   background: #e8ddd0;
@@ -2384,15 +2389,15 @@
   position: absolute;
   left: 2px;
   top: 2px;
-  width: 13px;
-  height: 13px;
+  width: 15px;
+  height: 15px;
   border-radius: 50%;
   background: white;
   box-shadow: 0 1px 3px rgba(43, 26, 20, 0.24);
   transition: transform 0.16s ease;
 }
 .fiber-fault-switch[aria-checked='true'] > span {
-  transform: translateX(15px);
+  transform: translateX(17px);
 }
 .fiber-fault-badge {
   gap: var(--sp-1);

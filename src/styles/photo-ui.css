@@ -1071,6 +1071,30 @@ button.pu-logo {
   border-color: var(--pu-line);
   background: #ffffff;
 }
+
+/* The inspector is a form, not a dense table: running copy and control text get
+ * one readable step up from the app's 13 px body, with calmer leading. */
+.fiberlab-inspector .text-body,
+.fiberlab-inspector-content .text-body,
+.fiberlab-inspector-content p {
+  font-size: 14px;
+  line-height: 1.55;
+}
+.fiberlab-inspector .field-label,
+.fiberlab-inspector .text-label {
+  font-size: var(--fs-xs);
+  line-height: 1.45;
+}
+.fiberlab-inspector .metric-value {
+  font-size: var(--fs-md);
+}
+.fiberlab-inspector .input,
+.fiberlab-inspector .select {
+  font-size: 14px;
+}
+.fiberlab-inspector .pu-insp-summary {
+  font-size: 14px;
+}
 .fiberlab-inspector .btn-danger {
   background: var(--pu-bad-soft);
   border-color: #f6c9cb;
@@ -1207,7 +1231,7 @@ button.pu-logo {
   white-space: nowrap;
 }
 .pu-adv-body {
-  padding-bottom: var(--sp-1);
+  padding: var(--sp-1) 0 var(--sp-2);
 }
 .pu-insp-foot {
   flex: 0 0 auto;
@@ -2246,50 +2270,57 @@ button.pu-logo {
   /* Clears the floating tool strip above the canvas, even at touch sizes. */
   margin-top: calc(var(--control-tap) + var(--sp-3) + var(--sp-2)) !important; /* 64 */
 }
-/* Empty canvas: a single-line chip — what is missing, the mission shortcut, and
- * a dismiss. It is a nudge, not furniture. */
-.pu-empty-card {
-  display: flex;
-  max-width: min(520px, calc(100vw - var(--sp-8) - var(--sp-1)));
+/* Empty canvas: a whisper, not a card. One muted line of text, a small
+ * underlined mission link and a dismiss — no border, no fill, no icon, so the
+ * dotted canvas stays the loudest thing on screen. */
+.pu-empty-note {
+  display: inline-flex;
+  max-width: min(560px, calc(100vw - var(--sp-8)));
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--sp-1) var(--sp-2);
-  padding: var(--sp-1) var(--sp-2) var(--sp-1) var(--sp-1);
-  border-radius: var(--r-md);
-}
-.pu-empty-icon {
-  display: grid;
-  width: 22px;
-  height: 22px;
-  flex-shrink: 0;
-  place-items: center;
-  border-radius: var(--r-sm);
-  background: var(--pu-pri-soft);
-  color: var(--pu-pri);
-}
-/* One line, always: the sentence ellipsizes rather than growing the chip. */
-.pu-empty-copy {
-  display: block;
-  min-width: 0;
-  flex: 1 1 auto;
-  overflow: hidden;
-  font-size: var(--type-body);
-  line-height: var(--leading-snug);
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  gap: 0 var(--sp-2);
+  padding: 0 var(--sp-1);
+  color: var(--pu-mut);
+  font-size: var(--type-small);
+  line-height: 1.4;
+  text-align: center;
 }
 .pu-empty-title {
-  margin-right: var(--sp-2);
   color: var(--pu-ink);
   font-weight: var(--fw-semibold);
+}
+.pu-empty-title::after {
+  content: '·';
+  margin-left: var(--sp-2);
+  color: var(--pu-line);
 }
 .pu-empty-hint {
   color: var(--pu-mut);
 }
+.pu-empty-action {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  padding: 0 2px;
+  border: 0;
+  background: transparent;
+  color: var(--pu-pri-text);
+  font-size: var(--type-small);
+  font-weight: var(--fw-semibold);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.pu-empty-action:hover {
+  color: var(--pu-pri-cta-hover);
+}
+.pu-empty-action:focus-visible {
+  outline: 2px solid var(--pu-pri);
+  outline-offset: 2px;
+}
 .pu-empty-dismiss {
   display: grid;
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   flex: 0 0 auto;
   place-items: center;
   border: 0;
@@ -2305,31 +2336,11 @@ button.pu-logo {
   outline: 2px solid var(--pu-pri);
   outline-offset: 1px;
 }
-.pu-empty-action {
-  display: inline-flex;
-  flex: 0 0 auto;
-  align-items: center;
-  gap: var(--sp-1);
-  min-height: 26px;
-  padding: 0 var(--sp-2);
-  border: 1px solid var(--pu-line);
-  border-radius: var(--r-sm);
-  background: var(--pu-panel);
-  color: var(--pu-pri);
-  font-size: var(--type-small);
-  font-weight: var(--fw-semibold);
-}
-.pu-empty-action:hover {
-  background: var(--pu-pri-soft);
-}
-.pu-empty-action:focus-visible {
-  outline: 2px solid var(--pu-pri);
-  outline-offset: 2px;
-}
 @media (max-width: 640px) {
-  /* Phones: keep the title and both actions, drop the sentence so the chip
-   * stays one row above the canvas. */
-  .pu-empty-hint {
+  /* Phones: the sentence would cost a line of canvas, so the note keeps only
+   * the state and the mission shortcut. */
+  .pu-empty-hint,
+  .pu-empty-title::after {
     display: none;
   }
 }

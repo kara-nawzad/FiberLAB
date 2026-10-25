@@ -27,7 +27,7 @@ import {
   type OnSelectionChangeParams,
   type ReactFlowInstance,
 } from '@xyflow/react';
-import { Flag, Link2, MousePointer2, Plus, X } from 'lucide-react';
+import { Flag, Link2, Plus, X } from 'lucide-react';
 import type {
   AnyNodeData,
   DesignSettings,
@@ -1296,17 +1296,12 @@ function StudioWorkspace({ onOpenOverview, landingCommand, isActive = true }: St
                     ) : null}
 
                     {nodes.length === 0 && !emptyHintDismissed ? (
-                      <Panel position="top-center" className="pu-empty-panel !m-3">
-                        <div className="panel pu-empty-card shadow-panel">
-                          <span className="pu-empty-icon" aria-hidden="true">
-                            <MousePointer2 size={13} />
-                          </span>
-                          <span className="pu-empty-copy">
-                            <span className="pu-empty-title">The canvas is empty</span>
-                            <span className="pu-empty-hint">Drag in an OLT, or let a mission walk you through it.</span>
-                          </span>
+                      <Panel position="top-center" className="pu-empty-panel !m-2">
+                        <div className="pu-empty-note">
+                          <span className="pu-empty-title">The canvas is empty</span>
+                          <span className="pu-empty-hint">Drag in an OLT, or let a mission walk you through it.</span>
                           <button type="button" className="pu-empty-action" onClick={openMissions}>
-                            <Flag size={12} aria-hidden="true" />
+                            <Flag size={11} aria-hidden="true" />
                             Open the mission
                           </button>
                           <button
@@ -1316,7 +1311,7 @@ function StudioWorkspace({ onOpenOverview, landingCommand, isActive = true }: St
                             aria-label="Dismiss canvas hint"
                             title="Dismiss"
                           >
-                            <X size={13} aria-hidden="true" />
+                            <X size={12} aria-hidden="true" />
                           </button>
                         </div>
                       </Panel>
