@@ -698,10 +698,12 @@ describe('FiberLAB application shell', () => {
     expect(oltNode).toHaveTextContent('ONU Rx (max)');
     expect(oltNode).toHaveTextContent('PON Status');
 
-    // Realistic PLC Splitter hardware card
+    // Realistic PLC Splitter hardware card. The canvas shows the part and its
+    // ratio only — measurements live in the Inspector that a click opens.
     const splitterNode = getCanvasNodeByText('PLC Splitter 1:8').querySelector('.hw-spl');
     expect(splitterNode).not.toBeNull();
-    expect(splitterNode).toHaveTextContent('Insertion Loss 10.5 dB');
+    expect(splitterNode).toHaveTextContent('PLC Splitter 1:8');
+    expect(splitterNode?.querySelectorAll('small')).toHaveLength(0);
 
     // Floating canvas sub-toolbar
     const canvasToolbar = screen.getByRole('toolbar', { name: 'Canvas workbench tools' });
@@ -1003,9 +1005,22 @@ describe('FiberLAB application shell', () => {
     await waitFor(() => expect(screen.getAllByText('Dukan Ridge — Tower 7').length).toBeGreaterThan(0));
 
     const splitter = getCanvasNodeByText('PLC Splitter 1:32');
-    expect(splitter.querySelectorAll('.react-flow__handle[data-handleid^="out-"]')).toHaveLength(16);
-    expect(within(splitter).getByText(/rest trunked/i)).toBeInTheDocument();
+    const outputs = splitter.querySelectorAll<HTMLElement>('.react-flow__handle[data-handleid^="out-"]');
+    expect(outputs).toHaveLength(16);
 
+    // Every port sits on one axis: the input lines up with the middle of the
+    // branch fan, which is also where the cassette's own stub is drawn.
+    const input = splitter.querySelector<HTMLElement>('.react-flow__handle[data-handleid="in"]') as HTMLElement;
+    const tops = Array.from(outputs).map((handle) => parseFloat(handle.style.top));
+    const inputTop = parseFloat(input.style.top);
+    expect(inputTop).toBeCloseTo((Math.min(...tops) + Math.max(...tops)) / 2, 1);
+    // Symmetric fan, one even step at a time.
+    const steps = tops.slice(1).map((top, index) => top - tops[index]);
+    expect(new Set(steps.map((step) => step.toFixed(2))).size).toBe(1);
+    expect(Math.min(...steps)).toBeGreaterThanOrEqual(15);
+
+    // The trunking explanation is the Inspector's job, not the canvas's.
+    expect(within(splitter).queryByText(/rest trunked/i)).not.toBeInTheDocument();
     fireEvent.click(splitter);
     expandAdvanced();
     expect(screen.getByText(/remaining fan-out stays a ribbon trunk/i)).toBeInTheDocument();

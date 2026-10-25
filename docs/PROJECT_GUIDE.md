@@ -510,7 +510,8 @@ The app is a client-side React/TypeScript application. There is no backend servi
 | `src/styles/global.css`                                     | Tailwind layers, application-wide styles, and mission keyframes.                                                              |
 | `src/styles/photo-ui.css`                                   | Photo-inspired studio UI overrides, loaded last.                                                                              |
 | `src/styles/theme.css`                                      | Warm responsive landing and studio theme, including modal and hardware treatments.                                            |
-| `public/favicon.svg`                                        | Scalable browser-tab icon (orange tile, fiber mark, port dots).                                                               |
+| `public/favicon.svg`                                        | Scalable browser-tab icon: the brand tile plus the same light-pulse mark the in-app wordmark uses.                            |
+| `public/apple-touch-icon.png`                               | 180 × 180 iOS home-screen icon in the same tile and mark.                                                                     |
 | `public/og-image.png`                                       | 1200 × 630 social card used by the absolute Open Graph/Twitter metadata in `index.html`.                                      |
 | `public/404.html`                                           | Standalone branded not-found page for the static host.                                                                        |
 | `src/hooks/useDialogA11y.ts`                                | Dialog focus trap, Escape/backdrop close and focus restore for the overlays.                                                  |
@@ -553,7 +554,7 @@ The app is a client-side React/TypeScript application. There is no backend servi
 | `src/components/nodes/ODFNode.tsx`                          | ODF React Flow node.                                                                                                          |
 | `src/components/nodes/OLTNode.tsx`                          | OLT React Flow node.                                                                                                          |
 | `src/components/nodes/ONTNode.tsx`                          | ONT React Flow node.                                                                                                          |
-| `src/components/nodes/SplitterNode.tsx`                     | PLC splitter React Flow node.                                                                                                 |
+| `src/components/nodes/SplitterNode.tsx`                     | PLC splitter React Flow node: cassette centred on the port axis, one handle per branch, no canvas notes.                      |
 | `src/components/nodes/index.ts`                             | Live `nodeTypes` registry consumed by `App.tsx`.                                                                              |
 
 `App.tsx` calculates the optical simulation from the current node graph and separately calculates `NetworkCostBreakdown` from the same nodes/edges plus local rates. Optical telemetry is shared through `SimulationContext`, decorates optical edges, and feeds optical displays; the CAPEX result feeds the Reports banner, the BOM, exports, and mission objectives. The OPM independently invokes the pure probe engine, and the OTDR modal invokes the pure route analyzer at its selected source, branch, wavelength, and pulse width. This keeps all three calculations decoupled from presentation.

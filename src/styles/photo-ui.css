@@ -1331,46 +1331,34 @@ button.pu-logo {
   padding: var(--sp-1);
   background: #f1f5ff;
 }
+/* Splitter: the cassette is centred on the same vertical axis as its port
+ * fan, so input, outputs and the artwork's own stubs share one line. */
 .hw-spl {
   position: relative;
   display: flex;
   flex-direction: column;
+  align-items: center;
   width: 104px;
 }
-/* Branch handles fan down the right edge; the fan-out rail makes the extra
- * height read as ports rather than empty space. */
-.hw-spl::after {
-  content: '';
+.hw-spl-art {
+  position: relative;
+  display: grid;
+  width: 100%;
+  place-items: center;
+}
+/* The port rail spans exactly the branch fan — never the label underneath. */
+.hw-spl-rail {
   position: absolute;
-  top: 10px;
-  right: -6px;
-  bottom: 10px;
+  right: -7px;
   width: 1px;
-  background: linear-gradient(180deg, rgba(13, 159, 110, 0.34), rgba(13, 159, 110, 0.1));
+  background: linear-gradient(180deg, rgba(13, 159, 110, 0.34), rgba(13, 159, 110, 0.14));
   pointer-events: none;
 }
-.hw-label-note {
-  color: var(--pu-warn);
-}
-.hw-spl .body {
-  border-radius: var(--r-lg);
-  background: linear-gradient(135deg, #343b50, #141929);
-  color: #fff;
-  padding: var(--sp-2);
-  text-align: center;
-  box-shadow: 0 8px 16px rgba(20, 26, 46, 0.35);
-}
-.hw-spl .body b {
-  display: block;
-  font-size: var(--fs-xs);
-}
-.hw-spl .body small {
-  font-size: var(--type-caption);
-  opacity: 0.8;
-}
 .hw-label {
-  margin-top: var(--sp-1);
+  max-width: 100%;
+  margin-top: 2px;
   text-align: center;
+  line-height: var(--leading-snug);
 }
 .hw-label b {
   display: block;
