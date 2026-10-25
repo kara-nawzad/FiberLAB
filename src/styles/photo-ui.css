@@ -86,9 +86,10 @@
   overflow: hidden;
   box-shadow: inset 0 1px 3px rgba(43, 26, 20, 0.04);
 }
-.pu-canvas .react-flow,
-.pu-canvas .react-flow__pane,
-.pu-canvas .react-flow__viewport {
+/* Only the canvas shell is painted. React Flow draws its dot grid on a layer
+ * with z-index -1, and the pane (z-index 1) and viewport (z-index 2) sit above
+ * it — filling either of those hid the grid completely. */
+.pu-canvas .react-flow {
   background: #ffffff !important;
 }
 .pu-canvas .react-flow__controls {
