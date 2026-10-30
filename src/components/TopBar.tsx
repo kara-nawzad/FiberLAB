@@ -153,13 +153,10 @@ export function TopBar({
         aria-label="Overview & Physics"
         title="Return to Overview & Physics"
       >
+        {/* The wordmark is the logo at every width. A lettered tile stood in for
+         * it on phones and read as a placeholder, not the brand. */}
         <span className="pu-logo-full">
           Fiber<b>LAB</b>
-        </span>
-        {/* Phone mark: the brand's F on the coral tile, carried by the tab icon
-         * and the touch icon too. */}
-        <span className="pu-logo-mark" aria-hidden="true">
-          F
         </span>
       </button>
       <span className="pu-sep" aria-hidden="true" />

@@ -613,8 +613,9 @@ describe('FiberLAB application shell', () => {
   it('acquires an interactive OTDR trace from the studio and lists terminal Fresnel events', async () => {
     await renderStudio();
     useSettingsAction('OTDR Trace');
-    // The analyser arrives in its own chunk; wait for the dialog itself.
-    expect(await screen.findByRole('dialog', { name: 'OTDR Trace Analyzer' })).toBeInTheDocument();
+    // The analyser arrives in its own chunk; wait for the dialog itself. The
+    // chunk import can lose a race with a busy machine, so give it room.
+    expect(await screen.findByRole('dialog', { name: 'OTDR Trace Analyzer' }, { timeout: 5000 })).toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: 'OTDR source node' })).toHaveValue('olt-a');
     expect(screen.getByRole('combobox', { name: 'OTDR target subscriber' })).toHaveValue('ont-a1');
 

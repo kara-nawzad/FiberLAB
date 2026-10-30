@@ -2648,9 +2648,6 @@ button.pu-logo {
 }
 
 /* ---- Top bar: four items only -------------------------------------------- */
-.pu-logo-mark {
-  display: none;
-}
 .pu-project {
   display: inline-flex;
   min-width: 0;
@@ -3060,16 +3057,23 @@ button.pu-logo {
    * zoom buttons are redundant next to Zoom in / Zoom out / Fit. */
   .pu-toolbar {
     top: auto;
-    right: var(--sp-2);
     bottom: calc(var(--sp-3) + var(--control-md) + var(--sp-2));
-    left: var(--sp-2);
-    max-width: none;
+    /* Hug the buttons and sit in the middle of the canvas. Stretching the pill
+     * edge to edge left the six 44 px targets stranded at one end with ~200 px
+     * of empty panel beside them, and 2 px gaps read as one compressed block.
+     * Centring uses auto margins rather than a transform, because a transform
+     * would become the containing block for the fixed-position popover below. */
+    left: 0;
+    right: 0;
+    width: max-content;
+    max-width: calc(100% - var(--sp-4));
+    margin-inline: auto;
     /* Wrapping rather than scrolling: a scroll container would clip the ⋯
-     * menu, and 7 × 44 px + gaps still fits one 360 px row. */
+     * menu, and 6 × 44 px + gaps still fits one 320 px row. */
     flex-wrap: wrap;
-    justify-content: flex-start;
-    gap: 2px;
-    padding: var(--sp-1);
+    justify-content: center;
+    gap: calc(var(--sp-1) + 2px);
+    padding: calc(var(--sp-1) + 2px);
     border: 1px solid var(--pu-line);
     border-radius: var(--r-xl);
     background: var(--pu-panel);
@@ -3311,29 +3315,22 @@ a[href],
     max-height: calc(100vh - var(--topbar-h) - var(--tabbar-h) - var(--sp-4));
   }
 
-  /* Top bar: logo mark, truncated project, icon + label run button. */
-  .pu-logo-full {
-    display: none;
-  }
-  .pu-logo-mark {
-    display: inline-flex;
-    width: var(--control-md);
-    height: var(--control-md);
-    align-items: center;
-    justify-content: center;
-    border-radius: var(--r-md);
-    background: var(--pu-pri);
-    color: #fff4e6;
-    font-family: Sora, Manrope, sans-serif;
+  /* Top bar: wordmark, truncated project, icon + label run button. The wordmark
+   * is one step smaller than on desktop so it still leaves the project room. */
+  .pu-logo {
+    flex: 0 0 auto;
+    margin-right: var(--sp-2);
     font-size: var(--fs-lg);
-    font-weight: var(--fw-black);
-    line-height: 1;
+    letter-spacing: -0.01em;
+  }
+  .pu-sep {
+    display: none;
   }
   .pu-zoom {
     display: none;
   }
   .pu-project-name {
-    max-width: 44vw;
+    max-width: 34vw;
   }
   .pu-label-full {
     display: none;
