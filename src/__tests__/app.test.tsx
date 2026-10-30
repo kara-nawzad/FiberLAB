@@ -392,9 +392,9 @@ describe('FiberLAB application shell', () => {
     const feederNode = getCanvasNodeByText(/^5\.0 km$/);
 
     fireEvent.click(screen.getByRole('button', { name: 'Link nodes' }));
-    expect(screen.getByText(/Select a source node, then a destination/i)).toBeInTheDocument();
+    expect(screen.getByText(/Pick a source component, then a destination/i)).toBeInTheDocument();
     fireEvent.click(oltNode);
-    expect(screen.getByText(/Source: olt-a/)).toBeInTheDocument();
+    expect(screen.getByText(/Source: OLT/)).toBeInTheDocument();
     fireEvent.click(feederNode);
     await waitFor(() =>
       // Bypassing the splitter leaves every subscriber with no path: Disconnected, not LOS.

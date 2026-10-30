@@ -159,6 +159,37 @@ const isCoarsePointer = () =>
     ? window.matchMedia('(pointer: coarse)').matches
     : false;
 
+/**
+ * The name a reader recognises, used by link-mode messages: ids like
+ * `splitter-mvvh1rg1-1` mean nothing on a phone screen.
+ */
+function describeNode(node: PonNode): string {
+  if (isOntNode(node) || isGatewayNode(node)) return node.data.subscriber;
+  if (isSplitterNode(node)) return `PLC splitter 1:${node.data.ratio}`;
+  if (isOltNode(node)) return `OLT ${node.data.portName}`;
+  if (isFiberNode(node)) return `${node.data.lengthKm.toFixed(1)} km span`;
+  if (isClosureNode(node)) return 'FOSC closure';
+  if (isNapNode(node)) return 'NAP/FAT';
+  if (isOdfNode(node)) return 'ODF panel';
+  if (isAttenuatorNode(node)) return 'Attenuator pad';
+  return (node as { id?: string }).id ?? 'Component';
+}
+
+/** Components that fan out to several branches: patching one branch usually
+ *  means patching the next, so link mode stays armed after a patch. */
+function isBranchingNode(node: PonNode): boolean {
+  return isSplitterNode(node) || isClosureNode(node) || isOdfNode(node) || isNapNode(node);
+}
+
+/** How many patchable branches that component exposes. */
+function branchCapacity(node: PonNode): number {
+  if (isSplitterNode(node)) return splitterBranchPortCount(node.data.ratio);
+  if (isClosureNode(node)) return CLOSURE_OUTPUT_PORTS;
+  if (isOdfNode(node)) return ODF_OUTPUT_PORTS;
+  if (isNapNode(node)) return NAP_OUTPUT_PORTS;
+  return 0;
+}
+
 const isNarrowViewport = () =>
   typeof window !== 'undefined' && typeof window.matchMedia === 'function'
     ? window.matchMedia(NARROW_VIEWPORT_QUERY).matches
@@ -867,11 +898,15 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
     const nextActive = !linkMode;
     setLinkMode(nextActive);
     setLinkStartNodeId(null);
-    setLinkMessage(nextActive ? 'Select a source node, then a destination.' : 'Link mode closed.');
+    setLinkMessage(nextActive ? 'Pick a source component, then a destination.' : 'Link mode closed.');
     if (nextActive) {
       setOpmActive(false);
       setOpmProbe(null);
       opmProbeRef.current = null;
+      /* On a phone the properties sheet and the library sheet both cover the
+       * canvas, and tap-to-patch needs the whole canvas. */
+      setInspectorCollapsed(true);
+      if (isNarrowViewport()) setSidebarCollapsed(true);
     }
   }, [linkMode]);
 
@@ -914,6 +949,20 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
     return () => document.removeEventListener('keydown', cancelOnEscape);
   }, [linkMode]);
 
+  /* In link mode the pending source gets a ring, so tap-to-patch has a visible
+   * anchor between the first and second tap. */
+  const canvasNodes = useMemo(
+    () =>
+      linkMode && linkStartNodeId
+        ? nodes.map((node) =>
+            node.id === linkStartNodeId
+              ? { ...node, className: [node.className, 'is-link-source'].filter(Boolean).join(' ') }
+              : node,
+          )
+        : nodes,
+    [nodes, linkMode, linkStartNodeId],
+  );
+
   const handleNodeClick = useCallback(
     (_event: ReactMouseEvent, clickedNode: PonNode) => {
       if (!linkMode) return;
@@ -924,7 +973,10 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
           return;
         }
         setLinkStartNodeId(clickedNode.id);
-        setLinkMessage(`Source: ${clickedNode.id}. Now choose a destination node.`);
+        const remaining = isBranchingNode(clickedNode)
+          ? ` ${describeNode(clickedNode)} has ${branchCapacity(clickedNode)} branches; pick each destination in turn.`
+          : '';
+        setLinkMessage(`Source: ${describeNode(clickedNode)}. Now choose the destination node.${remaining}`);
         return;
       }
 
@@ -958,7 +1010,7 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
         handleDeleteEdge(existingEdge.id);
         setLinkMode(false);
         setLinkStartNodeId(null);
-        setLinkMessage(`Removed the patch cord from ${sourceNode.id} to ${targetNode.id}.`);
+        setLinkMessage(`Removed the patch cord from ${describeNode(sourceNode)} to ${describeNode(targetNode)}.`);
         return;
       }
 
@@ -1037,12 +1089,37 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
         sourceHandle,
         targetHandle,
       });
-      setLinkMode(false);
-      setLinkStartNodeId(null);
+
       // Name both ends and the ports that were actually taken, so the auto-chosen
       // port is visible instead of disappearing with the next interaction.
-      const label = (node: PonNode) => (isOntNode(node) || isGatewayNode(node) ? node.data.subscriber : node.id);
-      setLinkMessage(`Patched ${label(sourceNode)} (${sourceHandle}) → ${label(targetNode)} (${targetHandle}).`);
+      const patched = `Patched ${describeNode(sourceNode)} (${sourceHandle}) → ${describeNode(
+        targetNode,
+      )} (${targetHandle}).`;
+
+      /* A splitter, closure, ODF or NAP fans out: one tap per remaining branch
+       * is the whole job, so the mode stays armed with the same source instead
+       * of demanding Connect → source → destination for every single drop. */
+      if (isBranchingNode(sourceNode)) {
+        // Count from the edges this call already read: getEdges() inside the same
+        // tick still returns the graph from before this patch landed.
+        const patchedBranches = currentEdges.filter((edge) => edge.source === sourceNode.id).length + 1;
+        const capacity = branchCapacity(sourceNode);
+        setLinkStartNodeId(sourceNode.id);
+        if (patchedBranches >= capacity) {
+          // Nothing left to patch. Stay armed so the message has somewhere to
+          // live, and tell the reader how to leave.
+          setLinkMessage(`${patched} All ${capacity} branches are patched — pick the source again to finish.`);
+          return;
+        }
+        setLinkMessage(
+          `${patched} ${patchedBranches} of ${capacity} branches patched — pick another destination, or pick the source again to finish.`,
+        );
+        return;
+      }
+
+      setLinkMode(false);
+      setLinkStartNodeId(null);
+      setLinkMessage(patched);
     },
     [getEdges, getNodes, handleConnect, handleDeleteEdge, linkMode, linkStartNodeId, recordStep],
   );
@@ -1519,7 +1596,7 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
                 ) : null}
                 <SimulationContext.Provider value={simulation}>
                   <ReactFlow<PonNode, PonEdge>
-                    nodes={nodes}
+                    nodes={canvasNodes}
                     edges={flowEdges}
                     snapToGrid={snapToGrid}
                     snapGrid={[16, 16]}
@@ -1529,6 +1606,12 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
                     onEdgesChange={onEdgesChange}
                     onConnect={handleConnect}
                     onNodeClick={(event, clickedNode) => {
+                      // Patching owns the canvas: no properties sheet while two
+                      // taps are all that stand between the user and a link.
+                      if (linkMode) {
+                        handleNodeClick(event, clickedNode);
+                        return;
+                      }
                       // Clicking a part always brings the panel back, even if it was closed.
                       setInspectorCollapsed(false);
                       handleNodeClick(event, clickedNode);
@@ -1540,9 +1623,12 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
                     onInit={handleInit}
                     onDragOver={handleDragOver}
                     onDrop={handleDrop}
-                    nodesDraggable={!opmActive && canvasTool === 'select'}
-                    nodesConnectable={!opmActive}
-                    elementsSelectable={!opmActive}
+                    nodesDraggable={!opmActive && canvasTool === 'select' && !linkMode}
+                    nodesConnectable={!opmActive && !linkMode}
+                    /* In link mode a tap is a patch target, not a selection: on a
+                     * phone a selection opens the properties sheet over the canvas
+                     * and the second tap never reaches the node. */
+                    elementsSelectable={!opmActive && !linkMode}
                     selectionOnDrag={!opmActive && canvasTool === 'select'}
                     /* Select mode pans with middle/right drag on a mouse, but a
                      * finger drag on empty canvas must pan too (nodes still drag). */
