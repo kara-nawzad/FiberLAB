@@ -3,6 +3,9 @@
 :root {
   --pu-bg: #fff4e6;
   --pu-panel: #fffaf2;
+  /* Referenced by tooltips, menus and focused fields; it was never defined, so
+   * every one of those surfaces rendered transparent. */
+  --pu-surface: #fffaf2;
   --pu-elevated: #f5e8d7;
   --pu-canvas-bg: #ffffff;
   --pu-ink: #231712;
@@ -1058,6 +1061,60 @@ button.pu-logo {
   background: var(--pu-surface);
   outline: none;
 }
+/* ------------------------- On/off switch (shared) ------------------------ */
+/* The button is the 44 × 36 hit area only; the track and knob are painted by
+ * children, so coarse-pointer tap-target rules cannot stretch the graphic. */
+.pu-toggle {
+  display: inline-flex;
+  width: 44px;
+  height: 36px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-md);
+  background: none;
+  cursor: pointer;
+}
+.pu-toggle-track {
+  position: relative;
+  display: block;
+  width: 38px;
+  height: 22px;
+  border: 1px solid #c5b19e;
+  border-radius: var(--r-pill);
+  background: #e8ddd0;
+  transition:
+    background 0.16s ease,
+    border-color 0.16s ease;
+}
+.pu-toggle.is-on .pu-toggle-track {
+  border-color: #bf6d31;
+  background: var(--pu-ok);
+}
+.pu-toggle-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(43, 26, 20, 0.28);
+  transition: transform 0.16s ease;
+}
+.pu-toggle.is-on .pu-toggle-knob {
+  transform: translateX(16px);
+}
+/* Ring the track, not the invisible tap area. */
+.pu-toggle:focus-visible {
+  outline: none;
+}
+.pu-toggle:focus-visible .pu-toggle-track {
+  outline: 2px solid var(--pu-pri-text);
+  outline-offset: 2px;
+}
 .pu-top-more {
   position: relative;
 }
@@ -1207,22 +1264,27 @@ button.pu-logo {
   color: var(--pu-pri);
 }
 .pu-helptip-panel {
-  position: absolute;
-  z-index: 20;
-  top: calc(100% + 4px);
-  left: 0;
-  width: min(260px, 76vw);
+  /* Placement comes from HelpTip (fixed + viewport-clamped); this rule only
+   * paints it. */
+  position: fixed;
+  z-index: 70;
   border: 1px solid var(--pu-line);
   border-radius: var(--r-md);
-  background: var(--pu-surface);
-  box-shadow: 0 4px 12px rgba(30, 36, 64, 0.12);
-  padding: var(--sp-2);
+  /* Opaque on purpose: the panel overlays the row underneath, and a
+   * transparent surface printed its copy straight on top of the table text. */
+  background: #fffaf2;
+  box-shadow:
+    0 10px 24px -12px rgba(43, 26, 20, 0.45),
+    0 1px 3px rgba(43, 26, 20, 0.08);
+  padding: var(--sp-2) 10px;
   color: var(--pu-ink);
   font-size: var(--type-small);
   font-weight: normal;
   letter-spacing: normal;
   line-height: var(--leading-snug);
+  text-align: left;
   text-transform: none;
+  white-space: normal;
 }
 
 /* ---------------------------- Guided note -------------------------------- */
@@ -1497,6 +1559,12 @@ button.pu-logo {
 .pu-toolbar .pu-tb-btn.is-compact .pu-tb-label {
   display: none;
 }
+.pu-tb-test {
+  /* The dropdown is absolutely positioned; without a positioned ancestor it
+   * anchored to the toolbar and opened under Select instead of under Test. */
+  position: relative;
+  display: flex;
+}
 .pu-tb-more {
   position: relative;
   display: flex;
@@ -1512,6 +1580,12 @@ button.pu-logo {
   margin-left: var(--sp-2);
   color: var(--pu-mut);
   font-size: var(--type-caption);
+  white-space: nowrap;
+}
+/* The primary action is the last thing to give up room: on a 390 px phone the
+ * flex row used to shrink it under its own content and clip the word "Run". */
+.pu-top > .pu-btn.pri {
+  flex: 0 0 auto;
   white-space: nowrap;
 }
 .pu-save-status.is-error {

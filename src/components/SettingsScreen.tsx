@@ -3,6 +3,7 @@ import { Crosshair, ExternalLink, ScanLine, ClipboardList, Trash2, ArrowLeft, Ga
 import type { DesignLevel, DesignSettings } from '../types';
 import { useSectionFocus } from '../hooks/useSectionFocus';
 import { readFileText } from '../lib/readFileText';
+import { Switch } from './Switch';
 
 /* ========================================================================== *
  * Settings — the fourth section: simulation options, test gear, workspace.
@@ -140,16 +141,12 @@ export function SettingsScreen({
                 Auto-run
               </span>
               <div className="pu-set-control">
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={settings.autoRun}
-                  aria-labelledby="settings-auto-label"
-                  onClick={() => onSettingsChange({ autoRun: !settings.autoRun })}
-                  className={`pu-switch ${settings.autoRun ? 'is-on' : ''}`}
-                >
-                  Auto {settings.autoRun ? 'on' : 'off'}
-                </button>
+                <Switch
+                  checked={settings.autoRun}
+                  onChange={(autoRun) => onSettingsChange({ autoRun })}
+                  label="Auto-run"
+                  title="Recalculate the budget after every edit"
+                />
               </div>
             </div>
             <p className="pu-set-note">

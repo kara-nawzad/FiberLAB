@@ -83,6 +83,7 @@ import {
 import { getHardwareProfileForNode } from '../data/componentCatalogue';
 import { FieldHardwareCard } from './FieldHardwareCard';
 import { HelpTip } from './HelpTip';
+import { Switch } from './Switch';
 
 /* ========================================================================== *
  * Selected Component inspector.
@@ -204,16 +205,7 @@ function FaultToggle({
           {description} · {active ? `+${penaltyDb.toFixed(2)} dB active` : 'no added loss'}
         </small>
       </span>
-      <button
-        type="button"
-        role="switch"
-        aria-label={label}
-        aria-checked={active}
-        className="fiber-fault-switch"
-        onClick={() => onChange(!active)}
-      >
-        <span />
-      </button>
+      <Switch checked={active} onChange={onChange} label={label} title={`${label} · toggle the injected fault`} />
     </div>
   );
 }
@@ -734,21 +726,12 @@ export function Inspector({
                   {node.data.laserOn ? 'Emitting — downstream live' : 'Disabled — all ONTs go dark'}
                 </div>
               </div>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={node.data.laserOn}
-                onClick={() => onPatchNode(node.id, { laserOn: !node.data.laserOn })}
-                className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${
-                  node.data.laserOn ? 'bg-emerald-600' : 'bg-slate-400'
-                }`}
-              >
-                <span
-                  className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-transform ${
-                    node.data.laserOn ? 'translate-x-[18px]' : 'translate-x-0.5'
-                  }`}
-                />
-              </button>
+              <Switch
+                checked={node.data.laserOn}
+                onChange={(laserOn) => onPatchNode(node.id, { laserOn })}
+                label="Laser transmitter"
+                title={node.data.laserOn ? 'Laser on — downstream is emitting' : 'Laser off — every ONT goes dark'}
+              />
             </div>
             <Advanced open={advancedOpen} onToggle={toggleAdvanced}>
               <SliderRow
