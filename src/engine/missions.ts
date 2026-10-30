@@ -312,6 +312,62 @@ export const MISSIONS: Mission[] = [
   blindFaultTrunkCutMission,
 ];
 
+/**
+ * Missions are grouped by the skill they train, easiest first, so the drawer
+ * reads as a course rather than an unordered list of five briefs.
+ */
+export interface MissionSection {
+  id: string;
+  title: string;
+  blurb: string;
+  missionIds: string[];
+}
+
+export const MISSION_SECTIONS: MissionSection[] = [
+  {
+    id: 'build',
+    title: 'Build & connect',
+    blurb: 'Patch the drop and bring a subscriber online.',
+    missionIds: ['rescue-unpatched-subscriber'],
+  },
+  {
+    id: 'budget',
+    title: 'Budget & margin',
+    blurb: 'Balance optical power against the quotation.',
+    missionIds: ['marginal-villa', 'budget-crunch'],
+  },
+  {
+    id: 'faults',
+    title: 'Fault-finding',
+    blurb: 'Find the break and repair the path with field diagnostics.',
+    missionIds: ['silent-ont', 'blind-fault'],
+  },
+];
+
+export interface GroupedMissions {
+  section: MissionSection;
+  missions: Mission[];
+}
+
+/** Sectioned view of the catalogue; anything unlisted lands in a final group. */
+export function groupMissions(missions: Mission[] = MISSIONS): GroupedMissions[] {
+  const byId = new Map(missions.map((mission) => [mission.id, mission]));
+  const grouped = MISSION_SECTIONS.map((section) => ({
+    section,
+    missions: section.missionIds
+      .map((id) => byId.get(id))
+      .filter((candidate): candidate is Mission => candidate !== undefined),
+  })).filter((entry) => entry.missions.length > 0);
+
+  const placed = new Set(grouped.flatMap((entry) => entry.missions.map((mission) => mission.id)));
+  const ungrouped = missions.filter((mission) => !placed.has(mission.id));
+  if (ungrouped.length === 0) return grouped;
+  return [
+    ...grouped,
+    { section: { id: 'more', title: 'More missions', blurb: '', missionIds: [] }, missions: ungrouped },
+  ];
+}
+
 export function getMissionById(id: string): Mission | undefined {
   if (id === 'blind-fault-trunk-cut' || id === 'the-cut-in-the-trunk') {
     return blindFaultTrunkCutMission;

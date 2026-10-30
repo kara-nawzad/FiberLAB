@@ -385,7 +385,9 @@
   position: absolute;
   z-index: -2;
   inset: 0 0 0 auto;
-  width: 50%;
+  /* 56 rather than 50: the home and the fiber get more of the frame, so the
+   * illustration is no longer a sliver on the far right of a cream page. */
+  width: 56%;
   overflow: hidden;
   background: #f0d9c9;
 }
@@ -413,17 +415,31 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
+  /* Cream only where the headline can reach. It clears by 55 % of the panel,
+   * which is exactly where the home starts, so the house reads at full
+   * strength instead of sitting under a 40 % milk wash. */
   background:
     linear-gradient(
       90deg,
       var(--fiber-ground) 0%,
-      rgba(255, 244, 230, 0.99) 10%,
-      rgba(255, 244, 230, 0.9) 32%,
-      rgba(255, 244, 230, 0.4) 55%,
-      rgba(255, 244, 230, 0.07) 76%,
+      rgba(255, 244, 230, 0.98) 6%,
+      rgba(255, 244, 230, 0.84) 24%,
+      rgba(255, 244, 230, 0.46) 40%,
+      rgba(255, 244, 230, 0.14) 55%,
+      rgba(255, 244, 230, 0.02) 70%,
       rgba(255, 244, 230, 0) 100%
     ),
-    linear-gradient(0deg, rgba(255, 244, 230, 0.26) 0%, transparent 20%);
+    linear-gradient(0deg, rgba(255, 244, 230, 0.18) 0%, transparent 16%);
+}
+
+/* Before the splice the home is dark glass: the house reads by its frame and
+ * silhouette, not by light. The panes get a cold dusk tint over the existing
+ * reflection so they read as glass rather than black holes — the lit layer
+ * (.hh) covers them completely once the splice lands, so this never shows in
+ * the "lights on" state. */
+.splice-hero-scene .hw {
+  fill: #5a6b7a;
+  opacity: 0.55;
 }
 
 /* Before the splice the home is dark glass: the house reads by its frame and
@@ -498,12 +514,20 @@
 .landing-nav {
   display: flex;
   width: min(100%, var(--page-max));
-  min-height: 66px;
   align-items: center;
   justify-content: space-between;
   gap: var(--sp-4);
   margin: 0 auto;
-  padding: var(--sp-2) var(--sp-3) var(--sp-2) var(--sp-4);
+}
+
+/* The outline belongs to the four controls only — the wordmark sits outside it,
+ * so the pill never runs behind the logo. */
+.landing-nav-cluster {
+  display: flex;
+  min-height: 46px;
+  align-items: center;
+  gap: var(--sp-1);
+  padding: var(--sp-1) var(--sp-1) var(--sp-1) var(--sp-4);
   border: 1px solid rgba(238, 216, 191, 0.82);
   border-radius: var(--r-pill);
   background: rgba(255, 250, 242, 0.83);
@@ -528,7 +552,7 @@
   align-items: baseline;
   gap: 0;
   font-family: Sora, Manrope, sans-serif;
-  font-size: var(--type-brand);
+  font-size: var(--fs-2xl);
   font-weight: var(--fw-black);
   line-height: 1;
   letter-spacing: var(--tracking-display);
@@ -547,8 +571,7 @@
 .landing-nav-links {
   display: flex;
   align-items: center;
-  gap: clamp(14px, 2.6vw, 36px);
-  margin-left: auto;
+  gap: clamp(10px, 1.6vw, 22px);
   color: #705443;
   font-size: var(--fs-xs);
   font-weight: var(--fw-bold);
@@ -557,7 +580,7 @@
 .landing-nav-links > a,
 .landing-preset-menu > summary {
   display: inline-flex;
-  min-height: 40px;
+  min-height: 36px;
   align-items: center;
   gap: var(--sp-1);
   color: inherit;
@@ -664,15 +687,15 @@
   transform: translateY(-1px);
 }
 .landing-button:focus-visible,
-.landing-pillar-link:focus-visible,
-.landing-footer-link:focus-visible {
+.landing-pillar-link:focus-visible {
   outline: 3px solid rgba(228, 103, 63, 0.48);
   outline-offset: 3px;
 }
 
 .landing-button--nav {
-  min-height: var(--control-lg);
-  padding: 0 var(--sp-4);
+  min-height: 38px;
+  padding: 0 var(--sp-3);
+  font-size: var(--type-small);
   background: var(--fiber-ink);
   color: var(--fiber-surface);
 }
@@ -1613,55 +1636,43 @@
   line-height: 1.6;
 }
 
+/* Footer: the wordmark states who made it, the note states how far to trust it.
+ * Two columns, one hairline, nothing else — no badge, no second call to action
+ * competing with the hero. */
 .landing-footer {
   display: grid;
   width: min(calc(100% - var(--page-gutter) * 2), var(--page-max));
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr);
   align-items: center;
-  gap: var(--sp-6);
+  gap: var(--sp-8);
   margin: calc(var(--sp-8) * 2) auto 0;
   padding: var(--sp-6) 0 var(--sp-8);
   border-top: 1px solid var(--fiber-hairline);
 }
 .landing-footer-brand {
+  display: flex;
+  flex-direction: column;
+}
+.landing-footer-wordmark {
+  display: inline-flex;
+  align-items: baseline;
   color: var(--fiber-ink);
   font-family: Sora, Manrope, sans-serif;
-  font-size: var(--fs-md);
-  font-weight: var(--fw-bold);
-  white-space: nowrap;
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-black);
+  line-height: 1;
+  letter-spacing: var(--tracking-display);
 }
-.landing-footer-brand span {
-  display: inline-grid;
-  width: 25px;
-  height: 25px;
-  place-items: center;
-  margin-right: var(--sp-1);
-  border-radius: var(--r-md);
-  background: #fff0df;
+.landing-footer-wordmark b {
   color: var(--fiber-coral);
+  font: inherit;
 }
 .landing-footer p {
+  max-width: 68ch;
   margin: 0;
   color: var(--fiber-muted);
-  font-size: var(--type-caption);
-  line-height: 1.6;
-}
-.landing-footer-link {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sp-1);
-  padding: var(--sp-1) 0;
-  border: 0;
-  background: none;
-  color: #c8512c;
-  font-family: Manrope, sans-serif;
   font-size: var(--type-small);
-  font-weight: var(--fw-bold);
-  white-space: nowrap;
-  cursor: pointer;
-}
-.landing-footer-link:hover {
-  color: var(--fiber-coral);
+  line-height: var(--leading-normal);
 }
 
 /* ----------------------- Compact workbench breakpoints */
@@ -1685,17 +1696,18 @@
     font-size: var(--type-display);
   }
   .splice-hero-scene {
-    width: 52%;
+    width: 58%;
   }
   /* Same rule as desktop: readable copy on the left, a crisp home on the right. */
   .splice-hero-scene-wash {
     background: linear-gradient(
       90deg,
       var(--fiber-ground) 0%,
-      rgba(255, 244, 230, 0.99) 12%,
-      rgba(255, 244, 230, 0.9) 44%,
-      rgba(255, 244, 230, 0.38) 68%,
-      rgba(255, 244, 230, 0.06) 100%
+      rgba(255, 244, 230, 0.99) 8%,
+      rgba(255, 244, 230, 0.86) 28%,
+      rgba(255, 244, 230, 0.44) 46%,
+      rgba(255, 244, 230, 0.12) 62%,
+      rgba(255, 244, 230, 0) 80%
     );
   }
   .splice-hero-content {
@@ -1727,10 +1739,7 @@
   }
   .landing-footer {
     width: min(calc(100% - var(--page-gutter) * 2), var(--page-max));
-    grid-template-columns: auto 1fr;
-  }
-  .landing-footer-link {
-    grid-column: 2;
+    gap: var(--sp-6);
   }
 }
 
@@ -1755,41 +1764,79 @@
 
   /* Phone: the hero is content-sized instead of a fixed tall stage, so there
    * is no dead space above or below the message. */
+  /* Phone: the hero becomes a plain column — copy, then the picture — and the
+   * band is sized by its own aspect ratio instead of a fixed height. A fixed
+   * height was the bug: the poster always fills the band's width, so every extra
+   * pixel of width scaled the drawing up and pushed the roofline out of the top
+   * of the frame. With an aspect ratio the crop is identical at 320 px, 390 px
+   * and 640 px. */
+  .splice-hero {
+    display: flex;
+    flex-direction: column;
+  }
   .splice-hero-frame {
     height: auto;
     min-height: 0;
   }
-  /* Phone: the copy owns the whole column, so the scene becomes a band along
-   * the bottom of the hero — the home is still clearly visible, but never
-   * behind a line of text. */
-  .splice-hero-scene {
-    inset: auto 0 0 0;
-    width: 100%;
-    height: 54%;
+  .splice-hero-content {
+    order: 1;
   }
+  .splice-hero-scene {
+    position: static;
+    order: 2;
+    width: 100%;
+    height: auto;
+    /* 234 units of the poster, which frames roof → ground. */
+    aspect-ratio: 380 / 234;
+    max-height: 62vh;
+  }
+  /* The drawing runs past the bottom edge, so slice() anchors the visible
+   * window on the house rather than on the empty foreground. */
+  .splice-hero-scene .splice-hero-svg > svg {
+    height: 118%;
+  }
+  /* The wash only softens the seam where the band meets the cream page; the
+   * rest of the band is the picture at full contrast. */
   .splice-hero-scene-wash {
+    /* Just enough cream to melt the top edge of the picture into the page. */
     background: linear-gradient(
       180deg,
       var(--fiber-ground) 0%,
-      rgba(255, 244, 230, 0.92) 26%,
-      rgba(255, 244, 230, 0.62) 62%,
-      rgba(255, 244, 230, 0.4) 100%
+      rgba(255, 244, 230, 0.45) 1.5%,
+      rgba(255, 244, 230, 0.1) 5%,
+      rgba(255, 244, 230, 0) 10%
     );
+  }
+  /* At band size the warm halo reads as a smear over the glass, so it is cut
+   * right back — the lit windows carry the "home is live" signal on their own. */
+  .splice-hero-scene.is-done .hh {
+    filter: drop-shadow(0 0 5px rgba(255, 176, 32, 0.8));
+  }
+  .splice-hero-scene.is-done .hh-glow {
+    opacity: 0.4;
   }
   .landing-nav-wrap {
     top: 12px;
     padding: 0 var(--sp-3);
   }
   .landing-nav {
-    min-height: 58px;
     gap: var(--sp-2);
-    padding: var(--sp-1) var(--sp-2);
+  }
+  /* Phone: the link list is hidden, so the pill would only wrap a single
+   * button — drop the pill and let the button stand on its own. */
+  .landing-nav-cluster {
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    box-shadow: none;
+    backdrop-filter: none;
   }
   .landing-brand {
     gap: var(--sp-2);
   }
   .landing-brand-wordmark {
-    font-size: var(--type-panel-title);
+    font-size: var(--fs-xl);
   }
   .landing-nav-links {
     display: none;
@@ -1807,7 +1854,7 @@
     width: min(calc(100% - var(--page-gutter) * 2), var(--page-max));
     height: auto;
     min-height: 0;
-    padding: calc(var(--sp-8) * 2 + var(--sp-4)) 0 var(--sp-8);
+    padding: calc(var(--sp-8) * 2 + var(--sp-4)) 0 var(--sp-6);
   }
   .splice-hero-eyebrow {
     max-width: 290px;
@@ -1817,7 +1864,9 @@
   }
   .splice-hero-content h1 {
     max-width: 440px;
-    font-size: var(--type-display);
+    /* A notch down from the desktop display size: at 45 px the two lines ate a
+     * third of the phone screen before the picture had a chance. */
+    font-size: clamp(34px, 9.6vw, 46px);
     /* Display leading is tight; on a phone the descenders of the second line
      * used to bleed into the sentence below it. */
     line-height: 1.08;
@@ -1829,17 +1878,42 @@
     font-size: max(var(--fs-sm), 15px);
     line-height: 1.55;
   }
-  /* Full-width controls are the clearest thing on a phone, and they keep the
-   * 58 px targets above the 44 px floor. */
+  /* Before the splice there is one control and it wants the whole width: it is
+   * a press-and-hold gesture. After the splice there are two, and stacking them
+   * as full-width bars pushed the picture off the screen — so they shrink into
+   * a compact pair that sits on one row. */
   .splice-hero-actions {
     width: 100%;
     flex-direction: column;
     align-items: stretch;
-    margin-top: var(--sp-6);
+    gap: var(--sp-2);
+    margin-top: var(--sp-4);
   }
   .splice-hero-actions .landing-button,
   .splice-fuse {
     width: 100%;
+    min-height: 52px;
+  }
+  .splice-hero.is-fused .splice-hero-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .splice-hero.is-fused .splice-fuse,
+  .splice-hero.is-fused .splice-hero-actions .landing-button {
+    width: auto;
+    min-height: 46px;
+    padding: 0 var(--sp-4);
+  }
+  .splice-hero.is-fused .splice-fuse {
+    padding: 0 var(--sp-3);
+  }
+  .splice-fuse-content {
+    font-size: var(--type-small);
+    letter-spacing: 0.04em;
+  }
+  .splice-hero.is-fused .splice-hero-actions .landing-button {
+    font-size: var(--type-body);
   }
   .landing-hero {
     gap: var(--sp-6);
@@ -1890,9 +1964,17 @@
   }
   .landing-waveguide-svg--compact {
     display: block;
+    /* The compact diagram is drawn for a 360-unit phone width. Letting it
+     * stretch to a wider panel blew every block and label up ~25%, which is
+     * what made the exhibit look oversized; it now stops at its drawn size and
+     * centres instead of upscaling. */
+    max-width: 360px;
+    margin-inline: auto;
   }
   .landing-waveguide-caption {
-    font-size: var(--type-caption);
+    /* 11 px captions under a phone-sized diagram are a strain; the sentence is
+     * short enough to carry 12 px. */
+    font-size: var(--type-small);
   }
   .landing-exhibit-equation {
     margin: var(--sp-2) var(--sp-3) var(--sp-3);
@@ -1943,11 +2025,8 @@
   }
   .landing-footer {
     grid-template-columns: 1fr;
-    gap: var(--sp-2);
+    gap: var(--sp-4);
     margin-top: calc(var(--sp-8) + var(--sp-2));
-  }
-  .landing-footer-link {
-    grid-column: auto;
   }
 }
 
@@ -2602,7 +2681,7 @@
   align-items: center;
   justify-content: center;
   padding: clamp(8px, 2vw, 24px);
-  background: rgba(8, 13, 19, 0.82);
+  background: rgba(43, 26, 20, 0.44);
   backdrop-filter: blur(9px);
   animation: otdr-backdrop-in 180ms ease-out both;
 }
@@ -2612,13 +2691,13 @@
   max-height: min(94vh, 980px);
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid rgba(148, 163, 184, 0.24);
+  border: 1px solid var(--pu-line);
   border-radius: var(--r-2xl);
-  background: #0e1821;
-  color: #e2e8f0;
+  background: var(--pu-panel);
+  color: var(--pu-ink);
   box-shadow:
-    0 28px 100px rgba(0, 0, 0, 0.55),
-    0 0 0 1px rgba(34, 211, 238, 0.06);
+    0 28px 100px rgba(43, 26, 20, 0.26),
+    0 0 0 1px rgba(228, 103, 63, 0.1);
   animation: otdr-modal-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 .otdr-modal-header {
@@ -2628,8 +2707,8 @@
   justify-content: space-between;
   gap: var(--sp-4);
   padding: var(--sp-4);
-  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
-  background: linear-gradient(105deg, rgba(17, 34, 47, 0.98), rgba(17, 24, 39, 0.92));
+  border-bottom: 1px solid rgba(238, 216, 191, 0.7);
+  background: linear-gradient(105deg, #fff7ee, #fffdf9);
 }
 .otdr-title-group {
   display: flex;
@@ -2643,13 +2722,13 @@
   height: 36px;
   flex: 0 0 auto;
   place-items: center;
-  border: 1px solid rgba(103, 232, 249, 0.24);
+  border: 1px solid rgba(228, 103, 63, 0.26);
   border-radius: var(--r-lg);
-  background: rgba(8, 145, 178, 0.15);
-  color: #67e8f9;
+  background: var(--pu-pri-soft);
+  color: #c8512c;
 }
 .otdr-eyebrow {
-  color: #67e8f9;
+  color: #c8512c;
   font:
     var(--fw-bold) var(--type-caption)/1.2 'JetBrains Mono',
     monospace;
@@ -2657,7 +2736,7 @@
 }
 .otdr-title-group h2 {
   margin: var(--sp-1) 0 var(--sp-1);
-  color: #f8fafc;
+  color: var(--pu-ink);
   font:
     var(--fw-bold) var(--type-section-title)/1.2 'Manrope',
     sans-serif;
@@ -2665,7 +2744,7 @@
 }
 .otdr-title-group p {
   margin: 0;
-  color: #94a3b8;
+  color: #85695a;
   font-size: var(--fs-2xs);
 }
 .otdr-close {
@@ -2674,25 +2753,25 @@
   height: 32px;
   flex: 0 0 auto;
   place-items: center;
-  border: 1px solid rgba(148, 163, 184, 0.2);
+  border: 1px solid var(--pu-line);
   border-radius: var(--r-md);
-  background: rgba(15, 23, 42, 0.48);
-  color: #cbd5e1;
+  background: #fff7ee;
+  color: #6b5346;
   transition:
     border-color 120ms ease,
     background 120ms ease,
     color 120ms ease;
 }
 .otdr-close:hover {
-  border-color: rgba(248, 113, 113, 0.5);
-  background: rgba(127, 29, 29, 0.2);
-  color: #fecaca;
+  border-color: rgba(185, 28, 28, 0.45);
+  background: #fef2f2;
+  color: #b91c1c;
 }
 .otdr-close:focus-visible,
 .otdr-acquire-button:focus-visible,
 .otdr-select-wrap:focus-within,
 .otdr-segment-control button:focus-visible {
-  outline: 2px solid #67e8f9;
+  outline: 2px solid #c8512c;
   outline-offset: 2px;
 }
 .otdr-modal-scroll {
@@ -2701,24 +2780,30 @@
   padding: var(--sp-4);
 }
 .otdr-instrument-panel {
-  display: grid;
-  grid-template-columns: minmax(170px, 1.3fr) minmax(200px, 1.5fr) minmax(190px, 1.2fr) minmax(165px, 1fr) minmax(
-      205px,
-      1.2fr
-    );
-  align-items: end;
-  gap: var(--sp-2);
+  /* Wrap, never squeeze. Five fixed grid tracks meant the wavelength strip and
+   * the acquire label overflowed their columns and printed over each other at
+   * every width below ~1180 px. */
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--sp-3) var(--sp-2);
   margin-bottom: var(--sp-3);
   padding: var(--sp-3);
-  border: 1px solid rgba(148, 163, 184, 0.16);
+  border: 1px solid var(--pu-line);
   border-radius: var(--r-lg);
-  background: rgba(19, 32, 43, 0.78);
+  background: #fffaf4;
+}
+.otdr-instrument-panel > .otdr-control-field,
+.otdr-instrument-panel > .otdr-segment-control,
+.otdr-instrument-panel > .otdr-acquire-button {
+  flex: 1 1 190px;
+  min-width: 0;
 }
 .otdr-control-field {
   display: grid;
   min-width: 0;
   gap: var(--sp-1);
-  color: #94a3b8;
+  color: #85695a;
   font:
     var(--fw-bold) var(--type-caption)/1.2 'JetBrains Mono',
     monospace;
@@ -2736,11 +2821,11 @@
   min-width: 0;
   height: var(--control-md);
   appearance: none;
-  border: 1px solid rgba(148, 163, 184, 0.22);
+  border: 1px solid var(--pu-line);
   border-radius: var(--r-md);
-  background: #0c1720;
+  background: #ffffff;
   padding: 0 var(--sp-8) 0 var(--sp-2);
-  color: #e2e8f0;
+  color: var(--pu-ink);
   font:
     var(--fw-medium) var(--type-body)/1.2 'Manrope',
     sans-serif;
@@ -2753,7 +2838,7 @@
 .otdr-select-wrap svg {
   position: absolute;
   right: var(--sp-2);
-  color: #67e8f9;
+  color: #c8512c;
   pointer-events: none;
 }
 .otdr-segment-control {
@@ -2764,7 +2849,7 @@
 }
 .otdr-segment-control legend {
   margin-bottom: var(--sp-1);
-  color: #94a3b8;
+  color: #85695a;
   font:
     var(--fw-bold) var(--type-caption)/1.2 'JetBrains Mono',
     monospace;
@@ -2773,25 +2858,28 @@
 }
 .otdr-segment-control > div {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   min-height: 34px;
-  gap: var(--sp-1);
-  padding: var(--sp-1);
-  border: 1px solid rgba(148, 163, 184, 0.16);
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--pu-line);
   border-radius: var(--r-md);
-  background: #0a141d;
+  background: #fff7ee;
 }
 .otdr-segment-control button {
   flex: 1 1 auto;
-  min-width: 0;
+  min-width: 44px;
+  min-height: 28px;
   border: 1px solid transparent;
   border-radius: var(--r-sm);
   background: transparent;
   padding: 0 var(--sp-1);
-  color: #94a3b8;
+  color: #85695a;
   font:
     var(--fw-semibold) var(--type-small)/1 'JetBrains Mono',
     monospace;
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
   transition:
     color 120ms ease,
@@ -2799,12 +2887,12 @@
     border-color 120ms ease;
 }
 .otdr-segment-control button:hover {
-  color: #e0f2fe;
+  color: #7c2d12;
 }
 .otdr-segment-control button[aria-pressed='true'] {
-  border-color: rgba(103, 232, 249, 0.3);
-  background: rgba(8, 145, 178, 0.19);
-  color: #a5f3fc;
+  border-color: rgba(228, 103, 63, 0.34);
+  background: rgba(228, 103, 63, 0.14);
+  color: #b4401f;
 }
 .otdr-segment-control button:disabled {
   opacity: 0.5;
@@ -2815,17 +2903,19 @@
   align-items: center;
   justify-content: center;
   gap: var(--sp-2);
-  border: 1px solid rgba(45, 212, 191, 0.55);
+  border: 1px solid rgba(200, 81, 44, 0.55);
   border-radius: var(--r-md);
-  background: linear-gradient(135deg, #0f766e, #0e7490);
+  background: linear-gradient(135deg, #d95a33, #c8512c);
   padding: 0 var(--sp-3);
-  color: #ecfeff;
+  color: #ffffff;
   font:
     var(--fw-bold) var(--type-small)/1 'JetBrains Mono',
     monospace;
   letter-spacing: var(--tracking-label);
-  white-space: nowrap;
-  box-shadow: 0 4px 18px rgba(8, 145, 178, 0.14);
+  white-space: normal;
+  text-align: center;
+  line-height: 1.25;
+  box-shadow: 0 4px 18px rgba(228, 103, 63, 0.1);
   transition:
     filter 120ms ease,
     transform 120ms ease,
@@ -2845,9 +2935,9 @@
 .otdr-chart-card {
   position: relative;
   overflow: hidden;
-  border: 1px solid rgba(103, 232, 249, 0.17);
+  border: 1px solid var(--pu-line);
   border-radius: var(--r-lg);
-  background: #08121a;
+  background: #fffdf9;
 }
 .otdr-chart-heading {
   display: flex;
@@ -2856,27 +2946,27 @@
   justify-content: space-between;
   gap: var(--sp-2);
   padding: var(--sp-2) var(--sp-3) var(--sp-2);
-  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
-  background: rgba(17, 31, 42, 0.76);
+  border-bottom: 1px solid rgba(238, 216, 191, 0.6);
+  background: #fff7ee;
 }
 .otdr-chart-heading > div {
   display: grid;
   gap: var(--sp-1);
 }
 .otdr-chart-heading strong {
-  color: #dbeafe;
+  color: var(--pu-ink);
   font:
     var(--fw-bold) var(--type-small)/1.2 'Manrope',
     sans-serif;
 }
 .otdr-chart-heading span {
-  color: #64748b;
+  color: #a08a7a;
   font:
     var(--fw-medium) var(--type-caption)/1.2 'JetBrains Mono',
     monospace;
 }
 .otdr-cursor-readout {
-  color: #a5f3fc;
+  color: #b4401f;
   font:
     var(--fw-bold) var(--type-caption)/1.2 'JetBrains Mono',
     monospace;
@@ -2894,32 +2984,40 @@
   cursor: crosshair;
 }
 .otdr-axis-tick {
-  fill: #8295a8;
+  fill: #8a6f60;
   font:
     var(--type-caption) 'JetBrains Mono',
     monospace;
 }
 .otdr-axis-label {
-  fill: #aabaca;
+  fill: #6b5346;
   font:
     var(--type-small) 'Manrope',
     sans-serif;
   font-weight: var(--fw-bold);
 }
-.otdr-chart-empty {
-  fill: #64748b;
+.otdr-chart-empty-note {
+  position: absolute;
+  inset: 7% 3% 14% 7%;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  padding: var(--sp-3);
+  color: #a08a7a;
   font:
-    var(--type-body) 'Manrope',
+    var(--fw-medium) var(--type-body) / 1.4 'Manrope',
     sans-serif;
+  text-align: center;
+  pointer-events: none;
 }
 .otdr-crosshair line {
-  stroke: rgba(250, 204, 21, 0.72);
+  stroke: rgba(194, 65, 12, 0.7);
   stroke-width: 1;
   stroke-dasharray: 4 4;
 }
 .otdr-crosshair circle {
-  fill: #facc15;
-  stroke: #422006;
+  fill: #c2410c;
+  stroke: #ffffff;
   stroke-width: 1.5;
 }
 .otdr-chart-legend {
@@ -2928,9 +3026,9 @@
   flex-wrap: wrap;
   align-items: center;
   gap: var(--sp-1) var(--sp-4);
-  border-top: 1px solid rgba(148, 163, 184, 0.11);
+  border-top: 1px solid rgba(238, 216, 191, 0.6);
   padding: var(--sp-1) var(--sp-3);
-  color: #94a3b8;
+  color: #85695a;
   font:
     var(--fw-medium) var(--type-caption)/1 'JetBrains Mono',
     monospace;
@@ -2948,35 +3046,35 @@
 }
 .otdr-legend-dot {
   border-radius: 50%;
-  background: #38bdf8;
+  background: #0e7490;
 }
 .otdr-legend-dot.connector {
-  background: #c4b5fd;
+  background: #6d28d9;
 }
 .otdr-legend-square {
   border-radius: 1px;
-  background: #34d399;
+  background: #0f766e;
 }
 .otdr-legend-diamond {
   width: 7px !important;
   height: 7px !important;
   transform: rotate(45deg);
-  background: #fb923c;
+  background: #c2410c;
 }
 .otdr-legend-triangle {
   width: 0 !important;
   height: 0 !important;
   border-right: 5px solid transparent;
-  border-bottom: 9px solid #f87171;
+  border-bottom: 9px solid #b91c1c;
   border-left: 5px solid transparent;
 }
 .otdr-legend-star {
   width: 0 !important;
   height: 0 !important;
   border-right: 5px solid transparent;
-  border-bottom: 9px solid #f8fafc;
+  border-bottom: 9px solid var(--pu-ink);
   border-left: 5px solid transparent;
-  filter: drop-shadow(0 0 2px #94a3b8);
+  filter: drop-shadow(0 0 2px #85695a);
 }
 .otdr-scanline {
   position: absolute;
@@ -2986,8 +3084,8 @@
   left: 7%;
   width: 1px;
   pointer-events: none;
-  background: #facc15;
-  box-shadow: 0 0 8px 2px rgba(250, 204, 21, 0.6);
+  background: #c2410c;
+  box-shadow: 0 0 8px 2px rgba(194, 65, 12, 0.45);
   animation: otdr-scanline-sweep 0.82s ease-in-out infinite;
 }
 .otdr-scanline span {
@@ -2996,14 +3094,14 @@
   left: -9px;
   width: 19px;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(250, 204, 21, 0.12), transparent);
+  background: linear-gradient(90deg, transparent, rgba(194, 65, 12, 0.1), transparent);
 }
 .otdr-event-section {
   margin-top: var(--sp-3);
   overflow: hidden;
-  border: 1px solid rgba(148, 163, 184, 0.16);
+  border: 1px solid var(--pu-line);
   border-radius: var(--r-lg);
-  background: rgba(15, 25, 34, 0.8);
+  background: #fffaf4;
 }
 .otdr-table-header {
   display: flex;
@@ -3011,29 +3109,29 @@
   justify-content: space-between;
   gap: var(--sp-2);
   padding: var(--sp-2) var(--sp-3);
-  border-bottom: 1px solid rgba(148, 163, 184, 0.13);
+  border-bottom: 1px solid rgba(238, 216, 191, 0.7);
 }
 .otdr-table-header h3 {
   margin: 0;
-  color: #e2e8f0;
+  color: var(--pu-ink);
   font:
     var(--fw-bold) var(--type-body)/1.3 'Manrope',
     sans-serif;
 }
 .otdr-table-header p {
   margin: var(--sp-1) 0 0;
-  color: #718096;
+  color: #8a6f60;
   font:
     var(--fw-medium) var(--type-caption)/1.3 'JetBrains Mono',
     monospace;
 }
 .otdr-event-count {
   flex: 0 0 auto;
-  border: 1px solid rgba(103, 232, 249, 0.2);
+  border: 1px solid rgba(228, 103, 63, 0.22);
   border-radius: var(--r-sm);
-  background: rgba(8, 145, 178, 0.1);
+  background: rgba(228, 103, 63, 0.09);
   padding: var(--sp-1) var(--sp-2);
-  color: #a5f3fc;
+  color: #b4401f;
   font:
     var(--fw-bold) var(--type-caption)/1 'JetBrains Mono',
     monospace;
@@ -3053,10 +3151,10 @@
   position: sticky;
   top: 0;
   z-index: 1;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.13);
-  background: #111e29;
+  border-bottom: 1px solid rgba(238, 216, 191, 0.7);
+  background: #fff7ee;
   padding: var(--sp-2) var(--sp-3);
-  color: #8798a9;
+  color: #8a6f60;
   font-size: var(--type-caption);
   font-weight: var(--fw-bold);
   letter-spacing: var(--tracking-label);
@@ -3065,9 +3163,9 @@
   white-space: nowrap;
 }
 .otdr-event-table td {
-  border-bottom: 1px solid rgba(148, 163, 184, 0.075);
+  border-bottom: 1px solid rgba(238, 216, 191, 0.5);
   padding: var(--sp-2) var(--sp-3);
-  color: #cbd5e1;
+  color: #6b5346;
   vertical-align: top;
   white-space: nowrap;
 }
@@ -3075,26 +3173,26 @@
   border-bottom: 0;
 }
 .otdr-event-table tbody tr:hover {
-  background: rgba(30, 58, 75, 0.22);
+  background: #efe3d6;
 }
 .otdr-event-table td:first-child {
-  color: #64748b;
+  color: #a08a7a;
 }
 .otdr-event-table td:nth-child(2) {
   min-width: 245px;
-  color: #e2e8f0;
+  color: var(--pu-ink);
 }
 .otdr-event-table td:nth-child(2) small {
   display: block;
   margin: var(--sp-1) 0 0 var(--sp-4);
-  color: #73869a;
+  color: #8a6f60;
   font:
     var(--fw-medium) var(--type-caption)/1.3 'Manrope',
     sans-serif;
   white-space: normal;
 }
 .otdr-event-table td.is-loss {
-  color: #fca5a5;
+  color: #b91c1c;
 }
 .otdr-table-marker {
   display: inline-block;
@@ -3102,33 +3200,33 @@
   height: 7px;
   margin: 0 var(--sp-2) 0 0;
   border-radius: 50%;
-  background: #67e8f9;
+  background: #c8512c;
   vertical-align: 1px;
 }
 .otdr-table-marker.launch {
-  background: #38bdf8;
+  background: #0e7490;
 }
 .otdr-table-marker.splice {
   border-radius: 1px;
-  background: #34d399;
+  background: #0f766e;
 }
 .otdr-table-marker.splitter {
   border-radius: 1px;
-  background: #fb923c;
+  background: #c2410c;
   transform: rotate(45deg);
 }
 .otdr-table-marker.connector {
-  background: #c4b5fd;
+  background: #6d28d9;
 }
 .otdr-table-marker.fault_bend {
   border-radius: 0;
-  background: #f87171;
+  background: #b91c1c;
   clip-path: polygon(50% 0, 100% 100%, 0 100%);
 }
 .otdr-table-marker.end_of_fiber {
-  border: 1px solid #94a3b8;
+  border: 1px solid #85695a;
   border-radius: 0;
-  background: #f8fafc;
+  background: var(--pu-ink);
   clip-path: polygon(50% 0, 62% 36%, 100% 50%, 62% 64%, 50% 100%, 38% 64%, 0 50%, 38% 36%);
 }
 .otdr-status {
@@ -3142,23 +3240,23 @@
   letter-spacing: var(--tracking-label);
 }
 .otdr-status.pass {
-  border-color: rgba(52, 211, 153, 0.23);
-  background: rgba(6, 78, 59, 0.28);
-  color: #6ee7b7;
+  border-color: #a7f3d0;
+  background: #ecfdf5;
+  color: #0f766e;
 }
 .otdr-status.warning {
-  border-color: rgba(251, 191, 36, 0.28);
-  background: rgba(120, 53, 15, 0.23);
-  color: #fcd34d;
+  border-color: #fde68a;
+  background: #fffbeb;
+  color: #a16207;
 }
 .otdr-status.fail {
-  border-color: rgba(248, 113, 113, 0.28);
-  background: rgba(127, 29, 29, 0.24);
-  color: #fca5a5;
+  border-color: #fecaca;
+  background: #fecaca;
+  color: #b91c1c;
 }
 .otdr-table-empty {
   padding: var(--sp-4) !important;
-  color: #8292a2 !important;
+  color: #8a6f60 !important;
   font:
     var(--fw-medium) var(--type-small) 'Manrope',
     sans-serif !important;
@@ -3167,7 +3265,7 @@
 }
 .otdr-model-note {
   margin: var(--sp-2) var(--sp-1) 0;
-  color: #77879a;
+  color: #8a6f60;
   font:
     var(--fw-medium) var(--type-caption)/1.55 'Manrope',
     sans-serif;
@@ -3219,9 +3317,6 @@
   .otdr-modal-scroll {
     padding: var(--sp-3);
   }
-  .otdr-instrument-panel {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
   .otdr-acquire-button {
     min-height: 36px;
   }
@@ -3246,9 +3341,13 @@
     padding: var(--sp-2);
   }
   .otdr-instrument-panel {
-    grid-template-columns: minmax(0, 1fr);
     gap: var(--sp-2);
     padding: var(--sp-2);
+  }
+  .otdr-instrument-panel > .otdr-control-field,
+  .otdr-instrument-panel > .otdr-segment-control,
+  .otdr-instrument-panel > .otdr-acquire-button {
+    flex-basis: 100%;
   }
   .otdr-segment-control > div {
     min-height: 38px;
@@ -3268,8 +3367,16 @@
   .otdr-cursor-readout {
     text-align: left;
   }
+  /* The plot is a fixed 960 × 400 viewBox, so at phone widths every label was
+   * scaled down to about 40 % and squashed by preserveAspectRatio="none".
+   * Scrolling the plot keeps the scale near uniform (620 / 960 ≈ 260 / 400),
+   * so the axis text stays readable instead of shrinking into noise. */
+  .otdr-chart-shell {
+    overflow-x: auto;
+  }
   .otdr-chart {
-    height: 270px;
+    min-width: 620px;
+    height: 260px;
   }
   .otdr-chart-legend {
     gap: var(--sp-2);

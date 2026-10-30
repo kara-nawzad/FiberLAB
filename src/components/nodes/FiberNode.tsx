@@ -10,10 +10,19 @@ import { useSimulation } from '../../context/SimulationContext';
  * exactly like the design image. Length, splices, connectors, wavelength and fault flags are
  * still real node data editable from the Inspector.
  */
-export function FiberNode({ data, selected }: NodeProps<FiberFlowNode>) {
+export function FiberNode({ id, data, selected }: NodeProps<FiberFlowNode>) {
   const simulation = useSimulation();
   const blindFaultMode = Boolean(simulation?.blindFaultMode);
   const loss = computeFiberLoss(data);
+  const span = simulation?.spanTelemetry?.[id];
+  const effectiveWavelengthNm = span?.wavelengthNm ?? data.wavelength;
+  const effectiveAttenuation = span?.attenuationDbPerKm ?? loss.attenuationDbPerKm;
+  const effectiveTotalDb =
+    Math.max(0, data.lengthKm) * effectiveAttenuation +
+    loss.spliceDb +
+    loss.connectorDb +
+    loss.macroBendLossDb +
+    loss.dirtyConnectorLossDb;
   const faulted = !blindFaultMode && (loss.macroBendLossDb > 0 || loss.dirtyConnectorLossDb > 0);
   const multiMode = isMultiModeProfile(data.fiberProfile);
   const profile = FIBER_PROFILE_SPECS[data.fiberProfile ?? 'singlemode'];
@@ -23,7 +32,7 @@ export function FiberNode({ data, selected }: NodeProps<FiberFlowNode>) {
     <div
       className={`hw-fiber${multiMode ? ' is-multimode' : ''}${overReach ? ' is-over-reach' : ''}`}
       style={selected ? { borderColor: 'var(--pu-pri)', boxShadow: '0 0 0 3px var(--pu-pri-soft)' } : undefined}
-      title={`${profile.short} ${data.cableType} cable · ${data.splices} splice · ${data.connectors} conn · ${loss.attenuationDbPerKm.toFixed(2)} dB/km @ ${data.wavelength} nm`}
+      title={`${profile.short} ${data.cableType} cable · ${data.splices} splice · ${data.connectors} conn · ${effectiveAttenuation.toFixed(2)} dB/km @ ${effectiveWavelengthNm} nm${span?.xgsLocked ? ` · locked to ${effectiveWavelengthNm} nm by the XGS-PON OLT` : ''}`}
     >
       {multiMode ? <span className="fiber-profile-tag">{profile.short}</span> : null}
       {faulted ? (
@@ -34,7 +43,7 @@ export function FiberNode({ data, selected }: NodeProps<FiberFlowNode>) {
         />
       ) : null}
       {data.lengthKm.toFixed(1)} km
-      <span>−{loss.totalDb.toFixed(1)} dB</span>
+      <span>−{effectiveTotalDb.toFixed(1)} dB</span>
       <Handle
         id="in"
         type="target"

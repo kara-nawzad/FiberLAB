@@ -18,6 +18,7 @@ import {
 import type {
   CableType,
   AttenuatorNodeData,
+  DesignLevel,
   FiberProfile,
   GatewayTelemetry,
   OltClass,
@@ -81,6 +82,7 @@ import {
 } from '../engine/opticalSimulator';
 import { getHardwareProfileForNode } from '../data/componentCatalogue';
 import { FieldHardwareCard } from './FieldHardwareCard';
+import { HelpTip } from './HelpTip';
 
 /* ========================================================================== *
  * Selected Component inspector.
@@ -96,6 +98,8 @@ interface InspectorProps {
   node: PonNode | null;
   edge: PonEdge | null;
   simulation: SimulationResult;
+  /** Guided hides the loss tables; Engineer opens them by default. */
+  detailLevel?: DesignLevel;
   onPatchNode: (nodeId: string, patch: Partial<PonNode['data']>) => void;
   onDeleteNode: (nodeId: string) => void;
   onDeleteEdge: (edgeId: string) => void;
@@ -113,10 +117,24 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-function Metric({ label, value, accent }: { label: string; value: ReactNode; accent?: string }) {
+function Metric({
+  label,
+  value,
+  accent,
+  hint,
+}: {
+  label: string;
+  value: ReactNode;
+  accent?: string;
+  /** Glossary id: renders a one-tap definition next to the label. */
+  hint?: string;
+}) {
   return (
     <div className="metric">
-      <div className="text-caption uppercase tracking-label text-slate-500">{label}</div>
+      <div className="text-caption uppercase tracking-label text-slate-500">
+        {label}
+        {hint ? <HelpTip termId={hint} /> : null}
+      </div>
       <div className="metric-value" style={accent ? { color: accent } : undefined}>
         {value}
       </div>
@@ -211,8 +229,8 @@ function Advanced({ open, onToggle, children }: { open: boolean; onToggle: () =>
         title={open ? 'Hide detailed values' : 'Show loss tables and detailed values'}
       >
         <ChevronRight size={14} className="pu-adv-chevron" aria-hidden="true" />
-        <span className="pu-adv-label">Advanced</span>
-        <span className="pu-adv-hint">loss tables &amp; details</span>
+        <span className="pu-adv-label">Details</span>
+        <span className="pu-adv-hint">loss tables, allowances, hardware</span>
       </button>
       <div className="pu-adv-body" hidden={!open}>
         {open ? children : null}
@@ -265,7 +283,16 @@ function SpliceTrayView({ channels, onChange }: { channels: boolean[]; onChange:
   );
 }
 
-function SegmentTable({ telemetry }: { telemetry: SubscriberOpticalTelemetry }) {
+function SegmentTable({
+  telemetry,
+  safetyMarginDb,
+}: {
+  telemetry: SubscriberOpticalTelemetry;
+  safetyMarginDb: number;
+}) {
+  // totalLossDb already carries the design allowance, so split it back out:
+  // what the glass and hardware cost, then the margin, then the budget total.
+  const pathLossDb = telemetry.totalLossDb - safetyMarginDb;
   return (
     <div className="overflow-hidden rounded-md border border-slate-200">
       <table className="w-full font-mono text-label">
@@ -291,7 +318,17 @@ function SegmentTable({ telemetry }: { telemetry: SubscriberOpticalTelemetry }) 
             ))
           )}
           <tr className="border-t border-slate-300 bg-slate-50 font-semibold text-slate-900">
-            <td className="px-2 py-1">Total path loss</td>
+            <td className="px-2 py-1">Path loss</td>
+            <td className="px-2 py-1 text-right">−{pathLossDb.toFixed(2)} dB</td>
+          </tr>
+          <tr className="bg-slate-50 text-slate-700">
+            <td className="px-2 py-1">
+              Safety margin <HelpTip termId="safety-margin" />
+            </td>
+            <td className="px-2 py-1 text-right">−{safetyMarginDb.toFixed(2)} dB</td>
+          </tr>
+          <tr className="border-t border-slate-300 bg-slate-50 font-semibold text-slate-900">
+            <td className="px-2 py-1">Total · loss + margin</td>
             <td className="px-2 py-1 text-right">−{telemetry.totalLossDb.toFixed(2)} dB</td>
           </tr>
         </tbody>
@@ -324,13 +361,18 @@ export function Inspector({
   node,
   edge,
   simulation,
+  detailLevel = 'guided',
   onPatchNode,
   onDeleteNode,
   onDeleteEdge,
   onClose,
 }: InspectorProps) {
   const [activeTab, setActiveTab] = useState<InspectorTab>('properties');
-  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const guided = (detailLevel ?? 'guided') === 'guided';
+  /* The disclosure follows the level until the reader toggles it by hand. */
+  const [manualAdvanced, setManualAdvanced] = useState<boolean | null>(null);
+  const advancedOpen = manualAdvanced ?? !guided;
+  const toggleAdvanced = () => setManualAdvanced((open) => !(open ?? !guided));
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [sheetFull, setSheetFull] = useState(false);
   const [sheetDrag, setSheetDrag] = useState(0);
@@ -345,7 +387,7 @@ export function Inspector({
   // A different component starts clean: essentials first, details folded away.
   useEffect(() => {
     setActiveTab('properties');
-    setAdvancedOpen(false);
+    setManualAdvanced(null);
     setConfirmingDelete(false);
     setSheetFull(false);
     setSheetDrag(0);
@@ -600,6 +642,12 @@ export function Inspector({
       </div>
 
       <div className="fiberlab-inspector-content flex-1 overflow-y-auto">
+        {guided ? (
+          <p className="pu-guided-note">
+            Guided view shows the essentials. Switch to <b>Engineer</b> in the top bar for every loss table, allowance
+            and hardware note.
+          </p>
+        ) : null}
         {beginnerSummary ? <p className="pu-insp-summary">{beginnerSummary}</p> : null}
 
         {hardwareInfo && showInfo ? (
@@ -702,7 +750,7 @@ export function Inspector({
                 />
               </button>
             </div>
-            <Advanced open={advancedOpen} onToggle={() => setAdvancedOpen((open) => !open)}>
+            <Advanced open={advancedOpen} onToggle={toggleAdvanced}>
               <SliderRow
                 label="Tx launch power"
                 value={node.data.txPowerDbm}
@@ -761,7 +809,7 @@ export function Inspector({
                 value={`${splitterBranchPortCount(node.data.ratio)} / ${MAX_BRANCH_PORTS}`}
               />
             </div>
-            <Advanced open={advancedOpen} onToggle={() => setAdvancedOpen((open) => !open)}>
+            <Advanced open={advancedOpen} onToggle={toggleAdvanced}>
               <SliderRow
                 label="Excess / uniformity loss"
                 value={node.data.excessLossDb}
@@ -813,10 +861,10 @@ export function Inspector({
 
         {node && isFiberNode(node) && showProperties ? (
           <>
-            <Row label="Fibre profile">
+            <Row label="Fiber profile">
               <select
                 className="select"
-                aria-label="Fibre profile"
+                aria-label="Fiber profile"
                 value={node.data.fiberProfile ?? 'singlemode'}
                 onChange={(event) => {
                   const fiberProfile = event.target.value as FiberProfile;
@@ -867,7 +915,14 @@ export function Inspector({
                 min={0}
                 step={0.05}
                 value={node.data.lengthKm}
-                onChange={(event) => onPatchNode(node.id, { lengthKm: Math.max(0, Number(event.target.value) || 0) })}
+                onChange={(event) => {
+                  // Only a real number patches the span; a cleared or mistyped
+                  // field keeps the last valid length instead of becoming 0 km.
+                  if (event.target.value.trim() === '') return;
+                  const next = Number(event.target.value);
+                  if (!Number.isFinite(next)) return;
+                  onPatchNode(node.id, { lengthKm: Math.max(0, next) });
+                }}
               />
             </Row>
             <div className="mb-4 grid grid-cols-2 gap-4">
@@ -889,7 +944,7 @@ export function Inspector({
                 {MODAL_DISPERSION_WARNING}
               </p>
             ) : null}
-            <Advanced open={advancedOpen} onToggle={() => setAdvancedOpen((open) => !open)}>
+            <Advanced open={advancedOpen} onToggle={toggleAdvanced}>
               <SliderRow
                 label="Span length"
                 value={node.data.lengthKm}
@@ -929,10 +984,16 @@ export function Inspector({
                     placeholder={computeFiberLoss(node.data).attenuationDbPerKm.toFixed(2)}
                     value={node.data.attenuationOverrideDbPerKm ?? ''}
                     onChange={(event) => {
-                      const raw = event.target.value;
-                      onPatchNode(node.id, {
-                        attenuationOverrideDbPerKm: raw === '' ? null : Math.max(0, Number(raw)),
-                      });
+                      const raw = event.target.value.trim();
+                      // Clearing the field returns to the wavelength default; a
+                      // typo is ignored rather than patched as NaN or 0 dB/km.
+                      if (raw === '') {
+                        onPatchNode(node.id, { attenuationOverrideDbPerKm: null });
+                        return;
+                      }
+                      const next = Number(raw);
+                      if (!Number.isFinite(next)) return;
+                      onPatchNode(node.id, { attenuationOverrideDbPerKm: Math.max(0, next) });
                     }}
                   />
                   <button
@@ -1002,7 +1063,7 @@ export function Inspector({
               channels={node.data.activeSpliceChannels}
               onChange={(activeSpliceChannels) => onPatchNode(node.id, { activeSpliceChannels })}
             />
-            <Advanced open={advancedOpen} onToggle={() => setAdvancedOpen((open) => !open)}>
+            <Advanced open={advancedOpen} onToggle={toggleAdvanced}>
               <SliderRow
                 label="Modeled through-splice allowance"
                 value={computeClosureSpliceLoss(node.data)}
@@ -1016,7 +1077,7 @@ export function Inspector({
                 The closure passes one modeled fiber per active branch and adds one adjustable fusion-splice allowance.
                 Tray occupancy is strand-level reference data, not a measured splice-loss value.
               </div>
-              <PortNote>2 × cable gland inputs (`in-0`, `in-1`) → 4 × branch outputs (`out-A` .. `out-D`)</PortNote>
+              <PortNote>2 × cable gland inputs (`in-0`, `in-1`) → 4 × branch outputs (`out-0` .. `out-3`)</PortNote>
             </Advanced>
           </>
         ) : null}
@@ -1036,7 +1097,7 @@ export function Inspector({
               Two matched independent through-pairs: input 1 → output 1, input 2 → output 2. Patch cords remain graph
               edges.
             </div>
-            <Advanced open={advancedOpen} onToggle={() => setAdvancedOpen((open) => !open)}>
+            <Advanced open={advancedOpen} onToggle={toggleAdvanced}>
               <div className="grid grid-cols-2 gap-4">
                 <Metric label="Optical inputs" value={ODF_INPUT_PORTS} />
                 <Metric label="Matched outputs" value={ODF_OUTPUT_PORTS} />
@@ -1059,7 +1120,7 @@ export function Inspector({
             <div className="mb-4 rounded-md border border-orange-300 bg-orange-50 px-3 py-3 text-body leading-relaxed text-orange-900">
               Outdoor NAP/FAT model: one feeder input, eight drop outputs, and an internal fixed 1:8 split.
             </div>
-            <Advanced open={advancedOpen} onToggle={() => setAdvancedOpen((open) => !open)}>
+            <Advanced open={advancedOpen} onToggle={toggleAdvanced}>
               <div className="grid grid-cols-2 gap-4">
                 <Metric label="Optical inputs" value={1} />
                 <Metric label="Drop outputs" value={NAP_OUTPUT_PORTS} />
@@ -1114,7 +1175,7 @@ export function Inspector({
               Add a pad only when the receiver would sit above the overload limit. The pad is wavelength-independent and
               adds no reflection to the OTDR trace.
             </div>
-            <Advanced open={advancedOpen} onToggle={() => setAdvancedOpen((open) => !open)}>
+            <Advanced open={advancedOpen} onToggle={toggleAdvanced}>
               <p className="text-body leading-relaxed text-slate-500">
                 Inline SC/APC barrel: the graph stays a straight through-path, so the pad simply subtracts a known
                 number of decibels between the plant and the subscriber.
@@ -1145,12 +1206,13 @@ export function Inspector({
             <div className="mb-4 grid grid-cols-2 gap-4">
               <Metric label="Rx power" value={formatDbm(telemetry?.rxPowerDbm ?? null)} />
               <Metric
-                label="Link margin"
+                label="Margin to LOS"
+                hint="margin-to-los"
                 value={telemetry?.rxPowerDbm === null || !telemetry ? '—' : `${telemetry.marginDb.toFixed(2)} dB`}
               />
             </div>
             <p className="text-body leading-relaxed text-slate-500">
-              Open <strong>Optical Power</strong> for the full link budget breakdown.
+              Open the <strong>Optical Power</strong> tab for the full loss, margin and receiver breakdown.
             </p>
           </>
         ) : null}
@@ -1185,7 +1247,7 @@ export function Inspector({
               <Metric label="Optical Rx" value={formatDbm(telemetry?.rxPowerDbm ?? null)} />
               <Metric label="PON standard" value={gatewayTelemetry?.ponStandard ?? 'No active link'} />
             </div>
-            <Advanced open={advancedOpen} onToggle={() => setAdvancedOpen((open) => !open)}>
+            <Advanced open={advancedOpen} onToggle={toggleAdvanced}>
               <div className="rounded-md border border-slate-200 bg-slate-50 p-2 text-body leading-relaxed text-slate-500">
                 Representative interfaces: dual-band Wi-Fi 6, four Gigabit Ethernet LAN ports, and one FXS voice port.
                 Exact radio streams, Ethernet options, and voice features vary by SKU.
@@ -1207,7 +1269,7 @@ export function Inspector({
               <Metric label="Power at far end" value={formatDbm(simulation.edgeTelemetry[edge.id]?.powerDbm ?? null)} />
               <Metric label="State" value={(simulation.edgeTelemetry[edge.id]?.edgeState ?? 'idle').toUpperCase()} />
             </div>
-            <Advanced open={advancedOpen} onToggle={() => setAdvancedOpen((open) => !open)}>
+            <Advanced open={advancedOpen} onToggle={toggleAdvanced}>
               <p className="text-body leading-relaxed text-slate-500">
                 A patch cord adds no loss of its own — its attenuation belongs to the fiber span it terminates on.
                 Delete it to break the optical path.
@@ -1331,7 +1393,8 @@ export function Inspector({
                     accent={STATUS_STYLES[telemetry.status].hex}
                   />
                   <Metric
-                    label="Link margin"
+                    label="Margin to LOS"
+                    hint="margin-to-los"
                     value={telemetry.rxPowerDbm === null ? '—' : `${telemetry.marginDb.toFixed(2)} dB`}
                   />
                   <Metric
@@ -1343,8 +1406,12 @@ export function Inspector({
                     value={telemetry.rxPowerDbm === null ? '—' : `1:${telemetry.cumulativeSplitRatio}`}
                   />
                 </div>
+                <p className="mb-4 text-caption leading-relaxed text-slate-500">
+                  Margin to LOS is how many dB still sit above the receiver's sensitivity floor. Smaller means the link
+                  is closer to dropping out.
+                </p>
                 <div className="eyebrow mb-2">Link budget breakdown</div>
-                <SegmentTable telemetry={telemetry} />
+                <SegmentTable telemetry={telemetry} safetyMarginDb={simulation.safetyMarginDb} />
                 <div className="mt-3 rounded-md border border-noc-700/60 bg-noc-950/50 p-2 font-mono text-label leading-relaxed text-noc-400">
                   <div className="mb-1 text-noc-300">P_rx = P_tx − ΣL − margin</div>
                   <div>
@@ -1385,7 +1452,8 @@ export function Inspector({
                     accent={STATUS_STYLES[telemetry.status].hex}
                   />
                   <Metric
-                    label="Link margin"
+                    label="Margin to LOS"
+                    hint="margin-to-los"
                     value={telemetry.rxPowerDbm === null ? '—' : `${telemetry.marginDb.toFixed(2)} dB`}
                   />
                   <Metric
@@ -1423,7 +1491,7 @@ export function Inspector({
                   TEST-NET placeholder only; DHCP, routing, and live Internet reachability are not modeled.
                 </p>
                 <div className="eyebrow mb-2">Optical path &amp; service audit</div>
-                <SegmentTable telemetry={telemetry} />
+                <SegmentTable telemetry={telemetry} safetyMarginDb={simulation.safetyMarginDb} />
                 <div className="mt-3 rounded-md border border-amber-300 bg-amber-50 p-2 text-body leading-relaxed text-amber-900">
                   Speed estimate divides the nominal shared PON line rate by the modeled cumulative split ratio. It does
                   not model contention, protocol overhead, Wi-Fi conditions, a service plan, or a measured speed test.

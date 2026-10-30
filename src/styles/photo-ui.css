@@ -53,8 +53,13 @@
   background: var(--pu-bg) !important;
 }
 .pu-center {
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  /* A column, not a three-row grid. The mission bar is optional, and a grid
+   * gives row 1 to whichever child comes first: without a mission the canvas
+   * landed in the `auto` row and collapsed to its 2 px border while the status
+   * bar took the `1fr`. Flex gives the canvas the leftover space whatever the
+   * number of children. */
+  display: flex;
+  flex-direction: column;
   flex: 1 1 0%;
   /* Canvas column floor: below this the tablet overlay step takes over. */
   min-width: min(var(--canvas-min-w), 100%);
@@ -935,6 +940,351 @@ button.pu-logo {
   font-size: var(--type-small);
   line-height: var(--leading-snug);
 }
+/* --------------------------- Results tabs -------------------------------- */
+.pu-result-tabs {
+  display: flex;
+  flex: 0 0 auto;
+  gap: var(--sp-1);
+  overflow-x: auto;
+  border-bottom: 1px solid var(--pu-line);
+  padding: 0 var(--sp-4);
+}
+.pu-result-tab {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 0 var(--sp-3);
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--pu-mut);
+  font-size: var(--type-small);
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+}
+.pu-result-tab:hover {
+  color: var(--pu-ink);
+}
+.pu-result-tab.is-active {
+  border-bottom-color: var(--pu-pri);
+  color: var(--pu-pri);
+}
+.pu-result-panel {
+  min-width: 0;
+  flex: 1;
+  overflow-y: auto;
+}
+/* The quotation rendered inside Results rather than as its own page. */
+.pu-embedded-report {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  padding: var(--sp-4);
+}
+
+/* ------------------------------- Learn ----------------------------------- */
+.pu-learn-list {
+  display: grid;
+  gap: var(--sp-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pu-learn-list > li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-2) 0;
+  border-top: 1px solid var(--pu-line);
+}
+.pu-learn-item-copy {
+  display: grid;
+  flex: 1 1 220px;
+  gap: 2px;
+  min-width: 0;
+}
+.pu-learn-item-copy small {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--pu-mut);
+  font-size: var(--type-caption);
+  line-height: var(--leading-snug);
+}
+.pu-learn-active {
+  margin-left: var(--sp-2);
+  border-radius: 999px;
+  background: var(--pu-pri-soft);
+  padding: 1px 8px;
+  color: var(--pu-pri);
+  font-size: var(--type-caption);
+  font-weight: var(--fw-semibold);
+}
+.pu-learn-links {
+  display: grid;
+  gap: var(--sp-1);
+  margin: 0 0 var(--sp-2);
+  padding: 0;
+  list-style: none;
+}
+.pu-learn-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--pu-pri);
+  font-size: var(--type-small);
+  font-weight: var(--fw-semibold);
+}
+
+/* ------------------------- Top bar (single row) -------------------------- */
+.pu-project-input {
+  min-width: 0;
+  max-width: 230px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: none;
+  padding: 3px 6px;
+  color: var(--pu-ink);
+  font: inherit;
+  font-weight: var(--fw-semibold);
+  text-overflow: ellipsis;
+}
+.pu-project-input:hover {
+  border-color: var(--pu-line);
+}
+.pu-project-input:focus-visible {
+  border-color: var(--pu-pri);
+  background: var(--pu-surface);
+  outline: none;
+}
+.pu-top-more {
+  position: relative;
+}
+.pu-menu-sub {
+  display: grid;
+  gap: 2px;
+  padding: 2px 0 2px var(--sp-4);
+}
+.pu-menu-sub button {
+  justify-content: flex-start;
+  font-size: var(--type-small);
+  text-align: left;
+}
+
+/* ---------------------------- Settings sheet ----------------------------- */
+.pu-settings-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  justify-content: flex-end;
+}
+.pu-settings-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgb(15 23 42 / 18%);
+  cursor: default;
+}
+.pu-settings-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 460px;
+  height: 100%;
+  overflow-y: auto;
+  border-left: 1px solid var(--pu-line);
+  background: var(--pu-surface);
+}
+.pu-settings-close {
+  position: absolute;
+  top: var(--sp-3);
+  right: var(--sp-3);
+  z-index: 1;
+}
+@media (max-width: 640px) {
+  .pu-settings-sheet {
+    align-items: flex-end;
+  }
+  .pu-settings-panel {
+    max-width: none;
+    height: min(86vh, 720px);
+    border-left: 0;
+    border-top: 1px solid var(--pu-line);
+    border-radius: var(--r-lg) var(--r-lg) 0 0;
+  }
+}
+
+/* --------------------------- Mission bar --------------------------------- */
+.pu-mission-bar {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2) var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  border-bottom: 1px solid var(--pu-line);
+  background: var(--pu-pri-soft);
+  color: var(--pu-ink);
+  font-size: var(--type-small);
+}
+.pu-mission-bar-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: var(--fw-semibold);
+}
+.pu-mission-bar-count {
+  border-radius: 999px;
+  background: var(--pu-surface);
+  padding: 1px 8px;
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--fw-semibold);
+}
+.pu-mission-bar-next {
+  flex: 1 1 220px;
+  min-width: 0;
+  color: var(--pu-mut);
+  line-height: var(--leading-snug);
+}
+
+/* -------------------------- Empty-state actions -------------------------- */
+.pu-empty-actions {
+  display: grid;
+  gap: var(--sp-1);
+  margin-top: var(--sp-2);
+}
+.pu-empty-actions .pu-btn {
+  justify-content: center;
+  width: 100%;
+}
+
+/* Zoom folds away on phones so every remaining target stays 44 px. */
+.pu-tb-zoom {
+  display: none !important;
+}
+@media (min-width: 768px) {
+  .pu-tb-zoom {
+    display: flex !important;
+  }
+}
+
+/* --------------------------- Detail level -------------------------------- */
+.pu-detail-chip {
+  display: none;
+  min-height: 30px;
+  padding: 4px 10px;
+  font-size: var(--type-small);
+  font-weight: var(--fw-semibold);
+}
+@media (min-width: 1024px) {
+  .pu-detail-chip {
+    display: inline-flex;
+  }
+}
+
+/* ---------------------------- Help tips ---------------------------------- */
+.pu-helptip {
+  position: relative;
+  display: inline-flex;
+  vertical-align: middle;
+  margin-left: 4px;
+}
+.pu-helptip-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  min-height: 22px;
+  border: 0;
+  background: none;
+  color: var(--pu-mut);
+  cursor: pointer;
+}
+.pu-helptip-btn:hover {
+  color: var(--pu-pri);
+}
+.pu-helptip-panel {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 4px);
+  left: 0;
+  width: min(260px, 76vw);
+  border: 1px solid var(--pu-line);
+  border-radius: var(--r-md);
+  background: var(--pu-surface);
+  box-shadow: 0 4px 12px rgba(30, 36, 64, 0.12);
+  padding: var(--sp-2);
+  color: var(--pu-ink);
+  font-size: var(--type-small);
+  font-weight: normal;
+  letter-spacing: normal;
+  line-height: var(--leading-snug);
+  text-transform: none;
+}
+
+/* ---------------------------- Guided note -------------------------------- */
+.pu-guided-note {
+  margin: 0 0 var(--sp-3);
+  border-left: 2px solid var(--pu-pri);
+  padding-left: var(--sp-2);
+  color: var(--pu-mut);
+  font-size: var(--type-caption);
+  line-height: var(--leading-snug);
+}
+
+/* ------------------------------ Glossary --------------------------------- */
+.pu-glossary {
+  display: grid;
+  gap: var(--sp-2);
+  margin: 0;
+  padding: 0;
+}
+.pu-glossary > div {
+  border-top: 1px solid var(--pu-line);
+  padding-top: var(--sp-2);
+}
+.pu-glossary dt {
+  color: var(--pu-ink);
+  font-size: var(--type-small);
+  font-weight: var(--fw-semibold);
+}
+.pu-glossary dd {
+  margin: 2px 0 0;
+  color: var(--pu-mut);
+  font-size: var(--type-caption);
+  line-height: var(--leading-snug);
+}
+
+/* Three-row link allowance: path loss, safety margin, total. */
+.pu-budget-rows {
+  display: grid;
+  gap: 2px;
+  margin: var(--sp-2) 0 0;
+  font-size: var(--type-small);
+}
+.pu-budget-rows > div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: 2px 0;
+  color: var(--pu-mut);
+}
+.pu-budget-rows b {
+  color: var(--pu-ink);
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--fw-semibold);
+}
+.pu-budget-rows .is-total {
+  margin-top: 2px;
+  border-top: 1px solid var(--pu-line);
+  padding-top: var(--sp-1);
+  color: var(--pu-ink);
+  font-weight: var(--fw-semibold);
+}
 .pu-sb-events {
   display: grid;
   gap: var(--sp-1);
@@ -1158,6 +1508,28 @@ button.pu-logo {
 }
 
 /* ---- Inspector: header, type line, Advanced disclosure, remove action ---- */
+.pu-save-status {
+  margin-left: var(--sp-2);
+  color: var(--pu-mut);
+  font-size: var(--type-caption);
+  white-space: nowrap;
+}
+.pu-save-status.is-error {
+  color: var(--pu-warn-text);
+  font-weight: var(--fw-semibold);
+}
+.pu-history {
+  display: none;
+  gap: var(--sp-1);
+}
+.pu-history .pu-btn {
+  padding: 5px 8px;
+}
+@media (min-width: 768px) {
+  .pu-history {
+    display: flex;
+  }
+}
 .pu-insp-close {
   display: inline-flex;
   width: var(--control-sm);
@@ -1403,6 +1775,14 @@ button.pu-logo {
   color: var(--pu-mut);
   font-size: var(--type-caption);
 }
+.hw-label .hw-spl-cap {
+  display: block;
+  margin-top: 2px;
+  color: var(--pu-warn-text);
+  font-size: var(--type-caption);
+  font-weight: var(--fw-semibold);
+  line-height: var(--leading-snug);
+}
 .hw-onu {
   position: relative;
   display: flex;
@@ -1595,13 +1975,33 @@ button.pu-logo {
     border-radius: var(--r-xl);
     box-shadow: -14px 0 32px rgba(43, 26, 20, 0.16);
   }
+  /* One row over the canvas: it scrolls instead of wrapping and eating canvas
+   * height, and its popover becomes a sheet because a scroller would clip it. */
   .pu-toolbar {
     max-width: calc(100% - var(--sp-4));
+    flex-wrap: nowrap;
     gap: var(--sp-1);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .pu-toolbar::-webkit-scrollbar {
+    display: none;
   }
   .pu-toolbar .pu-btn {
+    flex: 0 0 auto;
     padding: var(--sp-1) var(--sp-2);
     font-size: var(--type-body);
+  }
+  .pu-toolbar .pu-menu {
+    position: fixed !important;
+    top: calc(var(--topbar-h) + var(--sp-2)) !important;
+    left: var(--sp-2) !important;
+    right: var(--sp-2) !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-height: 62vh;
+    overflow-y: auto;
+    border-radius: var(--r-xl);
   }
   .pu-canvas .react-flow__minimap {
     display: none;
@@ -1642,6 +2042,28 @@ button.pu-logo {
   .pu-toolbar .pu-btn svg {
     width: 14px;
     height: 14px;
+  }
+}
+
+/* Captions on the canvas strip only survive where the canvas can hold them.
+ * At 768–1399 px the labelled row wrapped onto a second line, which broke the
+ * "one row of controls" rule; the icons stay, the tooltips still name them, and
+ * the captions return at 1400 px. */
+@media (min-width: 768px) and (max-width: 1399px) {
+  .pu-toolbar {
+    flex-wrap: nowrap;
+    gap: var(--sp-1);
+  }
+  .pu-toolbar .pu-tb-label {
+    display: none;
+  }
+  .pu-toolbar .pu-tb-btn,
+  .pu-toolbar .pu-tb-btn.is-compact {
+    justify-content: center;
+    padding: var(--sp-2) calc(var(--sp-2) + 2px);
+  }
+  .pu-toolbar .pu-tb-sep {
+    margin: 0;
   }
 }
 
@@ -2226,9 +2648,6 @@ button.pu-logo {
 }
 
 /* ---- Top bar: four items only -------------------------------------------- */
-.pu-logo-mark {
-  display: none;
-}
 .pu-project {
   display: inline-flex;
   min-width: 0;
@@ -2278,64 +2697,77 @@ button.pu-logo {
 /* Recent events keeps one scrollbar (the panel's) once the cards stack. */
 
 /* Canvas overlays. */
-.pu-empty-panel {
-  /* Clears the floating tool strip above the canvas, even at touch sizes. */
-  margin-top: calc(var(--control-tap) + var(--sp-3) + var(--sp-2)) !important; /* 64 */
+/* Empty canvas: a single centred card that owns the blank state — icon, the
+ * state itself, one sentence and the guided next step. The old version was an
+ * inline strip of floating text pinned under the top controls, which on a
+ * phone read as chrome that had been clipped at the right edge. Centred, it
+ * stays legible at every width and no longer collides with the "Components"
+ * pill or the tool strip. */
+.react-flow__panel.pu-empty-panel {
+  /* React Flow pins a top-centre panel; re-aim it at the middle of the canvas. */
+  top: 50% !important;
+  right: auto !important;
+  bottom: auto !important;
+  left: 50% !important;
+  margin: 0 !important;
+  transform: translate(-50%, -50%) !important;
 }
-/* Empty canvas: a whisper, not a card. One muted line of text, a small
- * underlined mission link and a dismiss — no border, no fill, no icon, so the
- * dotted canvas stays the loudest thing on screen. */
-.pu-empty-note {
-  display: inline-flex;
-  max-width: min(560px, calc(100vw - var(--sp-6)));
-  flex-wrap: nowrap;
+.pu-empty-card {
+  position: relative;
+  display: flex;
+  width: min(320px, calc(100vw - var(--sp-6) * 2));
+  flex-direction: column;
   align-items: center;
-  gap: 0 var(--sp-2);
-  overflow: hidden;
-  white-space: nowrap;
-  padding: 0 var(--sp-1);
-  color: var(--pu-mut);
-  font-size: var(--type-small);
-  line-height: 1.4;
+  gap: var(--sp-2);
+  padding: var(--sp-6) var(--sp-4) var(--sp-4);
+  border: 1px solid var(--pu-line);
+  border-radius: var(--r-2xl);
+  background: var(--pu-panel);
+  box-shadow:
+    0 18px 40px -20px rgba(43, 26, 20, 0.4),
+    0 1px 3px rgba(43, 26, 20, 0.06);
   text-align: center;
 }
-.pu-empty-title {
-  color: var(--pu-ink);
-  font-weight: var(--fw-semibold);
+.pu-empty-art {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: var(--r-pill);
+  background: var(--pu-pri-soft);
+  color: var(--pu-pri-text);
 }
-.pu-empty-title::after {
-  content: '·';
-  margin-left: var(--sp-2);
-  color: var(--pu-line);
+.pu-empty-title {
+  margin: 0;
+  color: var(--pu-ink);
+  font-size: var(--type-card-title);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--leading-snug);
 }
 .pu-empty-hint {
+  max-width: 30ch;
+  margin: 0;
   color: var(--pu-mut);
+  font-size: var(--type-small);
+  line-height: var(--leading-normal);
 }
 .pu-empty-action {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--sp-1);
-  padding: 0 2px;
-  border: 0;
-  background: transparent;
-  color: var(--pu-pri-text);
+  /* The fill comes from .pu-btn.pri; only the empty state's sizing lives here. */
+  min-height: var(--control-md);
+  margin-top: var(--sp-1);
+  padding: 0 var(--sp-4);
+  border-radius: var(--r-pill);
   font-size: var(--type-small);
-  font-weight: var(--fw-semibold);
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-.pu-empty-action:hover {
-  color: var(--pu-pri-cta-hover);
-}
-.pu-empty-action:focus-visible {
-  outline: 2px solid var(--pu-pri);
-  outline-offset: 2px;
 }
 .pu-empty-dismiss {
+  position: absolute;
+  top: var(--sp-1);
+  right: var(--sp-1);
   display: grid;
-  width: 22px;
-  height: 22px;
-  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
   place-items: center;
   border: 0;
   border-radius: var(--r-sm);
@@ -2351,11 +2783,13 @@ button.pu-logo {
   outline-offset: 1px;
 }
 @media (max-width: 640px) {
-  /* Phones: the sentence would cost a line of canvas, so the note keeps only
-   * the state and the mission shortcut. */
-  .pu-empty-hint,
-  .pu-empty-title::after {
-    display: none;
+  /* Phones: keep the card, tighten it so it never touches the canvas edges. */
+  .pu-empty-card {
+    width: min(300px, calc(100vw - var(--sp-4) * 2));
+    padding: var(--sp-4) var(--sp-3) var(--sp-3);
+  }
+  .pu-empty-hint {
+    max-width: 26ch;
   }
 }
 /* Short label swaps in on phones ("Run" instead of "Run Simulation"). */
@@ -2384,15 +2818,19 @@ button.pu-logo {
   .fiberlab-inspector:not(.is-collapsed) {
     max-width: calc(100% - var(--rail-w) - var(--sp-2) * 2);
   }
-  /* Below ~900 px the header can no longer hold every control on one line, so
-   * the row scrolls. Its popovers move out of the scroll container as fixed
-   * panels, otherwise the overflow would clip them. */
+  /* Below ~900 px the header shrinks the project name instead of scrolling:
+   * Run Simulation must never sit off-screen. Popovers stay fixed panels so no
+   * overflow can clip them. */
   .pu-top {
-    overflow-x: auto;
-    scrollbar-width: none;
+    overflow-x: visible;
   }
-  .pu-top::-webkit-scrollbar {
-    display: none;
+  .pu-project {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .pu-project-input {
+    width: 100%;
+    max-width: 100%;
   }
   .pu-top .pu-menu {
     position: fixed !important;
@@ -2404,35 +2842,66 @@ button.pu-logo {
     max-height: 60vh;
     overflow-y: auto;
   }
-  /* The tool strip stays one row over the canvas: it scrolls instead of
-   * wrapping and eating the canvas height. */
-  .pu-toolbar {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-  .pu-toolbar::-webkit-scrollbar {
-    display: none;
-  }
-  .pu-toolbar .pu-btn {
-    flex: 0 0 auto;
-  }
-  /* A scrolling container would clip its own popover, so it becomes a sheet
-   * anchored under the top bar. */
-  .pu-toolbar .pu-menu {
-    position: fixed !important;
-    top: calc(var(--topbar-h) + var(--sp-2)) !important;
-    left: var(--sp-2) !important;
-    right: var(--sp-2) !important;
-    width: auto !important;
-    min-width: 0 !important;
-    max-height: 62vh;
-    overflow-y: auto;
-    border-radius: var(--r-xl);
-  }
 }
 
 @media (max-width: 640px) {
+  /* A phone reads the subscriber table as cards: one endpoint per block, each
+   * number labelled by its column, so nothing needs a sideways scroll. */
+  .pu-sim-table thead {
+    display: none;
+  }
+  .pu-sim-table,
+  .pu-sim-table tbody,
+  .pu-sim-table tr,
+  .pu-sim-table td {
+    display: block;
+    width: 100%;
+  }
+  .pu-sim-table tr {
+    margin-bottom: var(--sp-2);
+    border: 1px solid var(--pu-line);
+    border-radius: var(--r-md);
+    padding: var(--sp-2);
+    background: var(--pu-surface);
+  }
+  .pu-sim-table td {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--sp-3);
+    padding: 2px 0;
+    text-align: right;
+  }
+  .pu-sim-table td::before {
+    content: attr(data-label);
+    color: var(--pu-mut);
+    font-size: var(--type-caption);
+    text-align: left;
+  }
+  .pu-sim-table td.pu-sim-action {
+    justify-content: flex-end;
+    padding-top: var(--sp-1);
+  }
+  .pu-sim-table td.pu-sim-action::before {
+    content: none;
+  }
+  .pu-sim-name {
+    font-weight: var(--fw-semibold);
+  }
+
+  /* Six 44 px targets on a 320 px phone: Select · Pan · Connect · Test ·
+   * Missions · ⋯. Delete stays in the inspector, where it asks first. */
+  .pu-toolbar .pu-tb-delete {
+    display: none;
+  }
+  .pu-toolbar .pu-tb-btn,
+  .pu-toolbar .pu-tb-btn.is-compact,
+  .pu-toolbar .pu-tb-more-btn {
+    min-width: 44px;
+    min-height: 44px;
+    justify-content: center;
+  }
+
   /* The buttons print their short captions on small screens. */
   .pu-label-full {
     display: none;
@@ -2588,16 +3057,23 @@ button.pu-logo {
    * zoom buttons are redundant next to Zoom in / Zoom out / Fit. */
   .pu-toolbar {
     top: auto;
-    right: var(--sp-2);
     bottom: calc(var(--sp-3) + var(--control-md) + var(--sp-2));
-    left: var(--sp-2);
-    max-width: none;
+    /* Hug the buttons and sit in the middle of the canvas. Stretching the pill
+     * edge to edge left the six 44 px targets stranded at one end with ~200 px
+     * of empty panel beside them, and 2 px gaps read as one compressed block.
+     * Centring uses auto margins rather than a transform, because a transform
+     * would become the containing block for the fixed-position popover below. */
+    left: 0;
+    right: 0;
+    width: max-content;
+    max-width: calc(100% - var(--sp-4));
+    margin-inline: auto;
     /* Wrapping rather than scrolling: a scroll container would clip the ⋯
-     * menu, and 7 × 44 px + gaps still fits one 360 px row. */
+     * menu, and 6 × 44 px + gaps still fits one 320 px row. */
     flex-wrap: wrap;
-    justify-content: flex-start;
-    gap: 2px;
-    padding: var(--sp-1);
+    justify-content: center;
+    gap: calc(var(--sp-1) + 2px);
+    padding: calc(var(--sp-1) + 2px);
     border: 1px solid var(--pu-line);
     border-radius: var(--r-xl);
     background: var(--pu-panel);
@@ -2731,6 +3207,72 @@ button.pu-logo {
   }
 }
 
+/* Portrait phone: the status line and its three numbers never fit on one row.
+ * The bar used to scroll sideways, so "Subscribers" was simply cut in half with
+ * no hint that anything was hidden. Split it into two rows instead — the state
+ * on top, the three metrics as equal columns underneath — so every number is
+ * readable without a swipe. The short captions (.pu-label-short) keep the
+ * columns from overflowing on a 320 px screen. */
+@media (max-width: 767px) and (orientation: portrait) {
+  .pu-sb-main {
+    flex-wrap: wrap;
+    gap: var(--sp-1) var(--sp-2);
+    padding: var(--sp-2);
+    overflow: hidden;
+  }
+  .pu-sb-status {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .pu-sb-spacer {
+    display: none;
+  }
+  .pu-sb-chevron {
+    position: static;
+    padding-left: 0;
+    background: none;
+  }
+  .pu-sb-values {
+    order: 1;
+    flex: 1 0 100%;
+    justify-content: space-between;
+    gap: var(--sp-2);
+    padding-top: var(--sp-1);
+    border-top: 1px solid var(--pu-line);
+  }
+  .pu-sb-item {
+    flex: 1 1 0;
+    min-width: 0;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+  }
+  .pu-sb-item small {
+    letter-spacing: 0;
+    white-space: nowrap;
+  }
+  .pu-sb-item b {
+    font-size: var(--type-small);
+  }
+}
+
+/* ---------------- Touch: kill the double-tap zoom ------------------------- *
+ * React Flow only sets `touch-action: none` on the pane, so parts were left on
+ * the browser default: a quick second tap on a component counted as a
+ * double-tap and iOS zoomed the whole page. `manipulation` keeps single taps,
+ * presses and drags for the app and disables that gesture. Controls get the
+ * same treatment so a double-tap on a button never magnifies the UI either. */
+.react-flow__node,
+.pu-canvas button,
+button,
+a[href],
+[role='button'] {
+  touch-action: manipulation;
+}
+
 /* Touch sizing sits last so it wins over the narrow-width overrides above. */
 /* Phone: the rail becomes a bottom tab bar and every sheet sits above it. */
 @media (max-width: 767px) {
@@ -2773,29 +3315,22 @@ button.pu-logo {
     max-height: calc(100vh - var(--topbar-h) - var(--tabbar-h) - var(--sp-4));
   }
 
-  /* Top bar: logo mark, truncated project, icon + label run button. */
-  .pu-logo-full {
-    display: none;
-  }
-  .pu-logo-mark {
-    display: inline-flex;
-    width: var(--control-md);
-    height: var(--control-md);
-    align-items: center;
-    justify-content: center;
-    border-radius: var(--r-md);
-    background: var(--pu-pri);
-    color: #fff4e6;
-    font-family: Sora, Manrope, sans-serif;
+  /* Top bar: wordmark, truncated project, icon + label run button. The wordmark
+   * is one step smaller than on desktop so it still leaves the project room. */
+  .pu-logo {
+    flex: 0 0 auto;
+    margin-right: var(--sp-2);
     font-size: var(--fs-lg);
-    font-weight: var(--fw-black);
-    line-height: 1;
+    letter-spacing: -0.01em;
+  }
+  .pu-sep {
+    display: none;
   }
   .pu-zoom {
     display: none;
   }
   .pu-project-name {
-    max-width: 44vw;
+    max-width: 34vw;
   }
   .pu-label-full {
     display: none;
@@ -2923,6 +3458,28 @@ button.pu-logo {
  * on the 44 px tap floor and the status bar floats over the canvas instead of
  * taking a row, which lifts the canvas from ~37 % to ~58 % of the height. */
 @media (max-width: 900px) and (max-height: 520px) and (orientation: landscape) {
+  /* Phone landscape: the mission bar stops costing canvas rows. */
+  .pu-mission-bar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding: var(--sp-1) var(--sp-2);
+  }
+  .pu-mission-bar::-webkit-scrollbar {
+    display: none;
+  }
+  .pu-mission-bar-next {
+    flex: 1 1 auto;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .pu-mission-bar .pu-btn {
+    flex: 0 0 auto;
+    min-height: 36px;
+  }
+
   :root {
     --topbar-h: 44px;
     --panel-head-h: 40px;
@@ -2930,7 +3487,6 @@ button.pu-logo {
   }
   .pu-center {
     position: relative;
-    grid-template-rows: auto minmax(0, 1fr);
   }
   .pu-design-bar {
     min-height: 40px;
@@ -3137,5 +3693,21 @@ button.pu-logo {
 @media (prefers-reduced-motion: reduce) {
   .pu-overlay-spinner {
     animation: none;
+  }
+}
+
+/* ------------------------------------------------------------------------- */
+/* Very wide desktops: the same layout, a touch larger, so a 1600–1920 px     */
+/* screen does not read as a phone screenshot. No component changes size      */
+/* relative to its neighbours; only the shell and type step up.               */
+/* ------------------------------------------------------------------------- */
+@media (min-width: 1600px) {
+  .fiberlab-studio {
+    --shell-pad: calc(var(--sp-4) * 1.15);
+    --shell-gap: calc(var(--sp-3) * 1.15);
+  }
+  .pu-screen {
+    padding-left: calc(var(--sp-6) * 1.15);
+    padding-right: calc(var(--sp-6) * 1.15);
   }
 }

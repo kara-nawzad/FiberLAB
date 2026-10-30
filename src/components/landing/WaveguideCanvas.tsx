@@ -50,15 +50,19 @@ const PORTS = [
   { port: '04', startY: 197, endY: 267 },
 ] as const;
 
-/* Compact geometry: each branch stops a few px above its pigtail card, so no
- * curve ever runs underneath a card's text. */
-const MOBILE_PORT_OUT_Y = 269;
-const MOBILE_CARD_H = 58;
+/* Phone geometry. The compact diagram is scaled to roughly 0.9× on a 390 px
+ * screen, so every label here is drawn at a readable size rather than shrunk
+ * from the desktop drawing. Branch curves are drawn before the pigtail cards,
+ * so a curve that has to travel past the first row of cards runs behind them
+ * instead of across their borders. */
+const MOBILE_PORT_OUT_Y = 256;
+const MOBILE_CARD_W = 160;
+const MOBILE_CARD_H = 62;
 const MOBILE_PORTS = [
-  { port: '01', startX: 132, endX: 94, cardY: 316 },
-  { port: '02', startX: 159, endX: 256, cardY: 316 },
-  { port: '03', startX: 201, endX: 94, cardY: 414 },
-  { port: '04', startX: 228, endX: 256, cardY: 414 },
+  { port: '01', startX: 132, endX: 94, endY: 292 },
+  { port: '02', startX: 159, endX: 256, endY: 292 },
+  { port: '03', startX: 201, endX: 94, endY: 390 },
+  { port: '04', startX: 228, endX: 256, endY: 390 },
 ] as const;
 
 function DesktopWaveguide({
@@ -99,6 +103,9 @@ function DesktopWaveguide({
       </text>
       <text x="975" y="28" fill="#705443" textAnchor="end" fontFamily="ui-monospace, monospace" fontSize="11">
         λ {wavelengthNm} nm · θc {criticalAngleDeg.toFixed(3)}°
+      </text>
+      <text x="26" y="48" fill="#85695a" fontFamily="ui-monospace, monospace" fontSize="10">
+        dBm = absolute power · dB = insertion loss
       </text>
 
       {/* Fiber jacket, cladding, and the 9 µm core are shown as nested layers. */}
@@ -217,9 +224,6 @@ function DesktopWaveguide({
       <text x="823" y="313" fill="#705443" fontFamily="ui-monospace, monospace" fontSize="9">
         Pbranch = Ptx − {PLC_1X4_INSERTION_LOSS_DB.toFixed(2)} dB
       </text>
-      <text x="980" y="313" textAnchor="end" fill="#85695a" fontFamily="ui-monospace, monospace" fontSize="8">
-        dBm = absolute power · dB = insertion loss
-      </text>
     </svg>
   );
 }
@@ -231,12 +235,12 @@ function MobileWaveguide({
   axialRayAngleDeg,
   branchPowerDbm,
 }: WaveguideCanvasProps) {
-  const ray = useMemo(() => makeRayPath(25, 335, 92.8, 96.2, axialRayAngleDeg), [axialRayAngleDeg]);
+  const ray = useMemo(() => makeRayPath(25, 335, 86, 92, axialRayAngleDeg), [axialRayAngleDeg]);
 
   return (
     <svg
       className="landing-waveguide-svg landing-waveguide-svg--compact"
-      viewBox="0 0 360 590"
+      viewBox="0 0 360 546"
       role="img"
       aria-label={`Single-mode fiber ray tracing at ${wavelengthNm} nanometers, through a one-to-four PLC splitter. Each branch receives ${powerLabel(branchPowerDbm)}.`}
     >
@@ -252,14 +256,21 @@ function MobileWaveguide({
           </feMerge>
         </filter>
       </defs>
-      <rect width="360" height="590" fill="url(#waveguide-grid-mobile)" opacity="0.38" />
-      <text x="18" y="24" fill="#705443" fontFamily="ui-monospace, monospace" fontSize="9" letterSpacing="0.5">
-        WAVEGUIDE · {wavelengthNm} nm · θc {criticalAngleDeg.toFixed(3)}°
+      <rect width="360" height="546" fill="url(#waveguide-grid-mobile)" opacity="0.38" />
+
+      <text x="18" y="25" fill="#705443" fontFamily="ui-monospace, monospace" fontSize="10.5" letterSpacing="0.4">
+        WAVEGUIDE · {wavelengthNm} nm
       </text>
-      <rect x="16" y="42" width="328" height="111" rx="18" fill="#fff4d6" stroke="#d8bfa0" />
-      <rect x="16" y="70" width="328" height="56" rx="12" fill="#f4e8d8" stroke="#b18c72" />
-      <rect x="16" y="92.8" width="328" height="3.4" rx="1.7" fill={rayColor} opacity="0.26" />
-      <path d={ray} fill="none" stroke={rayColor} strokeWidth="1.8" filter="url(#ray-glow-mobile)" />
+      <text x="344" y="25" textAnchor="end" fill="#705443" fontFamily="ui-monospace, monospace" fontSize="10.5">
+        θc {criticalAngleDeg.toFixed(3)}°
+      </text>
+
+      {/* Coating, cladding and the 9 µm core as three nested layers. The block
+       * stays shallow so it does not push the splitter off a phone screen. */}
+      <rect x="16" y="40" width="328" height="88" rx="14" fill="#fff4d6" stroke="#d8bfa0" />
+      <rect x="16" y="62" width="328" height="52" rx="10" fill="#f4e8d8" stroke="#b18c72" />
+      <rect x="16" y="87.5" width="328" height="3.4" rx="1.7" fill={rayColor} opacity="0.26" />
+      <path d={ray} fill="none" stroke={rayColor} strokeWidth="1.9" filter="url(#ray-glow-mobile)" />
       <path
         className="waveguide-ray-pulse"
         d={ray}
@@ -268,54 +279,57 @@ function MobileWaveguide({
         strokeWidth="0.8"
         strokeLinecap="round"
       />
-      <text x="27" y="61" fill="#713f12" fontFamily="ui-monospace, monospace" fontSize="8.5" fontWeight="700">
-        COATING {COATING_DIAMETER_UM} μm · CLADDING {CLADDING_DIAMETER_UM} μm · CORE {CORE_DIAMETER_UM} μm
+      <text x="28" y="54" fill="#713f12" fontFamily="ui-monospace, monospace" fontSize="10.5" fontWeight="700">
+        ACRYLATE COATING · {COATING_DIAMETER_UM} μm
       </text>
-      <text x="27" y="142" fill="#705443" fontFamily="ui-monospace, monospace" fontSize="8">
+      <text x="28" y="106" fill="#705443" fontFamily="ui-monospace, monospace" fontSize="10.5">
+        CLADDING {CLADDING_DIAMETER_UM} μm · CORE {CORE_DIAMETER_UM} μm
+      </text>
+      <text x="28" y="124" fill="#85695a" fontFamily="ui-monospace, monospace" fontSize="10.5">
         AXIAL RAY {axialRayAngleDeg.toFixed(3)}° · TIR AT CORE BOUNDARY
       </text>
 
       {/* Optical trunk bends from the longitudinal guide into the PLC cassette. */}
-      <path d="M 335 95 C 351 119, 330 168, 247 210" fill="none" stroke={rayColor} strokeWidth="1.8" />
+      <path d="M 344 89 C 360 108, 344 148, 246 180" fill="none" stroke={rayColor} strokeWidth="1.9" />
       <path
         className="waveguide-ray-pulse"
-        d="M 335 95 C 351 119, 330 168, 247 210"
+        d="M 344 89 C 360 108, 344 148, 246 180"
         fill="none"
         stroke="#fffaF2"
         strokeWidth="0.8"
         strokeLinecap="round"
       />
-      <rect x="116" y="178" width="128" height="91" rx="12" fill="#fffaF2" stroke="#d8bfa0" strokeWidth="1.3" />
+
+      <rect x="116" y="164" width="128" height="92" rx="12" fill="#fffaF2" stroke="#d8bfa0" strokeWidth="1.3" />
       <text
         x="180"
-        y="200"
+        y="188"
         textAnchor="middle"
         fill="#2b1a14"
         fontFamily="ui-monospace, monospace"
-        fontSize="12"
+        fontSize="14"
         fontWeight="700"
       >
         1:4 PLC
       </text>
       <path
-        d="M139 222H159M159 222L181 211M159 222L181 218M159 222L181 226M159 222L181 233"
+        d="M139 210H159M159 210L181 199M159 210L181 206M159 210L181 214M159 210L181 221"
         fill="none"
         stroke="#85695a"
         strokeWidth="1.3"
       />
-      <circle cx="159" cy="222" r="3" fill={rayColor} />
-      <text x="180" y="252" textAnchor="middle" fill="#705443" fontFamily="ui-monospace, monospace" fontSize="10">
+      <circle cx="159" cy="210" r="3" fill={rayColor} />
+      <text x="180" y="242" textAnchor="middle" fill="#705443" fontFamily="ui-monospace, monospace" fontSize="12">
         −{PLC_1X4_INSERTION_LOSS_DB.toFixed(2)} dB
       </text>
 
-      {MOBILE_PORTS.map(({ port, startX, endX, cardY }, index) => {
-        /* The curve lands 6 px above the card it feeds. */
+      {/* Every branch first, then the cards on top of them. */}
+      {MOBILE_PORTS.map(({ port, startX, endX, endY }) => {
         const path = `M ${startX} ${MOBILE_PORT_OUT_Y} C ${startX} ${MOBILE_PORT_OUT_Y + 26}, ${endX} ${
-          cardY - 34
-        }, ${endX} ${cardY - 6}`;
-        const x = index % 2 === 0 ? 14 : 186;
+          endY - 30
+        }, ${endX} ${endY - 4}`;
         return (
-          <g key={port}>
+          <g key={`branch-${port}`}>
             <path d={path} fill="none" stroke={rayColor} strokeWidth="1.6" opacity="0.72" />
             <path
               className="waveguide-ray-pulse"
@@ -325,16 +339,24 @@ function MobileWaveguide({
               strokeWidth="0.8"
               strokeLinecap="round"
             />
-            <rect x={x} y={cardY} width="160" height={MOBILE_CARD_H} rx="9" fill="#fffaF2" stroke="#d8bfa0" />
-            <text x={x + 11} y={cardY + 21} fill="#85695a" fontFamily="ui-monospace, monospace" fontSize="9">
+          </g>
+        );
+      })}
+
+      {MOBILE_PORTS.map(({ port, endY }, index) => {
+        const x = index % 2 === 0 ? 14 : 186;
+        return (
+          <g key={`card-${port}`}>
+            <rect x={x} y={endY} width={MOBILE_CARD_W} height={MOBILE_CARD_H} rx="10" fill="#fffaF2" stroke="#d8bfa0" />
+            <text x={x + 12} y={endY + 24} fill="#85695a" fontFamily="ui-monospace, monospace" fontSize="10.5">
               PIGTAIL {port}
             </text>
             <text
-              x={x + 11}
-              y={cardY + 43}
+              x={x + 12}
+              y={endY + 47}
               fill="#2b1a14"
               fontFamily="ui-monospace, monospace"
-              fontSize="12"
+              fontSize="15"
               fontWeight="700"
             >
               {powerLabel(branchPowerDbm)}
@@ -342,18 +364,19 @@ function MobileWaveguide({
           </g>
         );
       })}
-      <g transform="translate(42 540)">
-        <circle r="17" fill="#fff1c2" stroke="#d8bfa0" />
-        <circle r="8.5" fill="#eed8bf" stroke="#b18c72" />
-        <circle r="0.7" fill={rayColor} />
-        <text x="26" y="-3" fill="#705443" fontFamily="ui-monospace, monospace" fontSize="9">
+
+      <g transform="translate(42 492)">
+        <circle r="18" fill="#fff1c2" stroke="#d8bfa0" />
+        <circle r="9" fill="#eed8bf" stroke="#b18c72" />
+        <circle r="0.8" fill={rayColor} />
+        <text x="27" y="-2" fill="#705443" fontFamily="ui-monospace, monospace" fontSize="10.5">
           END-FACE · {COATING_DIAMETER_UM} / {CLADDING_DIAMETER_UM} / {CORE_DIAMETER_UM} μm
         </text>
-        <text x="26" y="12" fill="#85695a" fontFamily="ui-monospace, monospace" fontSize="8">
+        <text x="27" y="15" fill="#85695a" fontFamily="ui-monospace, monospace" fontSize="10">
           Magnified for legibility
         </text>
       </g>
-      <text x="346" y="574" textAnchor="end" fill="#85695a" fontFamily="ui-monospace, monospace" fontSize="8">
+      <text x="346" y="532" textAnchor="end" fill="#85695a" fontFamily="ui-monospace, monospace" fontSize="10.5">
         Pbranch = Ptx − {PLC_1X4_INSERTION_LOSS_DB.toFixed(2)} dB
       </text>
     </svg>

@@ -1,12 +1,16 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
+  ChevronDown,
+  Crosshair,
   Ellipsis,
   Grid3x3,
   Hand,
   Link2,
-  Maximize2,
+  ListTodo,
   MousePointer2,
+  Play,
   RotateCcw,
+  ScanLine,
   Trash2,
   ZoomIn,
   ZoomOut,
@@ -15,11 +19,11 @@ import {
 /* ========================================================================== *
  * Floating canvas toolbar.
  *
- * Only the tools an engineer touches while drawing live here: Select · Pan ·
- * Connect · Delete, then Zoom out · Zoom in · Fit. The overflow holds canvas
- * actions only — fit, zoom reset and grid snapping. Everything that configures
- * the app (Overview, OPM, OTDR, Missions, safety margin, Auto, Clear, help)
- * lives in the Settings section. Adding components lives in the library.
+ * One row, five groups: Select · Pan · Connect · Delete, then Test (run the
+ * budget, probe with the power meter, trace with the OTDR), then zoom, then the
+ * mission door, then an overflow for view actions. Zoom folds away on phones so
+ * every remaining target keeps a 44 px touch area; Settings and presets live in
+ * the top bar. Adding components lives in the library.
  * ========================================================================== */
 
 export interface CanvasToolbarProps {
@@ -34,7 +38,14 @@ export interface CanvasToolbarProps {
   onPanTool: () => void;
   onToggleLink: () => void;
   onDelete: () => void;
-  onFit: () => void;
+  /** Opens the field-mission drawer; the label names the running mission. */
+  onOpenMissions: () => void;
+  activeMissionTitle?: string | null;
+  /** Test ▾ — the three read-outs that need a live network. */
+  onRunTest: () => void;
+  onOpenOpm: () => void;
+  onOpenOtdr: () => void;
+  opmActive?: boolean;
   onZoomIn: () => void;
   onZoomOut: () => void;
   onZoomReset: () => void;
@@ -49,6 +60,7 @@ function ToolButton({
   disabled = false,
   pressed,
   compact = false,
+  className = '',
   onClick,
 }: {
   icon: React.ReactNode;
@@ -60,12 +72,14 @@ function ToolButton({
   pressed?: boolean;
   /** View utilities read better as square icon buttons with a tooltip. */
   compact?: boolean;
+  /** Extra class hook (phones hide the delete target, the inspector keeps it). */
+  className?: string;
   onClick: () => void;
 }) {
   return (
     <button
       type="button"
-      className={`pu-btn pu-tb-btn${compact ? ' is-compact' : ''}${active ? ' is-active' : ''}`}
+      className={`pu-btn pu-tb-btn${compact ? ' is-compact' : ''}${active ? ' is-active' : ''}${className ? ` ${className}` : ''}`}
       onClick={onClick}
       disabled={disabled}
       title={title}
@@ -91,13 +105,39 @@ export function CanvasToolbar(props: CanvasToolbarProps) {
     onPanTool,
     onToggleLink,
     onDelete,
-    onFit,
+    onOpenMissions,
+    activeMissionTitle = null,
+    onRunTest,
+    onOpenOpm,
+    onOpenOtdr,
+    opmActive = false,
     onZoomIn,
     onZoomOut,
     onZoomReset,
   } = props;
   const menuRef = useRef<HTMLDivElement | null>(null);
   const menuButtonRef = useRef<HTMLButtonElement | null>(null);
+  const [testOpen, setTestOpen] = useState(false);
+  const testRef = useRef<HTMLDivElement | null>(null);
+  const testButtonRef = useRef<HTMLButtonElement | null>(null);
+
+  useEffect(() => {
+    if (!testOpen) return;
+    const onDown = (event: MouseEvent) => {
+      if (testRef.current && !testRef.current.contains(event.target as globalThis.Node)) setTestOpen(false);
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      setTestOpen(false);
+      testButtonRef.current?.focus({ preventScroll: true });
+    };
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [testOpen]);
 
   useEffect(() => {
     if (!toolsOpen) return;
@@ -151,6 +191,7 @@ export function CanvasToolbar(props: CanvasToolbarProps) {
           onClick={onToggleLink}
         />
         <ToolButton
+          className="pu-tb-delete"
           icon={<Trash2 size={16} aria-hidden="true" />}
           label={selectionCount > 1 ? `Delete (${selectionCount})` : 'Delete'}
           ariaLabel="Delete selected elements"
@@ -162,7 +203,58 @@ export function CanvasToolbar(props: CanvasToolbarProps) {
 
       <span className="pu-tb-sep" aria-hidden="true" />
 
-      <div className="pu-tb-group">
+      <div className="pu-tb-group pu-tb-test" ref={testRef}>
+        <button
+          ref={testButtonRef}
+          type="button"
+          className={`pu-btn pu-tb-btn${testOpen || opmActive ? ' is-active' : ''}`}
+          onClick={() => setTestOpen((open) => !open)}
+          aria-expanded={testOpen}
+          aria-haspopup="true"
+          aria-controls="canvas-test-menu"
+          aria-label="Test"
+          title="Test the network: run the budget, probe light, trace fiber"
+        >
+          <ScanLine size={16} aria-hidden="true" />
+          <span className="pu-tb-label">Test</span>
+          <ChevronDown size={12} aria-hidden="true" />
+        </button>
+        {testOpen ? (
+          <div id="canvas-test-menu" className="pu-menu" style={{ top: 'calc(100% + 8px)', left: 0, width: 220 }}>
+            <button
+              type="button"
+              onClick={() => {
+                setTestOpen(false);
+                onRunTest();
+              }}
+            >
+              <Play size={14} className="pu-menu-ico" aria-hidden="true" /> Run the budget
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setTestOpen(false);
+                onOpenOpm();
+              }}
+            >
+              <Crosshair size={14} className="pu-menu-ico" aria-hidden="true" /> Probe with the OPM
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setTestOpen(false);
+                onOpenOtdr();
+              }}
+            >
+              <ScanLine size={14} className="pu-menu-ico" aria-hidden="true" /> Acquire an OTDR trace
+            </button>
+          </div>
+        ) : null}
+      </div>
+
+      <span className="pu-tb-sep pu-tb-zoom" aria-hidden="true" />
+
+      <div className="pu-tb-group pu-tb-zoom">
         <ToolButton
           icon={<ZoomOut size={16} aria-hidden="true" />}
           label="Zoom out"
@@ -177,13 +269,18 @@ export function CanvasToolbar(props: CanvasToolbarProps) {
           compact
           onClick={onZoomIn}
         />
+      </div>
+
+      <span className="pu-tb-sep" aria-hidden="true" />
+
+      <div className="pu-tb-group">
         <ToolButton
-          icon={<Maximize2 size={16} aria-hidden="true" />}
-          label="Fit"
-          ariaLabel="Fit View"
-          title="Fit the topology to the screen"
-          compact
-          onClick={onFit}
+          icon={<ListTodo size={16} aria-hidden="true" />}
+          label="Missions"
+          ariaLabel={activeMissionTitle ? `Missions, active: ${activeMissionTitle}` : 'Missions'}
+          title="Field missions: guided build and fault-finding practice"
+          active={Boolean(activeMissionTitle)}
+          onClick={onOpenMissions}
         />
       </div>
 
@@ -199,7 +296,7 @@ export function CanvasToolbar(props: CanvasToolbarProps) {
           aria-haspopup="true"
           aria-controls="canvas-more-tools"
           aria-label="More tools"
-          title="More tools — fit, zoom and grid snapping"
+          title="More tools — zoom reset and grid snapping"
         >
           <Ellipsis size={18} aria-hidden="true" />
         </button>
@@ -211,9 +308,6 @@ export function CanvasToolbar(props: CanvasToolbarProps) {
             aria-label="Canvas actions"
             style={{ top: 'calc(100% + 8px)', right: 0, width: 244 }}
           >
-            <button type="button" onClick={close(onFit)} aria-label="Fit view to screen">
-              <Maximize2 size={14} className="pu-menu-ico" aria-hidden="true" /> Fit view to screen
-            </button>
             <button type="button" onClick={close(onZoomReset)} aria-label="Zoom to 100%">
               <RotateCcw size={14} className="pu-menu-ico" aria-hidden="true" /> Zoom to 100%
             </button>

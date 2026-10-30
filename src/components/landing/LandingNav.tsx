@@ -19,39 +19,43 @@ export function LandingNav({ onLaunchStudio, onLoadPreset }: LandingNavProps) {
         </span>
       </a>
 
-      <div className="landing-nav-links">
-        <a href="#capabilities">Capabilities</a>
-        <a href="#reference">Reference</a>
-        <details
-          className="landing-preset-menu"
-          open={presetsOpen}
-          onToggle={(event) => setPresetsOpen(event.currentTarget.open)}
-        >
-          <summary aria-label="Quick-load a topology">
-            Topologies <ChevronDown size={14} aria-hidden="true" />
-          </summary>
-          <div className="landing-preset-popover">
-            <p>LOAD A NETWORK</p>
-            {PRESETS.map((preset) => (
-              <button
-                type="button"
-                key={preset.id}
-                onClick={() => {
-                  onLoadPreset(preset.id);
-                  setPresetsOpen(false);
-                }}
-              >
-                <span>{preset.name}</span>
-                <small>{preset.description}</small>
-              </button>
-            ))}
-          </div>
-        </details>
-      </div>
+      {/* The glass pill wraps the four controls only — the wordmark stands
+       * alone beside it instead of sharing the outline. */}
+      <div className="landing-nav-cluster">
+        <div className="landing-nav-links">
+          <a href="#capabilities">Capabilities</a>
+          <a href="#reference">Reference</a>
+          <details
+            className="landing-preset-menu"
+            open={presetsOpen}
+            onToggle={(event) => setPresetsOpen(event.currentTarget.open)}
+          >
+            <summary aria-label="Quick-load a topology">
+              Topologies <ChevronDown size={13} aria-hidden="true" />
+            </summary>
+            <div className="landing-preset-popover">
+              <p>LOAD A NETWORK</p>
+              {PRESETS.map((preset) => (
+                <button
+                  type="button"
+                  key={preset.id}
+                  onClick={() => {
+                    onLoadPreset(preset.id);
+                    setPresetsOpen(false);
+                  }}
+                >
+                  <span>{preset.name}</span>
+                  <small>{preset.description}</small>
+                </button>
+              ))}
+            </div>
+          </details>
+        </div>
 
-      <button type="button" className="landing-button landing-button--nav" onClick={onLaunchStudio}>
-        Launch Studio <ArrowRight size={14} aria-hidden="true" />
-      </button>
+        <button type="button" className="landing-button landing-button--nav" onClick={onLaunchStudio}>
+          Launch Studio <ArrowRight size={13} aria-hidden="true" />
+        </button>
+      </div>
     </nav>
   );
 }

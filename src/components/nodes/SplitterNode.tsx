@@ -59,6 +59,11 @@ export function SplitterNode({ id, data, selected }: NodeProps<SplitterFlowNode>
 
       <div className="hw-label">
         <b>PLC Splitter 1:{data.ratio}</b>
+        {data.ratio > portCount ? (
+          <small className="hw-spl-cap">
+            {portCount} of {data.ratio} ports shown
+          </small>
+        ) : null}
       </div>
 
       <Handle

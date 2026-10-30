@@ -40,15 +40,17 @@ const barWidth = (value: number | null): number =>
 
 function deriveStatus(summary: NetworkSummary): { tone: Tone; label: string } {
   if (summary.subscriberCount === 0) return { tone: 'idle', label: 'No subscribers' };
-  if (summary.byStatus.LOS > 0 || summary.byStatus.DISCONNECTED > 0) return { tone: 'bad', label: 'Fail' };
+  // Same words the subscriber badges use, so one state never has two names.
+  if (summary.byStatus.LOS > 0) return { tone: 'bad', label: 'LOS' };
+  if (summary.byStatus.DISCONNECTED > 0) return { tone: 'bad', label: 'Disconnected' };
   if (
     summary.byStatus.WARNING > 0 ||
     summary.byStatus.OVERLOAD > 0 ||
     summary.upstreamDynamicRangeWarning ||
     summary.modalDispersionWarnings.length > 0
   )
-    return { tone: 'warn', label: 'Marginal' };
-  return { tone: 'ok', label: 'OK' };
+    return { tone: 'warn', label: 'Warning' };
+  return { tone: 'ok', label: 'Online' };
 }
 
 interface StatusEvent {
@@ -136,8 +138,10 @@ export function StatusBar({
   const warningCount = events.filter((event) => event.tone !== 'ok').length;
   const summaryLabel = [
     `Network status: ${status.label}.`,
-    `Total loss ${worstLossDb !== null ? `${worstLossDb.toFixed(1)} dB` : 'unavailable'}.`,
-    `Total distance ${summary.totalFiberKm.toFixed(1)} km.`,
+    worstLossDb !== null
+      ? `Loss plus margin ${(worstLossDb + simulation.safetyMarginDb).toFixed(1)} dB (path loss ${worstLossDb.toFixed(1)} dB plus a ${simulation.safetyMarginDb.toFixed(1)} dB safety margin).`
+      : 'Loss plus margin unavailable.',
+    `Fiber on canvas ${summary.totalFiberKm.toFixed(1)} km, every span drawn whether it is patched or not.`,
     `${online} of ${summary.subscriberCount} subscribers online.`,
     expanded ? 'Hide optical budget and events.' : 'Show optical budget and events.',
   ].join(' ');
@@ -179,15 +183,24 @@ export function StatusBar({
         </span>
         <span className="pu-sb-values">
           <span className="pu-sb-item">
-            <small>Total loss</small>
-            <b>{worstLossDb !== null ? `${worstLossDb.toFixed(1)} dB` : '—'}</b>
+            <small>
+              <span className="pu-label-full">Loss + margin</span>
+              <span className="pu-label-short">Loss+margin</span>
+            </small>
+            <b>{worstLossDb !== null ? `${(worstLossDb + simulation.safetyMarginDb).toFixed(1)} dB` : '—'}</b>
           </span>
           <span className="pu-sb-item">
-            <small>Total distance</small>
+            <small>
+              <span className="pu-label-full">Fiber on canvas</span>
+              <span className="pu-label-short">Fiber</span>
+            </small>
             <b>{summary.totalFiberKm.toFixed(1)} km</b>
           </span>
           <span className="pu-sb-item">
-            <small>Subscribers OK</small>
+            <small>
+              <span className="pu-label-full">Subscribers online</span>
+              <span className="pu-label-short">Subscribers</span>
+            </small>
             <b>{`${online} / ${summary.subscriberCount}`}</b>
           </span>
         </span>

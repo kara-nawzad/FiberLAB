@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef, useState, type DragEvent, type PointerEvent, type ReactNode } from 'react';
-import { Activity, ChevronRight, Clock, Gauge, PanelLeftClose, Search } from 'lucide-react';
+import { Activity, ChevronRight, Clock, PanelLeftClose, Search } from 'lucide-react';
 import type { CableType, FiberProfile, SplitRatio } from '../types';
 import {
   ATTENUATOR_VALUES_DB,
@@ -33,8 +33,7 @@ export interface ToolboxPayload {
 
 interface SidebarProps {
   onQuickAdd: (payload: ToolboxPayload) => void;
-  onToggleOpm?: () => void;
-  onOpenOtdr?: () => void;
+  /* Test gear moved to the canvas Test menu and the top-bar overflow. */
   collapsed?: boolean;
   onToggleCollapse?: () => void;
 }
@@ -108,7 +107,7 @@ function ToolItem({
   );
 }
 
-export function Sidebar({ onQuickAdd, onToggleOpm, onOpenOtdr, collapsed = false, onToggleCollapse }: SidebarProps) {
+export function Sidebar({ onQuickAdd, collapsed = false, onToggleCollapse }: SidebarProps) {
   const [ratioDraft, setRatioDraft] = useState<SplitRatio>(8);
   // Keyed by card id rather than CableType: the fiber selector now spans the
   // three single-mode roles plus the two multi-mode profiles.
@@ -248,34 +247,8 @@ export function Sidebar({ onQuickAdd, onToggleOpm, onOpenOtdr, collapsed = false
           },
         ],
       },
-      {
-        id: 'tools',
-        label: 'Tools',
-        items: [
-          onToggleOpm
-            ? {
-                id: 'opm',
-                title: 'Power Meter',
-                subtitle: 'Probe a port or patch cord',
-                keywords: 'power meter opm optical probe measure dbm tool',
-                icon: <Gauge size={20} />,
-                onClick: onToggleOpm,
-              }
-            : null,
-          onOpenOtdr
-            ? {
-                id: 'otdr',
-                title: 'OTDR Trace',
-                subtitle: 'Find events and breaks',
-                keywords: 'otdr trace reflectometer events breaks testing tool',
-                icon: <Activity size={20} />,
-                onClick: onOpenOtdr,
-              }
-            : null,
-        ].filter((item) => item !== null) as LibraryItem[],
-      },
     ];
-  }, [onToggleOpm, onOpenOtdr]);
+  }, []);
 
   const allItems = useMemo(
     () => sections.flatMap((section) => section.items.map((item) => ({ item, section }))),

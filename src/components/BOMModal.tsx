@@ -24,6 +24,9 @@ interface BOMModalProps {
   onUnitCostsChange: (unitCosts: UnitCostProfile) => void;
   onResetUnitCosts: () => void;
   costBreakdown: NetworkCostBreakdown;
+  /** Rendered inside the Results → Quotation tab: no page chrome, no tab bar. */
+  embedded?: boolean;
+  initialTab?: 'optical' | 'commercial';
 }
 
 function triggerDownload(filename: string, contents: string, mime: string) {
@@ -186,8 +189,10 @@ export function BOMModal({
   onUnitCostsChange,
   onResetUnitCosts,
   costBreakdown,
+  embedded = false,
+  initialTab = 'optical',
 }: BOMModalProps) {
-  const [activeTab, setActiveTab] = useState<'optical' | 'commercial'>('optical');
+  const [activeTab, setActiveTab] = useState<'optical' | 'commercial'>(initialTab);
   /* Reports is a section: opening it puts the keyboard on the report title. */
   const titleRef = useSectionFocus<HTMLHeadingElement>();
   const summary = simulation.summary;
@@ -212,12 +217,19 @@ export function BOMModal({
   /* Reports is a section screen, so the report *is* the page: <main> with an
    * <h1> title, over <h2> section headings. */
   return (
-    <main className="pu-screen pu-reports-screen" aria-labelledby="bom-title" aria-describedby="bom-description">
-      <div className="pu-reports-back">
-        <button type="button" className="pu-btn" onClick={onClose}>
-          <ArrowLeft size={14} aria-hidden="true" /> Back to Design
-        </button>
-      </div>
+    <div
+      className={embedded ? 'pu-embedded-report' : 'pu-screen pu-reports-screen'}
+      aria-labelledby="bom-title"
+      aria-describedby="bom-description"
+      {...(embedded ? {} : { role: 'region' })}
+    >
+      {embedded ? null : (
+        <div className="pu-reports-back">
+          <button type="button" className="pu-btn" onClick={onClose}>
+            <ArrowLeft size={14} aria-hidden="true" /> Back to Design
+          </button>
+        </div>
+      )}
 
       <div className="panel-header">
         <div className="flex items-center gap-2">
@@ -225,14 +237,20 @@ export function BOMModal({
             <Table2 size={16} />
           </span>
           <div>
-            <h1
-              id="bom-title"
-              ref={titleRef}
-              tabIndex={-1}
-              className="text-section font-bold leading-tight text-[var(--pu-ink)]"
-            >
-              Bill of Materials
-            </h1>
+            {embedded ? (
+              <h2 id="bom-title" className="text-section font-bold leading-tight text-[var(--pu-ink)]">
+                Bill of Materials
+              </h2>
+            ) : (
+              <h1
+                id="bom-title"
+                ref={titleRef}
+                tabIndex={-1}
+                className="text-section font-bold leading-tight text-[var(--pu-ink)]"
+              >
+                Bill of Materials
+              </h1>
+            )}
             <p id="bom-description" className="text-body text-[var(--pu-mut)]">
               Optical audit &amp; commercial CAPEX quotation
             </p>
@@ -281,34 +299,36 @@ export function BOMModal({
         </div>
       </div>
 
-      <div
-        role="tablist"
-        aria-label="Bill of materials views"
-        className="flex shrink-0 gap-1 overflow-x-auto border-b border-[var(--pu-line)] px-4 pt-2"
-      >
-        <button
-          type="button"
-          role="tab"
-          id="optical-budget-tab"
-          aria-controls="optical-budget-panel"
-          aria-selected={activeTab === 'optical'}
-          className={`bom-tab ${activeTab === 'optical' ? 'is-active' : ''}`}
-          onClick={() => setActiveTab('optical')}
+      {embedded ? null : (
+        <div
+          role="tablist"
+          aria-label="Bill of materials views"
+          className="flex shrink-0 gap-1 overflow-x-auto border-b border-[var(--pu-line)] px-4 pt-2"
         >
-          Optical Budget Audit
-        </button>
-        <button
-          type="button"
-          role="tab"
-          id="commercial-quotation-tab"
-          aria-controls="commercial-quotation-panel"
-          aria-selected={activeTab === 'commercial'}
-          className={`bom-tab ${activeTab === 'commercial' ? 'is-active' : ''}`}
-          onClick={() => setActiveTab('commercial')}
-        >
-          Commercial Quotation &amp; CAPEX
-        </button>
-      </div>
+          <button
+            type="button"
+            role="tab"
+            id="optical-budget-tab"
+            aria-controls="optical-budget-panel"
+            aria-selected={activeTab === 'optical'}
+            className={`bom-tab ${activeTab === 'optical' ? 'is-active' : ''}`}
+            onClick={() => setActiveTab('optical')}
+          >
+            Optical Budget Audit
+          </button>
+          <button
+            type="button"
+            role="tab"
+            id="commercial-quotation-tab"
+            aria-controls="commercial-quotation-panel"
+            aria-selected={activeTab === 'commercial'}
+            className={`bom-tab ${activeTab === 'commercial' ? 'is-active' : ''}`}
+            onClick={() => setActiveTab('commercial')}
+          >
+            Commercial Quotation &amp; CAPEX
+          </button>
+        </div>
+      )}
 
       <div
         role="tabpanel"
@@ -344,7 +364,7 @@ export function BOMModal({
               <StatCard
                 label="Reachable"
                 value={`${summary.byStatus.ONLINE + summary.byStatus.WARNING + summary.byStatus.OVERLOAD}`}
-                sub={`${summary.byStatus.ONLINE} optimal · ${summary.byStatus.WARNING} marginal · ${summary.byStatus.OVERLOAD} overload`}
+                sub={`${summary.byStatus.ONLINE} online · ${summary.byStatus.WARNING} warning · ${summary.byStatus.LOS} LOS · ${summary.byStatus.OVERLOAD} overload`}
                 tone="text-[var(--pu-ok)]"
               />
               <StatCard
@@ -470,8 +490,8 @@ export function BOMModal({
                         <th className="px-2 py-2 text-left font-medium">Subscriber</th>
                         <th className="px-2 py-2 text-left font-medium">Status</th>
                         <th className="px-2 py-2 text-right font-medium">Rx dBm</th>
-                        <th className="px-2 py-2 text-right font-medium">Loss dB</th>
-                        <th className="px-2 py-2 text-right font-medium">Margin</th>
+                        <th className="px-2 py-2 text-right font-medium">Loss + margin</th>
+                        <th className="px-2 py-2 text-right font-medium">To LOS</th>
                         <th className="px-2 py-2 text-right font-medium">Upstream Δ</th>
                         <th className="px-2 py-2 text-right font-medium">Fiber km</th>
                         <th className="px-2 py-2 text-right font-medium">Split</th>
@@ -582,7 +602,7 @@ export function BOMModal({
           </>
         )}
       </div>
-    </main>
+    </div>
   );
 }
 

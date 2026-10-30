@@ -134,7 +134,7 @@ export function PillarsGrid({ onStartVillaMission, onOpenStudio }: PillarsGridPr
           </p>
           <RouteGraphic />
           <button type="button" className="landing-pillar-link" onClick={onStartVillaMission}>
-            Launch Mission 1 · The Marginal Villa <ArrowUpRight size={14} aria-hidden="true" />
+            Open The Marginal Villa mission <ArrowUpRight size={14} aria-hidden="true" />
           </button>
           <span className="landing-pillar-footnote">
             Dirty-ferrule training toggle adds an illustrative +2.00 dB scenario penalty.
@@ -153,7 +153,7 @@ export function PillarsGrid({ onStartVillaMission, onOpenStudio }: PillarsGridPr
           </p>
           <AuditGraphic />
           <button type="button" className="landing-pillar-link" onClick={onOpenStudio}>
-            Open the plant audit in Studio <ArrowUpRight size={14} aria-hidden="true" />
+            Open the design canvas in Studio <ArrowUpRight size={14} aria-hidden="true" />
           </button>
           <span className="landing-pillar-footnote">Totals come from the visible node graph and current settings.</span>
         </article>
