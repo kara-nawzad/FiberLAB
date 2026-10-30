@@ -95,12 +95,18 @@ describe('link mode as a tap-to-patch tool', () => {
       }
     }
 
-    await waitFor(() => expect(savedWorkspace().edges).toBeDefined());
-    const branches = savedWorkspace()
-      .edges.filter((edge: { source: string }) => edge.source === splitterId)
-      .map((edge: { sourceHandle: string }) => edge.sourceHandle)
-      .sort();
-    expect(branches).toEqual(['out-0', 'out-1', 'out-2', 'out-3']);
+    // Persisting is debounced, so poll rather than reading the first snapshot:
+    // a single read is a race that only shows up on slower machines.
+    await waitFor(
+      () => {
+        const branches = (savedWorkspace().edges ?? [])
+          .filter((edge: { source: string }) => edge.source === splitterId)
+          .map((edge: { sourceHandle: string }) => edge.sourceHandle)
+          .sort();
+        expect(branches).toEqual(['out-0', 'out-1', 'out-2', 'out-3']);
+      },
+      { timeout: 10_000 },
+    );
   }, 60_000);
 
   it('never opens the properties sheet while the user is patching', async () => {
