@@ -114,6 +114,19 @@ The estimator separates materials from labor, reports CAPEX per home passed and 
 
 These are illustrative baseline rates for learning, not a current market survey, installed-price guarantee, tax estimate, or supplier quotation. Local labor, logistics, taxes, currency, procurement, and contingency are not modeled.
 
+## Saving and reopening a design
+
+The canvas saves itself: every edit lands in this browser's `localStorage` (key `fiberlab.workspace.v1`) on a short debounce, so a reload restores the nodes, links, safety margin, project name, detail level and local unit rates.
+
+To keep a copy, move a design to another machine, or hand it to someone else, export a file and read it back:
+
+1. Open **More → Quotation** (or **Results → Quotation**) and press **Quote JSON**. The download, `fiberlab-quotation-<timestamp>.json`, carries the components, their links and the design settings.
+2. To reopen it use **More → Import topology** (also on the empty-canvas start panel, and in **Settings → Workspace**), and choose that JSON file.
+
+The importer checks the document's `format` and `version`, replaces the canvas with the imported components (Ctrl/Cmd+Z restores what was there before), and reports on the canvas what it loaded — or exactly why the file was rejected: not JSON, not a FiberLAB export, an unsupported version, or no readable components. The quotation **CSV** is a report for humans and cannot be imported; only the JSON round-trips.
+
+Two things are deliberately session-level and do not travel in the file: the editable project name and any custom **Local unit pricing** values. An imported design keeps the current session's name and rates.
+
 ## OTDR trace analyzer
 
 Open **OTDR Trace** in the TopBar to pulse a selected OLT output or fiber-span source toward a reachable ONT or gateway. Choose the target branch, 1270/1310/1490/1550/1577 nm wavelength, and a 10/100/1000 ns pulse width, then acquire the trace. The SVG analyzer plots 100–300 Rayleigh backscatter samples over 0–35 km and +5 to −45 dB, with a live distance/power crosshair and event markers for launch, fiber, connectors, splices, ODF/NAP/splitter losses, faults, and the terminal Fresnel reflection. Its automated event table reports distance, signed loss step, cumulative one-way loss, apparent reflection peak, and event assessment.
@@ -130,7 +143,8 @@ Open **OTDR Trace** in the TopBar to pulse a selected OLT output or fiber-span s
 - **Canvas toolbar** — Select, Pan, Connect and Delete plus zoom in/out and fit; the `⋯` overflow holds canvas actions only (fit view, zoom to 100 %, snap to grid). `OPM Tool`, `OTDR Trace`, missions, safety margin, Auto-run, Clear and the docs links live on the Settings screen. Phones get the same strip as icons along the bottom of the canvas.
 - **Status bar** — one slim always-visible row under the canvas (total loss, total distance, subscribers OK, coloured network status) that expands into just two tabs: Optical Budget and Events. Clicking an event selects and frames the affected component, and deployed counts moved into the Bill of Materials.
 - **Left toolbox** — draggable or double-click quick-add OLT / ODF / splitter (1:2 … 1:64) / cable (feeder, distribution, drop) / FOSC-style dome closure / 1:8 NAP/FAT / ONT / Wi-Fi 6 gateway.
-- **Canvas** — dotted grid, pan/zoom, minimap, compact hardware thumbnails, softly glowing animated optical edges, handle-drag connections, Link nodes mode, and an OPM probe cursor/HUD for port and patch-cord power. Faulted fiber spans mark their outgoing patch cord with a warning glyph.
+- **Canvas** — dotted grid, pan/zoom, minimap, compact hardware thumbnails, softly glowing animated optical edges, handle-drag connections, and an OPM probe cursor/HUD for port and patch-cord power. Faulted fiber spans mark their outgoing patch cord with a warning glyph.
+- **Connect (Link nodes) mode** — the touch answer to dragging a patch cord: press Connect, tap the source, tap the destination. The pending source wears a ring, no properties sheet opens while you patch, and on a splitter, closure, ODF or NAP the mode stays armed so each remaining branch is one tap. A splitter exposes one patchable output per split — 1:2, 1:4, 1:8 and 1:16 give 2, 4, 8 and 16 branches; 1:32 and 1:64 cassettes are ribbon-pigtailed in the model, so they show 16 patchable branches (`splitterPorts.test.ts`).
 - **Right inspector** — appears only while a component is selected, opens on **Properties** with the essentials and one **Advanced** disclosure, and keeps **Optical Power** telemetry and the **Info** Field Hardware Card for all nine component kinds. It carries the GPON/XGS-PON OLT selector, profile-scoped fiber/OTDR wavelengths (including the OM3/OM4 850/1300 nm windows), the attenuator pad selector, gateway service telemetry with a clearly marked TEST-NET IP placeholder, fiber fault toggles, a 12-color closure splice tray, and a confirm-to-remove action. Phones show it as a half/full-height bottom sheet. The SVGs are representative illustrations, not product photos or exact vendor models.
 - **BOM modal** — an Optical Budget Audit (including per-subscriber `Upstream Δ` differentials) and Commercial Quotation & CAPEX view, with material/labor/project/subscriber metrics, detailed quote lines, gateway SSID/IP/PON-rate fields, and JSON / combined CSV export.
 - **Mission drawer** — five scenarios: “The Marginal Villa,” “Diagnose the Silent ONT,” “Rescue the Unpatched Subscriber,” “The Budget Crunch: Cost vs. Performance,” and “Blind Fault: The Cut in the Trunk,” each with live objectives, hints, and completion recap. Budget Crunch requires three ONLINE homes, CAPEX below $1,600, and at least 2 dB global safety margin; Blind Fault hides visual fault badges on the canvas so learners diagnose a distribution break with the OPM and OTDR.

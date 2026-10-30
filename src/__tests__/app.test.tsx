@@ -392,9 +392,9 @@ describe('FiberLAB application shell', () => {
     const feederNode = getCanvasNodeByText(/^5\.0 km$/);
 
     fireEvent.click(screen.getByRole('button', { name: 'Link nodes' }));
-    expect(screen.getByText(/Select a source node, then a destination/i)).toBeInTheDocument();
+    expect(screen.getByText(/Pick a source component, then a destination/i)).toBeInTheDocument();
     fireEvent.click(oltNode);
-    expect(screen.getByText(/Source: olt-a/)).toBeInTheDocument();
+    expect(screen.getByText(/Source: OLT/)).toBeInTheDocument();
     fireEvent.click(feederNode);
     await waitFor(() =>
       // Bypassing the splitter leaves every subscriber with no path: Disconnected, not LOS.
@@ -1363,5 +1363,45 @@ describe('FiberLAB application shell', () => {
     openSection('Design');
     await waitFor(() => expect(container.querySelectorAll('.react-flow__node').length).toBeGreaterThan(0));
     expect(screen.queryByText('Al-Sulaymaniyah — Unit 12')).not.toBeInTheDocument();
+  });
+
+  /**
+   * The reported bug: "Import topology" in the More menu opened the picker,
+   * but the menu closed first and took the hidden input with it, so the chosen
+   * file was delivered to a detached node. Nothing changed and nothing was
+   * said. The import must run and report what it did.
+   */
+  it('imports from the top-bar More menu and reports what it loaded', async () => {
+    const { container } = await renderStudio();
+
+    const { nodes, edges } = buildPreset('failing-long-haul') as { nodes: PonNode[]; edges: PonEdge[] };
+    const simulation = simulateTopology(nodes, edges, DEFAULT_SETTINGS, 4321);
+    const cost = calculateNetworkCost(nodes, edges);
+    const document = buildQuotationExport(nodes, edges, simulation, DEFAULT_SETTINGS, resolveUnitCosts(), cost);
+
+    fireEvent.click(within(workbenchTopBar()).getByRole('button', { name: 'More' }));
+    fireEvent.click(screen.getByRole('button', { name: /Import topology/ }));
+
+    // The popover is gone, but the input it opened must still be attached.
+    const fileInput = screen.getByLabelText('Import topology file') as HTMLInputElement;
+    const file = new File([JSON.stringify(document)], 'failing.json', { type: 'application/json' });
+    fireEvent.change(fileInput, { target: { files: [file] } });
+
+    await waitFor(() => expect(screen.getByText(/Imported failing\.json/)).toBeInTheDocument());
+    await waitFor(() => expect(container.querySelectorAll('.react-flow__node').length).toBeGreaterThan(0));
+    expect(screen.queryByText('Al-Sulaymaniyah — Unit 12')).not.toBeInTheDocument();
+  });
+
+  it('says why a topology file was rejected', async () => {
+    await renderStudio();
+
+    fireEvent.click(within(workbenchTopBar()).getByRole('button', { name: 'More' }));
+    fireEvent.click(screen.getByRole('button', { name: /Import topology/ }));
+
+    const fileInput = screen.getByLabelText('Import topology file') as HTMLInputElement;
+    fireEvent.change(fileInput, { target: { files: [new File(['<xml/>'], 'notes.json')] } });
+
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent(/not JSON/i);
   });
 });
