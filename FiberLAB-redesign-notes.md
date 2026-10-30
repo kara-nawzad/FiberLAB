@@ -314,3 +314,32 @@ What was measured and clicked, at 390 / 768 / 1024 / 1280 / 1600 px:
 > be installed); the per-width checklist in `FiberLAB-redesign-notes.md` is
 > arithmetic, not screenshots. All 37 audit observations are traced there —
 > 19 fixed, 9 partly, 1 kept deliberately, 8 open with reasons.
+
+---
+
+## 8. If this work has to be recovered
+
+The sandbox re-clones the repository at the start of some sessions: commits that
+were never pushed disappear, while ordinary files survive. Two safeguards are in
+the workspace for that case:
+
+1. **`FiberLAB-progress.bundle`** — a `git bundle` of this branch with its
+   complete history. To restore it into a fresh clone:
+
+   ```
+   git fetch /home/user/FiberLAB/FiberLAB-progress.bundle \
+     arena/6360c38e-fiberlab:arena/6360c38e-fiberlab
+   git checkout arena/6360c38e-fiberlab
+   ```
+
+   Re-create it after any new commit with:
+
+   ```
+   git bundle create FiberLAB-progress.bundle arena/6360c38e-fiberlab
+   ```
+
+2. **The commit itself** — `git log --oneline` on this branch lists every step.
+   If the branch tip is not on `origin`, the work exists only here.
+
+The lasting fix is a push: once the branch is on `origin` and merged, no re-clone
+can take it away.
