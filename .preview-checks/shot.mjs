@@ -21,7 +21,9 @@ for (const w of widths) {
   });
   const page = await ctx.newPage();
   const errors = [];
-  page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text().slice(0, 160)); });
+  page.on('console', (m) => {
+    if (m.type() === 'error') errors.push(m.text().slice(0, 160));
+  });
   page.on('pageerror', (e) => errors.push('PAGEERROR ' + String(e).slice(0, 160)));
   await page.goto('http://127.0.0.1:5173/', { waitUntil: 'networkidle', timeout: 30000 });
   await page.waitForTimeout(1200);
@@ -32,7 +34,15 @@ for (const w of widths) {
       if (!el) return null;
       const r = el.getBoundingClientRect();
       const cs = getComputedStyle(el);
-      return { x: Math.round(r.x), y: Math.round(r.y), w: Math.round(r.width), h: Math.round(r.height), display: cs.display, vis: cs.visibility, pos: cs.position };
+      return {
+        x: Math.round(r.x),
+        y: Math.round(r.y),
+        w: Math.round(r.width),
+        h: Math.round(r.height),
+        display: cs.display,
+        vis: cs.visibility,
+        pos: cs.position,
+      };
     };
     const txt = (sel) => document.querySelector(sel)?.textContent?.trim().slice(0, 40) ?? null;
     return {
