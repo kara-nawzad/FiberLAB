@@ -27,9 +27,10 @@ import {
   type OnSelectionChangeParams,
   type ReactFlowInstance,
 } from '@xyflow/react';
-import { Flag, Link2, Plus, X } from 'lucide-react';
+import { Flag, Link2, Plus, Waypoints, X } from 'lucide-react';
 import type {
   AnyNodeData,
+  DesignLevel,
   DesignSettings,
   MeterWavelength,
   PonEdge,
@@ -60,18 +61,24 @@ import {
   nextId,
 } from './engine/factories';
 import { buildPreset, PRESETS } from './engine/presets';
+import { evaluateMissionObjectives } from './engine/missions';
 import {
   isAttenuatorNode,
   isClosureNode,
   isFiberNode,
+  isGatewayNode,
   isNapNode,
   isOdfNode,
   isOltNode,
+  isOntNode,
   isSplitterNode,
   isSubscriberEndpointNode,
   simulateTopology,
 } from './engine/opticalSimulator';
 import { decorateEdges } from './engine/edgeDecoration';
+import { parseTopologyImport, readWorkspace, writeWorkspace } from './engine/workspacePersistence';
+import { readFileText } from './lib/readFileText';
+import { useWorkspaceHistory, type CanvasSnapshot } from './hooks/useWorkspaceHistory';
 import { SimulationContext } from './context/SimulationContext';
 import {
   readOpticalPowerAtProbe,
@@ -87,11 +94,11 @@ import { Sidebar, DND_MIME, type ToolboxPayload } from './components/Sidebar';
 import { Inspector } from './components/Inspector';
 
 import { TopBar } from './components/TopBar';
-import { DesignBar } from './components/DesignBar';
 import { SectionRail, SectionTabBar, type SectionId } from './components/SectionNav';
 import { useSectionFocus } from './hooks/useSectionFocus';
 import { useSectionHistory } from './hooks/useSectionHistory';
-import { SimulationScreen } from './components/SimulationScreen';
+import { ResultsScreen } from './components/ResultsScreen';
+import { LearnScreen } from './components/LearnScreen';
 import { SettingsScreen } from './components/SettingsScreen';
 import { CanvasToolbar } from './components/CanvasToolbar';
 import { StatusBar } from './components/StatusBar';
@@ -213,13 +220,25 @@ function initialTopology(): { nodes: PonNode[]; edges: PonEdge[] } {
  * ========================================================================== */
 
 function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProps) {
+  /* The designed network is the artefact: it comes back from localStorage on
+   * boot, and anything unreadable is dropped node by node rather than crashing. */
+  const restored = useMemo(() => readWorkspace(), []);
   const seeded = useMemo(initialTopology, []);
-  const [nodes, setNodes, onNodesChange] = useNodesState<PonNode>(seeded.nodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState<PonEdge>(seeded.edges);
-  const [settings, setSettings] = useState<DesignSettings>(DEFAULT_SETTINGS);
-  const [unitCosts, setUnitCosts] = useState<UnitCostProfile>(() => resolveUnitCosts(DEFAULT_UNIT_COSTS));
-  const [activePresetId, setActivePresetId] = useState<string | null>(null);
-  const [presetEdited, setPresetEdited] = useState(false);
+  const [nodes, setNodes, onNodesChange] = useNodesState<PonNode>(restored?.nodes ?? seeded.nodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<PonEdge>(restored?.edges ?? seeded.edges);
+  const [settings, setSettings] = useState<DesignSettings>(restored?.settings ?? DEFAULT_SETTINGS);
+  const [unitCosts, setUnitCosts] = useState<UnitCostProfile>(
+    () => restored?.unitCosts ?? resolveUnitCosts(DEFAULT_UNIT_COSTS),
+  );
+  const [activePresetId, setActivePresetId] = useState<string | null>(restored?.activePresetId ?? null);
+  const [projectName, setProjectName] = useState<string>(() => {
+    if (restored?.projectName) return restored.projectName;
+    const presetName = PRESETS.find((preset) => preset.id === restored?.activePresetId)?.name;
+    return presetName ?? 'Untitled network';
+  });
+  const [presetEdited, setPresetEdited] = useState(restored?.presetEdited ?? false);
+  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'error'>('saved');
+  const [detailLevel, setDetailLevel] = useState<DesignLevel>(restored?.detailLevel ?? 'guided');
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null);
   const [selection, setSelection] = useState<{ nodeIds: string[]; edgeIds: string[] }>({ nodeIds: [], edgeIds: [] });
@@ -233,10 +252,13 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
   const [opmAnchor, setOpmAnchor] = useState({ x: 18, y: 18 });
   const opmHudRef = useRef<HTMLElement | null>(null);
   const studioMainRef = useRef<HTMLElement | null>(null);
+  const emptyImportRef = useRef<HTMLInputElement | null>(null);
   const [activeSection, setActiveSection] = useState<SectionId>('design');
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [resultsTab, setResultsTab] = useState<'summary' | 'subscribers' | 'quotation'>('summary');
   const [otdrOpen, setOtdrOpen] = useState(false);
   const [missionsOpen, setMissionsOpen] = useState(false);
-  const [activeMissionId, setActiveMissionId] = useState<string | null>(null);
+  const [activeMissionId, setActiveMissionId] = useState<string | null>(restored?.activeMissionId ?? null);
   const [testing, setTesting] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [committedSim, setCommittedSim] = useState<SimulationResult | null>(null);
@@ -248,12 +270,110 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [inspectorCollapsed, setInspectorCollapsed] = useState(false);
   const [statusExpanded, setStatusExpanded] = useState(false);
-  const [emptyHintDismissed, setEmptyHintDismissed] = useState(false);
+  const [emptyHintDismissed, setEmptyHintDismissed] = useState(restored?.ui.emptyHintDismissed ?? false);
 
   const { screenToFlowPosition, deleteElements, fitView, getNodes, getEdges, zoomIn, zoomOut, zoomTo } = useReactFlow<
     PonNode,
     PonEdge
   >();
+
+  /* ------------------------- Persistence & history ------------------------ */
+
+  /* Debounced write: a drag storm must not hit localStorage on every frame. */
+  useEffect(() => {
+    setSaveStatus('saving');
+    const timer = window.setTimeout(() => {
+      const ok = writeWorkspace({
+        nodes,
+        edges,
+        settings,
+        unitCosts,
+        activePresetId,
+        activeMissionId,
+        projectName,
+        presetEdited,
+        detailLevel,
+        ui: { emptyHintDismissed },
+      });
+      setSaveStatus(ok ? 'saved' : 'error');
+    }, 400);
+    return () => window.clearTimeout(timer);
+  }, [
+    nodes,
+    edges,
+    settings,
+    unitCosts,
+    activePresetId,
+    activeMissionId,
+    projectName,
+    presetEdited,
+    detailLevel,
+    emptyHintDismissed,
+  ]);
+
+  const { record: recordHistory, undo: undoHistory, redo: redoHistory, canUndo, canRedo } = useWorkspaceHistory();
+  /* Sliders fire a patch per pixel; coalesce one node's burst into one entry. */
+  const lastPatchRef = useRef<{ key: string; at: number } | null>(null);
+
+  const recordStep = useCallback(
+    (label: string) => {
+      recordHistory({ nodes: getNodes(), edges: getEdges(), activePresetId, presetEdited, label });
+    },
+    [recordHistory, getNodes, getEdges, activePresetId, presetEdited],
+  );
+
+  const applySnapshot = useCallback(
+    (snapshot: CanvasSnapshot) => {
+      setNodes(snapshot.nodes);
+      setEdges(snapshot.edges);
+      setActivePresetId(snapshot.activePresetId);
+      setPresetEdited(snapshot.presetEdited);
+      setSelectedNodeId(null);
+      setSelectedEdgeId(null);
+      setSelection({ nodeIds: [], edgeIds: [] });
+      setCommittedSim(null);
+      setDirty(true);
+    },
+    [setNodes, setEdges],
+  );
+
+  const undoCanvas = useCallback(() => {
+    const snapshot = undoHistory({
+      nodes: getNodes(),
+      edges: getEdges(),
+      activePresetId,
+      presetEdited,
+      label: 'redo',
+    });
+    if (snapshot) applySnapshot(snapshot);
+  }, [undoHistory, getNodes, getEdges, activePresetId, presetEdited, applySnapshot]);
+
+  const redoCanvas = useCallback(() => {
+    const snapshot = redoHistory({
+      nodes: getNodes(),
+      edges: getEdges(),
+      activePresetId,
+      presetEdited,
+      label: 'undo',
+    });
+    if (snapshot) applySnapshot(snapshot);
+  }, [redoHistory, getNodes, getEdges, activePresetId, presetEdited, applySnapshot]);
+
+  /* Cmd/Ctrl+Z and Cmd/Ctrl+Shift+Z; native text undo stays untouched. */
+  useEffect(() => {
+    const onUndoKey = (event: KeyboardEvent) => {
+      if (!(event.metaKey || event.ctrlKey)) return;
+      const key = event.key.toLowerCase();
+      if (key !== 'z' && key !== 'y') return;
+      const target = event.target as HTMLElement | null;
+      if (target && (/^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName) || target.isContentEditable)) return;
+      event.preventDefault();
+      if (key === 'y' || event.shiftKey) redoCanvas();
+      else undoCanvas();
+    };
+    document.addEventListener('keydown', onUndoKey);
+    return () => document.removeEventListener('keydown', onUndoKey);
+  }, [undoCanvas, redoCanvas]);
 
   /* --------------------------- Simulation core --------------------------- */
 
@@ -277,6 +397,14 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
   );
   const opmReading =
     opmActive && opmProbe && opmSimulation ? readOpticalPowerAtProbe(opmProbe, nodes, edges, opmSimulation) : null;
+
+  /* The mission runs whether or not its drawer is open: one place evaluates
+   * every objective, the bar announces progress, and the drawer reads the same
+   * result through the shared simulation. */
+  const missionProgress = useMemo(
+    () => (activeMission ? evaluateMissionObjectives(activeMission, simulation, nodes, edges, costBreakdown) : []),
+    [activeMission, simulation, nodes, edges, costBreakdown],
+  );
 
   const highlightedEdgeIds = useMemo(() => {
     const ids = new Set<string>();
@@ -403,6 +531,12 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
 
   const handlePatchNode = useCallback(
     (nodeId: string, patch: Partial<AnyNodeData>) => {
+      const key = `${nodeId}:${Object.keys(patch).sort().join(',')}`;
+      const now = Date.now();
+      if (!lastPatchRef.current || lastPatchRef.current.key !== key || now - lastPatchRef.current.at > 800) {
+        recordStep('edit');
+      }
+      lastPatchRef.current = { key, at: now };
       setNodes((current) =>
         current.map((node) => {
           if (node.id !== nodeId) return node;
@@ -430,29 +564,31 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
       }
       markDirty();
     },
-    [setNodes, setEdges, markDirty],
+    [setNodes, setEdges, markDirty, recordStep],
   );
 
   const handleDeleteNode = useCallback(
     (nodeId: string) => {
+      recordStep('delete');
       void deleteElements({ nodes: [{ id: nodeId }] });
       setSelectedNodeId(null);
       setSelectedEdgeId(null);
       setSelection({ nodeIds: [], edgeIds: [] });
       markDirty();
     },
-    [deleteElements, markDirty],
+    [deleteElements, markDirty, recordStep],
   );
 
   const handleDeleteEdge = useCallback(
     (edgeId: string) => {
+      recordStep('delete');
       void deleteElements({ edges: [{ id: edgeId }] });
       setSelectedNodeId(null);
       setSelectedEdgeId(null);
       setSelection({ nodeIds: [], edgeIds: [] });
       markDirty();
     },
-    [deleteElements, markDirty],
+    [deleteElements, markDirty, recordStep, setSelectedNodeId, setSelection],
   );
 
   // Backspace/Delete on the canvas bypasses the toolbar, so it needs the same
@@ -460,17 +596,19 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
   const handleCanvasDelete = useCallback<OnDelete<PonNode, PonEdge>>(
     ({ nodes: deletedNodes, edges: deletedEdges }) => {
       if (deletedNodes.length === 0 && deletedEdges.length === 0) return;
+      recordStep('delete');
       const deletedNodeIds = new Set(deletedNodes.map((node) => node.id));
       const deletedEdgeIds = new Set(deletedEdges.map((edge) => edge.id));
       setSelectedNodeId((current) => (current !== null && deletedNodeIds.has(current) ? null : current));
       setSelectedEdgeId((current) => (current !== null && deletedEdgeIds.has(current) ? null : current));
       markDirty();
     },
-    [markDirty],
+    [markDirty, recordStep],
   );
 
   const addComponent = useCallback(
     (payload: ToolboxPayload, position: { x: number; y: number }) => {
+      recordStep('add');
       const kind = payload.component;
       const size = NODE_SIZES[kind];
       const centered = {
@@ -510,7 +648,7 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
       setActivePresetId(null);
       markDirty();
     },
-    [setNodes, markDirty],
+    [setNodes, markDirty, recordStep],
   );
 
   const handleQuickAdd = useCallback(
@@ -635,10 +773,10 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
 
   const selectionCount = selection.nodeIds.length + selection.edgeIds.length;
 
-  /* Design → Simulation → Reports → Settings. Leaving Design folds every
-   * design-only affordance so the next screen is clean. `applySection` is the
-   * pure state move; `handleSectionChange` adds the history bookkeeping so the
-   * browser Back button walks the same path. */
+  /* Design → Results → Learn. Leaving Design folds every design-only
+   * affordance so the next screen is clean. `applySection` is the pure state
+   * move; `handleSectionChange` adds the history bookkeeping so the browser
+   * Back button walks the same path. Settings is a dialog, not a section. */
   const applySection = useCallback((section: SectionId) => {
     setActiveSection(section);
     setToolsOpen(false);
@@ -677,9 +815,14 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
   /* The status bar is the third phone sheet, so opening it folds the others. */
   const handleStatusExpandedChange = useCallback((open: boolean) => {
     setStatusExpanded(open);
-    if (open && isNarrowViewport()) {
-      setSidebarCollapsed(true);
-      setInspectorCollapsed(true);
+    if (open) {
+      // One sheet at a time, on every viewport: the status sheet folds the rest.
+      setSettingsOpen(false);
+      setMissionsOpen(false);
+      if (isNarrowViewport()) {
+        setSidebarCollapsed(true);
+        setInspectorCollapsed(true);
+      }
     }
   }, []);
 
@@ -700,6 +843,7 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
 
   const handleDeleteSelection = useCallback(() => {
     if (selectionCount === 0) return;
+    recordStep('delete');
     void deleteElements({
       nodes: selection.nodeIds.map((id) => ({ id })),
       edges: selection.edgeIds.map((id) => ({ id })),
@@ -708,7 +852,7 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
     setSelectedEdgeId(null);
     setSelection({ nodeIds: [], edgeIds: [] });
     markDirty();
-  }, [deleteElements, markDirty, selection, selectionCount]);
+  }, [deleteElements, markDirty, recordStep, selection, selectionCount]);
 
   const handleToggleLink = useCallback(() => {
     const nextActive = !linkMode;
@@ -877,6 +1021,7 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
         targetHandle = availableInput;
       }
 
+      recordStep('connect');
       handleConnect({
         source: sourceNode.id,
         target: targetNode.id,
@@ -885,22 +1030,31 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
       });
       setLinkMode(false);
       setLinkStartNodeId(null);
-      setLinkMessage(`Connected ${sourceNode.id} to ${targetNode.id}.`);
+      // Name both ends and the ports that were actually taken, so the auto-chosen
+      // port is visible instead of disappearing with the next interaction.
+      const label = (node: PonNode) => (isOntNode(node) || isGatewayNode(node) ? node.data.subscriber : node.id);
+      setLinkMessage(`Patched ${label(sourceNode)} (${sourceHandle}) → ${label(targetNode)} (${targetHandle}).`);
     },
-    [getEdges, getNodes, handleConnect, handleDeleteEdge, linkMode, linkStartNodeId],
+    [getEdges, getNodes, handleConnect, handleDeleteEdge, linkMode, linkStartNodeId, recordStep],
   );
 
   /* Only one overlay owns the keyboard at a time: opening one closes the others. */
   const closeBom = useCallback(() => goToDesign(), [goToDesign]);
-  /** Reports is a section now, not a dialog. */
-  const openBom = useCallback(() => {
+  /** Results is a section now, not a dialog; the quotation is one of its tabs. */
+  const openQuotation = useCallback(() => {
     setMissionsOpen(false);
     setOtdrOpen(false);
-    handleSectionChange('reports');
+    setSettingsOpen(false);
+    setResultsTab('quotation');
+    handleSectionChange('results');
   }, [handleSectionChange]);
-  /* Reports is a reading screen; Escape is the keyboard's Back to Design. */
+  const openResults = useCallback(() => {
+    setResultsTab('summary');
+    handleSectionChange('results');
+  }, [handleSectionChange]);
+  /* Results and Learn are reading screens; Escape is the keyboard's Back to Design. */
   useEffect(() => {
-    if (activeSection !== 'reports') return;
+    if (activeSection === 'design') return;
     const onEscape = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
       if (document.querySelector('[role="dialog"]')) return;
@@ -911,9 +1065,38 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
     return () => document.removeEventListener('keydown', onEscape);
   }, [activeSection, closeBom]);
 
+  /* Canvas tool shortcuts — the toolbar tooltips promise V and H, so deliver them. */
+  useEffect(() => {
+    if (activeSection !== 'design') return;
+    const onToolKey = (event: KeyboardEvent) => {
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
+      const target = event.target as HTMLElement | null;
+      if (target && (/^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName) || target.isContentEditable)) return;
+      if (document.querySelector('[role="dialog"]')) return;
+      const key = event.key.toLowerCase();
+      if (key !== 'v' && key !== 'h') return;
+      event.preventDefault();
+      setCanvasTool(key === 'v' ? 'select' : 'pan');
+      if (linkMode) handleToggleLink();
+    };
+    document.addEventListener('keydown', onToolKey);
+    return () => document.removeEventListener('keydown', onToolKey);
+  }, [activeSection, linkMode, handleToggleLink]);
+
   const closeMissions = useCallback(() => setMissionsOpen(false), []);
+  /* One sheet at a time: Settings folds the inspector, the status sheet and the missions. */
+  const openSettings = useCallback(() => {
+    setMissionsOpen(false);
+    setOtdrOpen(false);
+    setStatusExpanded(false);
+    setInspectorCollapsed(true);
+    setSettingsOpen(true);
+  }, []);
   const openMissions = useCallback(() => {
     setOtdrOpen(false);
+    setSettingsOpen(false);
+    setStatusExpanded(false);
+    setInspectorCollapsed(true);
     setMissionsOpen(true);
   }, []);
   const closeOtdr = useCallback(() => setOtdrOpen(false), []);
@@ -939,12 +1122,14 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
     (presetId: string) => {
       const built = buildPreset(presetId);
       if (!built) return;
+      recordStep('preset');
       setNodes(built.nodes);
       setEdges(built.edges);
       setCommittedSim(null);
       setOtdrOpen(false);
       setActivePresetId(presetId);
       setActiveMissionId(null);
+      setProjectName(PRESETS.find((preset) => preset.id === presetId)?.name ?? 'Untitled network');
       setSelectedNodeId(null);
       setSelectedEdgeId(null);
       setSelection({ nodeIds: [], edgeIds: [] });
@@ -959,13 +1144,14 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
         void fitView({ padding: 0.08, maxZoom: 1.15, duration: 350 });
       });
     },
-    [setNodes, setEdges, fitView],
+    [setNodes, setEdges, fitView, recordStep],
   );
 
   const startMission = useCallback(
     (mission: Mission) => {
       const presetTopology = buildPreset(mission.presetId);
       if (!presetTopology) return;
+      recordStep('mission');
       const topology = mission.prepareTopology?.(presetTopology) ?? presetTopology;
       setNodes(topology.nodes);
       setEdges(topology.edges);
@@ -979,6 +1165,7 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
       setPresetEdited(false);
       setActivePresetId(mission.presetId);
       setActiveMissionId(mission.id);
+      setProjectName(mission.title);
       setSelectedNodeId(null);
       setSelectedEdgeId(null);
       setSelection({ nodeIds: [], edgeIds: [] });
@@ -993,7 +1180,7 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
         void fitView({ padding: 0.08, maxZoom: 1.15, duration: 350 });
       });
     },
-    [setNodes, setEdges, fitView, goToDesign],
+    [setNodes, setEdges, fitView, goToDesign, recordStep],
   );
 
   useEffect(() => {
@@ -1009,11 +1196,13 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
   }, [landingCommand, applyPreset, startMission, openMissions]);
 
   const clearCanvas = useCallback(() => {
+    recordStep('clear');
     setNodes([]);
     setEdges([]);
     setOtdrOpen(false);
     setActivePresetId(null);
     setActiveMissionId(null);
+    setProjectName('Untitled network');
     setSelectedNodeId(null);
     setSelectedEdgeId(null);
     setSelection({ nodeIds: [], edgeIds: [] });
@@ -1024,7 +1213,32 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
     opmProbeRef.current = null;
     setPresetEdited(false);
     markDirty();
-  }, [setNodes, setEdges, markDirty]);
+  }, [setNodes, setEdges, markDirty, recordStep]);
+
+  /** Reads a TopologyExport v2 document back onto the canvas (Reports writes them). */
+  const importTopology = useCallback(
+    (text: string): { ok: boolean; error?: string } => {
+      const result = parseTopologyImport(text);
+      if (!result.ok) return { ok: false, error: result.error };
+      recordStep('import');
+      setNodes(result.state.nodes);
+      setEdges(result.state.edges);
+      setSettings(result.state.settings);
+      setCommittedSim(null);
+      setSelectedNodeId(null);
+      setSelectedEdgeId(null);
+      setSelection({ nodeIds: [], edgeIds: [] });
+      setActivePresetId(null);
+      setActiveMissionId(null);
+      setPresetEdited(true);
+      setDirty(true);
+      window.requestAnimationFrame(() => {
+        void fitView({ padding: 0.08, maxZoom: 1.15, duration: 350 });
+      });
+      return { ok: true };
+    },
+    [recordStep, setNodes, setEdges, fitView],
+  );
 
   const handleSettingsChange = useCallback(
     (patch: Partial<DesignSettings>) => {
@@ -1144,12 +1358,29 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
   return (
     <div className={`fiberlab-studio pu-shell ${testing ? 'is-simulating-pulse' : ''}`}>
       <TopBar
-        projectName={PRESETS.find((preset) => preset.id === activePresetId)?.name ?? 'FTTH Network Design'}
+        projectName={projectName}
+        onRenameProject={setProjectName}
         presetEdited={presetEdited}
+        activePresetId={activePresetId}
+        onSelectPreset={applyPreset}
+        onOpenSettings={openSettings}
+        onOpenResults={openResults}
+        onOpenQuotation={openQuotation}
+        onOpenMissions={openMissions}
+        onOpenOtdr={handleOpenOtdr}
+        onToggleOpm={handleToggleOpm}
+        onImportTopology={importTopology}
         onRunTest={runLightTest}
         onOpenOverview={handleOpenOverview}
         testing={testing}
         stale={!settings.autoRun && dirty}
+        saveStatus={saveStatus}
+        detailLevel={detailLevel}
+        onToggleDetailLevel={() => setDetailLevel((level) => (level === 'guided' ? 'engineer' : 'guided'))}
+        canUndo={canUndo}
+        canRedo={canRedo}
+        onUndoRequest={undoCanvas}
+        onRedoRequest={redoCanvas}
       />
 
       <div className="fiberlab-studio__body pu-body">
@@ -1162,8 +1393,6 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
             </h1>
             <Sidebar
               onQuickAdd={handleQuickAdd}
-              onToggleOpm={handleToggleOpm}
-              onOpenOtdr={handleOpenOtdr}
               collapsed={sidebarCollapsed}
               onToggleCollapse={() => {
                 const next = !sidebarCollapsed;
@@ -1173,12 +1402,27 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
             />
 
             <div className="pu-center">
-              <DesignBar
-                activePresetId={activePresetId}
-                presetEdited={presetEdited}
-                stale={!settings.autoRun && dirty}
-                onPreset={applyPreset}
-              />
+              {activeMission ? (
+                <div className="pu-mission-bar" data-testid="mission-bar">
+                  <span className="pu-mission-bar-title">
+                    <Flag size={14} aria-hidden="true" /> {activeMission.title}
+                  </span>
+                  <span className="pu-mission-bar-count">
+                    {missionProgress.filter((item) => item.isMet).length}/{missionProgress.length} done
+                  </span>
+                  <span className="pu-mission-bar-next">
+                    {missionProgress.find((item) => !item.isMet)?.objective.description ?? 'Every objective is met.'}
+                  </span>
+                  <button type="button" className="pu-btn" onClick={openMissions}>
+                    Brief
+                  </button>
+                  <span className="sr-only" role="status" aria-live="polite">
+                    {`Mission ${activeMission.title}: ${missionProgress.filter((item) => item.isMet).length} of ${
+                      missionProgress.length
+                    } objectives complete.`}
+                  </span>
+                </div>
+              ) : null}
               <main
                 ref={studioMainRef}
                 className={`fiberlab-studio-main pu-canvas relative min-w-0 flex-1 ${opmActive ? 'opm-probe-mode' : ''}`}
@@ -1204,7 +1448,12 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
                   }}
                   onToggleLink={handleToggleLink}
                   onDelete={handleDeleteSelection}
-                  onFit={() => void fitView({ padding: 0.16, duration: 350 })}
+                  onOpenMissions={openMissions}
+                  activeMissionTitle={activeMission?.title ?? null}
+                  onRunTest={runLightTest}
+                  onOpenOpm={handleToggleOpm}
+                  onOpenOtdr={handleOpenOtdr}
+                  opmActive={opmActive}
                   onZoomIn={() => void zoomIn({ duration: 180 })}
                   onZoomOut={() => void zoomOut({ duration: 180 })}
                   onZoomReset={() => void zoomTo(1, { duration: 200 })}
@@ -1243,6 +1492,7 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
                     onEdgeClick={() => setInspectorCollapsed(false)}
                     onSelectionChange={handleSelectionChange}
                     onDelete={handleCanvasDelete}
+                    onNodeDragStart={() => recordStep('move')}
                     onInit={handleInit}
                     onDragOver={handleDragOver}
                     onDrop={handleDrop}
@@ -1298,14 +1548,39 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
                     ) : null}
 
                     {nodes.length === 0 && !emptyHintDismissed ? (
-                      <Panel position="top-center" className="pu-empty-panel !m-2">
-                        <div className="pu-empty-note">
-                          <span className="pu-empty-title">The canvas is empty</span>
-                          <span className="pu-empty-hint">Drag in an OLT, or let a mission walk you through it.</span>
-                          <button type="button" className="pu-empty-action" onClick={openMissions}>
-                            <Flag size={11} aria-hidden="true" />
-                            Open the mission
-                          </button>
+                      <Panel position="top-center" className="pu-empty-panel">
+                        <div className="pu-empty-card">
+                          <span className="pu-empty-art" aria-hidden="true">
+                            <Waypoints size={20} />
+                          </span>
+                          <p className="pu-empty-title">Start your network</p>
+                          <p className="pu-empty-hint">
+                            Drop parts from the library, or begin from a working design. The canvas saves itself as you
+                            build.
+                          </p>
+                          <div className="pu-empty-actions">
+                            <button type="button" className="pu-btn pri" onClick={() => applyPreset('standard-1x32')}>
+                              <Waypoints size={14} aria-hidden="true" /> Standard 1:32 tree
+                            </button>
+                            <button type="button" className="pu-btn" onClick={openMissions}>
+                              <Flag size={14} aria-hidden="true" /> Guided mission
+                            </button>
+                            <button type="button" className="pu-btn" onClick={() => emptyImportRef.current?.click()}>
+                              <Plus size={14} aria-hidden="true" /> Import topology
+                            </button>
+                          </div>
+                          <input
+                            ref={emptyImportRef}
+                            type="file"
+                            accept="application/json,.json"
+                            className="sr-only"
+                            aria-label="Import topology file"
+                            onChange={(event) => {
+                              const file = event.target.files?.[0];
+                              event.target.value = '';
+                              if (file) void readFileText(file).then((text: string) => importTopology(text));
+                            }}
+                          />
                           <button
                             type="button"
                             className="pu-empty-dismiss"
@@ -1313,7 +1588,7 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
                             aria-label="Dismiss canvas hint"
                             title="Dismiss"
                           >
-                            <X size={12} aria-hidden="true" />
+                            <X size={14} aria-hidden="true" />
                           </button>
                         </div>
                       </Panel>
@@ -1340,7 +1615,7 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
                 worstLossDb={worstLossDb}
                 expanded={statusExpanded}
                 onExpandedChange={handleStatusExpandedChange}
-                onOpenReports={openBom}
+                onOpenReports={openQuotation}
                 onFocusNode={handleFocusNode}
               />
             </div>
@@ -1353,6 +1628,7 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
                 node={selectedNode}
                 edge={selectedEdge}
                 simulation={simulation}
+                detailLevel={detailLevel}
                 onPatchNode={handlePatchNode}
                 onDeleteNode={handleDeleteNode}
                 onDeleteEdge={handleDeleteEdge}
@@ -1362,8 +1638,9 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
           </>
         ) : null}
 
-        {activeSection === 'simulation' ? (
-          <SimulationScreen
+        {activeSection === 'results' ? (
+          <ResultsScreen
+            key={`results-${resultsTab}`}
             summary={summary}
             simulation={simulation}
             nodes={nodes}
@@ -1374,54 +1651,94 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
             autoRun={settings.autoRun}
             onRun={runLightTest}
             onFocusNode={handleFocusNode}
-            onOpenReports={openBom}
+            initialTab={resultsTab}
+            quotation={
+              <Suspense fallback={<OverlayLoading label="Loading the bill of materials…" variant="screen" />}>
+                <BOMModal
+                  open
+                  embedded
+                  initialTab="commercial"
+                  onClose={closeBom}
+                  nodes={nodes}
+                  edges={flowEdges}
+                  simulation={simulation}
+                  settings={settings}
+                  unitCosts={unitCosts}
+                  onUnitCostsChange={handleUnitCostsChange}
+                  onResetUnitCosts={resetUnitCosts}
+                  costBreakdown={costBreakdown}
+                />
+              </Suspense>
+            }
           />
         ) : null}
 
-        {activeSection === 'reports' ? (
-          <Suspense fallback={<OverlayLoading label="Loading the bill of materials…" variant="screen" />}>
-            <BOMModal
-              open
-              onClose={closeBom}
-              nodes={nodes}
-              edges={flowEdges}
-              simulation={simulation}
-              settings={settings}
-              unitCosts={unitCosts}
-              onUnitCostsChange={handleUnitCostsChange}
-              onResetUnitCosts={resetUnitCosts}
-              costBreakdown={costBreakdown}
-            />
-          </Suspense>
-        ) : null}
-
-        {activeSection === 'settings' ? (
-          <SettingsScreen
-            settings={settings}
-            onSettingsChange={handleSettingsChange}
-            opmActive={opmActive}
-            activeMissionTitle={activeMission?.title ?? null}
-            onToggleOpm={() => {
-              goToDesign();
-              handleToggleOpm();
-            }}
-            onOpenOtdr={() => {
-              goToDesign();
-              handleOpenOtdr();
-            }}
-            onOpenMissions={() => {
-              goToDesign();
-              openMissions();
-            }}
-            onClear={() => {
-              goToDesign();
-              clearCanvas();
-            }}
+        {activeSection === 'learn' ? (
+          <LearnScreen
+            activeMissionId={activeMissionId}
+            onStartMission={startMission}
+            onOpenMissions={openMissions}
             onOpenOverview={handleOpenOverview}
           />
         ) : null}
       </div>
       <SectionTabBar active={activeSection} onChange={handleSectionChange} />
+
+      {settingsOpen ? (
+        <div className="pu-settings-sheet" role="presentation">
+          <button
+            type="button"
+            className="pu-settings-backdrop"
+            aria-label="Dismiss settings"
+            tabIndex={-1}
+            onClick={() => setSettingsOpen(false)}
+          />
+          <div className="pu-settings-panel" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+            <button
+              type="button"
+              className="pu-insp-close pu-settings-close"
+              onClick={() => setSettingsOpen(false)}
+              aria-label="Close settings"
+              title="Close"
+            >
+              <X size={16} aria-hidden="true" />
+            </button>
+            <SettingsScreen
+              settings={settings}
+              onSettingsChange={handleSettingsChange}
+              opmActive={opmActive}
+              activeMissionTitle={activeMission?.title ?? null}
+              onToggleOpm={() => {
+                setSettingsOpen(false);
+                goToDesign();
+                handleToggleOpm();
+              }}
+              onOpenOtdr={() => {
+                setSettingsOpen(false);
+                goToDesign();
+                handleOpenOtdr();
+              }}
+              onOpenMissions={() => {
+                setSettingsOpen(false);
+                goToDesign();
+                openMissions();
+              }}
+              onClear={() => {
+                setSettingsOpen(false);
+                goToDesign();
+                clearCanvas();
+              }}
+              onImportTopology={importTopology}
+              detailLevel={detailLevel}
+              onDetailLevelChange={setDetailLevel}
+              onOpenOverview={() => {
+                setSettingsOpen(false);
+                handleOpenOverview();
+              }}
+            />
+          </div>
+        </div>
+      ) : null}
 
       {otdrOpen ? (
         <Suspense fallback={<OverlayLoading label="Loading the OTDR trace analyser…" variant="dialog" />}>

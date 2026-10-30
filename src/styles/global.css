@@ -234,11 +234,7 @@
   opacity: 0.92;
 }
 
-@keyframes optical-flow {
-  to {
-    stroke-dashoffset: -26;
-  }
-}
+/* `optical-flow` is defined once, in theme.css, which loads after this file. */
 
 .react-flow__edge.selected .react-flow__edge-path,
 .react-flow__edge:hover .react-flow__edge-path {

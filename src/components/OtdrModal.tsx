@@ -98,25 +98,25 @@ function eventLabel(type: OtdrEvent['type']): string {
 function markerColor(type: OtdrEvent['type']): string {
   switch (type) {
     case 'launch':
-      return '#38bdf8';
+      return '#0e7490';
     case 'fiber_span':
-      return '#67e8f9';
+      return '#0d9488';
     case 'splice':
-      return '#34d399';
+      return '#0f766e';
     case 'splitter':
-      return '#fb923c';
+      return '#c2410c';
     case 'odf':
-      return '#2dd4bf';
+      return '#0d7a70';
     case 'nap':
-      return '#fb7185';
+      return '#be123c';
     case 'attenuator':
-      return '#fbbf24';
+      return '#b45309';
     case 'connector':
-      return '#c4b5fd';
+      return '#6d28d9';
     case 'fault_bend':
-      return '#f87171';
+      return '#b91c1c';
     case 'end_of_fiber':
-      return '#f8fafc';
+      return '#231712';
   }
 }
 
@@ -188,10 +188,10 @@ function OtdrMarker({ event, trace }: { event: OtdrEvent; trace: OtdrAnalysisRes
         />
       ) : null}
       {event.type === 'launch' ? (
-        <circle cx={x} cy={y} r={5.5} fill={color} stroke="#082f49" strokeWidth={1.5} />
+        <circle cx={x} cy={y} r={5.5} fill={color} stroke="#ffffff" strokeWidth={1.5} />
       ) : null}
       {event.type === 'splice' ? (
-        <rect x={x - 4} y={y - 4} width={8} height={8} rx={1} fill={color} stroke="#064e3b" strokeWidth={1} />
+        <rect x={x - 4} y={y - 4} width={8} height={8} rx={1} fill={color} stroke="#ffffff" strokeWidth={1} />
       ) : null}
       {event.type === 'splitter' ? (
         <rect
@@ -201,12 +201,12 @@ function OtdrMarker({ event, trace }: { event: OtdrEvent; trace: OtdrAnalysisRes
           height={9}
           transform={`rotate(45 ${x} ${y})`}
           fill={color}
-          stroke="#7c2d12"
+          stroke="#ffffff"
           strokeWidth={1}
         />
       ) : null}
       {event.type === 'odf' ? (
-        <rect x={x - 4.5} y={y - 4.5} width={9} height={9} rx={1} fill={color} stroke="#134e4a" strokeWidth={1} />
+        <rect x={x - 4.5} y={y - 4.5} width={9} height={9} rx={1} fill={color} stroke="#ffffff" strokeWidth={1} />
       ) : null}
       {event.type === 'attenuator' ? (
         <rect x={x - 3.2} y={y - 3.2} width={6.4} height={6.4} rx={1} fill={color} />
@@ -215,7 +215,7 @@ function OtdrMarker({ event, trace }: { event: OtdrEvent; trace: OtdrAnalysisRes
         <path
           d={`M ${x - 5} ${y} L ${x - 2.5} ${y - 4.5} L ${x + 2.5} ${y - 4.5} L ${x + 5} ${y} L ${x + 2.5} ${y + 4.5} L ${x - 2.5} ${y + 4.5} Z`}
           fill={color}
-          stroke="#881337"
+          stroke="#ffffff"
           strokeWidth={1}
         />
       ) : null}
@@ -223,19 +223,19 @@ function OtdrMarker({ event, trace }: { event: OtdrEvent; trace: OtdrAnalysisRes
         <path
           d={`M ${x} ${y - 5.5} L ${x + 5} ${y + 4.5} L ${x - 5} ${y + 4.5} Z`}
           fill={color}
-          stroke="#7f1d1d"
+          stroke="#ffffff"
           strokeWidth={1}
         />
       ) : null}
       {event.type === 'connector' ? (
-        <circle cx={x} cy={y} r={3.5} fill={color} stroke="#4c1d95" strokeWidth={1} />
+        <circle cx={x} cy={y} r={3.5} fill={color} stroke="#ffffff" strokeWidth={1} />
       ) : null}
       {event.type === 'fiber_span' ? <circle cx={x} cy={y} r={2.2} fill={color} /> : null}
       {event.type === 'end_of_fiber' ? (
         <path
           d={`M ${x} ${y - 6} L ${x + 1.8} ${y - 1.8} L ${x + 6} ${y} L ${x + 1.8} ${y + 1.8} L ${x} ${y + 6} L ${x - 1.8} ${y + 1.8} L ${x - 6} ${y} L ${x - 1.8} ${y - 1.8} Z`}
           fill={color}
-          stroke="#64748b"
+          stroke="#ffffff"
           strokeWidth={1}
         />
       ) : null}
@@ -293,15 +293,15 @@ function OtdrChart({
       >
         <defs>
           <linearGradient id="otdr-trace-glow" x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0" stopColor="#67e8f9" stopOpacity="0.26" />
-            <stop offset="1" stopColor="#0e7490" stopOpacity="0.02" />
+            <stop offset="0" stopColor="#c2410c" stopOpacity="0.24" />
+            <stop offset="1" stopColor="#c2410c" stopOpacity="0.02" />
           </linearGradient>
           <clipPath id="otdr-plot-clip">
             <rect x={CHART.left} y={CHART.top} width={PLOT_WIDTH} height={PLOT_HEIGHT} />
           </clipPath>
         </defs>
 
-        <rect x={CHART.left} y={CHART.top} width={PLOT_WIDTH} height={PLOT_HEIGHT} rx="5" fill="#07111a" />
+        <rect x={CHART.left} y={CHART.top} width={PLOT_WIDTH} height={PLOT_HEIGHT} rx="5" fill="#fffdf9" />
         {yTicks.map((tick) => {
           const y = yForPower(tick);
           return (
@@ -311,7 +311,7 @@ function OtdrChart({
                 y1={y}
                 x2={CHART.width - CHART.right}
                 y2={y}
-                stroke="#334454"
+                stroke="#eddcc9"
                 strokeWidth={tick === 0 ? 1 : 0.65}
                 strokeDasharray={tick === 0 ? undefined : '3 5'}
               />
@@ -330,7 +330,7 @@ function OtdrChart({
                 y1={CHART.top}
                 x2={x}
                 y2={CHART.height - CHART.bottom}
-                stroke="#263746"
+                stroke="#f4e8db"
                 strokeWidth={0.65}
                 strokeDasharray="3 5"
               />
@@ -355,11 +355,11 @@ function OtdrChart({
 
         {trace ? (
           <g clipPath="url(#otdr-plot-clip)">
-            <path d={tracePath(trace.tracePoints)} fill="none" stroke="#164e63" strokeWidth={5} opacity={0.45} />
+            <path d={tracePath(trace.tracePoints)} fill="none" stroke="#0f766e" strokeWidth={5} opacity={0.16} />
             <path
               d={tracePath(trace.tracePoints)}
               fill="none"
-              stroke="#67e8f9"
+              stroke="#0d7a70"
               strokeWidth={1.8}
               strokeLinejoin="round"
               strokeLinecap="round"
@@ -368,16 +368,7 @@ function OtdrChart({
               <OtdrMarker key={event.id} event={event} trace={trace} />
             ))}
           </g>
-        ) : (
-          <text
-            x={CHART.left + PLOT_WIDTH / 2}
-            y={CHART.top + PLOT_HEIGHT / 2}
-            textAnchor="middle"
-            className="otdr-chart-empty"
-          >
-            Select a reachable subscriber, then acquire a trace
-          </text>
-        )}
+        ) : null}
 
         {cursor && trace ? (
           <g aria-hidden="true" className="otdr-crosshair">
@@ -396,6 +387,12 @@ function OtdrChart({
           pointerEvents="none"
         />
       </svg>
+
+      {!trace ? (
+        <p className="otdr-chart-empty-note">
+          {acquiring ? 'Pulsing the fiber…' : 'Select a reachable subscriber, then acquire a trace.'}
+        </p>
+      ) : null}
 
       <div className="otdr-chart-legend" aria-label="Event marker legend">
         <span>
@@ -605,10 +602,11 @@ export function OtdrModal({ open, onClose, nodes, edges }: OtdrModalProps) {
                     type="button"
                     key={wavelength}
                     aria-pressed={wavelengthNm === wavelength}
+                    aria-label={`${wavelength} nanometres`}
                     disabled={acquiring}
                     onClick={() => setWavelengthNm(wavelength)}
                   >
-                    {wavelength} nm
+                    {wavelength}
                   </button>
                 ))}
               </div>
@@ -642,7 +640,7 @@ export function OtdrModal({ open, onClose, nodes, edges }: OtdrModalProps) {
               ) : (
                 <Radio size={16} aria-hidden="true" />
               )}
-              {acquiring ? 'PULSING FIBER…' : 'ACQUIRE TRACE / PULSE LASER'}
+              {acquiring ? 'Acquiring trace…' : 'Acquire trace'}
             </button>
           </div>
 

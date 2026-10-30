@@ -31,8 +31,12 @@ function RateInput({
           value={value}
           aria-label={label}
           onChange={(event) => {
-            const next = Number(event.target.value);
-            onChange(Number.isFinite(next) ? Math.max(0, next) : 0);
+            // An empty or mistyped field keeps the last good price instead of
+            // silently repricing the line at zero.
+            const raw = event.target.value.trim();
+            const next = Number(raw);
+            if (raw === '' || !Number.isFinite(next)) return;
+            onChange(Math.max(0, next));
           }}
         />
         <small>{unit}</small>

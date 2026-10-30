@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import App from '../App';
+import { buildPreset } from '../engine/presets';
+import { simulateTopology } from '../engine/opticalSimulator';
+import { calculateNetworkCost, resolveUnitCosts } from '../data/pricingCatalogue';
+import { buildQuotationExport } from '../data/commercialQuoteExports';
+import { DEFAULT_SETTINGS, type PonEdge, type PonNode } from '../types';
 
 // jsdom ships no PointerEvent, but the component sheets are pointer-driven, so
 // give the environment a minimal MouseEvent-backed shim (clientY and all).
@@ -53,10 +58,9 @@ async function renderStudio() {
   const result = render(<App />);
   enterStudioFromNav();
   await screen.findByRole('button', { name: 'Run Simulation' });
-  // The workbench opens on an empty canvas, so load the reference tree the
-  // assertions below are written against.
-  fireEvent.click(screen.getByRole('button', { name: /Preset Topologies/i }));
-  fireEvent.click(await screen.findByRole('button', { name: /Standard 1:32 GPON Tree/i }));
+  // The workbench opens on the "Start your network" empty canvas, so load the
+  // reference tree the assertions below are written against.
+  fireEvent.click(await screen.findByRole('button', { name: 'Standard 1:32 tree' }));
   await waitFor(() => expect(screen.getAllByText('Al-Sulaymaniyah — Unit 12').length).toBeGreaterThan(0));
   return result;
 }
@@ -67,9 +71,33 @@ const rail = () => screen.getByRole('navigation', { name: 'Workbench sections' }
 const workbenchTopBar = () =>
   screen.getAllByRole('banner').find((element) => element.classList.contains('fiberlab-topbar')) as HTMLElement;
 
-/** Sections are screens: switching one unmounts the previous step. */
-function openSection(name: 'Design' | 'Simulation' | 'Reports' | 'Settings') {
+/** Sections are screens: Design, Results and Learn. Settings is a dialog now. */
+function openSection(name: 'Design' | 'Results' | 'Learn') {
   fireEvent.click(within(rail()).getByRole('button', { name }));
+}
+
+/** Results opens on Summary; the quotation is its third tab. */
+function openResultTab(name: 'Summary' | 'Subscribers' | 'Quotation') {
+  fireEvent.click(screen.getByRole('tab', { name }));
+}
+
+/** The quotation is the third Results tab. */
+function openQuotation() {
+  openSection('Results');
+  openResultTab('Quotation');
+}
+
+/** Settings moved from a section to a sheet behind the top bar's More menu. */
+function openSettings() {
+  fireEvent.click(within(workbenchTopBar()).getByRole('button', { name: 'More' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
+}
+
+/** Presets moved from the Design bar into the top bar's More menu. */
+function loadPreset(name: string | RegExp) {
+  fireEvent.click(within(workbenchTopBar()).getByRole('button', { name: 'More' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Presets' }));
+  fireEvent.click(screen.getByRole('button', { name }));
 }
 
 function openMoreTools() {
@@ -82,13 +110,14 @@ function openMoreTools() {
  * that need one of those walk there first.
  */
 function useSettingsAction(name: string | RegExp) {
-  openSection('Settings');
-  fireEvent.click(screen.getByRole('button', { name }));
+  openSettings();
+  // The canvas toolbar carries a Missions button too, so stay inside the sheet.
+  fireEvent.click(within(screen.getByRole('dialog', { name: 'Settings' })).getByRole('button', { name }));
 }
 
-/** Detailed values (loss tables, fault switches) hide behind one disclosure. */
+/** Detailed values (loss tables, fault switches) hide behind the Details disclosure. */
 function expandAdvanced() {
-  fireEvent.click(screen.getByRole('button', { name: /^Advanced/ }));
+  fireEvent.click(screen.getByRole('button', { name: /^Details/ }));
 }
 
 /** The library is an accordion, so a category must be opened before its cards exist. */
@@ -139,12 +168,14 @@ describe('FiberLAB application shell', () => {
     expect(await screen.findByRole('button', { name: 'Run Simulation' })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: /Splice the fiber/i })).not.toBeInTheDocument();
 
-    // The ⋯ menu is canvas-only; guided missions stay one row away in Settings.
+    // Missions sit in the canvas toolbar now; the ⋯ menu keeps the view actions
+    // only, and fitting is gone from both.
+    const canvasToolbar = screen.getByRole('toolbar', { name: 'Canvas workbench tools' });
+    expect(within(canvasToolbar).getByRole('button', { name: 'Missions' })).toBeInTheDocument();
+    expect(within(canvasToolbar).getByRole('button', { name: 'Test' })).toBeInTheDocument();
     openMoreTools();
-    expect(screen.getByRole('button', { name: 'Fit view to screen' })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /Missions/ })).not.toBeInTheDocument();
-    openSection('Settings');
-    expect(screen.getByRole('button', { name: 'Missions' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Zoom to 100%' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Fit view to screen' })).not.toBeInTheDocument();
   });
 
   it('quick-loads a preset and preserves the mounted studio state across the overview toggle', async () => {
@@ -169,18 +200,22 @@ describe('FiberLAB application shell', () => {
     enterStudioFromNav();
     await screen.findByRole('button', { name: 'Run Simulation' });
 
-    expect(await screen.findByText('The canvas is empty')).toBeInTheDocument();
+    expect(await screen.findByText('Start your network')).toBeInTheDocument();
     expect(screen.queryByText('Al-Sulaymaniyah — Unit 12')).not.toBeInTheDocument();
-    expect(screen.getByText('Drag in an OLT, or let a mission walk you through it.')).toBeInTheDocument();
+    expect(screen.getByText(/Drop parts from the library, or begin from a working design/)).toBeInTheDocument();
+    // Three ways in, no fourth.
+    expect(screen.getByRole('button', { name: /Standard 1:32 tree/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Guided mission/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Import topology/ })).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Open the mission' }));
+    fireEvent.click(screen.getByRole('button', { name: /Guided mission/ }));
     expect(await screen.findByRole('dialog', { name: 'Field missions' })).toBeInTheDocument();
     fireEvent.keyDown(document, { key: 'Escape' });
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Field missions' })).not.toBeInTheDocument());
 
     // The hint is a nudge, not furniture: it can be dismissed.
     fireEvent.click(screen.getByRole('button', { name: 'Dismiss canvas hint' }));
-    expect(screen.queryByText('The canvas is empty')).not.toBeInTheDocument();
+    expect(screen.queryByText('Start your network')).not.toBeInTheDocument();
   });
 
   it('loads the standard 1:32 tree and renders every element', async () => {
@@ -199,14 +234,7 @@ describe('FiberLAB application shell', () => {
     // The library is an accordion: one category open at a time, each with a
     // count badge. Every category still shows its hardware artwork.
     let thumbnails = 0;
-    for (const label of [
-      'OLT / Headend',
-      'Fiber Cables',
-      'Splitters',
-      'Splices & Closures',
-      'Customer / ONT',
-      'Tools',
-    ]) {
+    for (const label of ['OLT / Headend', 'Fiber Cables', 'Splitters', 'Splices & Closures', 'Customer / ONT']) {
       const header = within(toolbox as HTMLElement).getByRole('button', { name: new RegExp(`^${label}`) });
       // One category is open by default; opening another closes it.
       if (header.getAttribute('aria-expanded') !== 'true') fireEvent.click(header);
@@ -233,8 +261,7 @@ describe('FiberLAB application shell', () => {
   it('drags a toolbox component onto the React Flow canvas', async () => {
     const { container } = render(<App />);
     enterStudioFromNav();
-    fireEvent.click(await screen.findByRole('button', { name: /Preset Topologies/i }));
-    fireEvent.click(await screen.findByRole('button', { name: /Standard 1:32 GPON Tree/i }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Standard 1:32 tree' }));
     await waitFor(() => expect(screen.getAllByText('Al-Sulaymaniyah — Unit 12').length).toBeGreaterThan(0));
 
     const values = new Map<string, string>();
@@ -356,11 +383,10 @@ describe('FiberLAB application shell', () => {
   it('connects and disconnects node pairs in Link nodes mode and deletes a selected span', async () => {
     render(<App />);
     enterStudioFromNav();
-    fireEvent.click(await screen.findByRole('button', { name: /Preset Topologies/i }));
-    fireEvent.click(await screen.findByRole('button', { name: /Standard 1:32 GPON Tree/i }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Standard 1:32 tree' }));
     await waitFor(() => expect(screen.getAllByText('Al-Sulaymaniyah — Unit 12').length).toBeGreaterThan(0));
 
-    expect(statusToggle()).toHaveAccessibleName(/Network status: Marginal\./);
+    expect(statusToggle()).toHaveAccessibleName(/Network status: Warning\./);
 
     const oltNode = getCanvasNodeByText('OLT');
     const feederNode = getCanvasNodeByText(/^5\.0 km$/);
@@ -371,14 +397,15 @@ describe('FiberLAB application shell', () => {
     expect(screen.getByText(/Source: olt-a/)).toBeInTheDocument();
     fireEvent.click(feederNode);
     await waitFor(() =>
-      expect(within(statusBar()).getByRole('button', { name: /Network status: Fail\./ })).toBeInTheDocument(),
+      // Bypassing the splitter leaves every subscriber with no path: Disconnected, not LOS.
+      expect(within(statusBar()).getByRole('button', { name: /Network status: Disconnected\./ })).toBeInTheDocument(),
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Link nodes' }));
     fireEvent.click(oltNode);
     fireEvent.click(feederNode);
     await waitFor(() =>
-      expect(within(statusBar()).getByRole('button', { name: /Network status: Marginal\./ })).toBeInTheDocument(),
+      expect(within(statusBar()).getByRole('button', { name: /Network status: Warning\./ })).toBeInTheDocument(),
     );
 
     fireEvent.click(feederNode);
@@ -406,13 +433,13 @@ describe('FiberLAB application shell', () => {
     await renderStudio();
     await waitFor(() => expect(screen.getAllByText('Al-Sulaymaniyah — Unit 12').length).toBeGreaterThan(0));
 
-    // Four values, no more: status, total loss, total distance, subscribers OK.
+    // Four values, no more: status, loss + margin, total distance, subscribers OK.
     const bar = statusBar();
-    expect(within(bar).getByText('Marginal')).toBeInTheDocument();
-    expect(within(bar).getByText('Total loss')).toBeInTheDocument();
-    expect(within(bar).getByText('Total distance')).toBeInTheDocument();
+    expect(within(bar).getByText('Warning')).toBeInTheDocument();
+    expect(within(bar).getByText('Loss + margin')).toBeInTheDocument();
+    expect(within(bar).getByText('Fiber on canvas')).toBeInTheDocument();
     expect(within(bar).getByText('13.5 km')).toBeInTheDocument();
-    const subscribers = within(bar).getByText('Subscribers OK').closest('.pu-sb-item') as HTMLElement;
+    const subscribers = within(bar).getByText('Subscribers online').closest('.pu-sb-item') as HTMLElement;
     expect(subscribers).toHaveTextContent(/\d+ \/ 3/);
     expect(statusToggle()).toHaveAttribute('aria-expanded', 'false');
 
@@ -443,7 +470,7 @@ describe('FiberLAB application shell', () => {
     // CAPEX moved to Reports: the bar no longer carries it.
     expect(screen.queryByTestId('capex-telemetry')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Close inspector' }));
-    openSection('Reports');
+    openQuotation();
     // Reports is a lazily loaded chunk now, so the first paint may be the
     // suspense fallback while the module downloads.
     const capexAfterOpen = await screen.findByTestId('capex-telemetry');
@@ -456,13 +483,13 @@ describe('FiberLAB application shell', () => {
     await renderStudio();
     await waitFor(() => expect(screen.getAllByText('Al-Sulaymaniyah — Unit 12').length).toBeGreaterThan(0));
 
-    openSection('Reports');
+    openQuotation();
 
     expect(await screen.findByText('Optical audit & commercial CAPEX quotation')).toBeInTheDocument();
-    // 5 + 1 + 0.3 + 1.2 + 6 km of plant on the canvas.
-    expect(screen.getByText('13.50')).toBeInTheDocument();
-    // Two wired-optimal + one marginal = 3 online, 0 offline.
-    expect(screen.getByText('ONTs provisioned')).toBeInTheDocument();
+    // The quotation is a tab under Results, and it opens on the commercial view.
+    expect(screen.getByRole('tab', { name: 'Quotation' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('region', { name: 'Commercial quotation and CAPEX' })).toBeInTheDocument();
+    expect(screen.getByText('Total Project CAPEX')).toBeInTheDocument();
     expect(screen.queryByText('Dukan Ridge — Tower 7')).not.toBeInTheDocument();
 
     openSection('Design');
@@ -471,10 +498,9 @@ describe('FiberLAB application shell', () => {
 
   it('edits local USD pricing in the Bill of Materials without changing optical status', async () => {
     await renderStudio();
-    openSection('Reports');
+    openQuotation();
     const capexBadge = await screen.findByTestId('capex-telemetry');
     expect(capexBadge).toHaveTextContent('$3,747');
-    fireEvent.click(screen.getByRole('tab', { name: 'Commercial Quotation & CAPEX' }));
     fireEvent.click(screen.getByText('Local unit pricing'));
     const feederRate = screen.getByRole('spinbutton', { name: 'Feeder / OSP cable' });
     expect(feederRate).toHaveValue(350);
@@ -488,13 +514,12 @@ describe('FiberLAB application shell', () => {
 
     // Pricing is commercial only: the optics are untouched behind the screen.
     openSection('Design');
-    expect(statusToggle()).toHaveAccessibleName(/Network status: Marginal\./);
+    expect(statusToggle()).toHaveAccessibleName(/Network status: Warning\./);
   });
 
   it('shows a commercial quotation tab with reconciling material and labor totals', async () => {
     await renderStudio();
-    openSection('Reports');
-    fireEvent.click(screen.getByRole('tab', { name: 'Commercial Quotation & CAPEX' }));
+    openQuotation();
 
     expect(await screen.findByRole('region', { name: 'Commercial quotation and CAPEX' })).toBeInTheDocument();
     expect(screen.getByText('Total Materials Cost')).toBeInTheDocument();
@@ -532,12 +557,14 @@ describe('FiberLAB application shell', () => {
     await renderStudio();
     await waitFor(() => expect(screen.getAllByText('Al-Sulaymaniyah — Unit 12').length).toBeGreaterThan(0));
 
+    // Clearing is two-step now: ask, then act.
     useSettingsAction(/Clear Canvas/i);
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm clear canvas' }));
 
     // Clearing hands the empty canvas back to the user.
     expect(screen.getByRole('toolbar', { name: 'Canvas workbench tools' })).toBeInTheDocument();
     expect(screen.queryByText('Al-Sulaymaniyah — Unit 12')).not.toBeInTheDocument();
-    expect(await screen.findByText('The canvas is empty')).toBeInTheDocument();
+    expect(await screen.findByText('Start your network')).toBeInTheDocument();
   });
 
   it('opens a field mission, loads its scenario, and tracks objectives live', async () => {
@@ -548,7 +575,12 @@ describe('FiberLAB application shell', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Start mission' }));
 
     expect(await screen.findByText('2/3 complete')).toBeInTheDocument();
-    expect(screen.getByText(/Bring all three connected ONTs into the ONLINE window/)).toBeInTheDocument();
+    const missionsDrawer = screen.getByRole('dialog', { name: 'Field missions' });
+    expect(
+      within(missionsDrawer).getByText(/Bring all three connected ONTs into the ONLINE window/),
+    ).toBeInTheDocument();
+    // The same progress is on the canvas now, without opening the drawer.
+    expect(screen.getByTestId('mission-bar')).toHaveTextContent('2/3 done');
     expect(screen.getByText('Mission active')).toBeInTheDocument();
     expect(screen.getByRole('progressbar', { name: 'Mission objective progress' })).toHaveAttribute(
       'aria-valuenow',
@@ -557,8 +589,9 @@ describe('FiberLAB application shell', () => {
     fireEvent.keyDown(document, { key: 'Escape' });
     expect(screen.queryByRole('dialog', { name: 'Field missions' })).not.toBeInTheDocument();
 
-    openSection('Settings');
+    // The canvas toolbar names the running mission; the bar shows its progress.
     expect(screen.getByRole('button', { name: 'Missions, active: The Marginal Villa' })).toBeInTheDocument();
+    expect(screen.getByTestId('mission-bar')).toHaveTextContent('The Marginal Villa');
   });
 
   it('tracks the Budget Crunch mission against the live CAPEX estimate', async () => {
@@ -572,7 +605,7 @@ describe('FiberLAB application shell', () => {
     expect(screen.getByText(/Keep the total reference CAPEX below \$1,600\.00/)).toBeInTheDocument();
     expect(screen.queryByTestId('capex-telemetry')).not.toBeInTheDocument();
     fireEvent.keyDown(document, { key: 'Escape' });
-    openSection('Reports');
+    openQuotation();
     expect(await screen.findByTestId('capex-telemetry')).toHaveTextContent('$3,747');
     openSection('Design');
   });
@@ -585,8 +618,8 @@ describe('FiberLAB application shell', () => {
     expect(screen.getByRole('combobox', { name: 'OTDR source node' })).toHaveValue('olt-a');
     expect(screen.getByRole('combobox', { name: 'OTDR target subscriber' })).toHaveValue('ont-a1');
 
-    fireEvent.click(screen.getByRole('button', { name: /ACQUIRE TRACE \/ PULSE LASER/ }));
-    expect(screen.getByRole('button', { name: /PULSING FIBER/ })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Acquire trace' }));
+    expect(screen.getByRole('button', { name: /Acquiring trace/ })).toBeDisabled();
     const eventTable = screen.getByRole('table', { name: 'OTDR detected events' });
     await waitFor(() => expect(within(eventTable).getByText('End of fiber')).toBeInTheDocument(), { timeout: 2000 });
     expect(within(eventTable).getByText('+4.00 dB')).toBeInTheDocument();
@@ -597,11 +630,10 @@ describe('FiberLAB application shell', () => {
     await renderStudio();
     await waitFor(() => expect(screen.getAllByText('Al-Sulaymaniyah — Unit 12').length).toBeGreaterThan(0));
 
-    fireEvent.click(screen.getByRole('button', { name: /Preset Topologies/i }));
-    fireEvent.click(await screen.findByRole('button', { name: /Failing Long-Distance Link/ }));
+    loadPreset(/Failing Long-Distance Link/);
 
     await waitFor(() => expect(screen.getAllByText('Dukan Ridge — Tower 7').length).toBeGreaterThan(0));
-    expect(statusToggle()).toHaveAccessibleName(/Network status: Fail\./);
+    expect(statusToggle()).toHaveAccessibleName(/Network status: LOS\./);
 
     const ont = getCanvasNodeByText('Dukan Ridge — Tower 7').querySelector('.hw-onu');
     expect(within(ont as HTMLElement).getByText(/LOS/)).toBeInTheDocument();
@@ -610,8 +642,7 @@ describe('FiberLAB application shell', () => {
 
   it('selects the modern XGS-PON suburb preset and exposes live gateway service and hardware details', async () => {
     await renderStudio();
-    fireEvent.click(screen.getByRole('button', { name: /Preset Topologies/i }));
-    fireEvent.click(await screen.findByRole('button', { name: /MODERN 10G XGS-PON SUBURB/i }));
+    loadPreset(/MODERN 10G XGS-PON SUBURB/i);
 
     await waitFor(() => expect(screen.getAllByText('Modern Suburb — Home 1').length).toBeGreaterThan(0));
     const gatewayNode = getCanvasNodeByText('Modern Suburb — Home 1');
@@ -664,9 +695,9 @@ describe('FiberLAB application shell', () => {
 
     expect(await screen.findByTestId('olt-dynamic-range-warning')).toHaveTextContent(/Dynamic range exceeded/i);
 
-    openSection('Reports');
-    expect(await screen.findByText('Upstream Δ')).toBeInTheDocument();
-    expect(screen.getByText('0.00 dB')).toBeInTheDocument();
+    openSection('Results');
+    const upstreamCard = (await screen.findByText('Upstream Δ')).closest('.pu-stat-card') as HTMLElement;
+    expect(upstreamCard).toHaveTextContent('dB');
     openSection('Design');
 
     useSettingsAction(/^Missions$/i);
@@ -710,14 +741,15 @@ describe('FiberLAB application shell', () => {
     expect(within(canvasToolbar).getByRole('button', { name: 'Delete selected elements' })).toBeInTheDocument();
     expect(within(canvasToolbar).getByRole('button', { name: 'Zoom in' })).toBeInTheDocument();
     expect(within(canvasToolbar).getByRole('button', { name: 'Zoom out' })).toBeInTheDocument();
-    expect(within(canvasToolbar).getByRole('button', { name: 'Fit View' })).toBeInTheDocument();
+    expect(within(canvasToolbar).getByRole('button', { name: 'Missions' })).toBeInTheDocument();
+    expect(within(canvasToolbar).queryByRole('button', { name: 'Fit View' })).not.toBeInTheDocument();
     // Adding components lives in the library; the overflow keeps everything else.
     expect(within(canvasToolbar).queryByRole('button', { name: 'Add Node' })).not.toBeInTheDocument();
     expect(within(canvasToolbar).getByRole('button', { name: 'More tools' })).toBeInTheDocument();
 
     // A slim status bar replaces the old Components/Topology tabs.
     const bar = statusBar();
-    expect(within(bar).getByText('Total distance')).toBeInTheDocument();
+    expect(within(bar).getByText('Fiber on canvas')).toBeInTheDocument();
     expect(within(bar).getByText('13.5 km')).toBeInTheDocument();
     expect(screen.queryByRole('tablist', { name: 'Network summary views' })).not.toBeInTheDocument();
     fireEvent.click(statusToggle());
@@ -749,66 +781,74 @@ describe('FiberLAB application shell', () => {
     expect(screen.getByRole('tablist', { name: 'Inspector sections' })).toBeInTheDocument();
   });
 
-  it('keeps the top bar to the logo, project, zoom and Run Simulation', async () => {
+  it('keeps the top bar to one row: project, save state, undo/redo, zoom, More and Run', async () => {
     await renderStudio();
     const banner = workbenchTopBar();
 
     expect(within(banner).getByRole('button', { name: 'Overview & Physics' })).toBeInTheDocument();
-    expect(within(banner).getByText('Standard 1:32 GPON Tree')).toBeInTheDocument();
+    // The project name is editable in place and says whether it is saved.
+    expect(within(banner).getByLabelText('Project name')).toHaveValue('Standard 1:32 GPON Tree');
+    expect(within(banner).getByRole('status')).toHaveTextContent(/Saved|Saving/);
+    expect(within(banner).getByRole('button', { name: 'Undo' })).toBeInTheDocument();
+    expect(within(banner).getByRole('button', { name: 'Redo' })).toBeInTheDocument();
     expect(within(banner).getByRole('button', { name: 'Zoom' })).toBeInTheDocument();
+    expect(within(banner).getByRole('button', { name: 'More' })).toBeInTheDocument();
     expect(within(banner).getByRole('button', { name: 'Run Simulation' })).toBeInTheDocument();
 
-    // Reports owns a section now, presets moved to the design bar, and the
-    // network colour lives in the status bar instead of a header chip.
-    expect(within(banner).queryByRole('button', { name: 'Reports' })).not.toBeInTheDocument();
-    expect(within(banner).queryByRole('button', { name: /Preset Topologies/ })).not.toBeInTheDocument();
+    // Presets live one level down in More; the network colour lives in the status bar.
     expect(within(banner).queryByLabelText(/Network health/)).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Preset Topologies/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Preset Topologies/i })).not.toBeInTheDocument();
   });
 
-  it('switches between the Design, Simulation, Reports and Settings screens', async () => {
+  it('switches between the Design, Results and Learn screens, with Settings as a sheet', async () => {
     await renderStudio();
     expect(within(rail()).getByRole('button', { name: 'Design' })).toHaveAttribute('aria-current', 'page');
 
-    openSection('Simulation');
-    expect(screen.getByRole('heading', { name: 'Simulation' })).toBeInTheDocument();
-    expect(screen.getByRole('table', { name: 'Subscriber optical results' })).toBeInTheDocument();
+    openSection('Results');
+    expect(screen.getByRole('heading', { name: 'Results' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Summary' })).toHaveAttribute('aria-selected', 'true');
     expect(screen.getByText('OLT Launch')).toBeInTheDocument();
     expect(screen.getByText('13.5 km')).toBeInTheDocument();
+
+    openResultTab('Subscribers');
+    expect(screen.getByRole('table', { name: 'Subscriber optical results' })).toBeInTheDocument();
 
     // A row is a shortcut back to that component on the canvas.
     fireEvent.click(screen.getByRole('button', { name: /Show Al-Sulaymaniyah — Unit 12 on the canvas/ }));
     expect(screen.getByRole('toolbar', { name: 'Canvas workbench tools' })).toBeInTheDocument();
     expect(screen.getByRole('tablist', { name: 'Inspector sections' })).toBeInTheDocument();
 
-    openSection('Settings');
-    expect(screen.getByRole('heading', { name: 'Settings' })).toBeInTheDocument();
+    openSettings();
+    expect(screen.getByRole('dialog', { name: 'Settings' })).toBeInTheDocument();
     expect(screen.getByRole('spinbutton', { name: 'Global safety margin' })).toBeInTheDocument();
     expect(screen.getByRole('switch', { name: 'Auto-run' })).toHaveAttribute('aria-checked', 'true');
+    fireEvent.click(screen.getByRole('button', { name: 'Close settings' }));
 
-    openSection('Reports');
+    openQuotation();
     expect(screen.getByRole('heading', { name: 'Bill of Materials' })).toBeInTheDocument();
     expect(screen.getByTestId('capex-telemetry')).toHaveTextContent('CAPEX $3,747');
+
+    openSection('Learn');
+    expect(screen.getByRole('heading', { name: 'Learn' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Fault-finding' })).toBeInTheDocument();
   });
 
-  it('returns from Reports with the back button, Escape, or the browser back gesture', async () => {
+  it('returns from Results with Escape or the browser back gesture', async () => {
     await renderStudio();
-    openSection('Reports');
+    openQuotation();
 
-    const back = screen.getByRole('button', { name: 'Back to Design' });
-    expect(back).toBeVisible();
-    fireEvent.click(back);
+    fireEvent.keyDown(document, { key: 'Escape' });
     expect(screen.getByRole('toolbar', { name: 'Canvas workbench tools' })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Bill of Materials' })).not.toBeInTheDocument();
 
     // Escape is the keyboard's way back.
-    openSection('Reports');
+    openQuotation();
     fireEvent.keyDown(document, { key: 'Escape' });
     expect(screen.queryByRole('heading', { name: 'Bill of Materials' })).not.toBeInTheDocument();
     expect(screen.getByRole('toolbar', { name: 'Canvas workbench tools' })).toBeInTheDocument();
 
     // The browser Back button and the phone back gesture walk the same steps.
-    openSection('Reports');
+    openQuotation();
     window.history.back();
     await waitFor(() => expect(screen.getByRole('toolbar', { name: 'Canvas workbench tools' })).toBeInTheDocument());
   });
@@ -816,45 +856,44 @@ describe('FiberLAB application shell', () => {
   it('moves keyboard focus to the heading of the section that opens', async () => {
     await renderStudio();
 
-    openSection('Reports');
-    expect(screen.getByRole('heading', { level: 1, name: 'Bill of Materials' })).toHaveFocus();
+    openSection('Results');
+    expect(screen.getByRole('heading', { level: 1, name: 'Results' })).toHaveFocus();
 
-    openSection('Settings');
+    openSettings();
     expect(screen.getByRole('heading', { level: 1, name: 'Settings' })).toHaveFocus();
-
-    openSection('Simulation');
-    expect(screen.getByRole('heading', { level: 1, name: 'Simulation' })).toHaveFocus();
+    fireEvent.click(screen.getByRole('button', { name: 'Close settings' }));
 
     openSection('Design');
     expect(screen.getByRole('heading', { level: 1, name: 'Design canvas' })).toHaveFocus();
   });
 
-  it('gives Reports a main landmark, a heading hierarchy and self-scrolling tables', async () => {
+  it('gives Results one h1, tab panels, and tables that scroll inside their own box', async () => {
     await renderStudio();
-    openSection('Reports');
+    openQuotation();
 
-    const main = document.querySelector('main.pu-reports-screen') as HTMLElement;
-    expect(main).not.toBeNull();
-    expect(within(main).getByRole('heading', { level: 1, name: 'Bill of Materials' })).toBeInTheDocument();
-    expect(within(main).getByRole('heading', { level: 2, name: 'Optical budget per subscriber' })).toBeInTheDocument();
+    const results = screen.getByRole('region', { name: 'Results' });
+    expect(within(results).getByRole('heading', { level: 1, name: 'Results' })).toBeInTheDocument();
+    // The quotation is embedded, so it titles itself at h2 under Results.
+    expect(within(results).getByRole('heading', { level: 2, name: 'Bill of Materials' })).toBeInTheDocument();
+    expect(
+      within(results).getByRole('heading', { level: 2, name: 'Commercial quotation & CAPEX' }),
+    ).toBeInTheDocument();
 
-    // Every table scrolls inside its own box, so the page never scrolls sideways.
-    const subscriberTable = screen.getByTestId('subscriber-budget');
-    expect(subscriberTable.parentElement).toHaveClass('overflow-x-auto');
-
-    fireEvent.click(screen.getByRole('tab', { name: 'Commercial Quotation & CAPEX' }));
     const quotationTable = screen.getByTestId('quotation-line-items');
     expect(quotationTable.parentElement).toHaveClass('overflow-x-auto');
-    expect(within(main).getByRole('heading', { level: 2, name: 'Commercial quotation & CAPEX' })).toBeInTheDocument();
+
+    openResultTab('Subscribers');
+    const subscriberTable = screen.getByRole('table', { name: 'Subscriber optical results' });
+    expect(subscriberTable.parentElement).toHaveClass('pu-sim-table-wrap');
   });
 
   it('keeps the URL hash while the sections move', async () => {
     window.location.hash = '#reference';
     await renderStudio();
 
-    openSection('Reports');
+    openQuotation();
     expect(window.location.hash).toBe('#reference');
-    openSection('Settings');
+    openSettings();
     expect(window.location.hash).toBe('#reference');
     openSection('Design');
     expect(window.location.hash).toBe('#reference');
@@ -862,7 +901,7 @@ describe('FiberLAB application shell', () => {
     window.history.replaceState({}, '', window.location.pathname);
   });
 
-  it('offers the same four sections in the phone tab bar', async () => {
+  it('offers the same three sections in the phone tab bar', async () => {
     await renderStudio();
     const tabs = screen.getByRole('navigation', { name: 'Sections' });
 
@@ -870,42 +909,48 @@ describe('FiberLAB application shell', () => {
       within(tabs)
         .getAllByRole('button')
         .map((tab) => tab.getAttribute('aria-label')),
-    ).toEqual(['Design', 'Simulation', 'Reports', 'Settings']);
+    ).toEqual(['Design', 'Results', 'Learn']);
 
-    fireEvent.click(within(tabs).getByRole('button', { name: 'Reports' }));
-    expect(screen.getByRole('heading', { name: 'Bill of Materials' })).toBeInTheDocument();
-    expect(within(tabs).getByRole('button', { name: 'Reports' })).toHaveAttribute('aria-current', 'page');
+    fireEvent.click(within(tabs).getByRole('button', { name: 'Results' }));
+    expect(screen.getByRole('heading', { name: 'Results' })).toBeInTheDocument();
+    expect(within(tabs).getByRole('button', { name: 'Results' })).toHaveAttribute('aria-current', 'page');
   });
 
-  it('explains the first three steps once and remembers the dismissal', async () => {
+  it('remembers a dismissed empty-state hint across a reload', async () => {
     window.localStorage.clear();
-    const { unmount } = await renderStudio();
+    const { unmount } = render(<App />);
+    enterStudioFromNav();
+    await screen.findByRole('button', { name: 'Run Simulation' });
 
-    const hint = screen.getByRole('complementary', { name: 'Getting started' });
-    expect(hint).toHaveTextContent('Pick a component');
-    expect(hint).toHaveTextContent('Connect them');
-    expect(hint).toHaveTextContent('Press Run Simulation');
+    // The hint is a nudge, not furniture: it can be dismissed.
+    expect(await screen.findByText('Start your network')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Dismiss canvas hint' }));
+    expect(screen.queryByText('Start your network')).not.toBeInTheDocument();
 
-    fireEvent.click(within(hint).getByRole('button', { name: 'Dismiss getting started' }));
-    expect(screen.queryByRole('complementary', { name: 'Getting started' })).not.toBeInTheDocument();
-
-    // Remembered: a fresh mount stays clean.
+    // The dismissal is part of the saved workspace, so a reload stays clean.
+    await waitFor(() => expect(window.localStorage.getItem('fiberlab.workspace.v1')).not.toBeNull(), {
+      timeout: 2000,
+    });
     unmount();
-    await renderStudio();
-    expect(screen.queryByRole('complementary', { name: 'Getting started' })).not.toBeInTheDocument();
+    render(<App />);
+    enterStudioFromNav();
+    await screen.findByRole('button', { name: 'Run Simulation' });
+    expect(screen.queryByText('Start your network')).not.toBeInTheDocument();
   });
 
-  it('opens Reports as its own section instead of a dialog', async () => {
+  it('opens Results and its quotation as a section, not a dialog', async () => {
     await renderStudio();
-    const reportsTab = within(rail()).getByRole('button', { name: 'Reports' });
-    fireEvent.click(reportsTab);
+    const resultsTab = within(rail()).getByRole('button', { name: 'Results' });
+    fireEvent.click(resultsTab);
 
-    // The Bill of Materials is the Reports screen, so there is no overlay at all.
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Bill of Materials' })).toBeInTheDocument();
-    expect(reportsTab).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('heading', { name: 'Results' })).toBeInTheDocument();
+    expect(resultsTab).toHaveAttribute('aria-current', 'page');
     // Design chrome unmounts while another section is in charge.
     expect(screen.queryByRole('toolbar', { name: 'Canvas workbench tools' })).not.toBeInTheDocument();
+
+    openResultTab('Quotation');
+    expect(screen.getByRole('heading', { name: 'Bill of Materials' })).toBeInTheDocument();
 
     openSection('Design');
     expect(screen.getByRole('toolbar', { name: 'Canvas workbench tools' })).toBeInTheDocument();
@@ -943,7 +988,8 @@ describe('FiberLAB application shell', () => {
       .getAllByRole('button')
       .map((button) => button.getAttribute('aria-label'));
 
-    expect(labels).toEqual(['Fit view to screen', 'Zoom to 100%']);
+    expect(labels).toEqual(['Zoom to 100%']);
+    expect(labels).not.toContain('Fit view to screen');
     expect(within(menu).getByRole('switch', { name: 'Snap to grid' })).toBeInTheDocument();
     // Everything that configures the app moved to Settings instead.
     for (const moved of ['Overview & Physics', 'OPM Tool', 'OTDR Trace', 'Missions', 'Clear Canvas']) {
@@ -956,8 +1002,7 @@ describe('FiberLAB application shell', () => {
     const { container } = render(<App />);
     enterStudioFromNav();
     await screen.findByRole('button', { name: 'Run Simulation' });
-    fireEvent.click(screen.getByRole('button', { name: /Preset Topologies/i }));
-    fireEvent.click(await screen.findByRole('button', { name: /Standard 1:32 GPON Tree/i }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Standard 1:32 tree' }));
 
     const dropSpan = getCanvasNodeByText(/^6\.0 km$/);
     fireEvent.click(dropSpan);
@@ -997,8 +1042,7 @@ describe('FiberLAB application shell', () => {
   it('caps large cassettes at sixteen branch ports and says so', async () => {
     await renderStudio();
 
-    fireEvent.click(screen.getByRole('button', { name: /Preset Topologies/i }));
-    fireEvent.click(await screen.findByRole('button', { name: /Failing Long-Distance Link/ }));
+    loadPreset(/Failing Long-Distance Link/);
     await waitFor(() => expect(screen.getAllByText('Dukan Ridge — Tower 7').length).toBeGreaterThan(0));
 
     const splitter = getCanvasNodeByText('PLC Splitter 1:32');
@@ -1023,21 +1067,63 @@ describe('FiberLAB application shell', () => {
     expect(screen.getByText(/remaining fan-out stays a ribbon trunk/i)).toBeInTheDocument();
   });
 
-  it('keeps loss tables and allowances folded behind Advanced until asked', async () => {
+  it('keeps loss tables and allowances folded behind Details until asked', async () => {
     await renderStudio();
     fireEvent.click(getCanvasNodeByText('PLC Splitter 1:8'));
 
     // Essentials first: the ratio and its insertion loss.
     expect(screen.getByRole('combobox', { name: 'Split ratio' })).toHaveValue('8');
     expect(screen.getByText('Insertion loss')).toBeInTheDocument();
-    const advanced = screen.getByRole('button', { name: /^Advanced/ });
+    const advanced = screen.getByRole('button', { name: /^Details/ });
     expect(advanced).toHaveAttribute('aria-expanded', 'false');
     expect(screen.queryByText('Excess / uniformity loss')).not.toBeInTheDocument();
+    expect(screen.getByText(/Guided view shows the essentials/)).toBeInTheDocument();
 
     expandAdvanced();
     expect(advanced).toHaveAttribute('aria-expanded', 'true');
     expect(screen.getByText('Excess / uniformity loss')).toBeInTheDocument();
     expect(screen.getByText('Total modeled insertion loss')).toBeInTheDocument();
+  });
+
+  it('switches between Guided and Engineer detail levels from the top bar chip', async () => {
+    await renderStudio();
+    const banner = workbenchTopBar();
+    const chip = within(banner).getByRole('button', { name: /^Detail level: Guided$/ });
+    expect(chip).toHaveAttribute('aria-pressed', 'false');
+
+    fireEvent.click(getCanvasNodeByText('PLC Splitter 1:8'));
+    // Guided hides the loss tables and explains why.
+    expect(screen.getByText(/Guided view shows the essentials/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Details/ })).toHaveAttribute('aria-expanded', 'false');
+    fireEvent.click(screen.getByRole('button', { name: 'Close inspector' }));
+
+    fireEvent.click(within(banner).getByRole('button', { name: /^Detail level: Guided$/ }));
+    expect(within(banner).getByRole('button', { name: /^Detail level: Engineer$/ })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+
+    fireEvent.click(getCanvasNodeByText('PLC Splitter 1:8'));
+    // Engineer opens the same table without being asked.
+    expect(screen.queryByText(/Guided view shows the essentials/)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Details/ })).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByText('Excess / uniformity loss')).toBeInTheDocument();
+  });
+
+  it('defines a term once in the glossary and links it from the inspector', async () => {
+    await renderStudio();
+    fireEvent.click(getCanvasNodeByText('Al-Sulaymaniyah — Unit 12'));
+    fireEvent.click(screen.getByRole('tab', { name: 'Optical Power' }));
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'What is Margin to LOS?' })[0]);
+    expect(screen.getByRole('note')).toHaveTextContent(/closer to dropping out/i);
+
+    // The same sentence is on the Learn screen, not a second copy of it.
+    fireEvent.click(screen.getByRole('button', { name: 'Close inspector' }));
+    openSection('Learn');
+    const glossary = screen.getByRole('heading', { name: 'Glossary' }).closest('.pu-screen-card') as HTMLElement;
+    expect(within(glossary).getByText('Margin to LOS')).toBeInTheDocument();
+    expect(within(glossary).getByText(/closer to dropping out/i)).toBeInTheDocument();
   });
 
   it('confirms before removing a selected component', async () => {
@@ -1169,7 +1255,7 @@ describe('FiberLAB application shell', () => {
 
     // The canvas pill carries the OM4 tag, and the inspector exposes the glass.
     expect(container.querySelector('.hw-fiber.is-multimode')).not.toBeNull();
-    expect(screen.getByLabelText('Fibre profile')).toHaveValue('om4');
+    expect(screen.getByLabelText('Fiber profile')).toHaveValue('om4');
 
     openLibraryCategory('Splices & Closures');
     fireEvent.click(within(library).getByRole('button', { name: /Attenuator Pad/i }));
@@ -1178,5 +1264,103 @@ describe('FiberLAB application shell', () => {
     expect(screen.getByLabelText('Pad value')).toHaveValue('5');
     expect(screen.getByRole('combobox', { name: 'Attenuator polish' })).toHaveValue('SC/APC');
     expect(screen.getByText('Inline pad · 5 dB fixed')).toBeInTheDocument();
+  });
+
+  it('honours the V and H shortcuts its own tooltips advertise', async () => {
+    await renderStudio();
+    const toolbar = screen.getByRole('toolbar', { name: 'Canvas workbench tools' });
+    const select = within(toolbar).getByRole('button', { name: 'Select' });
+    const pan = within(toolbar).getByRole('button', { name: 'Pan' });
+
+    expect(select).toHaveAttribute('aria-pressed', 'true');
+    expect(select.getAttribute('title')).toContain('(V)');
+    expect(pan.getAttribute('title')).toContain('(H)');
+
+    fireEvent.keyDown(document, { key: 'h' });
+    await waitFor(() => expect(pan).toHaveAttribute('aria-pressed', 'true'));
+    expect(select).toHaveAttribute('aria-pressed', 'false');
+
+    fireEvent.keyDown(document, { key: 'v' });
+    await waitFor(() => expect(select).toHaveAttribute('aria-pressed', 'true'));
+  });
+
+  it('shows path loss, safety margin and the total as three separate rows', async () => {
+    await renderStudio();
+    openSection('Results');
+    expect(within(document.body).getByText('Loss + margin')).toBeInTheDocument();
+    expect(within(document.body).getByText('Path loss · worst subscriber')).toBeInTheDocument();
+    expect(within(document.body).getByText('Safety margin · design allowance')).toBeInTheDocument();
+    expect(within(document.body).getByText('Total · loss + margin')).toBeInTheDocument();
+  });
+
+  it('never turns a mistyped span length into zero kilometres', async () => {
+    await renderStudio();
+    const feeder = getCanvasNodeByText(/^5\.0 km$/);
+    fireEvent.click(feeder);
+
+    const lengthInput = await screen.findByLabelText('Span length (km)');
+    expect(lengthInput).toHaveValue(5);
+
+    fireEvent.change(lengthInput, { target: { value: '12.5' } });
+    await waitFor(() => expect(lengthInput).toHaveValue(12.5));
+
+    // A cleared or non-numeric field must keep the last good length.
+    fireEvent.change(lengthInput, { target: { value: '' } });
+    fireEvent.change(lengthInput, { target: { value: 'abc' } });
+    expect(lengthInput).toHaveValue(12.5);
+  });
+
+  it('keeps the design in this browser across a remount', async () => {
+    const { unmount } = await renderStudio();
+    await waitFor(() => expect(screen.getAllByText('Al-Sulaymaniyah — Unit 12').length).toBeGreaterThan(0));
+
+    // The write is debounced, so give it a beat before the "reload".
+    await waitFor(() => expect(window.localStorage.getItem('fiberlab.workspace.v1')).not.toBeNull(), {
+      timeout: 2000,
+    });
+
+    unmount();
+    render(<App />);
+    enterStudioFromNav();
+    await waitFor(() => expect(screen.getAllByText('Al-Sulaymaniyah — Unit 12').length).toBeGreaterThan(0));
+    expect(screen.queryByText('Start your network')).not.toBeInTheDocument();
+  });
+
+  it('undoes and redoes a canvas edit with Ctrl+Z and Ctrl+Shift+Z', async () => {
+    await renderStudio();
+    const feeder = getCanvasNodeByText(/^5\.0 km$/);
+    fireEvent.click(feeder);
+
+    const deleteButton = screen.getByRole('button', { name: 'Delete selected elements' });
+    await waitFor(() => expect(deleteButton).toBeEnabled());
+    fireEvent.click(deleteButton);
+    await waitFor(() => expect(screen.queryByText(/^5\.0 km$/)).not.toBeInTheDocument());
+
+    fireEvent.keyDown(document, { key: 'z', ctrlKey: true });
+    await waitFor(() => expect(screen.getByText(/^5\.0 km$/)).toBeInTheDocument());
+
+    fireEvent.keyDown(document, { key: 'z', ctrlKey: true, shiftKey: true });
+    await waitFor(() => expect(screen.queryByText(/^5\.0 km$/)).not.toBeInTheDocument());
+  });
+
+  it('imports a topology JSON exported from Reports', async () => {
+    const { container } = await renderStudio();
+    await waitFor(() => expect(screen.getAllByText('Al-Sulaymaniyah — Unit 12').length).toBeGreaterThan(0));
+
+    // Build a document from the failing preset, then feed it back in.
+    const { nodes, edges } = buildPreset('failing-long-haul') as { nodes: PonNode[]; edges: PonEdge[] };
+    const simulation = simulateTopology(nodes, edges, DEFAULT_SETTINGS, 4321);
+    const cost = calculateNetworkCost(nodes, edges);
+    const document = buildQuotationExport(nodes, edges, simulation, DEFAULT_SETTINGS, resolveUnitCosts(), cost);
+
+    openSettings();
+    const fileInput = screen.getByLabelText('Topology JSON file') as HTMLInputElement;
+    const file = new File([JSON.stringify(document)], 'failing.json', { type: 'application/json' });
+    fireEvent.change(fileInput, { target: { files: [file] } });
+
+    await waitFor(() => expect(screen.getByText('Imported failing.json.')).toBeInTheDocument());
+    openSection('Design');
+    await waitFor(() => expect(container.querySelectorAll('.react-flow__node').length).toBeGreaterThan(0));
+    expect(screen.queryByText('Al-Sulaymaniyah — Unit 12')).not.toBeInTheDocument();
   });
 });

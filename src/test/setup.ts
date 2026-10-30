@@ -36,4 +36,6 @@ if (typeof window !== 'undefined' && !window.matchMedia) {
 
 afterEach(() => {
   cleanup();
+  // Persistence is real now: one test's workspace must not seed the next one.
+  window.localStorage.clear();
 });

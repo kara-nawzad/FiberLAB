@@ -1,4 +1,3 @@
-import { ArrowUpRight } from 'lucide-react';
 import { LandingNav } from './LandingNav';
 import { PhotonicHero } from './PhotonicHero';
 import { PillarsGrid } from './PillarsGrid';
@@ -31,16 +30,12 @@ export function LandingView({ onLaunchStudio, onLoadPreset, onStartVillaMission 
 
       <footer className="landing-footer">
         <div className="landing-footer-brand">
-          <span>F</span> FiberLAB
+          <span className="landing-footer-wordmark">
+            <strong>Fiber</strong>
+            <b>LAB</b>
+          </span>
         </div>
-        <p>
-          Learning model · downstream link-budget terms are explicit, but product-specific optics, bend penalties, and
-          upstream receiver budgets are not fully modeled. Confirm every live-network decision against current standards
-          and device datasheets.
-        </p>
-        <button type="button" className="landing-footer-link" onClick={onLaunchStudio}>
-          Open the engineering canvas <ArrowUpRight size={14} aria-hidden="true" />
-        </button>
+        <p>A learning model: confirm every live-network decision against current standards and device datasheets.</p>
       </footer>
     </div>
   );

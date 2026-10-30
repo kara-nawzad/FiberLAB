@@ -21,6 +21,7 @@ import type {
   SplitRatio,
   SplitterNodeData,
   Wavelength,
+  SpanTelemetry,
 } from '../types';
 import {
   ATTENUATION_DB_PER_KM,
@@ -307,6 +308,8 @@ export function simulateTopology(
     connectors: 0,
   });
 
+  const spanTelemetry: Record<string, SpanTelemetry> = {};
+
   const recordEdge = (edgeId: string, powerDbm: number): void => {
     const existing = edgeBest.get(edgeId);
     if (existing === undefined || powerDbm > existing) edgeBest.set(edgeId, powerDbm);
@@ -394,6 +397,11 @@ export function simulateTopology(
           ? { ...node.data, wavelength: PON_STANDARD_SPECS['XGS-PON'].downstreamWavelength }
           : node.data;
       const loss = computeFiberLoss(effectiveFiberData);
+      spanTelemetry[node.id] = {
+        wavelengthNm: effectiveFiberData.wavelength,
+        attenuationDbPerKm: loss.attenuationDbPerKm,
+        xgsLocked: oltData.ponStandard === 'XGS-PON' && node.data.wavelength !== effectiveFiberData.wavelength,
+      };
       nextState.lossDb += loss.totalDb;
       nextState.fiberKm += Math.max(0, node.data.lengthKm);
       nextState.splices += Math.max(0, node.data.splices);
@@ -670,6 +678,7 @@ export function simulateTopology(
     oltTelemetry,
     bestPaths,
     edgeTelemetry,
+    spanTelemetry,
     summary,
     upstreamDeltaDb: summary.upstreamDeltaDb,
     upstreamDynamicRangeWarning: summary.upstreamDynamicRangeWarning,
@@ -777,11 +786,11 @@ export const formatDbm = (value: number | null): string =>
 export function describeStatus(status: OntStatus, ponStandard?: PonStandard): string {
   switch (status) {
     case 'OVERLOAD':
-      return 'Optical saturation / burn risk';
+      return 'Receiver overload — add attenuation';
     case 'ONLINE':
       return ponStandard === 'XGS-PON' ? 'Within modeled XGS-PON receive-power window' : 'Within GPON optimal window';
     case 'WARNING':
-      return 'Marginal — high BER risk';
+      return 'Marginal — service may degrade';
     case 'LOS':
       return 'Loss of signal';
     case 'DISCONNECTED':

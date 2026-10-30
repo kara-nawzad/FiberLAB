@@ -73,8 +73,9 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             Fiber<b>LAB</b> hit an unexpected error
           </h1>
           <p className="fl-crash-copy">
-            Your design is kept in this browser session, so reloading the workbench is safe. If it happens again, note
-            what you were doing and send it to the project’s issue tracker.
+            Your design is saved in this browser as you edit, so the last saved state comes back when you reload. Any
+            change made in the moment before the crash may not have been written yet. If it happens again, note what you
+            were doing and send it to the project’s issue tracker.
           </p>
 
           <pre className="fl-crash-detail" aria-label="Error detail">

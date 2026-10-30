@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
-import { FileBarChart, LayoutDashboard, PlayCircle, Settings2 } from 'lucide-react';
+import { FileBarChart, GraduationCap, LayoutDashboard } from 'lucide-react';
 
 /* ========================================================================== *
- * Section navigation — Design → Simulation → Reports → Settings.
+ * Section navigation — Design → Results → Learn.
  *
  * Desktop keeps the slim rail on the left (icon + label). Phones swap it for a
  * bottom tab bar with 44 px targets that sits under the status bar and clears
@@ -10,7 +10,7 @@ import { FileBarChart, LayoutDashboard, PlayCircle, Settings2 } from 'lucide-rea
  * only shows what belongs to that step.
  * ========================================================================== */
 
-export type SectionId = 'design' | 'simulation' | 'reports' | 'settings';
+export type SectionId = 'design' | 'results' | 'learn';
 
 interface SectionDef {
   id: SectionId;
@@ -27,22 +27,16 @@ const SECTIONS: SectionDef[] = [
     icon: <LayoutDashboard size={20} aria-hidden="true" />,
   },
   {
-    id: 'simulation',
-    label: 'Simulation',
-    hint: 'Simulation — run the optical budget and read every subscriber',
-    icon: <PlayCircle size={20} aria-hidden="true" />,
-  },
-  {
-    id: 'reports',
-    label: 'Reports',
-    hint: 'Reports — optical audit and commercial quotation',
+    id: 'results',
+    label: 'Results',
+    hint: 'Results — the optical budget, every subscriber and the quotation',
     icon: <FileBarChart size={20} aria-hidden="true" />,
   },
   {
-    id: 'settings',
-    label: 'Settings',
-    hint: 'Settings — simulation options, test gear and help',
-    icon: <Settings2 size={20} aria-hidden="true" />,
+    id: 'learn',
+    label: 'Learn',
+    hint: 'Learn — guided missions and the physics behind the numbers',
+    icon: <GraduationCap size={20} aria-hidden="true" />,
   },
 ];
 

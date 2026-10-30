@@ -3,7 +3,7 @@ import { Check, ChevronDown, CircleHelp, Flag, Play, RotateCcw, X } from 'lucide
 import type { PonEdge, PonNode, SimulationResult } from '../types';
 import type { NetworkCostBreakdown } from '../data/pricingCatalogue';
 import { formatDbm } from '../engine/opticalSimulator';
-import { evaluateMissionObjectives, MISSIONS, type Mission } from '../engine/missions';
+import { evaluateMissionObjectives, groupMissions, MISSIONS, type Mission } from '../engine/missions';
 import { useDialogA11y } from '../hooks/useDialogA11y';
 
 interface MissionDrawerProps {
@@ -52,6 +52,7 @@ export function MissionDrawer({
     () => MISSIONS.find((candidate) => candidate.id === selectedMissionId) ?? MISSIONS[0],
     [selectedMissionId],
   );
+  const sections = useMemo(() => groupMissions(), []);
 
   if (!open || !mission) return null;
 
@@ -105,7 +106,7 @@ export function MissionDrawer({
 
         <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
           <div className="mb-2 flex items-center justify-between">
-            <h3 className="text-label font-bold uppercase tracking-eyebrow text-slate-500">Choose a mission</h3>
+            <h3 className="text-label font-bold uppercase tracking-eyebrow text-slate-500">Missions by skill</h3>
             {activeMissionId ? (
               <span className="inline-flex items-center gap-2 text-caption font-semibold text-emerald-700">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" /> Mission active
@@ -113,35 +114,49 @@ export function MissionDrawer({
             ) : null}
           </div>
 
-          <div className="grid gap-2">
-            {MISSIONS.map((candidate) => {
-              const active = candidate.id === selectedMissionId;
-              const currentlyRunning = candidate.id === activeMissionId;
-              return (
-                <button
-                  key={candidate.id}
-                  type="button"
-                  aria-pressed={active}
-                  onClick={() => setSelectedMissionId(candidate.id)}
-                  className={`w-full rounded-xl border p-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--pu-pri)] ${
-                    active
-                      ? 'border-[var(--pu-line)] bg-[var(--pu-pri-soft)] shadow-sm'
-                      : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
-                  }`}
-                >
-                  <div className="mb-2 flex items-center justify-between gap-2">
-                    <span className="text-body font-semibold text-slate-900">{candidate.title}</span>
-                    <span className="flex items-center gap-2">
-                      {currentlyRunning ? (
-                        <span className="font-mono text-caption font-bold uppercase text-emerald-700">Active</span>
-                      ) : null}
-                      <DifficultyPill difficulty={candidate.difficulty} />
-                    </span>
-                  </div>
-                  <p className="line-clamp-2 text-body leading-relaxed text-slate-600">{candidate.scenarioBrief}</p>
-                </button>
-              );
-            })}
+          <div className="grid gap-5">
+            {sections.map(({ section, missions }) => (
+              <section key={section.id} aria-labelledby={`mission-section-${section.id}`} className="grid gap-2">
+                <div>
+                  <h3
+                    id={`mission-section-${section.id}`}
+                    className="text-label font-bold uppercase tracking-eyebrow text-slate-700"
+                  >
+                    {section.title}
+                  </h3>
+                  {section.blurb ? <p className="mt-1 text-caption text-slate-500">{section.blurb}</p> : null}
+                </div>
+
+                {missions.map((candidate) => {
+                  const active = candidate.id === selectedMissionId;
+                  const currentlyRunning = candidate.id === activeMissionId;
+                  return (
+                    <button
+                      key={candidate.id}
+                      type="button"
+                      aria-pressed={active}
+                      onClick={() => setSelectedMissionId(candidate.id)}
+                      className={`w-full rounded-xl border p-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--pu-pri)] ${
+                        active
+                          ? 'border-[var(--pu-line)] bg-[var(--pu-pri-soft)] shadow-sm'
+                          : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
+                      }`}
+                    >
+                      <div className="mb-2 flex items-center justify-between gap-2">
+                        <span className="text-body font-semibold text-slate-900">{candidate.title}</span>
+                        <span className="flex items-center gap-2">
+                          {currentlyRunning ? (
+                            <span className="font-mono text-caption font-bold uppercase text-emerald-700">Active</span>
+                          ) : null}
+                          <DifficultyPill difficulty={candidate.difficulty} />
+                        </span>
+                      </div>
+                      <p className="line-clamp-2 text-body leading-relaxed text-slate-600">{candidate.scenarioBrief}</p>
+                    </button>
+                  );
+                })}
+              </section>
+            ))}
           </div>
 
           <section className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
@@ -257,7 +272,9 @@ export function MissionDrawer({
                   </div>
                 </div>
                 <div className="rounded-md border border-emerald-200/80 bg-white/80 p-2">
-                  <div className="text-caption font-semibold uppercase tracking-label text-slate-500">Margin</div>
+                  <div className="text-caption font-semibold uppercase tracking-label text-slate-500">
+                    Margin to LOS
+                  </div>
                   <div className="mt-1 font-mono text-label font-bold text-slate-900">
                     {simulation.safetyMarginDb.toFixed(1)} dB
                   </div>

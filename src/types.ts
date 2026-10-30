@@ -350,7 +350,7 @@ export const STATUS_STYLES: Record<OntStatus, StatusStyle> = {
     hex: '#7c3aed',
     badge: 'bg-purple-50 text-purple-800 border-purple-200',
     ring: 'border-purple-500/70 shadow-[0_0_18px_-8px_rgba(124,58,237,0.32)]',
-    blurb: 'Receiver saturation — optical burn risk. Add attenuation.',
+    blurb: 'Receiver overload — add attenuation.',
   },
   ONLINE: {
     label: 'ONLINE',
@@ -364,7 +364,7 @@ export const STATUS_STYLES: Record<OntStatus, StatusStyle> = {
     hex: '#a16207',
     badge: 'bg-amber-50 text-amber-900 border-amber-200',
     ring: 'border-amber-600/70 shadow-[0_0_18px_-8px_rgba(161,98,7,0.25)]',
-    blurb: 'Marginal link — high BER risk, service will degrade.',
+    blurb: 'Marginal link — service may degrade.',
   },
   LOS: {
     label: 'LOS',
@@ -381,6 +381,17 @@ export const STATUS_STYLES: Record<OntStatus, StatusStyle> = {
     blurb: 'No active OLT path reaches this ONT.',
   },
 };
+
+/* -------------------------------------------------------------------------- *
+ * Effective span telemetry (read-only view of what the budget actually used)
+ * -------------------------------------------------------------------------- */
+
+export interface SpanTelemetry {
+  wavelengthNm: Wavelength;
+  attenuationDbPerKm: number;
+  /** True when the OLT's PON standard forced a different window than the span's own selector. */
+  xgsLocked: boolean;
+}
 
 /* -------------------------------------------------------------------------- *
  * Node data payloads
@@ -649,6 +660,8 @@ export interface SimulationResult {
   /** Best path per ONT or gateway id. */
   bestPaths: Record<string, OpticalPath>;
   edgeTelemetry: Record<string, EdgeTelemetry>;
+  /** Effective wavelength/attenuation the budget used per fiber span. */
+  spanTelemetry: Record<string, SpanTelemetry>;
   summary: NetworkSummary;
   upstreamDeltaDb: number;
   upstreamDynamicRangeWarning: boolean;
@@ -663,6 +676,9 @@ export interface SimulationResult {
 /* -------------------------------------------------------------------------- *
  * Global design settings
  * -------------------------------------------------------------------------- */
+
+/** Guided keeps the essentials; Engineer opens the numbers by default. */
+export type DesignLevel = 'guided' | 'engineer';
 
 export interface DesignSettings {
   safetyMarginDb: number;
