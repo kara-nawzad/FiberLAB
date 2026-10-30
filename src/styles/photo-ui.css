@@ -2712,6 +2712,63 @@ button.pu-logo {
   margin: 0 !important;
   transform: translate(-50%, -50%) !important;
 }
+/* Import receipt: sits over the canvas so a rejected file can never pass for
+ * "nothing happened". It clears itself, and can be dismissed. */
+.pu-import-notice {
+  position: fixed;
+  bottom: calc(var(--sp-4) + 8px);
+  left: var(--sp-4);
+  z-index: 40;
+  display: flex;
+  max-width: min(420px, calc(100vw - var(--sp-6) * 2));
+  align-items: flex-start;
+  gap: var(--sp-2);
+  padding: 10px 10px 10px var(--sp-3);
+  border: 1px solid var(--pu-line);
+  border-left: 3px solid var(--pu-ok, #15803d);
+  border-radius: var(--r-xl);
+  background: var(--pu-panel);
+  box-shadow:
+    0 14px 30px -18px rgba(43, 26, 20, 0.45),
+    0 1px 3px rgba(43, 26, 20, 0.06);
+  color: var(--pu-ink);
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+.pu-import-notice.is-error {
+  border-left-color: var(--pu-warn);
+  background: var(--pu-warn-soft);
+  color: var(--pu-warn-text);
+}
+.pu-import-notice-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.pu-import-notice-close {
+  display: grid;
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  opacity: 0.65;
+  cursor: pointer;
+}
+.pu-import-notice-close:hover {
+  opacity: 1;
+  background: rgba(43, 26, 20, 0.07);
+}
+@media (max-width: 640px) {
+  .pu-import-notice {
+    right: var(--sp-3);
+    bottom: calc(var(--sp-4) + 4px);
+    left: var(--sp-3);
+    max-width: none;
+  }
+}
 .pu-empty-card {
   position: relative;
   display: flex;

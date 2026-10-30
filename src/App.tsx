@@ -253,6 +253,8 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
   const opmHudRef = useRef<HTMLElement | null>(null);
   const studioMainRef = useRef<HTMLElement | null>(null);
   const emptyImportRef = useRef<HTMLInputElement | null>(null);
+  /* The result of the last topology import, shown over the canvas. */
+  const [importNotice, setImportNotice] = useState<{ tone: 'ok' | 'error'; text: string } | null>(null);
   const [activeSection, setActiveSection] = useState<SectionId>('design');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [resultsTab, setResultsTab] = useState<'summary' | 'subscribers' | 'quotation'>('summary');
@@ -528,6 +530,13 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
     setDirty(true);
     setPresetEdited(true);
   }, []);
+
+  /* Import feedback is a receipt, not a dialog: it clears itself. */
+  useEffect(() => {
+    if (!importNotice) return;
+    const timer = window.setTimeout(() => setImportNotice(null), importNotice.tone === 'error' ? 12000 : 7000);
+    return () => window.clearTimeout(timer);
+  }, [importNotice]);
 
   const handlePatchNode = useCallback(
     (nodeId: string, patch: Partial<AnyNodeData>) => {
@@ -1215,11 +1224,18 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
     markDirty();
   }, [setNodes, setEdges, markDirty, recordStep]);
 
-  /** Reads a TopologyExport v2 document back onto the canvas (Reports writes them). */
+  /**
+   * Reads a TopologyExport v2 document back onto the canvas (Reports writes
+   * them). Every outcome is announced on the canvas: a rejected file used to
+   * return quietly, which read as "the import did nothing".
+   */
   const importTopology = useCallback(
-    (text: string): { ok: boolean; error?: string } => {
+    (text: string, fileName?: string): { ok: boolean; error?: string } => {
       const result = parseTopologyImport(text);
-      if (!result.ok) return { ok: false, error: result.error };
+      if (!result.ok) {
+        setImportNotice({ tone: 'error', text: result.error });
+        return { ok: false, error: result.error };
+      }
       recordStep('import');
       setNodes(result.state.nodes);
       setEdges(result.state.edges);
@@ -1232,6 +1248,14 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
       setActiveMissionId(null);
       setPresetEdited(true);
       setDirty(true);
+      const componentCount = result.state.nodes.length;
+      const linkCount = result.state.edges.length;
+      setImportNotice({
+        tone: 'ok',
+        text: `Imported ${fileName ?? 'your design'} — ${componentCount} component${
+          componentCount === 1 ? '' : 's'
+        }, ${linkCount} link${linkCount === 1 ? '' : 's'}. Ctrl/Cmd+Z restores the previous canvas.`,
+      });
       window.requestAnimationFrame(() => {
         void fitView({ padding: 0.08, maxZoom: 1.15, duration: 350 });
       });
@@ -1382,6 +1406,26 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
         onUndoRequest={undoCanvas}
         onRedoRequest={redoCanvas}
       />
+
+      {/* Import feedback belongs to the workbench, not to one screen: the
+       *  top-bar menu can import from any section. */}
+      {importNotice ? (
+        <div
+          className={`pu-import-notice is-${importNotice.tone}`}
+          role={importNotice.tone === 'error' ? 'alert' : 'status'}
+          aria-live={importNotice.tone === 'error' ? 'assertive' : 'polite'}
+        >
+          <span className="pu-import-notice-text">{importNotice.text}</span>
+          <button
+            type="button"
+            className="pu-import-notice-close"
+            onClick={() => setImportNotice(null)}
+            aria-label="Dismiss import message"
+          >
+            <X size={13} aria-hidden="true" />
+          </button>
+        </div>
+      ) : null}
 
       <div className="fiberlab-studio__body pu-body">
         <SectionRail active={activeSection} onChange={handleSectionChange} />
@@ -1578,7 +1622,8 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
                             onChange={(event) => {
                               const file = event.target.files?.[0];
                               event.target.value = '';
-                              if (file) void readFileText(file).then((text: string) => importTopology(text));
+                              if (file)
+                                void readFileText(file).then((text: string) => importTopology(text, file?.name));
                             }}
                           />
                           <button

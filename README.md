@@ -114,6 +114,19 @@ The estimator separates materials from labor, reports CAPEX per home passed and 
 
 These are illustrative baseline rates for learning, not a current market survey, installed-price guarantee, tax estimate, or supplier quotation. Local labor, logistics, taxes, currency, procurement, and contingency are not modeled.
 
+## Saving and reopening a design
+
+The canvas saves itself: every edit lands in this browser's `localStorage` (key `fiberlab.workspace.v1`) on a short debounce, so a reload restores the nodes, links, safety margin, project name, detail level and local unit rates.
+
+To keep a copy, move a design to another machine, or hand it to someone else, export a file and read it back:
+
+1. Open **More → Quotation** (or **Results → Quotation**) and press **Quote JSON**. The download, `fiberlab-quotation-<timestamp>.json`, carries the components, their links and the design settings.
+2. To reopen it use **More → Import topology** (also on the empty-canvas start panel, and in **Settings → Workspace**), and choose that JSON file.
+
+The importer checks the document's `format` and `version`, replaces the canvas with the imported components (Ctrl/Cmd+Z restores what was there before), and reports on the canvas what it loaded — or exactly why the file was rejected: not JSON, not a FiberLAB export, an unsupported version, or no readable components. The quotation **CSV** is a report for humans and cannot be imported; only the JSON round-trips.
+
+Two things are deliberately session-level and do not travel in the file: the editable project name and any custom **Local unit pricing** values. An imported design keeps the current session's name and rates.
+
 ## OTDR trace analyzer
 
 Open **OTDR Trace** in the TopBar to pulse a selected OLT output or fiber-span source toward a reachable ONT or gateway. Choose the target branch, 1270/1310/1490/1550/1577 nm wavelength, and a 10/100/1000 ns pulse width, then acquire the trace. The SVG analyzer plots 100–300 Rayleigh backscatter samples over 0–35 km and +5 to −45 dB, with a live distance/power crosshair and event markers for launch, fiber, connectors, splices, ODF/NAP/splitter losses, faults, and the terminal Fresnel reflection. Its automated event table reports distance, signed loss step, cumulative one-way loss, apparent reflection peak, and event assessment.

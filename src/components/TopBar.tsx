@@ -54,7 +54,7 @@ interface TopBarProps {
   onOpenMissions?: () => void;
   onOpenOtdr?: () => void;
   onToggleOpm?: () => void;
-  onImportTopology?: (text: string) => { ok: boolean; error?: string };
+  onImportTopology?: (text: string, fileName?: string) => { ok: boolean; error?: string };
 }
 
 export function TopBar({
@@ -326,27 +326,9 @@ export function TopBar({
               </button>
             ) : null}
             {onImportTopology ? (
-              <>
-                <button type="button" onClick={runMenuAction(() => importRef.current?.click())}>
-                  <Upload size={14} className="pu-menu-ico" aria-hidden="true" /> Import topology
-                </button>
-                <input
-                  ref={importRef}
-                  type="file"
-                  accept="application/json,.json"
-                  className="sr-only"
-                  aria-label="Import topology file"
-                  onChange={(event) => {
-                    const file = event.target.files?.[0];
-                    event.target.value = '';
-                    if (!file) return;
-                    void readFileText(file).then((text: string) => {
-                      onImportTopology(text);
-                      setMoreOpen(false);
-                    });
-                  }}
-                />
-              </>
+              <button type="button" onClick={runMenuAction(() => importRef.current?.click())}>
+                <Upload size={14} className="pu-menu-ico" aria-hidden="true" /> Import topology
+              </button>
             ) : null}
             {onOpenSettings ? (
               <button type="button" onClick={runMenuAction(onOpenSettings)}>
@@ -354,6 +336,25 @@ export function TopBar({
               </button>
             ) : null}
           </div>
+        ) : null}
+        {/* Outside the popover on purpose: closing the menu must not unmount the
+         * input while the OS file picker is still open. Otherwise the chosen
+         * file is delivered to a detached node and the import silently does
+         * nothing at all. */}
+        {onImportTopology ? (
+          <input
+            ref={importRef}
+            type="file"
+            accept="application/json,.json"
+            className="sr-only"
+            aria-label="Import topology file"
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              event.target.value = '';
+              if (!file) return;
+              void readFileText(file).then((text: string) => onImportTopology(text, file.name));
+            }}
+          />
         ) : null}
       </div>
 
