@@ -276,6 +276,12 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
   const [linkMode, setLinkMode] = useState(false);
   const [linkStartNodeId, setLinkStartNodeId] = useState<string | null>(null);
   const [linkMessage, setLinkMessage] = useState('Select a source node, then a destination.');
+  /* Output handles already taken on the armed source. Kept in a ref because the
+   * React Flow store can still report the graph from before the previous tap:
+   * reading it there let two quick taps grab the same output handle, and
+   * re-dropping a cord on an occupied handle replaces the first one — which is
+   * how a 1:4 splitter came to look like it only accepted three branches. */
+  const patchedHandlesRef = useRef(new Map<string, Set<string>>());
   const [opmActive, setOpmActive] = useState(false);
   const [opmProbe, setOpmProbe] = useState<OpticalProbeTarget | null>(null);
   const opmProbeRef = useRef<OpticalProbeTarget | null>(null);
@@ -894,12 +900,30 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
     markDirty();
   }, [deleteElements, markDirty, recordStep, selection, selectionCount]);
 
+  /** Handles taken on `sourceId`: seeded once from the graph, then kept in sync by taps. */
+  const patchedHandlesFor = useCallback(
+    (sourceId: string) => {
+      let taken = patchedHandlesRef.current.get(sourceId);
+      if (!taken) {
+        taken = new Set(
+          getEdges()
+            .filter((edge) => edge.source === sourceId && edge.sourceHandle)
+            .map((edge) => edge.sourceHandle as string),
+        );
+        patchedHandlesRef.current.set(sourceId, taken);
+      }
+      return taken;
+    },
+    [getEdges],
+  );
+
   const handleToggleLink = useCallback(() => {
     const nextActive = !linkMode;
     setLinkMode(nextActive);
     setLinkStartNodeId(null);
     setLinkMessage(nextActive ? 'Pick a source component, then a destination.' : 'Link mode closed.');
     if (nextActive) {
+      patchedHandlesRef.current.clear();
       setOpmActive(false);
       setOpmProbe(null);
       opmProbeRef.current = null;
@@ -972,6 +996,7 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
           setLinkMessage('Subscriber endpoints are destinations; choose a source component.');
           return;
         }
+        patchedHandlesRef.current.delete(clickedNode.id);
         setLinkStartNodeId(clickedNode.id);
         const remaining = isBranchingNode(clickedNode)
           ? ` ${describeNode(clickedNode)} has ${branchCapacity(clickedNode)} branches; pick each destination in turn.`
@@ -1007,6 +1032,7 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
       const currentEdges = getEdges();
       const existingEdge = currentEdges.find((edge) => edge.source === sourceNode.id && edge.target === targetNode.id);
       if (existingEdge) {
+        patchedHandlesRef.current.get(sourceNode.id)?.delete(existingEdge.sourceHandle ?? '');
         handleDeleteEdge(existingEdge.id);
         setLinkMode(false);
         setLinkStartNodeId(null);
@@ -1016,9 +1042,7 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
 
       let sourceHandle: string | undefined = 'out';
       if (isSplitterNode(sourceNode)) {
-        const usedHandles = new Set(
-          currentEdges.filter((edge) => edge.source === sourceNode.id).map((edge) => edge.sourceHandle),
-        );
+        const usedHandles = patchedHandlesFor(sourceNode.id);
         const outputCount = splitterBranchPortCount(sourceNode.data.ratio);
         sourceHandle = Array.from({ length: outputCount }, (_, index) => `out-${index}`).find(
           (handle) => !usedHandles.has(handle),
@@ -1028,9 +1052,7 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
           return;
         }
       } else if (isClosureNode(sourceNode)) {
-        const usedHandles = new Set(
-          currentEdges.filter((edge) => edge.source === sourceNode.id).map((edge) => edge.sourceHandle),
-        );
+        const usedHandles = patchedHandlesFor(sourceNode.id);
         sourceHandle = Array.from({ length: CLOSURE_OUTPUT_PORTS }, (_, index) => `out-${index}`).find(
           (handle, index) => sourceNode.data.activeSpliceChannels[index] && !usedHandles.has(handle),
         );
@@ -1039,9 +1061,7 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
           return;
         }
       } else if (isOdfNode(sourceNode)) {
-        const usedHandles = new Set(
-          currentEdges.filter((edge) => edge.source === sourceNode.id).map((edge) => edge.sourceHandle),
-        );
+        const usedHandles = patchedHandlesFor(sourceNode.id);
         sourceHandle = Array.from({ length: ODF_OUTPUT_PORTS }, (_, index) => `out-${index}`).find(
           (handle) => !usedHandles.has(handle),
         );
@@ -1050,9 +1070,7 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
           return;
         }
       } else if (isNapNode(sourceNode)) {
-        const usedHandles = new Set(
-          currentEdges.filter((edge) => edge.source === sourceNode.id).map((edge) => edge.sourceHandle),
-        );
+        const usedHandles = patchedHandlesFor(sourceNode.id);
         sourceHandle = Array.from({ length: NAP_OUTPUT_PORTS }, (_, index) => `out-${index}`).find(
           (handle) => !usedHandles.has(handle),
         );
@@ -1061,6 +1079,8 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
           return;
         }
       }
+
+      if (sourceHandle) patchedHandlesFor(sourceNode.id).add(sourceHandle);
 
       let targetHandle = 'in';
       if (isClosureNode(targetNode) || isOdfNode(targetNode)) {
@@ -1100,9 +1120,9 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
        * is the whole job, so the mode stays armed with the same source instead
        * of demanding Connect → source → destination for every single drop. */
       if (isBranchingNode(sourceNode)) {
-        // Count from the edges this call already read: getEdges() inside the same
-        // tick still returns the graph from before this patch landed.
-        const patchedBranches = currentEdges.filter((edge) => edge.source === sourceNode.id).length + 1;
+        // Count from the handles tracked for this source: getEdges() inside the
+        // same tick still returns the graph from before this patch landed.
+        const patchedBranches = patchedHandlesFor(sourceNode.id).size;
         const capacity = branchCapacity(sourceNode);
         setLinkStartNodeId(sourceNode.id);
         if (patchedBranches >= capacity) {
@@ -1121,7 +1141,7 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
       setLinkStartNodeId(null);
       setLinkMessage(patched);
     },
-    [getEdges, getNodes, handleConnect, handleDeleteEdge, linkMode, linkStartNodeId, recordStep],
+    [getEdges, getNodes, handleConnect, handleDeleteEdge, linkMode, linkStartNodeId, patchedHandlesFor, recordStep],
   );
 
   /* Only one overlay owns the keyboard at a time: opening one closes the others. */
