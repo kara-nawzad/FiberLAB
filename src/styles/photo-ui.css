@@ -1575,44 +1575,12 @@ button.pu-logo {
   letter-spacing: 0.05em;
 }
 
-/* ---- Inspector: header, type line, Advanced disclosure, remove action ---- */
-.pu-save-status {
-  margin-left: var(--sp-2);
-  color: var(--pu-mut);
-  font-size: var(--type-caption);
-  white-space: nowrap;
-}
+/* ---- Top bar: run action, undo history ---------------------------------- */
 /* The primary action is the last thing to give up room: on a 390 px phone the
  * flex row used to shrink it under its own content and clip the word "Run". */
 .pu-top > .pu-btn.pri {
   flex: 0 0 auto;
   white-space: nowrap;
-}
-/* Phones: the project name needs the room that "Saved" was taking, so the save
- * state becomes a dot (the word stays in the DOM for screen readers). */
-@media (max-width: 479px) {
-  .pu-save-status {
-    width: 8px;
-    height: 8px;
-    flex: 0 0 auto;
-    margin-left: 2px;
-    border-radius: 50%;
-    background: var(--pu-ok);
-    font-size: 0;
-    line-height: 0;
-  }
-  .pu-save-status.is-error {
-    width: auto;
-    height: auto;
-    border-radius: 0;
-    background: none;
-    font-size: var(--type-caption);
-    line-height: var(--leading-snug);
-  }
-}
-.pu-save-status.is-error {
-  color: var(--pu-warn-text);
-  font-weight: var(--fw-semibold);
 }
 .pu-history {
   display: none;
@@ -2272,6 +2240,35 @@ button.pu-logo {
   outline-offset: 4px;
   box-shadow: 0 0 0 6px rgba(200, 81, 44, 0.14);
 }
+/* The port the reader tapped first in link mode. Sits on the node so a phone
+ * tap has something that says "this end is armed" between the two taps. */
+.pu-canvas .react-flow__handle.is-link-anchor {
+  width: 18px;
+  height: 18px;
+  border-color: #ffffff !important;
+  background: var(--pu-pri-cta) !important;
+  transform: scale(1.25);
+  box-shadow:
+    0 0 0 3px rgba(200, 81, 44, 0.4),
+    0 0 0 6px rgba(200, 81, 44, 0.16),
+    0 4px 10px rgba(200, 81, 44, 0.45);
+  animation: link-anchor-pulse 1.6s ease-in-out infinite;
+}
+@keyframes link-anchor-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 3px rgba(200, 81, 44, 0.4),
+      0 0 0 6px rgba(200, 81, 44, 0.16),
+      0 4px 10px rgba(200, 81, 44, 0.45);
+  }
+  50% {
+    box-shadow:
+      0 0 0 4px rgba(200, 81, 44, 0.28),
+      0 0 0 10px rgba(200, 81, 44, 0.08),
+      0 4px 10px rgba(200, 81, 44, 0.35);
+  }
+}
 .pu-canvas .react-flow__panel.pu-link-panel {
   bottom: calc(var(--sp-8) + var(--sp-2)) !important;
   margin-bottom: 0 !important;
@@ -2446,6 +2443,11 @@ button.pu-logo {
 .pu-screen-card-note {
   color: var(--pu-mut);
   font-size: var(--type-small);
+}
+/* Learn's skill groups read as headings for the missions under them, so they
+ * carry the brand orange rather than the same ink as a mission title. */
+.pu-learn-card .pu-screen-card-head h2 {
+  color: var(--pu-pri-text);
 }
 .pu-screen-empty,
 .pu-screen-warn {
@@ -3230,20 +3232,23 @@ button.pu-logo {
     bottom: calc(var(--sp-3) + var(--control-md) + var(--sp-2));
     /* Hug the buttons and sit in the middle of the canvas. Stretching the pill
      * edge to edge left the six 44 px targets stranded at one end with ~200 px
-     * of empty panel beside them, and 2 px gaps read as one compressed block.
+     * of empty panel beside them. The 44 px targets are kept (they are the tap
+     * minimum) and the slack comes out of the chrome instead: a 4 px inset and
+     * 2 px between buttons, so the strip reads as one control bar rather than
+     * a panel with space to spare.
      * Centring uses auto margins rather than a transform, because a transform
      * would become the containing block for the fixed-position popover below. */
     left: 0;
     right: 0;
     width: max-content;
-    max-width: calc(100% - var(--sp-4));
+    max-width: calc(100% - var(--sp-2));
     margin-inline: auto;
     /* Wrapping rather than scrolling: a scroll container would clip the ⋯
      * menu, and 6 × 44 px + gaps still fits one 320 px row. */
     flex-wrap: wrap;
     justify-content: center;
-    gap: calc(var(--sp-1) + 2px);
-    padding: calc(var(--sp-1) + 2px);
+    gap: 2px;
+    padding: 4px;
     border: 1px solid var(--pu-line);
     border-radius: var(--r-xl);
     background: var(--pu-panel);

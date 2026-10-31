@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
+  DEFAULT_UI_PREFERENCES,
+  UI_PREFS_STORAGE_KEY,
   WORKSPACE_STORAGE_KEY,
   clearWorkspace,
   parseTopologyImport,
-  readWorkspace,
+  readUiPreferences,
   sanitiseWorkspace,
-  writeWorkspace,
+  writeUiPreferences,
   type WorkspaceState,
 } from '../workspacePersistence';
 import { calculateNetworkCost, resolveUnitCosts } from '../../data/pricingCatalogue';
@@ -44,29 +46,65 @@ function workspaceFrom(presetId = 'standard-1x32'): WorkspaceState {
   };
 }
 
-describe('workspace persistence', () => {
-  it('writes under one versioned key and reads the same design back', () => {
+describe('UI preferences', () => {
+  it('round-trips the two preferences that survive a reload', () => {
     const storage = fakeStorage();
-    const state = workspaceFrom();
 
-    expect(writeWorkspace(state, storage)).toBe(true);
-    expect(storage.keys()).toEqual([WORKSPACE_STORAGE_KEY]);
+    writeUiPreferences({ detailLevel: 'engineer', emptyHintDismissed: true }, storage);
 
-    const restored = readWorkspace(storage);
-    expect(restored).not.toBeNull();
-    expect(restored?.nodes).toHaveLength(state.nodes.length);
-    expect(restored?.edges).toHaveLength(state.edges.length);
-    expect(restored?.settings).toEqual(settings);
-    expect(restored?.activePresetId).toBe('standard-1x32');
-    expect(restored?.ui.emptyHintDismissed).toBe(true);
+    expect(storage.keys()).toEqual([UI_PREFS_STORAGE_KEY]);
+    expect(readUiPreferences(storage)).toEqual({ detailLevel: 'engineer', emptyHintDismissed: true });
   });
 
-  it('survives a corrupted document instead of crashing on boot', () => {
-    expect(readWorkspace(fakeStorage({ [WORKSPACE_STORAGE_KEY]: '{not json' }))).toBeNull();
-    expect(readWorkspace(fakeStorage({ [WORKSPACE_STORAGE_KEY]: '"just a string"' }))).toBeNull();
-    expect(readWorkspace(fakeStorage())).toBeNull();
-    expect(readWorkspace(undefined)).toBeNull();
-    expect(clearWorkspace(fakeStorage({ [WORKSPACE_STORAGE_KEY]: '{}' }))).toBeUndefined();
+  it('falls back to the defaults for a missing or corrupted document', () => {
+    expect(readUiPreferences(fakeStorage())).toEqual(DEFAULT_UI_PREFERENCES);
+    expect(readUiPreferences(fakeStorage({ [UI_PREFS_STORAGE_KEY]: '{not json' }))).toEqual(DEFAULT_UI_PREFERENCES);
+    expect(readUiPreferences(fakeStorage({ [UI_PREFS_STORAGE_KEY]: '"just a string"' }))).toEqual(
+      DEFAULT_UI_PREFERENCES,
+    );
+    expect(readUiPreferences(undefined)).toEqual(DEFAULT_UI_PREFERENCES);
+  });
+
+  it('ignores unknown values one field at a time', () => {
+    const storage = fakeStorage({
+      [UI_PREFS_STORAGE_KEY]: JSON.stringify({ detailLevel: 'wizard', emptyHintDismissed: 'yes' }),
+    });
+    expect(readUiPreferences(storage)).toEqual(DEFAULT_UI_PREFERENCES);
+  });
+
+  it('stays quiet when the browser refuses storage', () => {
+    const failing = {
+      getItem: () => {
+        throw new Error('blocked');
+      },
+      setItem: () => {
+        throw new Error('blocked');
+      },
+      removeItem: () => {
+        throw new Error('blocked');
+      },
+    };
+    expect(readUiPreferences(failing)).toEqual(DEFAULT_UI_PREFERENCES);
+    expect(() => writeUiPreferences(DEFAULT_UI_PREFERENCES, failing)).not.toThrow();
+    expect(() => clearWorkspace(failing)).not.toThrow();
+  });
+});
+
+describe('session-only workspace', () => {
+  it('clears the autosaved document older versions left behind', () => {
+    const storage = fakeStorage({ [WORKSPACE_STORAGE_KEY]: JSON.stringify({ version: 1 }) });
+
+    clearWorkspace(storage);
+
+    expect(storage.getItem(WORKSPACE_STORAGE_KEY)).toBeNull();
+    expect(() => clearWorkspace(fakeStorage())).not.toThrow();
+  });
+
+  it('never writes a workspace document, so a reload starts clean', () => {
+    const storage = fakeStorage();
+    writeUiPreferences({ detailLevel: 'guided', emptyHintDismissed: false }, storage);
+
+    expect(storage.getItem(WORKSPACE_STORAGE_KEY)).toBeNull();
   });
 
   it('drops only the unreadable nodes and the edges that pointed at them', () => {
@@ -86,11 +124,10 @@ describe('workspace persistence', () => {
     expect(restored?.settings).toEqual(DEFAULT_SETTINGS);
   });
 
-  it('refuses a stored workspace from a different version', () => {
-    const storage = fakeStorage({
-      [WORKSPACE_STORAGE_KEY]: JSON.stringify({ version: 99, nodes: [], edges: [] }),
-    });
-    expect(readWorkspace(storage)).toBeNull();
+  it('refuses a document that is not a workspace at all', () => {
+    expect(sanitiseWorkspace(null)).toBeNull();
+    expect(sanitiseWorkspace('a workspace, honest')).toBeNull();
+    expect(sanitiseWorkspace({ nodes: [], edges: 'none' })).toBeNull();
   });
 });
 

@@ -36,13 +36,11 @@ interface TopBarProps {
   testing: boolean;
   onRunTest: () => void;
   onOpenOverview: () => void;
-  /** Whether the last debounced write landed in this browser's storage. */
-  saveStatus?: 'saved' | 'saving' | 'error';
   canUndo?: boolean;
   canRedo?: boolean;
   onUndoRequest?: () => void;
   onRedoRequest?: () => void;
-  /** Renaming is an edit like any other: it is saved with the workspace. */
+  /** Renaming is an edit like any other: it marks the document as edited. */
   onRenameProject?: (name: string) => void;
   detailLevel?: DesignLevel;
   onToggleDetailLevel?: () => void;
@@ -64,7 +62,6 @@ export function TopBar({
   testing,
   onRunTest,
   onOpenOverview,
-  saveStatus = 'saved',
   canUndo = false,
   canRedo = false,
   onUndoRequest,
@@ -180,9 +177,6 @@ export function TopBar({
           </span>
         )}
         {presetEdited ? <span className="pu-doc-tab-edited">Edited</span> : null}
-        <span className={`pu-save-status${saveStatus === 'error' ? ' is-error' : ''}`} role="status">
-          {saveStatus === 'saving' ? 'Saving…' : saveStatus === 'error' ? 'Not saved' : 'Saved'}
-        </span>
       </span>
 
       <div style={{ flex: 1 }} />

@@ -76,7 +76,12 @@ import {
   simulateTopology,
 } from './engine/opticalSimulator';
 import { decorateEdges } from './engine/edgeDecoration';
-import { parseTopologyImport, readWorkspace, writeWorkspace } from './engine/workspacePersistence';
+import {
+  clearWorkspace,
+  parseTopologyImport,
+  readUiPreferences,
+  writeUiPreferences,
+} from './engine/workspacePersistence';
 import { readFileText } from './lib/readFileText';
 import { useWorkspaceHistory, type CanvasSnapshot } from './hooks/useWorkspaceHistory';
 import { SimulationContext } from './context/SimulationContext';
@@ -190,6 +195,73 @@ function branchCapacity(node: PonNode): number {
   return 0;
 }
 
+/**
+ * The pending end of a tap-to-patch: the component, and the exact port when the
+ * reader tapped one. A body tap (no port) lets link mode pick the next free
+ * port, which is what makes one tap per branch possible on a splitter.
+ */
+interface LinkAnchor {
+  nodeId: string;
+  handleId: string | null;
+  handleType: 'source' | 'target' | null;
+}
+
+/** A port name a reader recognises, for link-mode messages. */
+function describePort(node: PonNode, handleId: string | null, type: 'source' | 'target'): string {
+  const fallback = type === 'source' ? 'OUT' : 'IN';
+  const match = handleId ? /^(?:out|in)-(\d+)$/.exec(handleId) : null;
+  if (!match) return fallback;
+  const index = Number(match[1]) + 1;
+  if (type === 'source') {
+    if (isSplitterNode(node)) return `OUT ${index}`;
+    if (isNapNode(node)) return `drop ${index}`;
+    if (isClosureNode(node)) return `branch ${index}`;
+    if (isOdfNode(node)) return `through-pair ${index}`;
+    return `OUT ${index}`;
+  }
+  if (isClosureNode(node) || isOdfNode(node)) return `entry ${index}`;
+  return `IN ${index}`;
+}
+
+/**
+ * Why a tapped output port cannot carry a cord, or null when it can. The
+ * component draws its own ports, so a tap can only land on a real one; what it
+ * cannot know is whether that port is switched on (a closure tray channel).
+ */
+function validateSourceHandle(node: PonNode, handleId: string): string | null {
+  const index = Number(handleId.replace(/^out-/, ''));
+  if (isClosureNode(node)) {
+    if (!Number.isInteger(index) || index < 0 || index >= CLOSURE_OUTPUT_PORTS) {
+      return 'The closure has no such branch port.';
+    }
+    if (!node.data.activeSpliceChannels[index]) {
+      return `Branch ${index + 1} is not spliced yet — activate that tray channel first.`;
+    }
+  }
+  if (isOdfNode(node) && !['out-0', 'out-1'].includes(handleId)) {
+    return 'An ODF exposes two through-pairs; tap one of its own output ports.';
+  }
+  if (isNapNode(node) && (!Number.isInteger(index) || index < 0 || index >= NAP_OUTPUT_PORTS)) {
+    return 'The NAP exposes eight drop ports; tap one of them.';
+  }
+  if (
+    isSplitterNode(node) &&
+    (!Number.isInteger(index) || index < 0 || index >= splitterBranchPortCount(node.data.ratio))
+  ) {
+    return `The 1:${node.data.ratio} splitter exposes ${splitterBranchPortCount(node.data.ratio)} branches.`;
+  }
+  return null;
+}
+
+/**
+ * A press that travels further than this is a drag, not a tap. Touch browsers
+ * still deliver a click at the end of a drag; without this the properties sheet
+ * opened on every component the reader moved.
+ */
+const DRAG_TAP_SLOP = 6;
+/** How long a finished drag keeps the follow-up click muted. */
+const DRAG_CLICK_MUTE_MS = 400;
+
 const isNarrowViewport = () =>
   typeof window !== 'undefined' && typeof window.matchMedia === 'function'
     ? window.matchMedia(NARROW_VIEWPORT_QUERY).matches
@@ -215,8 +287,12 @@ function resolveProbeTarget(target: EventTarget | null): OpticalProbeTarget | nu
     const nodeElement = handle.closest<HTMLElement>('.react-flow__node');
     const id = handle.dataset.nodeid ?? nodeElement?.dataset.id ?? nodeElement?.getAttribute('data-id');
     if (id) {
-      const rawType = handle.dataset.handletype;
-      const handleType = rawType === 'source' || rawType === 'target' ? rawType : null;
+      /* The end a port belongs to is on its class list, not in a data attribute. */
+      const handleType = handle.classList.contains('source')
+        ? 'source'
+        : handle.classList.contains('target')
+          ? 'target'
+          : null;
       return {
         kind: 'node',
         id,
@@ -251,31 +327,37 @@ function initialTopology(): { nodes: PonNode[]; edges: PonEdge[] } {
  * ========================================================================== */
 
 function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProps) {
-  /* The designed network is the artefact: it comes back from localStorage on
-   * boot, and anything unreadable is dropped node by node rather than crashing. */
-  const restored = useMemo(() => readWorkspace(), []);
+  /* The canvas is session-only on purpose: every load starts on an empty
+   * workspace, so a design from a previous visit never comes back. Only the two
+   * UI preferences below are remembered. */
+  const preferences = useMemo(readUiPreferences, []);
   const seeded = useMemo(initialTopology, []);
-  const [nodes, setNodes, onNodesChange] = useNodesState<PonNode>(restored?.nodes ?? seeded.nodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState<PonEdge>(restored?.edges ?? seeded.edges);
-  const [settings, setSettings] = useState<DesignSettings>(restored?.settings ?? DEFAULT_SETTINGS);
-  const [unitCosts, setUnitCosts] = useState<UnitCostProfile>(
-    () => restored?.unitCosts ?? resolveUnitCosts(DEFAULT_UNIT_COSTS),
-  );
-  const [activePresetId, setActivePresetId] = useState<string | null>(restored?.activePresetId ?? null);
-  const [projectName, setProjectName] = useState<string>(() => {
-    if (restored?.projectName) return restored.projectName;
-    const presetName = PRESETS.find((preset) => preset.id === restored?.activePresetId)?.name;
-    return presetName ?? 'Untitled network';
-  });
-  const [presetEdited, setPresetEdited] = useState(restored?.presetEdited ?? false);
-  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'error'>('saved');
-  const [detailLevel, setDetailLevel] = useState<DesignLevel>(restored?.detailLevel ?? 'guided');
+  const [nodes, setNodes, onNodesChange] = useNodesState<PonNode>(seeded.nodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<PonEdge>(seeded.edges);
+  const [settings, setSettings] = useState<DesignSettings>(DEFAULT_SETTINGS);
+  const [unitCosts, setUnitCosts] = useState<UnitCostProfile>(() => resolveUnitCosts(DEFAULT_UNIT_COSTS));
+  const [activePresetId, setActivePresetId] = useState<string | null>(null);
+  const [projectName, setProjectName] = useState<string>('Untitled network');
+  const [presetEdited, setPresetEdited] = useState(false);
+  const [detailLevel, setDetailLevel] = useState<DesignLevel>(preferences.detailLevel);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null);
   const [selection, setSelection] = useState<{ nodeIds: string[]; edgeIds: string[] }>({ nodeIds: [], edgeIds: [] });
   const [linkMode, setLinkMode] = useState(false);
-  const [linkStartNodeId, setLinkStartNodeId] = useState<string | null>(null);
+  const [linkAnchor, setLinkAnchorState] = useState<LinkAnchor | null>(null);
   const [linkMessage, setLinkMessage] = useState('Select a source node, then a destination.');
+  /* The handlers read the anchor from a ref as well as state: two taps can land
+   * inside one React batch, and the second must see what the first armed. */
+  const linkAnchorRef = useRef<LinkAnchor | null>(null);
+  const setLinkAnchor = useCallback((anchor: LinkAnchor | null) => {
+    linkAnchorRef.current = anchor;
+    setLinkAnchorState(anchor);
+  }, []);
+  const linkStartNodeId = linkAnchor?.nodeId ?? null;
+  /* A press that turned into a drag keeps its click from selecting anything. */
+  const pressRef = useRef<{ x: number; y: number; onNode: boolean; moved: boolean } | null>(null);
+  const suppressClickRef = useRef(false);
+  const suppressClickTimerRef = useRef<number | null>(null);
   /* Output handles already taken on the armed source. Kept in a ref because the
    * React Flow store can still report the graph from before the previous tap:
    * reading it there let two quick taps grab the same output handle, and
@@ -297,7 +379,7 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
   const [resultsTab, setResultsTab] = useState<'summary' | 'subscribers' | 'quotation'>('summary');
   const [otdrOpen, setOtdrOpen] = useState(false);
   const [missionsOpen, setMissionsOpen] = useState(false);
-  const [activeMissionId, setActiveMissionId] = useState<string | null>(restored?.activeMissionId ?? null);
+  const [activeMissionId, setActiveMissionId] = useState<string | null>(null);
   const [testing, setTesting] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [committedSim, setCommittedSim] = useState<SimulationResult | null>(null);
@@ -306,10 +388,12 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
   const [snapToGrid, setSnapToGrid] = useState(false);
   /* Read once: a phone does not become a desktop mid-session. */
   const [coarsePointer] = useState(isCoarsePointer);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  /* Phones summon the library from the "+ Components" sheet, so it starts
+   * closed there: opening the site must show the workspace, not a panel over it. */
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(isNarrowViewport);
   const [inspectorCollapsed, setInspectorCollapsed] = useState(false);
   const [statusExpanded, setStatusExpanded] = useState(false);
-  const [emptyHintDismissed, setEmptyHintDismissed] = useState(restored?.ui.emptyHintDismissed ?? false);
+  const [emptyHintDismissed, setEmptyHintDismissed] = useState(preferences.emptyHintDismissed);
 
   const { screenToFlowPosition, deleteElements, fitView, getNodes, getEdges, zoomIn, zoomOut, zoomTo } = useReactFlow<
     PonNode,
@@ -318,37 +402,17 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
 
   /* ------------------------- Persistence & history ------------------------ */
 
-  /* Debounced write: a drag storm must not hit localStorage on every frame. */
+  /* Earlier versions autosaved the whole design here. Nothing reads it any more,
+   * so drop whatever a returning visitor still has: a stale canvas must not be
+   * able to come back. */
   useEffect(() => {
-    setSaveStatus('saving');
-    const timer = window.setTimeout(() => {
-      const ok = writeWorkspace({
-        nodes,
-        edges,
-        settings,
-        unitCosts,
-        activePresetId,
-        activeMissionId,
-        projectName,
-        presetEdited,
-        detailLevel,
-        ui: { emptyHintDismissed },
-      });
-      setSaveStatus(ok ? 'saved' : 'error');
-    }, 400);
-    return () => window.clearTimeout(timer);
-  }, [
-    nodes,
-    edges,
-    settings,
-    unitCosts,
-    activePresetId,
-    activeMissionId,
-    projectName,
-    presetEdited,
-    detailLevel,
-    emptyHintDismissed,
-  ]);
+    clearWorkspace();
+  }, []);
+
+  /* Preferences are the only thing remembered between visits. */
+  useEffect(() => {
+    writeUiPreferences({ detailLevel, emptyHintDismissed });
+  }, [detailLevel, emptyHintDismissed]);
 
   const { record: recordHistory, undo: undoHistory, redo: redoHistory, canUndo, canRedo } = useWorkspaceHistory();
   /* Sliders fire a patch per pixel; coalesce one node's burst into one entry. */
@@ -416,7 +480,28 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
 
   /* --------------------------- Simulation core --------------------------- */
 
-  const liveSimulation = useMemo(() => simulateTopology(nodes, edges, settings, 0), [nodes, edges, settings]);
+  /* Moving a component changes its position, not the network. Keying the model
+   * on the topology keeps a drag from re-running the whole path search on every
+   * frame — that per-frame work is what made a component stutter behind the
+   * finger instead of following it. */
+  const topologySignature = useMemo(() => {
+    const nodePart = nodes.map((node) => `${node.id}:${node.type}:${JSON.stringify(node.data)}`).join('|');
+    const edgePart = edges
+      .map((edge) => `${edge.source}.${edge.sourceHandle ?? ''}>${edge.target}.${edge.targetHandle ?? ''}`)
+      .join('|');
+    return `${nodePart}#${edgePart}#${JSON.stringify(settings)}`;
+  }, [nodes, edges, settings]);
+  /* The newest graph, read only when the signature says something moved. */
+  const latestTopology = useRef({ nodes, edges, settings });
+  latestTopology.current = { nodes, edges, settings };
+  const liveSimulation = useMemo(
+    () =>
+      simulateTopology(latestTopology.current.nodes, latestTopology.current.edges, latestTopology.current.settings, 0),
+    // Keyed on the topology signature on purpose: `latestTopology` is a ref, so
+    // the rule cannot see that the graph itself is what the work depends on.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [topologySignature],
+  );
 
   const activeMission = useMemo(
     () => (activeMissionId ? (getMissionById(activeMissionId) ?? null) : null),
@@ -532,20 +617,61 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
     [opmActive],
   );
 
-  const handleOpmPointerMove = useCallback(
-    (event: ReactPointerEvent<HTMLElement>) => updateOpmProbeFromEvent(event),
-    [updateOpmProbeFromEvent],
-  );
-  const handleOpmClickCapture = useCallback(
-    (event: ReactMouseEvent<HTMLElement>) => {
-      if (!opmActive || (event.target instanceof Element && event.target.closest('.opm-meter-hud, .pu-toolbar')))
-        return;
+  /* --------------------------------------------------------------------- *
+   * Gestures on the canvas.
+   *
+   * A press that turns into a drag must not also count as a click: on a phone
+   * the browser still sends one when the finger lifts, and that click used to
+   * select the component and throw the properties sheet over the canvas while
+   * the reader was moving it. The press is tracked from pointerdown here, and
+   * the click that follows a drag is swallowed before React Flow sees it.
+   * --------------------------------------------------------------------- */
+
+  const muteNextClick = useCallback(() => {
+    suppressClickRef.current = true;
+    if (suppressClickTimerRef.current !== null) window.clearTimeout(suppressClickTimerRef.current);
+    suppressClickTimerRef.current = window.setTimeout(() => {
+      suppressClickRef.current = false;
+      suppressClickTimerRef.current = null;
+    }, DRAG_CLICK_MUTE_MS);
+  }, []);
+
+  const handleCanvasPointerDownCapture = useCallback((event: ReactPointerEvent<HTMLElement>) => {
+    // A fresh press always starts clean, so one drag never mutes the next tap.
+    suppressClickRef.current = false;
+    if (event.pointerType === 'mouse' && event.button !== 0) {
+      pressRef.current = null;
+      return;
+    }
+    const nodeElement = event.target instanceof Element ? event.target.closest<HTMLElement>('.react-flow__node') : null;
+    pressRef.current = {
+      x: event.clientX,
+      y: event.clientY,
+      onNode: nodeElement !== null,
+      moved: false,
+    };
+  }, []);
+
+  const handleCanvasPointerMoveCapture = useCallback(
+    (event: ReactPointerEvent<HTMLElement>) => {
       updateOpmProbeFromEvent(event);
-      event.preventDefault();
-      event.stopPropagation();
+      const press = pressRef.current;
+      if (!press || !press.onNode || press.moved) return;
+      const dx = event.clientX - press.x;
+      const dy = event.clientY - press.y;
+      if (dx * dx + dy * dy > DRAG_TAP_SLOP * DRAG_TAP_SLOP) {
+        press.moved = true;
+        muteNextClick();
+      }
     },
-    [opmActive, updateOpmProbeFromEvent],
+    [muteNextClick, updateOpmProbeFromEvent],
   );
+
+  const handleCanvasPointerUpCapture = useCallback(() => {
+    if (pressRef.current?.moved) muteNextClick();
+    pressRef.current = null;
+  }, [muteNextClick]);
+
   const handleOpmPointerLeave = useCallback(
     (event: ReactPointerEvent<HTMLElement>) => {
       if (
@@ -744,6 +870,21 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
         }
       }
 
+      /* The default target port, so the edge can name both ends before it is
+       * built: the accessible label of every patch cord lists the exact ports
+       * it uses, which is how a screen reader (and the tests) can tell a cord
+       * from its neighbours. */
+      const defaultTargetHandle = targetNode && (isClosureNode(targetNode) || isOdfNode(targetNode)) ? 'in-0' : 'in';
+      const resolvedTargetHandle = connection.targetHandle ?? defaultTargetHandle;
+      const patchLabel =
+        sourceNode && targetNode
+          ? `Patch cord from ${describeNode(sourceNode)} ${describePort(
+              sourceNode,
+              connection.sourceHandle ?? null,
+              'source',
+            )} to ${describeNode(targetNode)} ${describePort(targetNode, resolvedTargetHandle, 'target')}`
+          : undefined;
+
       setEdges((currentEdges) => {
         // Never duplicate an identical patch cord.
         if (
@@ -763,10 +904,9 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
           source,
           target,
           sourceHandle: connection.sourceHandle ?? null,
-          targetHandle:
-            connection.targetHandle ??
-            (targetNode && (isClosureNode(targetNode) || isOdfNode(targetNode)) ? 'in-0' : 'in'),
+          targetHandle: resolvedTargetHandle,
           type: 'optical',
+          ariaLabel: patchLabel,
         };
 
         let filtered = currentEdges;
@@ -806,7 +946,9 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
     const nextEdgeId = params.edges.length === 1 ? params.edges[0].id : null;
     setSelectedNodeId(nextNodeId);
     setSelectedEdgeId(nextEdgeId);
-    if (nextNodeId || nextEdgeId) {
+    /* A drag can change the selection as it ends; only a tap may open the
+     * properties sheet. */
+    if ((nextNodeId || nextEdgeId) && !suppressClickRef.current) {
       setInspectorCollapsed(false);
       // One sheet at a time on phones: opening the properties sheet closes the status sheet.
       if (isNarrowViewport()) setStatusExpanded(false);
@@ -823,23 +965,26 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
    * affordance so the next screen is clean. `applySection` is the pure state
    * move; `handleSectionChange` adds the history bookkeeping so the browser
    * Back button walks the same path. Settings is a dialog, not a section. */
-  const applySection = useCallback((section: SectionId) => {
-    setActiveSection(section);
-    setToolsOpen(false);
-    setStatusExpanded(false);
-    setOpmActive(false);
-    setOpmProbe(null);
-    opmProbeRef.current = null;
-    setLinkMode(false);
-    setLinkStartNodeId(null);
-    /* Phones summon the library from its own pill, so only a docked desktop
-     * column is restored here; leaving Design folds the phone sheet away. */
-    if (section === 'design') {
-      if (!isNarrowViewport()) setSidebarCollapsed(false);
-    } else if (isNarrowViewport()) {
-      setSidebarCollapsed(true);
-    }
-  }, []);
+  const applySection = useCallback(
+    (section: SectionId) => {
+      setActiveSection(section);
+      setToolsOpen(false);
+      setStatusExpanded(false);
+      setOpmActive(false);
+      setOpmProbe(null);
+      opmProbeRef.current = null;
+      setLinkMode(false);
+      setLinkAnchor(null);
+      /* Phones summon the library from its own pill, so only a docked desktop
+       * column is restored here; leaving Design folds the phone sheet away. */
+      if (section === 'design') {
+        if (!isNarrowViewport()) setSidebarCollapsed(false);
+      } else if (isNarrowViewport()) {
+        setSidebarCollapsed(true);
+      }
+    },
+    [setLinkAnchor],
+  );
 
   const { push: pushSection } = useSectionHistory(applySection);
 
@@ -920,8 +1065,12 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
   const handleToggleLink = useCallback(() => {
     const nextActive = !linkMode;
     setLinkMode(nextActive);
-    setLinkStartNodeId(null);
-    setLinkMessage(nextActive ? 'Pick a source component, then a destination.' : 'Link mode closed.');
+    setLinkAnchor(null);
+    setLinkMessage(
+      nextActive
+        ? 'Pick a source component, then a destination — or tap a port on each end to patch them straight away.'
+        : 'Link mode closed.',
+    );
     if (nextActive) {
       patchedHandlesRef.current.clear();
       setOpmActive(false);
@@ -932,7 +1081,7 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
       setInspectorCollapsed(true);
       if (isNarrowViewport()) setSidebarCollapsed(true);
     }
-  }, [linkMode]);
+  }, [linkMode, setLinkAnchor]);
 
   const handleToggleOpm = useCallback(() => {
     const nextActive = !opmActive;
@@ -941,13 +1090,13 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
     opmProbeRef.current = null;
     if (nextActive) {
       setLinkMode(false);
-      setLinkStartNodeId(null);
+      setLinkAnchor(null);
       setLinkMessage('Link mode closed.');
       setSelection({ nodeIds: [], edgeIds: [] });
       setSelectedNodeId(null);
       setSelectedEdgeId(null);
     }
-  }, [opmActive]);
+  }, [opmActive, setLinkAnchor]);
 
   useEffect(() => {
     if (!opmActive) return;
@@ -966,15 +1115,16 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
     const cancelOnEscape = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
       setLinkMode(false);
-      setLinkStartNodeId(null);
+      setLinkAnchor(null);
       setLinkMessage('Link mode closed.');
     };
     document.addEventListener('keydown', cancelOnEscape);
     return () => document.removeEventListener('keydown', cancelOnEscape);
-  }, [linkMode]);
+  }, [linkMode, setLinkAnchor]);
 
-  /* In link mode the pending source gets a ring, so tap-to-patch has a visible
-   * anchor between the first and second tap. */
+  /* In link mode the pending source gets a ring, and the exact port that was
+   * tapped gets one too, so tap-to-patch has a visible anchor between the two
+   * taps. */
   const canvasNodes = useMemo(
     () =>
       linkMode && linkStartNodeId
@@ -987,41 +1137,190 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
     [nodes, linkMode, linkStartNodeId],
   );
 
-  const handleNodeClick = useCallback(
-    (_event: ReactMouseEvent, clickedNode: PonNode) => {
+  /* The armed port wears a ring of its own. It is painted on the handle DOM node
+   * rather than through React Flow state: the tap never goes through React
+   * Flow's own click-to-connect, so it has no state of ours to render from. */
+  useEffect(() => {
+    const canvas = studioMainRef.current;
+    if (!canvas) return;
+    const armed = linkMode ? linkAnchor : null;
+    canvas.querySelectorAll<HTMLElement>('.react-flow__handle.is-link-anchor').forEach((handle) => {
+      if (!armed?.handleId || handle.dataset.nodeid !== armed.nodeId || handle.dataset.handleid !== armed.handleId) {
+        handle.classList.remove('is-link-anchor');
+      }
+    });
+    if (!armed?.handleId) return;
+    canvas
+      .querySelectorAll<HTMLElement>('.react-flow__handle')
+      .forEach((handle) =>
+        handle.classList.toggle(
+          'is-link-anchor',
+          handle.dataset.nodeid === armed.nodeId && handle.dataset.handleid === armed.handleId,
+        ),
+      );
+  }, [linkAnchor, linkMode]);
+
+  /** The next output port link mode may take on `node`, or null when it is full. */
+  const nextFreeSourceHandle = useCallback(
+    (node: PonNode): string | null => {
+      if (!isBranchingNode(node)) return 'out';
+      const used = patchedHandlesFor(node.id);
+      if (isSplitterNode(node)) {
+        return (
+          Array.from({ length: splitterBranchPortCount(node.data.ratio) }, (_, index) => `out-${index}`).find(
+            (handle) => !used.has(handle),
+          ) ?? null
+        );
+      }
+      if (isClosureNode(node)) {
+        return (
+          Array.from({ length: CLOSURE_OUTPUT_PORTS }, (_, index) => `out-${index}`).find(
+            (handle, index) => node.data.activeSpliceChannels[index] && !used.has(handle),
+          ) ?? null
+        );
+      }
+      const count = isOdfNode(node) ? ODF_OUTPUT_PORTS : NAP_OUTPUT_PORTS;
+      return Array.from({ length: count }, (_, index) => `out-${index}`).find((handle) => !used.has(handle)) ?? null;
+    },
+    [patchedHandlesFor],
+  );
+
+  /** The next input port on `node`, or null when every entry is already patched. */
+  const nextFreeTargetHandle = useCallback((node: PonNode, currentEdges: PonEdge[]): string | null => {
+    if (!isClosureNode(node) && !isOdfNode(node)) return 'in';
+    const used = new Set(currentEdges.filter((edge) => edge.target === node.id).map((edge) => edge.targetHandle));
+    const count = isClosureNode(node) ? CLOSURE_INPUT_PORTS : ODF_INPUT_PORTS;
+    return Array.from({ length: count }, (_, index) => `in-${index}`).find((handle) => !used.has(handle)) ?? null;
+  }, []);
+
+  /** Why `node` has no free output left, in the words of its own hardware. */
+  const sourceFullMessage = useCallback((node: PonNode): string => {
+    if (isSplitterNode(node)) return `All 1:${node.data.ratio} splitter outputs are already patched.`;
+    if (isClosureNode(node)) return 'No active, unpatched closure branch is available. Splice a tray channel first.';
+    if (isOdfNode(node)) return 'Both ODF through-pair outputs are already patched.';
+    if (isNapNode(node)) return 'All eight NAP drop outputs are already patched.';
+    return 'That component has no free output port.';
+  }, []);
+
+  /** Why `node` has no free input left, in the words of its own hardware. */
+  const targetFullMessage = useCallback((node: PonNode): string => {
+    if (isClosureNode(node)) return 'Both closure feeder entries are already patched.';
+    if (isOdfNode(node)) return 'Both ODF input pairs are already patched.';
+    return 'That component has no free input port.';
+  }, []);
+
+  /**
+   * One tap of the patch tool.
+   *
+   * A tap on a port names both the component and the port; a tap on a component
+   * body names the component and lets link mode take the next free port (which
+   * is what makes one tap per splitter branch possible). Two ends are paired,
+   * the cord is laid, and the note says what happened — no selected component in
+   * between, and none of React Flow's click-to-connect state to fall out of step
+   * with ours.
+   */
+  const handlePatchTap = useCallback(
+    (tap: { nodeId: string; handleId: string | null; handleType: 'source' | 'target' | null }) => {
       if (!linkMode) return;
 
-      if (linkStartNodeId === null) {
-        if (isSubscriberEndpointNode(clickedNode)) {
-          setLinkMessage('Subscriber endpoints are destinations; choose a source component.');
+      const currentNodes = getNodes();
+      const tappedNode = currentNodes.find((node) => node.id === tap.nodeId);
+      if (!tappedNode) {
+        setLinkAnchor(null);
+        setLinkMessage('That component is gone. Tap again.');
+        return;
+      }
+
+      const tapLabel = tap.handleType ? describePort(tappedNode, tap.handleId, tap.handleType) : null;
+      const armTap = (message: string) => {
+        patchedHandlesRef.current.delete(tappedNode.id);
+        setLinkAnchor({ nodeId: tap.nodeId, handleId: tap.handleId, handleType: tap.handleType });
+        setLinkMessage(message);
+      };
+      const armMessage = (role: 'source' | 'target') =>
+        tap.handleType && tapLabel
+          ? `${role === 'source' ? 'Source' : 'Destination'}: ${describeNode(tappedNode)} · ${tapLabel}. Now tap the ${
+              role === 'source' ? 'destination' : 'source'
+            } port.`
+          : `${role === 'source' ? 'Source' : 'Destination'}: ${describeNode(tappedNode)}. Now choose the ${
+              role === 'source' ? 'destination' : 'source'
+            }${isBranchingNode(tappedNode) ? ' — or tap one of its ports' : ''}.`;
+
+      /* First tap: remember the end the reader pointed at and name it. */
+      if (!linkAnchorRef.current) {
+        if (!tap.handleType && isSubscriberEndpointNode(tappedNode)) {
+          setLinkMessage('Subscriber endpoints are destinations; choose a source component first.');
           return;
         }
-        patchedHandlesRef.current.delete(clickedNode.id);
-        setLinkStartNodeId(clickedNode.id);
-        const remaining = isBranchingNode(clickedNode)
-          ? ` ${describeNode(clickedNode)} has ${branchCapacity(clickedNode)} branches; pick each destination in turn.`
-          : '';
-        setLinkMessage(`Source: ${describeNode(clickedNode)}. Now choose the destination node.${remaining}`);
+        const role: 'source' | 'target' = tap.handleType ?? 'source';
+        /* A body tap on a fan-out component gets the branch count up front: the
+         * next taps are all on the destination side. */
+        const remaining =
+          !tap.handleType && role === 'source' && isBranchingNode(tappedNode)
+            ? ` ${describeNode(tappedNode)} has ${branchCapacity(tappedNode)} branches; pick each destination in turn.`
+            : '';
+        armTap(`${armMessage(role)}${remaining}`);
         return;
       }
 
-      if (clickedNode.id === linkStartNodeId) {
-        setLinkStartNodeId(null);
-        setLinkMessage('Source cleared. Choose a source node, then a destination.');
+      const anchor = linkAnchorRef.current;
+
+      /* The same end again: the reader is cancelling it. */
+      if (anchor.nodeId === tap.nodeId && anchor.handleId === tap.handleId) {
+        setLinkAnchor(null);
+        setLinkMessage(
+          tap.handleType
+            ? 'Port cleared. Tap a port on one component, then the matching port on the other.'
+            : 'Source cleared. Choose a source node, then a destination.',
+        );
         return;
       }
 
-      const currentNodes = getNodes();
-      const sourceNode = currentNodes.find((node) => node.id === linkStartNodeId);
-      const targetNode = currentNodes.find((node) => node.id === clickedNode.id);
-      if (!sourceNode || !targetNode) {
-        setLinkStartNodeId(null);
-        setLinkMessage('A node changed. Choose a source node, then a destination.');
+      const anchorNode = currentNodes.find((node) => node.id === anchor.nodeId);
+      if (!anchorNode) {
+        setLinkAnchor(null);
+        setLinkMessage('That component is gone. Tap again.');
         return;
       }
+
+      /* Which end is the anchor? A tapped port says so itself; a body tap is a
+       * source (the reading of the older component-then-component flow), unless
+       * the component is a subscriber terminal, which is always a destination. */
+      const anchorType: 'source' | 'target' =
+        anchor.handleType ?? (isSubscriberEndpointNode(anchorNode) ? 'target' : 'source');
+
+      /* Two taps on one component: either the reader is moving the pending end
+       * to the port they meant, or they are trying to join a component to
+       * itself, which no cord can do. */
+      if (anchor.nodeId === tap.nodeId) {
+        if (anchorType === (tap.handleType ?? anchorType) && tap.handleType) {
+          armTap(armMessage(tap.handleType));
+          return;
+        }
+        setLinkMessage(
+          `${describeNode(tappedNode)} is already the ${anchorType} end. Tap a port on another component.`,
+        );
+        return;
+      }
+
+      /* Same kind of end on two components: the newest tap replaces the pending
+       * one, so a wrong first tap costs a tap, not a cancelled mode. */
+      if (tap.handleType && tap.handleType === anchorType) {
+        if (tap.handleType === 'source' && isSubscriberEndpointNode(tappedNode)) {
+          setLinkMessage('Subscriber endpoints have no output port. Tap an input port instead.');
+          return;
+        }
+        armTap(armMessage(tap.handleType));
+        return;
+      }
+
+      const sourceNode = tap.handleType === 'source' ? tappedNode : anchorNode;
+      const targetNode = tap.handleType === 'target' ? tappedNode : anchorNode;
+      const sourceTap = tap.handleType === 'source' ? tap : anchor;
+      const targetTap = tap.handleType === 'target' ? tap : anchor;
+
       if (isSubscriberEndpointNode(sourceNode)) {
-        setLinkStartNodeId(null);
-        setLinkMessage('Subscriber endpoints are destination nodes. Choose another source.');
+        setLinkMessage('Subscriber endpoints have no output port. Tap an input port instead.');
         return;
       }
       if (isOltNode(targetNode)) {
@@ -1029,80 +1328,59 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
         return;
       }
 
+      /* The source end: a tapped output port that cannot carry a cord is refused
+       * with the reason; a body tap takes the next free one. */
+      let sourceHandle = sourceTap.handleId;
+      if (sourceHandle) {
+        const refusal = validateSourceHandle(sourceNode, sourceHandle);
+        if (refusal) {
+          setLinkMessage(refusal);
+          return;
+        }
+      } else {
+        sourceHandle = nextFreeSourceHandle(sourceNode);
+        if (!sourceHandle) {
+          setLinkMessage(sourceFullMessage(sourceNode));
+          return;
+        }
+      }
+
+      /* The destination end works the same way round. */
       const currentEdges = getEdges();
-      const existingEdge = currentEdges.find((edge) => edge.source === sourceNode.id && edge.target === targetNode.id);
+      const targetHandle = targetTap.handleId ?? nextFreeTargetHandle(targetNode, currentEdges);
+      if (!targetHandle) {
+        setLinkMessage(targetFullMessage(targetNode));
+        return;
+      }
+
+      /* The same cord tapped again is removed. Body taps keep the older, looser
+       * reading (any cord between the pair) so a repeated pair still undoes
+       * itself; port taps match the exact ports. */
+      const bothBody = !sourceTap.handleId && !targetTap.handleId;
+      const existingEdge = bothBody
+        ? currentEdges.find((edge) => edge.source === sourceNode.id && edge.target === targetNode.id)
+        : currentEdges.find(
+            (edge) =>
+              edge.source === sourceNode.id &&
+              edge.target === targetNode.id &&
+              (edge.sourceHandle ?? null) === sourceHandle &&
+              (edge.targetHandle ?? null) === targetHandle,
+          );
       if (existingEdge) {
         patchedHandlesRef.current.get(sourceNode.id)?.delete(existingEdge.sourceHandle ?? '');
         handleDeleteEdge(existingEdge.id);
         setLinkMode(false);
-        setLinkStartNodeId(null);
-        setLinkMessage(`Removed the patch cord from ${describeNode(sourceNode)} to ${describeNode(targetNode)}.`);
+        setLinkAnchor(null);
+        setLinkMessage(
+          `Removed the patch cord from ${describeNode(sourceNode)}${
+            bothBody ? '' : ` (${describePort(sourceNode, sourceHandle, 'source')})`
+          } to ${describeNode(targetNode)}${bothBody ? '' : ` (${describePort(targetNode, targetHandle, 'target')})`}.`,
+        );
         return;
       }
 
-      let sourceHandle: string | undefined = 'out';
-      if (isSplitterNode(sourceNode)) {
-        const usedHandles = patchedHandlesFor(sourceNode.id);
-        const outputCount = splitterBranchPortCount(sourceNode.data.ratio);
-        sourceHandle = Array.from({ length: outputCount }, (_, index) => `out-${index}`).find(
-          (handle) => !usedHandles.has(handle),
-        );
-        if (!sourceHandle) {
-          setLinkMessage(`All 1:${sourceNode.data.ratio} splitter outputs are already patched.`);
-          return;
-        }
-      } else if (isClosureNode(sourceNode)) {
-        const usedHandles = patchedHandlesFor(sourceNode.id);
-        sourceHandle = Array.from({ length: CLOSURE_OUTPUT_PORTS }, (_, index) => `out-${index}`).find(
-          (handle, index) => sourceNode.data.activeSpliceChannels[index] && !usedHandles.has(handle),
-        );
-        if (!sourceHandle) {
-          setLinkMessage('No active, unpatched closure branch is available. Splice a tray channel first.');
-          return;
-        }
-      } else if (isOdfNode(sourceNode)) {
-        const usedHandles = patchedHandlesFor(sourceNode.id);
-        sourceHandle = Array.from({ length: ODF_OUTPUT_PORTS }, (_, index) => `out-${index}`).find(
-          (handle) => !usedHandles.has(handle),
-        );
-        if (!sourceHandle) {
-          setLinkMessage('Both ODF through-pair outputs are already patched.');
-          return;
-        }
-      } else if (isNapNode(sourceNode)) {
-        const usedHandles = patchedHandlesFor(sourceNode.id);
-        sourceHandle = Array.from({ length: NAP_OUTPUT_PORTS }, (_, index) => `out-${index}`).find(
-          (handle) => !usedHandles.has(handle),
-        );
-        if (!sourceHandle) {
-          setLinkMessage('All eight NAP drop outputs are already patched.');
-          return;
-        }
-      }
-
-      if (sourceHandle) patchedHandlesFor(sourceNode.id).add(sourceHandle);
-
-      let targetHandle = 'in';
-      if (isClosureNode(targetNode) || isOdfNode(targetNode)) {
-        const usedInputs = new Set(
-          currentEdges.filter((edge) => edge.target === targetNode.id).map((edge) => edge.targetHandle),
-        );
-        const inputCount = isClosureNode(targetNode) ? CLOSURE_INPUT_PORTS : ODF_INPUT_PORTS;
-        const availableInput = Array.from({ length: inputCount }, (_, index) => `in-${index}`).find(
-          (handle) => !usedInputs.has(handle),
-        );
-        if (!availableInput) {
-          setLinkMessage(
-            isClosureNode(targetNode)
-              ? 'Both closure feeder entries are already patched.'
-              : 'Both ODF input pairs are already patched.',
-          );
-          return;
-        }
-        targetHandle = availableInput;
-      }
-
       recordStep('connect');
+      patchedHandlesFor(sourceNode.id).add(sourceHandle);
       handleConnect({
         source: sourceNode.id,
         target: targetNode.id,
@@ -1110,11 +1388,13 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
         targetHandle,
       });
 
-      // Name both ends and the ports that were actually taken, so the auto-chosen
+      // Name both ends and the ports that were actually taken, so an auto-chosen
       // port is visible instead of disappearing with the next interaction.
-      const patched = `Patched ${describeNode(sourceNode)} (${sourceHandle}) → ${describeNode(
-        targetNode,
-      )} (${targetHandle}).`;
+      const patched = `Patched ${describeNode(sourceNode)} (${describePort(
+        sourceNode,
+        sourceHandle,
+        'source',
+      )}) → ${describeNode(targetNode)} (${describePort(targetNode, targetHandle, 'target')}).`;
 
       /* A splitter, closure, ODF or NAP fans out: one tap per remaining branch
        * is the whole job, so the mode stays armed with the same source instead
@@ -1124,24 +1404,125 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
         // same tick still returns the graph from before this patch landed.
         const patchedBranches = patchedHandlesFor(sourceNode.id).size;
         const capacity = branchCapacity(sourceNode);
-        setLinkStartNodeId(sourceNode.id);
+        setLinkAnchor({ nodeId: sourceNode.id, handleId: null, handleType: 'source' });
         if (patchedBranches >= capacity) {
           // Nothing left to patch. Stay armed so the message has somewhere to
           // live, and tell the reader how to leave.
-          setLinkMessage(`${patched} All ${capacity} branches are patched — pick the source again to finish.`);
+          setLinkMessage(`${patched} All ${capacity} branches are patched — tap the source again to finish.`);
           return;
         }
         setLinkMessage(
-          `${patched} ${patchedBranches} of ${capacity} branches patched — pick another destination, or pick the source again to finish.`,
+          `${patched} ${patchedBranches} of ${capacity} branches patched — tap the next destination port, or tap the source again to finish.`,
         );
         return;
       }
 
       setLinkMode(false);
-      setLinkStartNodeId(null);
+      setLinkAnchor(null);
       setLinkMessage(patched);
     },
-    [getEdges, getNodes, handleConnect, handleDeleteEdge, linkMode, linkStartNodeId, patchedHandlesFor, recordStep],
+    [
+      getEdges,
+      getNodes,
+      handleConnect,
+      handleDeleteEdge,
+      linkMode,
+      nextFreeSourceHandle,
+      nextFreeTargetHandle,
+      patchedHandlesFor,
+      recordStep,
+      setLinkAnchor,
+      sourceFullMessage,
+      targetFullMessage,
+    ],
+  );
+
+  /**
+   * A tap on a component body. The first one arms the component as the source
+   * end; from then on the tap belongs to the patch machine above, which picks
+   * the next free port on whichever end this component is.
+   */
+  const handleNodeClick = useCallback(
+    (_event: ReactMouseEvent, clickedNode: PonNode) => {
+      if (!linkMode) return;
+
+      const anchor = linkAnchorRef.current;
+      if (!anchor) {
+        handlePatchTap({ nodeId: clickedNode.id, handleId: null, handleType: null });
+        return;
+      }
+
+      if (clickedNode.id === anchor.nodeId) {
+        setLinkAnchor(null);
+        setLinkMessage(
+          anchor.handleType === 'target'
+            ? 'Destination cleared. Tap a port on one component, then the matching port on the other.'
+            : 'Source cleared. Choose a source node, then a destination.',
+        );
+        return;
+      }
+
+      handlePatchTap({
+        nodeId: clickedNode.id,
+        handleId: null,
+        handleType: anchor.handleType === 'target' ? 'source' : 'target',
+      });
+    },
+    [handlePatchTap, linkMode, setLinkAnchor],
+  );
+
+  /**
+   * The canvas click, captured before React Flow or a node gets to see it.
+   *
+   * Three things are settled here, in order: the OPM probe owns every click
+   * while it is armed; a click that ends a drag is swallowed; and in link mode a
+   * click on a port is a patch, not a selection.
+   */
+  const handleCanvasClickCapture = useCallback(
+    (event: ReactMouseEvent<HTMLElement>) => {
+      const target = event.target instanceof Element ? event.target : null;
+      if (target?.closest('.opm-meter-hud, .pu-toolbar')) return;
+
+      if (opmActive) {
+        updateOpmProbeFromEvent(event);
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+
+      /* The click a drag leaves behind: the reader moved a component, so nothing
+       * on the canvas should now be selected and no properties sheet should open.
+       * Anything outside the canvas keeps its click. */
+      if (suppressClickRef.current) {
+        suppressClickRef.current = false;
+        if (target?.closest('.react-flow')) {
+          event.preventDefault();
+          event.stopPropagation();
+          return;
+        }
+      }
+
+      if (!linkMode) return;
+
+      const handle = target?.closest<HTMLElement>('.react-flow__handle');
+      if (!handle) return;
+      const nodeId = handle.dataset.nodeid ?? handle.closest<HTMLElement>('.react-flow__node')?.dataset.id;
+      const handleId = handle.dataset.handleid ?? null;
+      /* React Flow names the end on the handle element itself. */
+      const handleType = handle.classList.contains('source')
+        ? 'source'
+        : handle.classList.contains('target')
+          ? 'target'
+          : null;
+      if (!nodeId || !handleType) return;
+
+      // The tap is ours: keep it away from React Flow's click-to-connect and
+      // from the node's own click, which would select the component.
+      event.preventDefault();
+      event.stopPropagation();
+      handlePatchTap({ nodeId, handleId, handleType });
+    },
+    [handlePatchTap, linkMode, opmActive, updateOpmProbeFromEvent],
   );
 
   /* Only one overlay owns the keyboard at a time: opening one closes the others. */
@@ -1213,8 +1594,8 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
     setOpmProbe(null);
     opmProbeRef.current = null;
     setLinkMode(false);
-    setLinkStartNodeId(null);
-  }, []);
+    setLinkAnchor(null);
+  }, [setLinkAnchor]);
   const handleOpenOverview = useCallback(() => {
     setOtdrOpen(false);
     setMissionsOpen(false);
@@ -1240,7 +1621,7 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
       setSelectedEdgeId(null);
       setSelection({ nodeIds: [], edgeIds: [] });
       setLinkMode(false);
-      setLinkStartNodeId(null);
+      setLinkAnchor(null);
       setOpmActive(false);
       setOpmProbe(null);
       opmProbeRef.current = null;
@@ -1250,7 +1631,7 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
         void fitView({ padding: 0.08, maxZoom: 1.15, duration: 350 });
       });
     },
-    [setNodes, setEdges, fitView, recordStep],
+    [setNodes, setEdges, fitView, recordStep, setLinkAnchor],
   );
 
   const startMission = useCallback(
@@ -1276,7 +1657,7 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
       setSelectedEdgeId(null);
       setSelection({ nodeIds: [], edgeIds: [] });
       setLinkMode(false);
-      setLinkStartNodeId(null);
+      setLinkAnchor(null);
       setOpmActive(false);
       setOpmProbe(null);
       opmProbeRef.current = null;
@@ -1286,7 +1667,7 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
         void fitView({ padding: 0.08, maxZoom: 1.15, duration: 350 });
       });
     },
-    [setNodes, setEdges, fitView, goToDesign, recordStep],
+    [setNodes, setEdges, fitView, goToDesign, recordStep, setLinkAnchor],
   );
 
   useEffect(() => {
@@ -1313,13 +1694,13 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
     setSelectedEdgeId(null);
     setSelection({ nodeIds: [], edgeIds: [] });
     setLinkMode(false);
-    setLinkStartNodeId(null);
+    setLinkAnchor(null);
     setOpmActive(false);
     setOpmProbe(null);
     opmProbeRef.current = null;
     setPresetEdited(false);
     markDirty();
-  }, [setNodes, setEdges, markDirty, recordStep]);
+  }, [setNodes, setEdges, markDirty, recordStep, setLinkAnchor]);
 
   /**
    * Reads a TopologyExport v2 document back onto the canvas (Reports writes
@@ -1495,7 +1876,6 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
         onOpenOverview={handleOpenOverview}
         testing={testing}
         stale={!settings.autoRun && dirty}
-        saveStatus={saveStatus}
         detailLevel={detailLevel}
         onToggleDetailLevel={() => setDetailLevel((level) => (level === 'guided' ? 'engineer' : 'guided'))}
         canUndo={canUndo}
@@ -1567,8 +1947,11 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
               <main
                 ref={studioMainRef}
                 className={`fiberlab-studio-main pu-canvas relative min-w-0 flex-1 ${opmActive ? 'opm-probe-mode' : ''}`}
-                onPointerMoveCapture={handleOpmPointerMove}
-                onClickCapture={handleOpmClickCapture}
+                onPointerDownCapture={handleCanvasPointerDownCapture}
+                onPointerMoveCapture={handleCanvasPointerMoveCapture}
+                onPointerUpCapture={handleCanvasPointerUpCapture}
+                onPointerCancelCapture={handleCanvasPointerUpCapture}
+                onClickCapture={handleCanvasClickCapture}
                 onPointerLeave={handleOpmPointerLeave}
               >
                 <CanvasToolbar
@@ -1626,6 +2009,9 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
                     onEdgesChange={onEdgesChange}
                     onConnect={handleConnect}
                     onNodeClick={(event, clickedNode) => {
+                      /* A drag ends with a click on some browsers; it must not
+                       * select anything or open the properties sheet. */
+                      if (suppressClickRef.current) return;
                       // Patching owns the canvas: no properties sheet while two
                       // taps are all that stand between the user and a link.
                       if (linkMode) {
@@ -1634,7 +2020,6 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
                       }
                       // Clicking a part always brings the panel back, even if it was closed.
                       setInspectorCollapsed(false);
-                      handleNodeClick(event, clickedNode);
                     }}
                     onEdgeClick={() => setInspectorCollapsed(false)}
                     onSelectionChange={handleSelectionChange}
@@ -1645,6 +2030,19 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
                     onDrop={handleDrop}
                     nodesDraggable={!opmActive && canvasTool === 'select' && !linkMode}
                     nodesConnectable={!opmActive && !linkMode}
+                    /* A press has to travel before it counts as a drag, so a tap
+                     * on a phone stays a tap: selection follows the click, not
+                     * the press, and moving a component never opens its sheet.
+                     * The click tolerance is the same distance, so a slightly
+                     * shaky tap still selects instead of being read as a drag. */
+                    nodeDragThreshold={DRAG_TAP_SLOP}
+                    nodeClickDistance={DRAG_TAP_SLOP}
+                    paneClickDistance={DRAG_TAP_SLOP}
+                    selectNodesOnDrag={false}
+                    /* Link mode is the one tap-to-patch: its port taps carry the
+                     * notes. A stray pair of handle clicks elsewhere must not
+                     * quietly build a cord as well. */
+                    connectOnClick={false}
                     /* In link mode a tap is a patch target, not a selection: on a
                      * phone a selection opens the properties sheet over the canvas
                      * and the second tap never reaches the node. */
@@ -1687,7 +2085,13 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
                             <Link2 size={16} aria-hidden="true" />
                           </span>
                           <span className="min-w-0 flex-1">
-                            <strong>{linkStartNodeId ? 'Choose a destination' : 'Link nodes'}</strong>
+                            <strong>
+                              {linkAnchor?.handleId
+                                ? 'Tap the other port'
+                                : linkStartNodeId
+                                  ? 'Choose a destination'
+                                  : 'Link nodes'}
+                            </strong>
                             <small>{linkMessage}</small>
                           </span>
                           <button type="button" className="btn-ghost !min-h-8 !px-2" onClick={handleToggleLink}>
@@ -1705,8 +2109,8 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
                           </span>
                           <p className="pu-empty-title">Start your network</p>
                           <p className="pu-empty-hint">
-                            Drop parts from the library, or begin from a working design. The canvas saves itself as you
-                            build.
+                            Drop parts from the library, or begin from a working design. The canvas starts empty on
+                            every visit — export it from Reports to keep a copy.
                           </p>
                           <div className="pu-empty-actions">
                             <button type="button" className="pu-btn pri" onClick={() => applyPreset('standard-1x32')}>

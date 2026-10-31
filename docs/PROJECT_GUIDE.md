@@ -116,7 +116,7 @@ The left-hand **Component Library** keeps all eight modeled element kinds in a f
 
 Only one category is open at a time and every header carries a count badge; up to four recently used parts sit as one-click shortcuts under the search box. Search spans every category at once and labels each hit with its category name. The library header has a collapse toggle, and the "Need help?" links that used to sit in its footer live on the Settings screen's Workspace card.
 
-A component can be dragged to the canvas, or clicked to place it at the visible canvas centre. On phones the library is a bottom sheet summoned by the **+ Components** button: drag its handle up to expand, down to shrink or dismiss, and tap a part to drop it on the canvas and close the sheet — no drag-and-drop required on touch. Components connect by dragging from a source handle to a target handle or by using **Link nodes**: click a source node, then a destination; selecting an existing source/destination pair removes its patch cord. Press Escape or Cancel to leave link mode. The app uses a directed graph, and the simulation follows connections outward from an active OLT.
+A component can be dragged to the canvas, or clicked to place it at the visible canvas centre. On phones the library is a bottom sheet summoned by the **+ Components** button: drag its handle up to expand, down to shrink or dismiss, and tap a part to drop it on the canvas and close the sheet — no drag-and-drop required on touch. Components connect by dragging from a source handle to a target handle or by using **Link nodes**: tap one port, then the port on the other end, and the cord is laid immediately; tapping a component body instead lets link mode choose the next free port (a splitter then stays armed so each remaining branch is one tap). Tapping the same two ports again removes the cord. Press Escape or Cancel to leave link mode. The app uses a directed graph, and the simulation follows connections outward from an active OLT.
 
 Splice trays are a property of the closure's Inspector panel, and patch cords/connectors are the graph's edges rather than placeable nodes, so neither appears as a library card; the closure category says so in a footnote.
 
@@ -202,7 +202,7 @@ The BOM has an **Optical Budget Audit** view and a **Commercial Quotation & CAPE
 - Combined CSV with commercial line items, financial summary fields, and ONT/gateway optical-service results.
 - Version-2 JSON with topology/settings/simulation plus currency, resolved local unit rates, commercial breakdown, and subscriber cost metrics.
 
-JSON export is implemented; **JSON import and automatic project saving are not currently implemented**.
+JSON export and import are implemented; **automatic project saving is not**: the canvas is session-only, so every reload starts from an empty workspace and a design is kept by exporting the JSON.
 
 ### 3.6 Practice field missions
 
@@ -607,7 +607,7 @@ FiberLAB is a useful **learning simulator**, but the current model should not be
 4. **Shared endpoint thresholds:** ONTs, gateways, GPON, and XGS-PON currently share the existing GPON-oriented status window even though endpoint sensitivity fields are stored; XGS-PON receiver classes are not separately modeled.
 5. **Informational OLT budgets:** class link-budget and OLT receiver-sensitivity values are displayed but are not independently enforced by the path engine.
 6. **Abstract branch ports:** high-ratio splitters have four visible branch handles, not a handle for every physical subscriber port. The closure likewise exposes four modeled branches; only its first four tray channels map to those handles.
-7. **No project persistence:** workspace state is in browser memory. Reloading starts over at the default preset. JSON export exists, but import, autosave, and account/cloud storage do not.
+7. **Session-only workspace:** the design lives in browser memory and every load starts on an empty canvas; nothing is autosaved, so a reload never restores a previous design. JSON export/import covers keeping or moving a design; account/cloud storage does not exist. Only the detail level and the dismissed first-run hint are remembered (`fiberlab.prefs.v1`).
 8. **Limited learning content:** five guided missions provide live objective progress and hints, and two explicit fiber fault switches support introductory troubleshooting; there is no broader curriculum, quiz, points, grading, or general fault library.
 9. **No hardware can be damaged by the app:** an OVERLOAD state is a simulation warning. It is not a physical safety interlock.
 10. **Values need domain review:** standards and component specifications evolve and vary by product. Any real equipment profile should cite its source and distinguish typical values from guaranteed limits.
