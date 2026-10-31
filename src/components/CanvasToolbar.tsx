@@ -185,7 +185,7 @@ export function CanvasToolbar(props: CanvasToolbarProps) {
           icon={<Link2 size={16} aria-hidden="true" />}
           label="Connect"
           ariaLabel="Link nodes"
-          title="Link nodes: pick a source, then a destination"
+          title="Link nodes: tap one port, then the other"
           active={linkMode}
           pressed={linkMode}
           onClick={onToggleLink}

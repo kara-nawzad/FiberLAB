@@ -2272,6 +2272,35 @@ button.pu-logo {
   outline-offset: 4px;
   box-shadow: 0 0 0 6px rgba(200, 81, 44, 0.14);
 }
+/* The port the reader tapped first in link mode. Sits on the node so a phone
+ * tap has something that says "this end is armed" between the two taps. */
+.pu-canvas .react-flow__handle.is-link-anchor {
+  width: 18px;
+  height: 18px;
+  border-color: #ffffff !important;
+  background: var(--pu-pri-cta) !important;
+  transform: scale(1.25);
+  box-shadow:
+    0 0 0 3px rgba(200, 81, 44, 0.4),
+    0 0 0 6px rgba(200, 81, 44, 0.16),
+    0 4px 10px rgba(200, 81, 44, 0.45);
+  animation: link-anchor-pulse 1.6s ease-in-out infinite;
+}
+@keyframes link-anchor-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 3px rgba(200, 81, 44, 0.4),
+      0 0 0 6px rgba(200, 81, 44, 0.16),
+      0 4px 10px rgba(200, 81, 44, 0.45);
+  }
+  50% {
+    box-shadow:
+      0 0 0 4px rgba(200, 81, 44, 0.28),
+      0 0 0 10px rgba(200, 81, 44, 0.08),
+      0 4px 10px rgba(200, 81, 44, 0.35);
+  }
+}
 .pu-canvas .react-flow__panel.pu-link-panel {
   bottom: calc(var(--sp-8) + var(--sp-2)) !important;
   margin-bottom: 0 !important;
