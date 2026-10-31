@@ -959,27 +959,35 @@ describe('FiberLAB application shell', () => {
     expect(within(tabs).getByRole('button', { name: 'Results' })).toHaveAttribute('aria-current', 'page');
   });
 
-  it('remembers a dismissed empty-state hint across a reload', async () => {
+  it('offers the three ways into the canvas again after a reload', async () => {
     window.localStorage.clear();
     const { unmount } = render(<App />);
     enterStudioFromNav();
     await screen.findByRole('button', { name: 'Run Simulation' });
 
-    // The hint is a nudge, not furniture: it can be dismissed.
+    // The start panel is not furniture: it can be dismissed for this visit.
     expect(await screen.findByText('Start your network')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Standard 1:32 tree' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Guided mission' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Import topology' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Dismiss canvas hint' }));
     expect(screen.queryByText('Start your network')).not.toBeInTheDocument();
 
-    // The dismissal is a preference, so a reload stays clean while the canvas
-    // itself comes back empty.
-    await waitFor(() => expect(window.localStorage.getItem('fiberlab.prefs.v1')).not.toBeNull(), {
-      timeout: 2000,
-    });
+    // But it is not remembered either: a fresh load is a fresh workspace, so the
+    // three ways in are offered again instead of being silenced for good.
     unmount();
     render(<App />);
     enterStudioFromNav();
     await screen.findByRole('button', { name: 'Run Simulation' });
-    expect(screen.queryByText('Start your network')).not.toBeInTheDocument();
+    expect(await screen.findByText('Start your network')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Standard 1:32 tree' })).toBeInTheDocument();
+
+    // The reading style still survives, so persistence itself is not broken.
+    await waitFor(() =>
+      expect(JSON.parse(window.localStorage.getItem('fiberlab.prefs.v1') ?? '{}')).toEqual({
+        detailLevel: 'guided',
+      }),
+    );
   });
 
   it('opens Results and its quotation as a section, not a dialog', async () => {

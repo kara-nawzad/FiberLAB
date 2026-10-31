@@ -393,7 +393,9 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
   const [sidebarCollapsed, setSidebarCollapsed] = useState(isNarrowViewport);
   const [inspectorCollapsed, setInspectorCollapsed] = useState(false);
   const [statusExpanded, setStatusExpanded] = useState(false);
-  const [emptyHintDismissed, setEmptyHintDismissed] = useState(preferences.emptyHintDismissed);
+  /* Session-only: dismissing the start panel clears it for this visit, and the
+   * next load offers the three ways in again. */
+  const [emptyHintDismissed, setEmptyHintDismissed] = useState(false);
 
   const { screenToFlowPosition, deleteElements, fitView, getNodes, getEdges, zoomIn, zoomOut, zoomTo } = useReactFlow<
     PonNode,
@@ -409,10 +411,10 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
     clearWorkspace();
   }, []);
 
-  /* Preferences are the only thing remembered between visits. */
+  /* The reading style is the only thing remembered between visits. */
   useEffect(() => {
-    writeUiPreferences({ detailLevel, emptyHintDismissed });
-  }, [detailLevel, emptyHintDismissed]);
+    writeUiPreferences({ detailLevel });
+  }, [detailLevel]);
 
   const { record: recordHistory, undo: undoHistory, redo: redoHistory, canUndo, canRedo } = useWorkspaceHistory();
   /* Sliders fire a patch per pixel; coalesce one node's burst into one entry. */
@@ -2141,7 +2143,7 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
                             className="pu-empty-dismiss"
                             onClick={() => setEmptyHintDismissed(true)}
                             aria-label="Dismiss canvas hint"
-                            title="Dismiss"
+                            title="Hide for this visit — it comes back on the next load"
                           >
                             <X size={14} aria-hidden="true" />
                           </button>

@@ -3214,22 +3214,28 @@ button.pu-logo {
     font-size: var(--type-body);
   }
 
-  /* Link mode's instructions must clear the bottom tool strip, not sit under it. */
+  /* Link mode's instructions must clear the bottom tool strip, not sit under it:
+   * the strip's own offset, its 44 px controls, its 4 px inset and a breath. */
   .pu-canvas .react-flow__panel.pu-link-panel {
-    /* Tool strip offset + its 44 px controls + a breath of clearance. */
-    bottom: calc(
-      var(--sp-3) + var(--control-md) + var(--sp-2) + var(--control-tap) + var(--sp-4) + var(--sp-2)
-    ) !important;
+    bottom: calc(var(--pu-toolbar-offset) + var(--control-tap) + var(--sp-2) + var(--sp-2) + var(--sp-1)) !important;
     width: calc(100% - var(--sp-4));
   }
 
   /* ---- Phone canvas chrome -------------------------------------------------
    * The tool strip drops to the bottom of the canvas as a compact icon bar that
    * sits above the status bar, freeing the top of the canvas. React Flow's own
-   * zoom buttons are redundant next to Zoom in / Zoom out / Fit. */
+   * zoom buttons are redundant next to Zoom in / Zoom out / Fit.
+   * One inset shared by the strip and the link-mode note, so the two never drift
+   * apart and neither leaves a dead band above the status bar. */
+  .pu-canvas {
+    --pu-toolbar-offset: var(--sp-2);
+  }
+  /* The status bar sits in the page flow under the canvas, so the strip only
+   * needs its own inset: a 44 px control row used to float 56 px up from the
+   * canvas edge and left a visible dead band above the status bar. */
   .pu-toolbar {
     top: auto;
-    bottom: calc(var(--sp-3) + var(--control-md) + var(--sp-2));
+    bottom: var(--pu-toolbar-offset);
     /* Hug the buttons and sit in the middle of the canvas. Stretching the pill
      * edge to edge left the six 44 px targets stranded at one end with ~200 px
      * of empty panel beside them. The 44 px targets are kept (they are the tap
@@ -3683,9 +3689,10 @@ a[href],
     border-radius: var(--r-pill);
     box-shadow: 0 6px 18px rgba(43, 26, 20, 0.16);
   }
-  /* Keep the tool strip above the floating status pill. */
-  .pu-toolbar {
-    bottom: calc(var(--sp-2) + var(--control-tap) + var(--sp-3));
+  /* Keep the tool strip above the floating status pill; the strip and the
+   * link-mode note both read this one inset. */
+  .pu-canvas {
+    --pu-toolbar-offset: calc(var(--sp-2) + var(--control-tap) + var(--sp-3));
   }
   .pu-fab-components {
     min-height: var(--control-tap);

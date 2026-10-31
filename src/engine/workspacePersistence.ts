@@ -130,16 +130,20 @@ export function sanitiseWorkspace(value: unknown): WorkspaceState | null {
 
 /* -------------------------------------------------------------------------- *
  * UI preferences — the only thing that survives a reload.
+ *
+ * Only the reading style is remembered. The start panel is not: every visit is
+ * a fresh workspace, so the three ways in ("Standard 1:32 tree", "Guided
+ * mission", "Import topology") are offered again on each load rather than being
+ * silenced for good by one dismissal.
  * -------------------------------------------------------------------------- */
 
 export const UI_PREFS_STORAGE_KEY = 'fiberlab.prefs.v1';
 
 export interface UiPreferences {
   detailLevel: DesignLevel;
-  emptyHintDismissed: boolean;
 }
 
-export const DEFAULT_UI_PREFERENCES: UiPreferences = { detailLevel: 'guided', emptyHintDismissed: false };
+export const DEFAULT_UI_PREFERENCES: UiPreferences = { detailLevel: 'guided' };
 
 export function readUiPreferences(storage: MinimalStorage | undefined = globalThis.localStorage): UiPreferences {
   if (!storage) return { ...DEFAULT_UI_PREFERENCES };
@@ -148,10 +152,7 @@ export function readUiPreferences(storage: MinimalStorage | undefined = globalTh
     if (!raw) return { ...DEFAULT_UI_PREFERENCES };
     const parsed: unknown = JSON.parse(raw);
     if (!isRecord(parsed)) return { ...DEFAULT_UI_PREFERENCES };
-    return {
-      detailLevel: parsed.detailLevel === 'engineer' ? 'engineer' : 'guided',
-      emptyHintDismissed: parsed.emptyHintDismissed === true,
-    };
+    return { detailLevel: parsed.detailLevel === 'engineer' ? 'engineer' : 'guided' };
   } catch {
     return { ...DEFAULT_UI_PREFERENCES };
   }
