@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import App from '../App';
-import { WORKSPACE_STORAGE_KEY } from '../engine/workspacePersistence';
 
 /* ========================================================================== *
  * Tap-to-patch on touch hardware.
@@ -22,7 +21,64 @@ import { WORKSPACE_STORAGE_KEY } from '../engine/workspacePersistence';
  * component still works and lets link mode choose the next free port.
  * ========================================================================== */
 
-const savedWorkspace = () => JSON.parse(window.localStorage.getItem(WORKSPACE_STORAGE_KEY) ?? '{}');
+type ExportedCord = {
+  source: string;
+  sourceHandle: string | null;
+  target: string;
+  targetHandle: string | null;
+};
+
+/**
+ * The live graph, read the way a user can: through the Quotation JSON export.
+ * The workspace is session-only now, so there is no storage document to inspect,
+ * and jsdom gives React Flow no node geometry (so the SVG edges never mount).
+ * The export carries the real `sourceHandle` / `targetHandle` of every cord.
+ */
+async function exportedCords(): Promise<ExportedCord[]> {
+  const blobs: Blob[] = [];
+  const originalCreate = URL.createObjectURL;
+  const originalRevoke = URL.revokeObjectURL;
+  const originalClick = HTMLAnchorElement.prototype.click;
+  Object.defineProperty(URL, 'createObjectURL', {
+    configurable: true,
+    value: (blob: Blob) => {
+      blobs.push(blob);
+      return 'blob:cords';
+    },
+  });
+  Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: () => {} });
+  // Keep jsdom from trying to navigate to the blob URL.
+  HTMLAnchorElement.prototype.click = () => {};
+  try {
+    const rail = screen.getByRole('navigation', { name: 'Workbench sections' });
+    fireEvent.click(within(rail).getByRole('button', { name: 'Results' }));
+    fireEvent.click(await screen.findByRole('tab', { name: 'Quotation' }));
+    fireEvent.click(await screen.findByRole('button', { name: /Quote JSON/ }));
+    expect(blobs).toHaveLength(1);
+    const text = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = () => reject(reader.error as Error);
+      reader.readAsText(blobs[0]);
+    });
+    return (JSON.parse(text) as { edges: ExportedCord[] }).edges;
+  } finally {
+    Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: originalCreate });
+    Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: originalRevoke });
+    HTMLAnchorElement.prototype.click = originalClick;
+  }
+}
+
+/** Cords leaving one component, keyed by the output port they use. */
+const sourceHandlesOf = (cords: ExportedCord[], nodeId: string) =>
+  cords
+    .filter((edge) => edge.source === nodeId)
+    .map((edge) => edge.sourceHandle)
+    .sort();
+
+/** The cord joining two components, or undefined. */
+const cordBetween = (cords: ExportedCord[], sourceId: string, targetId: string) =>
+  cords.find((edge) => edge.source === sourceId && edge.target === targetId);
 
 function enterStudio() {
   fireEvent.click(
@@ -99,18 +155,8 @@ describe('link mode as a tap-to-patch tool', () => {
       }
     }
 
-    // Persisting is debounced, so poll rather than reading the first snapshot:
-    // a single read is a race that only shows up on slower machines.
-    await waitFor(
-      () => {
-        const branches = (savedWorkspace().edges ?? [])
-          .filter((edge: { source: string }) => edge.source === splitterId)
-          .map((edge: { sourceHandle: string }) => edge.sourceHandle)
-          .sort();
-        expect(branches).toEqual(['out-0', 'out-1', 'out-2', 'out-3']);
-      },
-      { timeout: 10_000 },
-    );
+    // Each tap must land on its own output port: no repeats, no replacements.
+    expect(sourceHandlesOf(await exportedCords(), splitterId)).toEqual(['out-0', 'out-1', 'out-2', 'out-3']);
   }, 60_000);
 
   it('never opens the properties sheet while the user is patching', async () => {
@@ -158,17 +204,13 @@ describe('link mode as a tap-to-patch tool', () => {
     expect(screen.queryByRole('tablist', { name: 'Inspector sections' })).not.toBeInTheDocument();
     expect(screen.queryByText('Selected Component')).not.toBeInTheDocument();
 
-    await waitFor(
-      () => {
-        const cords = (savedWorkspace().edges ?? []).filter(
-          (edge: { source: string; target: string }) => edge.source === splitterId && edge.target === ontId,
-        );
-        expect(cords).toHaveLength(1);
-        expect(cords[0].sourceHandle).toBe('out-2');
-        expect(cords[0].targetHandle).toBe('in');
-      },
-      { timeout: 10_000 },
-    );
+    const cords = await exportedCords();
+    const cord = cordBetween(cords, splitterId, ontId);
+    expect(cord).toBeDefined();
+    expect(cord?.sourceHandle).toBe('out-2');
+    expect(cord?.targetHandle).toBe('in');
+    // The exact pair tapped, and nothing else was patched on the way.
+    expect(sourceHandlesOf(cords, splitterId)).toEqual(['out-2']);
   }, 60_000);
 
   it('patches a port pair tapped destination-first', async () => {
@@ -186,16 +228,9 @@ describe('link mode as a tap-to-patch tool', () => {
     expect(screen.getByText(/Destination: .* · IN\./)).toBeInTheDocument();
     fireEvent.click(port(nodeById(container, splitterId), 'out-1'));
 
-    await waitFor(
-      () => {
-        const cords = (savedWorkspace().edges ?? []).filter(
-          (edge: { source: string; target: string }) => edge.source === splitterId && edge.target === ontId,
-        );
-        expect(cords).toHaveLength(1);
-        expect(cords[0].sourceHandle).toBe('out-1');
-      },
-      { timeout: 10_000 },
-    );
+    const cord = cordBetween(await exportedCords(), splitterId, ontId);
+    expect(cord?.sourceHandle).toBe('out-1');
+    expect(cord?.targetHandle).toBe('in');
   }, 60_000);
 
   it('keeps one tap per branch when the ports are tapped instead of the bodies', async () => {
@@ -218,16 +253,7 @@ describe('link mode as a tap-to-patch tool', () => {
       expect(screen.getByText(new RegExp(`${progress} of 4 branches patched`))).toBeInTheDocument();
     }
 
-    await waitFor(
-      () => {
-        const branches = (savedWorkspace().edges ?? [])
-          .filter((edge: { source: string }) => edge.source === splitterId)
-          .map((edge: { sourceHandle: string }) => edge.sourceHandle)
-          .sort();
-        expect(branches).toEqual(['out-0', 'out-1', 'out-2']);
-      },
-      { timeout: 10_000 },
-    );
+    expect(sourceHandlesOf(await exportedCords(), splitterId)).toEqual(['out-0', 'out-1', 'out-2']);
   }, 60_000);
 
   it('moves a port tap to the newest point when both taps are the same end', async () => {
@@ -259,17 +285,9 @@ describe('link mode as a tap-to-patch tool', () => {
     fireEvent.click(port(nodeById(container, splitterId), 'out-0'));
     fireEvent.click(nodeById(container, ontId));
 
-    await waitFor(
-      () => {
-        const cords = (savedWorkspace().edges ?? []).filter(
-          (edge: { source: string; target: string }) => edge.source === splitterId && edge.target === ontId,
-        );
-        expect(cords).toHaveLength(1);
-        expect(cords[0].sourceHandle).toBe('out-0');
-        expect(cords[0].targetHandle).toBe('in');
-      },
-      { timeout: 10_000 },
-    );
+    const cord = cordBetween(await exportedCords(), splitterId, ontId);
+    expect(cord?.sourceHandle).toBe('out-0');
+    expect(cord?.targetHandle).toBe('in');
   }, 60_000);
 
   it('removes the cord when its two ports are tapped again', async () => {
@@ -284,16 +302,6 @@ describe('link mode as a tap-to-patch tool', () => {
     fireEvent.click(port(nodeById(container, splitterId), 'out-1'));
     fireEvent.click(port(nodeById(container, ontId), 'in'));
 
-    await waitFor(
-      () => {
-        const cords = (savedWorkspace().edges ?? []).filter(
-          (edge: { source: string; target: string }) => edge.source === splitterId && edge.target === ontId,
-        );
-        expect(cords).toHaveLength(1);
-      },
-      { timeout: 10_000 },
-    );
-
     // The same two points again undo it, and say so. The splitter stays armed
     // after a branch lands, so tapping its output pins that exact port again.
     fireEvent.click(port(nodeById(container, splitterId), 'out-1'));
@@ -301,15 +309,7 @@ describe('link mode as a tap-to-patch tool', () => {
 
     // Removing the pair leaves the tool, exactly as the body-tap flow does.
     await waitFor(() => expect(screen.queryByText(/branches patched/)).not.toBeInTheDocument());
-    await waitFor(
-      () => {
-        const cords = (savedWorkspace().edges ?? []).filter(
-          (edge: { source: string; target: string }) => edge.source === splitterId && edge.target === ontId,
-        );
-        expect(cords).toHaveLength(0);
-      },
-      { timeout: 10_000 },
-    );
+    expect(cordBetween(await exportedCords(), splitterId, ontId)).toBeUndefined();
   }, 60_000);
 
   it('does not open the properties sheet for a component that was dragged', async () => {

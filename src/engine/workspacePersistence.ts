@@ -7,12 +7,17 @@ import {
 } from '../data/pricingCatalogue';
 
 /* ========================================================================== *
- * Workspace persistence.
+ * Workspace persistence, UI preferences and topology import.
  *
- * The designed network is the product's primary artefact, so it is written to
- * localStorage under one versioned key on a debounce. Reading is defensive: a
- * half-written, hand-edited or older document is dropped field by field rather
- * than allowed to crash the workbench on boot.
+ * The design is deliberately session-only: a reload opens a clean canvas, so a
+ * network built last night never reappears in the workbench days later. What is
+ * written to localStorage is only the two UI preferences (detail level and a
+ * dismissed canvas hint). `clearWorkspace` exists to wipe the document older
+ * versions autosaved under WORKSPACE_STORAGE_KEY.
+ *
+ * Reading is defensive: a hand-edited or older document is dropped field by
+ * field rather than allowed to crash the workbench. `sanitiseWorkspace` is the
+ * same reader that validates an imported TopologyExport file.
  *
  * This module is React-free and storage-free at import time, so the engine
  * tests can exercise the parse rules directly.
@@ -20,7 +25,7 @@ import {
 
 export const WORKSPACE_STORAGE_KEY = 'fiberlab.workspace.v1';
 
-/** Everything that survives a reload. */
+/** One complete canvas document, as sanitised for a topology import. */
 export interface WorkspaceState {
   nodes: PonNode[];
   edges: PonEdge[];
@@ -33,15 +38,9 @@ export interface WorkspaceState {
   presetEdited: boolean;
   /** How much engineering detail the reader asked for. */
   detailLevel: DesignLevel;
-  /** Chrome that should not come back the next time the tab opens. */
   ui: {
     emptyHintDismissed: boolean;
   };
-}
-
-interface StoredWorkspace extends WorkspaceState {
-  version: 1;
-  savedAt: string;
 }
 
 export const NODE_TYPES = [
@@ -129,32 +128,45 @@ export function sanitiseWorkspace(value: unknown): WorkspaceState | null {
   };
 }
 
-export function readWorkspace(storage: MinimalStorage | undefined = globalThis.localStorage): WorkspaceState | null {
-  if (!storage) return null;
+/* -------------------------------------------------------------------------- *
+ * UI preferences — the only thing that survives a reload.
+ * -------------------------------------------------------------------------- */
+
+export const UI_PREFS_STORAGE_KEY = 'fiberlab.prefs.v1';
+
+export interface UiPreferences {
+  detailLevel: DesignLevel;
+  emptyHintDismissed: boolean;
+}
+
+export const DEFAULT_UI_PREFERENCES: UiPreferences = { detailLevel: 'guided', emptyHintDismissed: false };
+
+export function readUiPreferences(storage: MinimalStorage | undefined = globalThis.localStorage): UiPreferences {
+  if (!storage) return { ...DEFAULT_UI_PREFERENCES };
   try {
-    const raw = storage.getItem(WORKSPACE_STORAGE_KEY);
-    if (!raw) return null;
+    const raw = storage.getItem(UI_PREFS_STORAGE_KEY);
+    if (!raw) return { ...DEFAULT_UI_PREFERENCES };
     const parsed: unknown = JSON.parse(raw);
-    // Only the current workspace version is read; anything else is discarded.
-    if (!isRecord(parsed) || parsed.version !== 1) return null;
-    return sanitiseWorkspace(parsed);
+    if (!isRecord(parsed)) return { ...DEFAULT_UI_PREFERENCES };
+    return {
+      detailLevel: parsed.detailLevel === 'engineer' ? 'engineer' : 'guided',
+      emptyHintDismissed: parsed.emptyHintDismissed === true,
+    };
   } catch {
-    return null;
+    return { ...DEFAULT_UI_PREFERENCES };
   }
 }
 
-export function writeWorkspace(
-  state: WorkspaceState,
+export function writeUiPreferences(
+  preferences: UiPreferences,
   storage: MinimalStorage | undefined = globalThis.localStorage,
-): boolean {
-  if (!storage) return false;
-  const document: StoredWorkspace = { version: 1, savedAt: new Date().toISOString(), ...state };
+): void {
+  if (!storage) return;
   try {
-    storage.setItem(WORKSPACE_STORAGE_KEY, JSON.stringify(document));
-    return true;
+    storage.setItem(UI_PREFS_STORAGE_KEY, JSON.stringify(preferences));
   } catch {
-    // Quota exceeded or storage disabled: the session keeps working, unsaved.
-    return false;
+    // Storage disabled or full: the session keeps the preference, it just will
+    // not be remembered next time.
   }
 }
 

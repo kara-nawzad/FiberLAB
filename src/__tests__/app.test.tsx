@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import App from '../App';
 import { buildPreset } from '../engine/presets';
@@ -782,14 +782,15 @@ describe('FiberLAB application shell', () => {
     expect(screen.getByRole('tablist', { name: 'Inspector sections' })).toBeInTheDocument();
   });
 
-  it('keeps the top bar to one row: project, save state, undo/redo, zoom, More and Run', async () => {
+  it('keeps the top bar to one row: project, undo/redo, zoom, More and Run', async () => {
     await renderStudio();
     const banner = workbenchTopBar();
 
     expect(within(banner).getByRole('button', { name: 'Overview & Physics' })).toBeInTheDocument();
-    // The project name is editable in place and says whether it is saved.
+    // The project name is editable in place.
     expect(within(banner).getByLabelText('Project name')).toHaveValue('Standard 1:32 GPON Tree');
-    expect(within(banner).getByRole('status')).toHaveTextContent(/Saved|Saving/);
+    // The canvas is session-only, so the bar makes no "saved" promise.
+    expect(within(banner).queryByRole('status')).not.toBeInTheDocument();
     expect(within(banner).getByRole('button', { name: 'Undo' })).toBeInTheDocument();
     expect(within(banner).getByRole('button', { name: 'Redo' })).toBeInTheDocument();
     expect(within(banner).getByRole('button', { name: 'Zoom' })).toBeInTheDocument();
@@ -832,6 +833,47 @@ describe('FiberLAB application shell', () => {
     openSection('Learn');
     expect(screen.getByRole('heading', { name: 'Learn' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Fault-finding' })).toBeInTheDocument();
+  });
+
+  it('marks the Learn mission groups as headers while the reference cards keep the ink colour', async () => {
+    await renderStudio();
+    openSection('Learn');
+
+    // The skill groups ("Build & connect", "Budget & margin", …) head the
+    // missions under them, so they carry the brand orange.
+    for (const title of ['Build & connect', 'Budget & margin', 'Fault-finding']) {
+      expect(screen.getByRole('heading', { name: title }).closest('.pu-screen-card')).toHaveClass('pu-learn-card');
+    }
+    // Glossary and Reading are reference cards, not mission groups.
+    for (const title of ['Glossary', 'Reading']) {
+      expect(screen.getByRole('heading', { name: title }).closest('.pu-screen-card')).not.toHaveClass('pu-learn-card');
+    }
+  });
+
+  it('opens a phone on the canvas, not on the component library sheet', async () => {
+    const originalMatchMedia = window.matchMedia;
+    window.matchMedia = vi.fn().mockImplementation((query: string) => ({
+      matches: query === '(max-width: 900px)',
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
+    try {
+      render(<App />);
+      enterStudioFromNav();
+      await screen.findByRole('button', { name: 'Run Simulation' });
+
+      // The sheet is summoned, not open: the first thing to see is the workspace.
+      expect(screen.getByLabelText('Search components')).not.toBeVisible();
+      expect(screen.getByRole('button', { name: 'Open component library' })).toBeInTheDocument();
+      expect(await screen.findByText('Start your network')).toBeInTheDocument();
+    } finally {
+      window.matchMedia = originalMatchMedia;
+    }
   });
 
   it('returns from Results with Escape or the browser back gesture', async () => {
@@ -928,8 +970,9 @@ describe('FiberLAB application shell', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Dismiss canvas hint' }));
     expect(screen.queryByText('Start your network')).not.toBeInTheDocument();
 
-    // The dismissal is part of the saved workspace, so a reload stays clean.
-    await waitFor(() => expect(window.localStorage.getItem('fiberlab.workspace.v1')).not.toBeNull(), {
+    // The dismissal is a preference, so a reload stays clean while the canvas
+    // itself comes back empty.
+    await waitFor(() => expect(window.localStorage.getItem('fiberlab.prefs.v1')).not.toBeNull(), {
       timeout: 2000,
     });
     unmount();
@@ -1311,20 +1354,21 @@ describe('FiberLAB application shell', () => {
     expect(lengthInput).toHaveValue(12.5);
   });
 
-  it('keeps the design in this browser across a remount', async () => {
+  it('starts a fresh canvas after a remount instead of restoring the old design', async () => {
     const { unmount } = await renderStudio();
     await waitFor(() => expect(screen.getAllByText('Al-Sulaymaniyah — Unit 12').length).toBeGreaterThan(0));
-
-    // The write is debounced, so give it a beat before the "reload".
-    await waitFor(() => expect(window.localStorage.getItem('fiberlab.workspace.v1')).not.toBeNull(), {
-      timeout: 2000,
-    });
 
     unmount();
     render(<App />);
     enterStudioFromNav();
-    await waitFor(() => expect(screen.getAllByText('Al-Sulaymaniyah — Unit 12').length).toBeGreaterThan(0));
-    expect(screen.queryByText('Start your network')).not.toBeInTheDocument();
+    await screen.findByRole('button', { name: 'Run Simulation' });
+
+    // Session-only canvas: nothing from the previous visit comes back, and the
+    // old autosave key is wiped on mount so it cannot linger for hours.
+    expect(screen.getByText('Start your network')).toBeInTheDocument();
+    expect(screen.queryByText('Al-Sulaymaniyah — Unit 12')).not.toBeInTheDocument();
+    expect(window.localStorage.getItem('fiberlab.workspace.v1')).toBeNull();
+    expect(screen.getByLabelText('Project name')).toHaveValue('Untitled network');
   });
 
   it('undoes and redoes a canvas edit with Ctrl+Z and Ctrl+Shift+Z', async () => {

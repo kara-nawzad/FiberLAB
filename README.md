@@ -114,9 +114,9 @@ The estimator separates materials from labor, reports CAPEX per home passed and 
 
 These are illustrative baseline rates for learning, not a current market survey, installed-price guarantee, tax estimate, or supplier quotation. Local labor, logistics, taxes, currency, procurement, and contingency are not modeled.
 
-## Saving and reopening a design
+## Keeping a design
 
-The canvas saves itself: every edit lands in this browser's `localStorage` (key `fiberlab.workspace.v1`) on a short debounce, so a reload restores the nodes, links, safety margin, project name, detail level and local unit rates.
+The canvas is deliberately session-only: opening the site or refreshing the tab starts a clean, empty workspace, so a network built in an earlier visit never reappears on screen. Only two interface preferences survive a reload (the Guided/Engineer detail level and a dismissed first-run hint, in `fiberlab.prefs.v1`).
 
 To keep a copy, move a design to another machine, or hand it to someone else, export a file and read it back:
 

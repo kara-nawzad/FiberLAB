@@ -47,7 +47,11 @@ export function LearnScreen({ activeMissionId, onStartMission, onOpenMissions, o
       <div className="pu-screen-body">
         <div className="pu-screen-cards">
           {sections.map(({ section, missions }) => (
-            <section className="pu-screen-card" key={section.id} aria-labelledby={`learn-${section.id}-title`}>
+            <section
+              className="pu-screen-card pu-learn-card"
+              key={section.id}
+              aria-labelledby={`learn-${section.id}-title`}
+            >
               <div className="pu-screen-card-head">
                 <h2 id={`learn-${section.id}-title`}>{section.title}</h2>
                 <span className="pu-screen-card-note">{missions.length} missions</span>

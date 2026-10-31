@@ -76,7 +76,12 @@ import {
   simulateTopology,
 } from './engine/opticalSimulator';
 import { decorateEdges } from './engine/edgeDecoration';
-import { parseTopologyImport, readWorkspace, writeWorkspace } from './engine/workspacePersistence';
+import {
+  clearWorkspace,
+  parseTopologyImport,
+  readUiPreferences,
+  writeUiPreferences,
+} from './engine/workspacePersistence';
 import { readFileText } from './lib/readFileText';
 import { useWorkspaceHistory, type CanvasSnapshot } from './hooks/useWorkspaceHistory';
 import { SimulationContext } from './context/SimulationContext';
@@ -322,25 +327,19 @@ function initialTopology(): { nodes: PonNode[]; edges: PonEdge[] } {
  * ========================================================================== */
 
 function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProps) {
-  /* The designed network is the artefact: it comes back from localStorage on
-   * boot, and anything unreadable is dropped node by node rather than crashing. */
-  const restored = useMemo(() => readWorkspace(), []);
+  /* The canvas is session-only on purpose: every load starts on an empty
+   * workspace, so a design from a previous visit never comes back. Only the two
+   * UI preferences below are remembered. */
+  const preferences = useMemo(readUiPreferences, []);
   const seeded = useMemo(initialTopology, []);
-  const [nodes, setNodes, onNodesChange] = useNodesState<PonNode>(restored?.nodes ?? seeded.nodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState<PonEdge>(restored?.edges ?? seeded.edges);
-  const [settings, setSettings] = useState<DesignSettings>(restored?.settings ?? DEFAULT_SETTINGS);
-  const [unitCosts, setUnitCosts] = useState<UnitCostProfile>(
-    () => restored?.unitCosts ?? resolveUnitCosts(DEFAULT_UNIT_COSTS),
-  );
-  const [activePresetId, setActivePresetId] = useState<string | null>(restored?.activePresetId ?? null);
-  const [projectName, setProjectName] = useState<string>(() => {
-    if (restored?.projectName) return restored.projectName;
-    const presetName = PRESETS.find((preset) => preset.id === restored?.activePresetId)?.name;
-    return presetName ?? 'Untitled network';
-  });
-  const [presetEdited, setPresetEdited] = useState(restored?.presetEdited ?? false);
-  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'error'>('saved');
-  const [detailLevel, setDetailLevel] = useState<DesignLevel>(restored?.detailLevel ?? 'guided');
+  const [nodes, setNodes, onNodesChange] = useNodesState<PonNode>(seeded.nodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<PonEdge>(seeded.edges);
+  const [settings, setSettings] = useState<DesignSettings>(DEFAULT_SETTINGS);
+  const [unitCosts, setUnitCosts] = useState<UnitCostProfile>(() => resolveUnitCosts(DEFAULT_UNIT_COSTS));
+  const [activePresetId, setActivePresetId] = useState<string | null>(null);
+  const [projectName, setProjectName] = useState<string>('Untitled network');
+  const [presetEdited, setPresetEdited] = useState(false);
+  const [detailLevel, setDetailLevel] = useState<DesignLevel>(preferences.detailLevel);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null);
   const [selection, setSelection] = useState<{ nodeIds: string[]; edgeIds: string[] }>({ nodeIds: [], edgeIds: [] });
@@ -380,7 +379,7 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
   const [resultsTab, setResultsTab] = useState<'summary' | 'subscribers' | 'quotation'>('summary');
   const [otdrOpen, setOtdrOpen] = useState(false);
   const [missionsOpen, setMissionsOpen] = useState(false);
-  const [activeMissionId, setActiveMissionId] = useState<string | null>(restored?.activeMissionId ?? null);
+  const [activeMissionId, setActiveMissionId] = useState<string | null>(null);
   const [testing, setTesting] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [committedSim, setCommittedSim] = useState<SimulationResult | null>(null);
@@ -389,10 +388,12 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
   const [snapToGrid, setSnapToGrid] = useState(false);
   /* Read once: a phone does not become a desktop mid-session. */
   const [coarsePointer] = useState(isCoarsePointer);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  /* Phones summon the library from the "+ Components" sheet, so it starts
+   * closed there: opening the site must show the workspace, not a panel over it. */
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(isNarrowViewport);
   const [inspectorCollapsed, setInspectorCollapsed] = useState(false);
   const [statusExpanded, setStatusExpanded] = useState(false);
-  const [emptyHintDismissed, setEmptyHintDismissed] = useState(restored?.ui.emptyHintDismissed ?? false);
+  const [emptyHintDismissed, setEmptyHintDismissed] = useState(preferences.emptyHintDismissed);
 
   const { screenToFlowPosition, deleteElements, fitView, getNodes, getEdges, zoomIn, zoomOut, zoomTo } = useReactFlow<
     PonNode,
@@ -401,37 +402,17 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
 
   /* ------------------------- Persistence & history ------------------------ */
 
-  /* Debounced write: a drag storm must not hit localStorage on every frame. */
+  /* Earlier versions autosaved the whole design here. Nothing reads it any more,
+   * so drop whatever a returning visitor still has: a stale canvas must not be
+   * able to come back. */
   useEffect(() => {
-    setSaveStatus('saving');
-    const timer = window.setTimeout(() => {
-      const ok = writeWorkspace({
-        nodes,
-        edges,
-        settings,
-        unitCosts,
-        activePresetId,
-        activeMissionId,
-        projectName,
-        presetEdited,
-        detailLevel,
-        ui: { emptyHintDismissed },
-      });
-      setSaveStatus(ok ? 'saved' : 'error');
-    }, 400);
-    return () => window.clearTimeout(timer);
-  }, [
-    nodes,
-    edges,
-    settings,
-    unitCosts,
-    activePresetId,
-    activeMissionId,
-    projectName,
-    presetEdited,
-    detailLevel,
-    emptyHintDismissed,
-  ]);
+    clearWorkspace();
+  }, []);
+
+  /* Preferences are the only thing remembered between visits. */
+  useEffect(() => {
+    writeUiPreferences({ detailLevel, emptyHintDismissed });
+  }, [detailLevel, emptyHintDismissed]);
 
   const { record: recordHistory, undo: undoHistory, redo: redoHistory, canUndo, canRedo } = useWorkspaceHistory();
   /* Sliders fire a patch per pixel; coalesce one node's burst into one entry. */
@@ -889,6 +870,21 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
         }
       }
 
+      /* The default target port, so the edge can name both ends before it is
+       * built: the accessible label of every patch cord lists the exact ports
+       * it uses, which is how a screen reader (and the tests) can tell a cord
+       * from its neighbours. */
+      const defaultTargetHandle = targetNode && (isClosureNode(targetNode) || isOdfNode(targetNode)) ? 'in-0' : 'in';
+      const resolvedTargetHandle = connection.targetHandle ?? defaultTargetHandle;
+      const patchLabel =
+        sourceNode && targetNode
+          ? `Patch cord from ${describeNode(sourceNode)} ${describePort(
+              sourceNode,
+              connection.sourceHandle ?? null,
+              'source',
+            )} to ${describeNode(targetNode)} ${describePort(targetNode, resolvedTargetHandle, 'target')}`
+          : undefined;
+
       setEdges((currentEdges) => {
         // Never duplicate an identical patch cord.
         if (
@@ -908,10 +904,9 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
           source,
           target,
           sourceHandle: connection.sourceHandle ?? null,
-          targetHandle:
-            connection.targetHandle ??
-            (targetNode && (isClosureNode(targetNode) || isOdfNode(targetNode)) ? 'in-0' : 'in'),
+          targetHandle: resolvedTargetHandle,
           type: 'optical',
+          ariaLabel: patchLabel,
         };
 
         let filtered = currentEdges;
@@ -1881,7 +1876,6 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
         onOpenOverview={handleOpenOverview}
         testing={testing}
         stale={!settings.autoRun && dirty}
-        saveStatus={saveStatus}
         detailLevel={detailLevel}
         onToggleDetailLevel={() => setDetailLevel((level) => (level === 'guided' ? 'engineer' : 'guided'))}
         canUndo={canUndo}
@@ -2115,8 +2109,8 @@ function StudioWorkspace({ onOpenOverview, landingCommand }: StudioWorkspaceProp
                           </span>
                           <p className="pu-empty-title">Start your network</p>
                           <p className="pu-empty-hint">
-                            Drop parts from the library, or begin from a working design. The canvas saves itself as you
-                            build.
+                            Drop parts from the library, or begin from a working design. The canvas starts empty on
+                            every visit — export it from Reports to keep a copy.
                           </p>
                           <div className="pu-empty-actions">
                             <button type="button" className="pu-btn pri" onClick={() => applyPreset('standard-1x32')}>
