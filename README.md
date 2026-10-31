@@ -116,7 +116,7 @@ These are illustrative baseline rates for learning, not a current market survey,
 
 ## Keeping a design
 
-The canvas is deliberately session-only: opening the site or refreshing the tab starts a clean, empty workspace, so a network built in an earlier visit never reappears on screen. Only two interface preferences survive a reload (the Guided/Engineer detail level and a dismissed first-run hint, in `fiberlab.prefs.v1`).
+The canvas is deliberately session-only: opening the site or refreshing the tab starts a clean, empty workspace, so a network built in an earlier visit never reappears on screen. The only thing that survives a reload is the Guided/Engineer reading style, in `fiberlab.prefs.v1`: the start panel is offered again on every visit, so the three ways in — a preset tree, a guided mission, or an imported topology — are always one tap away.
 
 To keep a copy, move a design to another machine, or hand it to someone else, export a file and read it back:
 
@@ -139,7 +139,7 @@ Open **OTDR Trace** in the TopBar to pulse a selected OLT output or fiber-span s
 
 - **Landing overview** — warm fiber-splice hero: one headline, one sentence of scope, and one **HOLD TO SPLICE** action that fills for 2 s, sends the light down the fiber to the dark home, and then reveals **Launch Studio**; preserved interactive 1310/1490/1550 nm waveguide, adjustable launch power, capability cards, and GPON reference strips carry the engineering detail. The ray-angle display is an educational Sellmeier-based schematic, not a measured fiber-profile claim. The graph simulator supports 1270/1310/1490/1550/1577 nm; its OPM calibration control remains 1310/1490/1550 nm.
 - **Sections** — Design, Simulation, Reports and Settings are separate screens (desktop rail, phone bottom tab bar with safe-area padding). Simulation shows the budget anchors plus a subscriber table, Reports is the Bill of Materials page (with a **Back to Design** button, Escape-to-Design and browser-back history), and Settings holds the margin, Auto-run, test gear and workspace actions.
-- **Top bar** — FiberLAB logo, the project name with an **Edited** marker, the zoom percentage, and the primary `Run Simulation` button. Presets and the dismissible three-step first-run hint live on the design bar; CAPEX and cost per home passed sit on the Reports banner.
+- **Top bar** — FiberLAB logo, the project name with an **Edited** marker, the zoom percentage, and the primary `Run Simulation` button. Presets and the dismissible start panel live on the design bar; CAPEX and cost per home passed sit on the Reports banner.
 - **Canvas toolbar** — Select, Pan, Connect and Delete plus zoom in/out and fit; the `⋯` overflow holds canvas actions only (fit view, zoom to 100 %, snap to grid). `OPM Tool`, `OTDR Trace`, missions, safety margin, Auto-run, Clear and the docs links live on the Settings screen. Phones get the same strip as icons along the bottom of the canvas.
 - **Status bar** — one slim always-visible row under the canvas (total loss, total distance, subscribers OK, coloured network status) that expands into just two tabs: Optical Budget and Events. Clicking an event selects and frames the affected component, and deployed counts moved into the Bill of Materials.
 - **Left toolbox** — draggable or double-click quick-add OLT / ODF / splitter (1:2 … 1:64) / cable (feeder, distribution, drop) / FOSC-style dome closure / 1:8 NAP/FAT / ONT / Wi-Fi 6 gateway.

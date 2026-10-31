@@ -47,13 +47,26 @@ function workspaceFrom(presetId = 'standard-1x32'): WorkspaceState {
 }
 
 describe('UI preferences', () => {
-  it('round-trips the two preferences that survive a reload', () => {
+  it('round-trips the reading style, the only preference that survives a reload', () => {
     const storage = fakeStorage();
 
-    writeUiPreferences({ detailLevel: 'engineer', emptyHintDismissed: true }, storage);
+    writeUiPreferences({ detailLevel: 'engineer' }, storage);
 
     expect(storage.keys()).toEqual([UI_PREFS_STORAGE_KEY]);
-    expect(readUiPreferences(storage)).toEqual({ detailLevel: 'engineer', emptyHintDismissed: true });
+    expect(readUiPreferences(storage)).toEqual({ detailLevel: 'engineer' });
+  });
+
+  it('never remembers the start panel, so a reload offers the three ways in again', () => {
+    const storage = fakeStorage({
+      // A document from a build that did persist the dismissal.
+      [UI_PREFS_STORAGE_KEY]: JSON.stringify({ detailLevel: 'guided', emptyHintDismissed: true }),
+    });
+
+    expect(readUiPreferences(storage)).toEqual({ detailLevel: 'guided' });
+
+    // Writing the preference cannot bring the flag back.
+    writeUiPreferences({ detailLevel: 'guided' }, storage);
+    expect(JSON.parse(storage.getItem(UI_PREFS_STORAGE_KEY) ?? '{}')).toEqual({ detailLevel: 'guided' });
   });
 
   it('falls back to the defaults for a missing or corrupted document', () => {
@@ -67,7 +80,7 @@ describe('UI preferences', () => {
 
   it('ignores unknown values one field at a time', () => {
     const storage = fakeStorage({
-      [UI_PREFS_STORAGE_KEY]: JSON.stringify({ detailLevel: 'wizard', emptyHintDismissed: 'yes' }),
+      [UI_PREFS_STORAGE_KEY]: JSON.stringify({ detailLevel: 'wizard' }),
     });
     expect(readUiPreferences(storage)).toEqual(DEFAULT_UI_PREFERENCES);
   });
@@ -102,7 +115,7 @@ describe('session-only workspace', () => {
 
   it('never writes a workspace document, so a reload starts clean', () => {
     const storage = fakeStorage();
-    writeUiPreferences({ detailLevel: 'guided', emptyHintDismissed: false }, storage);
+    writeUiPreferences({ detailLevel: 'guided' }, storage);
 
     expect(storage.getItem(WORKSPACE_STORAGE_KEY)).toBeNull();
   });
